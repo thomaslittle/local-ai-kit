@@ -24,3 +24,6 @@ Next: expand shared native adapters, strengthen process-tree cleanup and session
 
 ## Additional native provider
 Claude Code now has native control metadata and text-only structured execution, alongside Codex. Use repeatable `--allow-metadata PROVIDER` and `--allow-execution PROVIDER` flags. See `docs/adapters/claude-code.md`. No live inference was submitted. Shared ACP, HTTP providers/gateways and the remaining release/SDK/UI requirements are next.
+
+## Gateway route boundary
+Pending multi-provider gateway metadata is integrated with route-scoped model IDs, vendor identity, and billing. Extra routes remain execution-disabled unless an executor is registered. The gateway regression and full Windows native baseline pass. Next: shared ACP engine and native Google/Grok adapters.

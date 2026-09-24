@@ -65,6 +65,8 @@ pub fn parse_metadata(
         },
         account: None,
         models: vec![],
+        additional_routes: vec![],
+        providers: vec![],
         quota_pools: vec![],
         included_usage_allowed: Observation::unknown("INCLUDED_USAGE_PERMISSION_NOT_REPORTED"),
         diagnostics: vec![],

@@ -42,6 +42,8 @@ pub fn parse_metadata(
         billing: Observation::unknown("BILLING_NOT_REPORTED"),
         account: None,
         models: Vec::new(),
+        additional_routes: vec![],
+        providers: vec![],
         quota_pools: Vec::new(),
         included_usage_allowed: Observation::unknown("INCLUDED_USAGE_PERMISSION_NOT_REPORTED"),
         diagnostics: Vec::new(),

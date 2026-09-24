@@ -78,6 +78,8 @@ fn report(id: &str, route: &str) -> ConnectionMetadata {
             .into_iter()
             .find(|a| a.id == format!("account-{id}")),
         models: snapshot.models,
+        additional_routes: vec![],
+        providers: vec![],
         quota_pools: snapshot.quota_pools,
         included_usage_allowed: Observation::unknown("NOT_REPORTED"),
         diagnostics: Vec::new(),

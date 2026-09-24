@@ -89,6 +89,14 @@ fn validate_report(report: &ConnectionMetadata, connection: &str, route: &str) -
         || report.route_id != route
         || report.models.len() > 2048
         || report.quota_pools.len() > 128
+        || report.additional_routes.len() > 128
+        || report.providers.len() > 128
+        || report.additional_routes.iter().any(|r| {
+            r.connection_id != connection
+                || r.id != stable_id("route", &[route, &r.provider_id])
+                || r.provider_id.is_empty()
+                || r.provider_id.len() > 128
+        })
     {
         return Err(params::invalid());
     }
@@ -102,15 +110,41 @@ fn validate_report(report: &ConnectionMetadata, connection: &str, route: &str) -
             "Metadata result exceeds the bound",
         ));
     }
+    let mut route_ids = BTreeSet::new();
+    for route in &report.additional_routes {
+        if !route_ids.insert(&route.id) {
+            return Err(params::invalid());
+        }
+    }
+    let mut provider_ids = BTreeSet::new();
+    for provider in &report.providers {
+        if !provider_ids.insert(&provider.id)
+            || provider.id.is_empty()
+            || provider.id.len() > 128
+            || provider.name.len() > 1024
+            || provider.name.chars().any(char::is_control)
+        {
+            return Err(params::invalid());
+        }
+    }
     let mut ids = BTreeSet::new();
     for model in &report.models {
-        if model.route_id != route || !ids.insert(&model.id) || model.options.len() > 128 {
+        if (model.route_id != route
+            && !report.additional_routes.iter().any(|r| {
+                r.id == model.route_id && model.id == route_model_key(&r.id, &model.native_id)
+            }))
+            || !ids.insert(&model.id)
+            || model.options.len() > 128
+        {
             return Err(params::invalid());
         }
     }
     for pool in &report.quota_pools {
         if pool.connection_ids.iter().any(|id| id != connection)
-            || pool.route_ids.iter().any(|id| id != route)
+            || pool
+                .route_ids
+                .iter()
+                .any(|id| id != route && !report.additional_routes.iter().any(|r| &r.id == id))
             || pool.windows.len() > 128
         {
             return Err(params::invalid());
@@ -204,7 +238,43 @@ pub(crate) fn merge_report(snapshot: &mut Snapshot, report: &ConnectionMetadata,
             }
         }
     }
-    snapshot.models.retain(|m| m.route_id != report.route_id);
+    let old_routes: BTreeSet<_> = snapshot
+        .routes
+        .iter()
+        .filter(|r| r.connection_id == report.connection_id)
+        .map(|r| r.id.clone())
+        .collect();
+    snapshot
+        .models
+        .retain(|m| !old_routes.contains(&m.route_id));
+    snapshot
+        .routes
+        .retain(|r| r.connection_id != report.connection_id || r.id == report.route_id);
+    for original in &report.additional_routes {
+        let mut route = original.clone();
+        route
+            .capabilities
+            .retain(|c| !(c.id == "generation.text" && c.origin == CapabilityOrigin::Runtime));
+        route.capabilities.push(Capability {
+            id: "generation.text".into(),
+            support: Support::Unsupported,
+            origin: CapabilityOrigin::Runtime,
+            evidence: runtime_evidence(&report.auth),
+            conditions: vec![],
+        });
+        if stale {
+            route.billing.mark_stale();
+            for cap in &mut route.capabilities {
+                cap.evidence.mark_stale();
+            }
+        }
+        snapshot.routes.push(route);
+    }
+    for provider in &report.providers {
+        if !snapshot.providers.iter().any(|p| p.id == provider.id) {
+            snapshot.providers.push(provider.clone());
+        }
+    }
     for original in &report.models {
         let mut model = original.clone();
         if stale {
@@ -217,7 +287,7 @@ pub(crate) fn merge_report(snapshot: &mut Snapshot, report: &ConnectionMetadata,
     }
     for pool in &mut snapshot.quota_pools {
         pool.connection_ids.retain(|c| c != &report.connection_id);
-        pool.route_ids.retain(|r| r != &report.route_id);
+        pool.route_ids.retain(|r| !old_routes.contains(r));
     }
     snapshot
         .quota_pools

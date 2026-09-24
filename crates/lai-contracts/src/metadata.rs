@@ -1,4 +1,6 @@
-use crate::{Account, AuthState, BillingMode, Model, Observation, Plan, QuotaPool};
+use crate::{
+    AccessRoute, Account, AuthState, BillingMode, Model, Observation, Plan, Provider, QuotaPool,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,6 +17,10 @@ pub struct ConnectionMetadata {
     pub billing: Observation<BillingMode>,
     pub account: Option<Account>,
     pub models: Vec<Model>,
+    #[serde(default)]
+    pub additional_routes: Vec<AccessRoute>,
+    #[serde(default)]
+    pub providers: Vec<Provider>,
     pub quota_pools: Vec<QuotaPool>,
     pub included_usage_allowed: Observation<bool>,
     pub diagnostics: Vec<String>,

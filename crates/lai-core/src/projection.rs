@@ -21,7 +21,7 @@ pub fn project_snapshot(source: &Snapshot, policy: &ClientPolicy) -> Snapshot {
         .iter()
         .filter_map(|c| c.account_id.clone())
         .collect();
-    let providers: BTreeSet<_> = snapshot
+    let mut providers: BTreeSet<_> = snapshot
         .connections
         .iter()
         .map(|c| c.provider_id.clone())
@@ -36,6 +36,7 @@ pub fn project_snapshot(source: &Snapshot, policy: &ClientPolicy) -> Snapshot {
         .installations
         .retain(|i| installations.contains(&i.id));
     snapshot.accounts.retain(|a| accounts.contains(&a.id));
+    providers.extend(snapshot.routes.iter().map(|r| r.provider_id.clone()));
     snapshot.providers.retain(|p| providers.contains(&p.id));
     for pool in &mut snapshot.quota_pools {
         pool.connection_ids.retain(|id| connections.contains(id));
