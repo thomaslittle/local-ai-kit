@@ -1,0 +1,45 @@
+/** Entirely synthetic scenarios. These records are not claims about real providers. */
+export function fixtureSnapshot(){
+ const now=new Date().toISOString();
+ const source={kind:'synthetic',adapterId:'synthetic',adapterVersion:'0.1.0-alpha.1',reference:'bundled demonstration scenarios'};
+ const known=value=>({state:'known',value,source,observedAt:now,freshness:'fresh',verification:'reported'});
+ const unknown=reason=>({state:'unknown',reason});
+ const cap=(id,support='supported')=>({id,support,origin:'model',conditions:[],evidence:known('Illustrative fixture only')});
+ const providers=[['codex','Codex'],['antigravity','Antigravity'],['grok','Grok'],['opencode','OpenCode'],['claude','Claude Code'],['local','Local runtime']].map(([id,name])=>({id,name,kind:'synthetic_client'}));
+ const rows=[
+  ['codex-personal','codex','Personal workspace','subscription','authenticated'],
+  ['codex-work','codex','Work workspace','subscription','authenticated'],
+  ['antigravity-personal','antigravity','Google workspace','subscription','authenticated'],
+  ['grok-personal','grok','Grok workspace','subscription','authenticated'],
+  ['opencode-linked','opencode','Linked account','subscription','authenticated'],
+  ['opencode-api','opencode','API-key route','api_metered','authenticated'],
+  ['claude-expired','claude','Expired sign-in','unknown','expired'],
+  ['local-machine','local','On this device','local','authenticated'],
+ ];
+ const installations=rows.map(([id,providerId])=>({id:'install-'+id,providerId,environmentId:'synthetic-host',locationHint:'Synthetic installation (no file was inspected)',version:known('fixture-1.0')}));
+ const profiles=rows.map(([id])=>({id:'profile-'+id,installationId:'install-'+id,label:'Example profile'}));
+ const accounts=rows.map(([id,providerId])=>({id:'account-'+id,providerId,displayLabel:known('Example account'),identitySource:known('synthetic/'+id)}));
+ const connections=rows.map(([id,providerId,displayName,billing,auth])=>({
+  id,providerId,displayName,installationId:'install-'+id,profileId:'profile-'+id,accountId:'account-'+id,
+  auth:known(auth),plan:billing==='unknown'?unknown('PLAN_NOT_REPORTED'):known({nativeId:'fixture-'+billing,label:billing==='subscription'?'Example included plan':billing==='local'?'Local compute':'Example metered access'}),
+  status:auth==='expired'?'needs_auth':'ok',diagnostics:auth==='expired'?['SYNTHETIC_EXPIRED_LOGIN']:[],
+ }));
+ const routes=rows.map(([id,providerId,displayName,billing])=>({id:'route-'+id,connectionId:id,providerId,displayName,billing:billing==='unknown'?unknown('BILLING_NOT_REPORTED'):known(billing),capabilities:[],catalogRevision:'fixture-1'}));
+ const options=(id)=>id.startsWith('codex')?[{id:'reasoningEffort',label:'Reasoning effort',scope:'turn',revision:'fixture-1',category:'thought_level',source,
+   control:{type:'select',choices:['low','medium','high','cosmic'].map(value=>({value,label:value[0].toUpperCase()+value.slice(1)})),defaultValue:'medium'}}]
+  :id.startsWith('antigravity')?[{id:'thinkingBudget',label:'Thinking budget',scope:'turn',revision:'fixture-1',category:'thought_level',source,control:{type:'number',min:0,max:16384,step:1024}}]
+  :id.startsWith('grok')?[{id:'serviceTier',label:'Service tier',scope:'session',revision:'fixture-1',category:'service_tier',billingSensitive:true,source,control:{type:'select',choices:[{value:'standard',label:'Standard'},{value:'priority',label:'Priority'}],defaultValue:'standard'}}]
+  :[];
+ const models=routes.flatMap((route,i)=>[0,1].map(n=>({
+  id:`model-${route.connectionId}-${n}`,routeId:route.id,nativeId:n===0?'fixture/balanced':'fixture/precise',name:n===0?'Example Balanced':'Example Precise',revision:'fixture-1',isDefault:n===0,
+  capabilities:[cap('generation.text'),cap('structured.output',n?'supported':'unknown'),cap('tools',i%3===0?'supported':'conditional'),...(route.providerId==='local'?[cap('offline')]:[])],
+  options:n===0?options(route.connectionId):[],contextWindow:n===0?known('128000'):unknown('NOT_REPORTED'),
+ })));
+ const reading=(unit,used,limit)=>known({unit,used:String(used),limit:limit===null?null:String(limit),remaining:limit===null?null:String(Math.max(0,limit-used)),usedFraction:limit===null?null:used/limit});
+ const quotaPools=[
+  {id:'pool-shared-personal',accountId:'account-codex-personal',connectionIds:['codex-personal','opencode-linked'],routeIds:['route-codex-personal','route-opencode-linked'],sharing:'verified',windows:[{id:'example-session',label:'Example session window',reading:reading('credits',25,100),durationSeconds:18000,resetsAt:new Date(Date.now()+3600000).toISOString()}]},
+  {id:'pool-work',accountId:'account-codex-work',connectionIds:['codex-work'],routeIds:['route-codex-work'],sharing:'unknown',windows:[{id:'example-week',label:'Example weekly window',reading:{...reading('credits',70,100),freshness:'stale'},durationSeconds:604800,resetsAt:null}]},
+  {id:'pool-unknown-total',accountId:'account-antigravity-personal',connectionIds:['antigravity-personal'],routeIds:['route-antigravity-personal'],sharing:'unknown',windows:[{id:'example-count',label:'Count without a published total',reading:reading('requests',17,null),durationSeconds:86400,resetsAt:null}]},
+ ];
+ return {protocolVersion:'1.0',revision:'fixture-1',observedAt:now,mode:'synthetic',providers,installations,profiles,accounts,connections,routes,models,quotaPools,diagnostics:['All records are synthetic examples. No installed clients, accounts, or credentials have been inspected.']};
+}
