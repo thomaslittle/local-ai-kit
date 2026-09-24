@@ -56,3 +56,5 @@ Task 8 increment: nine catalog and eight owned-child protocol tests observed red
 
 ## HTTP provider foundation continuation
 Resumed existing worktree at 9a32086; retained in-progress Grok/ACP metadata and command-capture work. Five HTTP tests failed at missing implementation, then passed after endpoint-bound authentication, redirect rejection, byte/deadline limits, and NDJSON/SSE line reading. Full Windows Rust workspace: 189 tests passed. No inference or provider credential export. Original 18-task release still in progress.
+
+HTTP providers: catalog tests 7 red->green; frame tests 2 red->green; runtime/HTTP integration 2 red->green; endpoint registry 4 red->green; CLI endpoint tests 2 red->green plus one negative case. Full Windows workspace 207 passed. Ruling: explicit host textModels assertions are tagged user_supplied when catalogs do not publish text capability; no model-name eligibility guesses. Endpoint credentials remain an explicit host-resolver responsibility.

@@ -1,4 +1,5 @@
 mod args;
+mod endpoints;
 mod host;
 use args::{Action, Args};
 use lai_contracts::{DomainError, ErrorCode, Result};
@@ -17,7 +18,8 @@ Usage:
       [--allow-codex-execution --workspace ABSOLUTE_DIRECTORY]
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
-  Execution providers: codex, claude_code. Metadata also supports grok. Repeated grants are supported.
+  Execution providers: codex, claude_code, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api. Metadata also supports grok.
+  --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
   local-ai-kit --version
 
 Serving never scans on startup. --allow-passive-discovery explicitly authorizes
@@ -49,7 +51,15 @@ fn source(home: Option<PathBuf>) -> InventorySource {
     })
 }
 async fn execute(args: Args) -> Result<()> {
-    let service = host::build_service(source(args.home.clone()), args.allow_execution);
+    let registry = Arc::new(endpoints::load(args.endpoints.as_deref())?);
+    let original = source(args.home.clone());
+    let scan_registry = registry.clone();
+    let inventory: InventorySource = Arc::new(move |cancel| {
+        let mut result = original(cancel)?;
+        scan_registry.inject(&mut result);
+        Ok(result)
+    });
+    let service = host::build_service_with_endpoints(inventory, args.allow_execution, registry);
     let policy = host::policy(&args);
     let grant = host::execution_grant(&args);
     match args.action {

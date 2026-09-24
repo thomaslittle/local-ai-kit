@@ -164,8 +164,48 @@ impl Endpoint {
         }
         Ok(url)
     }
+    pub fn anthropic_version(mut self) -> Self {
+        self.headers
+            .insert("anthropic-version", HeaderValue::from_static("2023-06-01"));
+        self
+    }
+    fn query_url(&self, path: &str, query: &[(&str, &str)]) -> Result<Url> {
+        if query.len() > 8
+            || query.iter().any(|(key, value)| {
+                !["alt", "pageToken", "pageSize", "limit", "after_id"].contains(key)
+                    || value.len() > 4096
+                    || value.chars().any(char::is_control)
+            })
+        {
+            return Err(invalid());
+        }
+        let mut url = self.url(path)?;
+        if !query.is_empty() {
+            url.query_pairs_mut().extend_pairs(query.iter().copied());
+        }
+        Ok(url)
+    }
+    pub async fn stream_query(
+        &self,
+        path: &str,
+        query: &[(&str, &str)],
+        body: Value,
+    ) -> Result<LineStream> {
+        let response = self
+            .send_url(self.query_url(path, query)?, Some(body), true)
+            .await?;
+        Ok(LineStream {
+            response,
+            pending: Vec::new(),
+            total: 0,
+            done: false,
+        })
+    }
     async fn send(&self, path: &str, body: Option<Value>, streaming: bool) -> Result<Response> {
         let url = self.url(path)?;
+        self.send_url(url, body, streaming).await
+    }
+    async fn send_url(&self, url: Url, body: Option<Value>, streaming: bool) -> Result<Response> {
         let mut request = if body.is_some() {
             self.client.post(url)
         } else {
@@ -199,7 +239,16 @@ impl Endpoint {
         Ok(response)
     }
     pub async fn json(&self, path: &str, body: Option<Value>) -> Result<Value> {
-        let mut response = self.send(path, body, false).await?;
+        self.json_query(path, &[], body).await
+    }
+    pub async fn json_query(
+        &self,
+        path: &str,
+        query: &[(&str, &str)],
+        body: Option<Value>,
+    ) -> Result<Value> {
+        let url = self.query_url(path, query)?;
+        let mut response = self.send_url(url, body, false).await?;
         if response
             .content_length()
             .is_some_and(|n| n > BODY_LIMIT as u64)

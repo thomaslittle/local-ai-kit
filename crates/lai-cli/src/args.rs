@@ -10,6 +10,7 @@ pub enum Action {
 pub struct Args {
     pub action: Action,
     pub home: Option<PathBuf>,
+    pub endpoints: Option<PathBuf>,
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
     pub http: bool,
@@ -50,6 +51,7 @@ impl Args {
         let mut args = Self {
             action,
             home: None,
+            endpoints: None,
             allow_passive: false,
             allow_codex_metadata: false,
             http: false,
@@ -77,6 +79,9 @@ impl Args {
                 "--home" if matches!(args.action, Action::Scan | Action::Serve) => {
                     args.home = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
+                "--endpoints" if matches!(args.action, Action::Serve | Action::Scan) => {
+                    args.endpoints = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
                 "--stdio" if matches!(args.action, Action::Serve) => stdio = true,
                 "--http" if matches!(args.action, Action::Serve) => args.http = true,
                 "--allow-passive-discovery" if matches!(args.action, Action::Serve) => {
@@ -89,7 +94,18 @@ impl Args {
                         .next()
                         .and_then(|v| v.into_string().ok())
                         .filter(|v| {
-                            ["codex", "claude_code"].contains(&v.as_str())
+                            [
+                                "codex",
+                                "claude_code",
+                                "ollama",
+                                "lmstudio",
+                                "openai_api",
+                                "anthropic_api",
+                                "gemini_api",
+                                "xai_api",
+                                "compatible_api",
+                            ]
+                            .contains(&v.as_str())
                                 || (flag == "--allow-metadata" && v == "grok")
                         })
                         .ok_or_else(invalid)?;

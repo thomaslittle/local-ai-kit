@@ -9,3 +9,4 @@ pub mod acp;
 pub mod grok;
 
 pub mod http;
+pub mod http_provider;

@@ -33,3 +33,6 @@ ACP parsing and process/runtime integration are now implemented. Nine catalog te
 
 ## Bounded HTTP foundation
 Implemented the pending HTTP client and verified all 189 Windows native tests. Grok metadata is wired; native execution remains gated separately. Next: registered local/API endpoints, provider-specific execution, generated SDK contracts, React controls, and packaged release checks.
+
+## HTTP provider routes
+Seven HTTP protocol families now implement catalog normalization and text sessions through the existing runtime. The CLI accepts explicit endpoint files and provider grants; local runtimes use known loopback defaults only after probing permission. All 207 Windows Rust tests passed before the current checkpoint. API input capability assertions are explicitly host-declared when the model catalog lacks evidence. Next: OpenCode and native Google/Grok execution, generated contracts, React packages, host examples, packaging and qualification. See docs/adapters/http-providers.md.
