@@ -10,7 +10,7 @@ use std::{
 };
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
-    process::{Child, ChildStdin, ChildStdout, Command},
+    process::{ChildStdin, ChildStdout, Command},
     task::JoinHandle,
 };
 
@@ -23,7 +23,7 @@ pub struct LaunchSpec {
     pub env: BTreeMap<OsString, OsString>,
 }
 pub(crate) struct Peer {
-    child: Child,
+    child: Box<dyn process_wrap::tokio::ChildWrapper>,
     input: ChildStdin,
     output: BufReader<ChildStdout>,
     stderr: JoinHandle<()>,
@@ -86,8 +86,7 @@ impl Peer {
             .env_clear()
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .kill_on_drop(true);
+            .stderr(Stdio::piped());
         for key in [
             "PATH",
             "Path",
@@ -112,23 +111,35 @@ impl Peer {
             }
         }
         command.envs(spec.env);
+        let mut command = process_wrap::tokio::CommandWrap::from(command);
+        command.wrap(process_wrap::tokio::KillOnDrop);
         #[cfg(windows)]
-        command.creation_flags(0x08000000); // CREATE_NO_WINDOW; no shell or terminal attachment.
+        {
+            command
+                .wrap(process_wrap::tokio::CreationFlags(
+                    windows::Win32::System::Threading::CREATE_NO_WINDOW,
+                ))
+                .wrap(process_wrap::tokio::JobObject);
+        }
+        #[cfg(unix)]
+        {
+            command.wrap(process_wrap::tokio::ProcessGroup::leader());
+        }
         let mut child = command
             .spawn()
             .map_err(|_| error(ErrorCode::RuntimeMissing))?;
         let input = child
-            .stdin
+            .stdin()
             .take()
             .ok_or_else(|| error(ErrorCode::ProviderUnavailable))?;
         let output = BufReader::new(
             child
-                .stdout
+                .stdout()
                 .take()
                 .ok_or_else(|| error(ErrorCode::ProviderUnavailable))?,
         );
         let mut stderr = child
-            .stderr
+            .stderr()
             .take()
             .ok_or_else(|| error(ErrorCode::ProviderUnavailable))?;
         let drain = tokio::spawn(async move {
@@ -212,7 +223,8 @@ impl Peer {
             .await
             .is_err()
         {
-            let _ = self.child.kill().await;
+            let _ = self.child.start_kill();
+            let _ = tokio::time::timeout(Duration::from_secs(2), self.child.wait()).await;
             let _ = self.child.wait().await;
         }
         self.stderr.abort();

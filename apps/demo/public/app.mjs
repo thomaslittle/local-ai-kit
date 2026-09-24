@@ -14,12 +14,12 @@ const descriptions={
 };
 
 /** UI host. Consumes public SDK clients only; no account or provider logic is embedded. */
-export async function mountDemo({connectFixture,connectLive}){
+export async function mountDemo({connectFixture,connectLive,initialClient=null,initialMode='synthetic'}){
  const root=document.querySelector('#app')??document.body;
- const state={page:'Selector lab',variant:'rail',mode:'synthetic',snapshot:null,selection:null,provider:'codex',query:'',required:new Set(),onlyEligible:false,allowPaid:false,favorites:new Set(),sensitiveConsent:false,
-  mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,prompt:'Explain how an application can select an existing AI connection.',notice:'',connectionError:null,diagnostics:null};
+ const state={page:'Selector lab',variant:'rail',mode:initialMode,snapshot:null,selection:null,provider:'codex',query:'',required:new Set(),onlyEligible:false,allowPaid:false,favorites:new Set(),sensitiveConsent:false,
+  mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,prompt:'Explain how an application can select an existing AI connection.',notice:'',connectionError:null,diagnostics:null};
  let catalog=null,all=[],epoch=0,eventController=null,closed=false;
- const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,answerApproval,refreshDiagnostics,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
+ const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,answerApproval,refreshDiagnostics,scan,probeConnection,revokeConnection,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
  function rebuild(snapshot){
   if(!snapshot||!Array.isArray(snapshot.connections)||!Array.isArray(snapshot.models)||!Array.isArray(snapshot.routes)||!Array.isArray(snapshot.providers))throw Error('INVALID_SNAPSHOT');
   if(state.mode==='live'&&snapshot.mode!=='live')throw Error('SYNTHETIC_RUNTIME_REJECTED');
@@ -63,26 +63,29 @@ export async function mountDemo({connectFixture,connectLive}){
    client=await factory();if(closed||epoch!==current){await client.close();return;}
    const snapshot=await client.snapshot.get();if(closed||epoch!==current){await client.close();return;}
    rebuild(snapshot);state.client=client;render();
-   if(mode==='synthetic')void observe(client,current);
+   if(client.handshake.methods.includes('events.subscribe'))void observe(client,current);
   }catch(error){await client?.close().catch(()=>{});if(epoch===current){state.connectionError='Unable to connect. No account or model data has been substituted.';render();}}
  }
  async function attachLive(endpoint,token){return attach(()=>connectLive(endpoint,token),'live');}
  async function startTurn(){
-  if(state.mode!=='synthetic'||!state.grantConsent||!state.selection||!state.client||['Starting','Running','Awaiting approval'].includes(state.sessionStatus))return;
+  if(!state.grantConsent||!state.selection||!state.client||['Starting','Running','Awaiting approval'].includes(state.sessionStatus))return;
   const client=state.client,current=epoch,selection=structuredClone(state.selection);state.sessionStatus='Starting';state.output='';state.approval=null;state.notice='';render();
   await operate(async()=>{
    const model=all.find(c=>c.model.id===selection.modelId);if(!model)throw Error('SELECTION_STALE');
    if(state.sessionId)await client.sessions.close({sessionId:state.sessionId});
-   await client.grants.request({connectionIds:[model.connection.id],scopes:['execution'],allowPaid:state.allowPaid});
-   const session=await client.sessions.create({selection,allowPaid:state.allowPaid});
+   if(state.mode==='synthetic')await client.grants.request({connectionIds:[model.connection.id],scopes:['execution'],allowPaid:state.allowPaid});
+   const session=await client.sessions.create({selection,allowPaid:state.allowPaid,...(state.mode==='live'?{workspaceId:state.workspaceId,permissionMode:'read_only'}:{})});
    if(epoch!==current)return;state.sessionId=session.id;state.turnId=null;state.sessionStatus='Running';render();
-   const turn=await client.turns.start({sessionId:session.id,prompt:state.prompt,simulateApproval:state.simulateApproval});
+   const turn=await client.turns.start({sessionId:session.id,prompt:state.prompt,...(state.mode==='synthetic'?{simulateApproval:state.simulateApproval}:{requestId:crypto.randomUUID()})});
    if(epoch!==current)return;state.turnId=turn.turnId;render();
   });
   if(state.notice&&epoch===current){state.sessionStatus='Error';render();}
  }
- async function cancelTurn(){if(state.mode==='synthetic'&&state.turnId&&state.client)await operate(async()=>{await state.client.turns.cancel({turnId:state.turnId});});}
- async function answerApproval(allow){if(state.mode==='synthetic'&&state.approval&&state.client)await operate(async()=>{await state.client.approvals.respond({approvalId:state.approval.approvalId,allow});});}
+ async function cancelTurn(){if(state.turnId&&state.client)await operate(async()=>{await state.client.turns.cancel({turnId:state.turnId});});}
+ async function answerApproval(allow){if(state.approval&&state.client)await operate(async()=>{await state.client.approvals.respond({approvalId:state.approval.approvalId,allow});});}
+ async function scan(){if(state.client)await operate(async()=>{await state.client.discovery.refresh({level:'passive'});rebuild(await state.client.snapshot.get());state.page='Connections';render();});}
+ async function probeConnection(id){if(!state.client||state.probing)return;state.probing=id;render();await operate(async()=>{await state.client.connections.probe({connectionId:id});rebuild(await state.client.snapshot.get());});state.probing=null;render();}
+ async function revokeConnection(){if(!state.client)return;await operate(async()=>{await state.client.grants.revoke({});await stopClient();catalog=null;all=[];state.snapshot=null;state.selection=null;state.notice='Connection revoked. Restart the native host and reload to pair again.';render();});}
  async function refreshDiagnostics(){if(state.client)await operate(async()=>{state.diagnostics=await state.client.diagnostics.report();render();});}
  function render(){
   if(closed)return;
@@ -92,8 +95,8 @@ export async function mountDemo({connectFixture,connectLive}){
   const shell=el('div',{class:'shell'},el('aside',{class:'sidebar'},el('a',{class:'brand',href:'#','aria-label':'Local AI Kit home',onClick:event=>{event.preventDefault();state.page='Overview';render();}},el('span',{class:'brand-mark','aria-hidden':'true'},'◈'),el('span',{},el('strong',{},'Local AI Kit'),el('small',{},'DEVELOPER SHOWCASE'))),
    el('div',{class:'sidebar-label'},'WORKSPACE'),el('nav',{'aria-label':'Showcase sections'},pages.map(([name,glyph])=>button(el('span',{class:'nav-inner'},el('span',{'aria-hidden':'true'},glyph),name),()=>{state.page=name;if(name==='Models')state.variant='compare';render();},{class:'nav-link'+(state.page===name?' active':''),'aria-label':name,'aria-current':state.page===name?'page':'false'}))),
    el('div',{class:'sidebar-bottom'},badge('Implementation preview'),el('p',{},'Build around access. Not assumptions.'),el('a',{href:'https://github.com/thomaslittle/local-ai-kit',target:'_blank',rel:'noreferrer'},'View repository ↗'))),
-   el('main',{class:'main'},el('header',{class:'topbar'},el('span',{class:'breadcrumb'},'Workspace',el('span',{},'/'),state.page),el('div',{class:'top-actions'},button('⌘ K',ctx.openPalette,{'aria-label':'Open model command palette',class:'shortcut'}),button('Connect local runtime',()=>openConnectionDialog(ctx),{class:'connect-button'}))),
-    el('div',{id:'mode-banner',class:'mode-banner '+state.mode,role:'status'},el('span',{class:'status-dot','aria-hidden':'true'}),el('strong',{},state.mode==='synthetic'?'Synthetic showcase':'Live connection'),el('span',{},state.mode==='synthetic'?'Example accounts and models. No credentials inspected. No inference used.':'Only data from an explicitly connected runtime is shown. Live execution is disabled.'),state.mode==='live'?button('Open synthetic showcase',()=>attach(connectFixture,'synthetic')):badge('NO ACCOUNT REQUIRED')),
+   el('main',{class:'main'},el('header',{class:'topbar'},el('span',{class:'breadcrumb'},'Workspace',el('span',{},'/'),state.page),el('div',{class:'top-actions'},button('⌘ K',ctx.openPalette,{'aria-label':'Open model command palette',class:'shortcut'}),state.mode==='live'?button('Scan local clients',scan,{class:'connect-button',disabled:!state.client}):button('Connect local runtime',()=>openConnectionDialog(ctx),{class:'connect-button'}))),
+    el('div',{id:'mode-banner',class:'mode-banner '+state.mode,role:'status'},el('span',{class:'status-dot','aria-hidden':'true'}),el('strong',{},state.mode==='synthetic'?'Synthetic showcase':'Live connection'),el('span',{},state.mode==='synthetic'?'Example accounts and models. No credentials inspected. No inference used.':'Only native data is shown. Execution requires your explicit action and a host-granted workspace.'),state.mode==='live'?button('Revoke connection',revokeConnection):badge('NO ACCOUNT REQUIRED')),
     el('div',{class:'main-content'},el('div',{class:'page-heading'},el('div',{},el('span',{class:'eyebrow'},state.mode==='synthetic'?'SDK & SELECTION PREVIEW':'CONNECTED WORKSPACE'),el('h1',{id:'page-title'},state.page),el('p',{},descriptions[state.page])),badge(state.snapshot?`${state.snapshot.models.length.toLocaleString()} ${state.mode==='synthetic'?'example ':''}models`:'Not connected')),
      state.connectionError?el('div',{id:'connection-error',class:'notice warning',role:'alert'},state.connectionError):null,
      state.notice?el('div',{class:'notice warning',role:'alert'},state.notice):null,renderPage(ctx),
@@ -102,6 +105,6 @@ export async function mountDemo({connectFixture,connectLive}){
   if(focus){const replacement=root.querySelector(`[data-focus="${CSS.escape(focus)}"]`);replacement?.focus({preventScroll:true});if(typeof start==='number'&&typeof end==='number')try{replacement?.setSelectionRange(start,end);}catch{}}
  }
  const keydown=event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'&&!document.querySelector('dialog[open]')){event.preventDefault();ctx.openPalette();}};
- document.addEventListener('keydown',keydown);render();await attach(connectFixture,'synthetic');
+ document.addEventListener('keydown',keydown);render();await attach(initialClient?()=>Promise.resolve(initialClient):connectFixture,initialMode);
  return {async close(){if(closed)return;closed=true;++epoch;document.removeEventListener('keydown',keydown);await stopClient();}};
 }

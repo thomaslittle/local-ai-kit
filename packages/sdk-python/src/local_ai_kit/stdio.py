@@ -131,6 +131,13 @@ class AsyncStdioTransport:
                             future.set_result(value['result'])
                         except LocalAIError as error:
                             future.set_exception(error)
+                elif value.get('method') == 'events.error':
+                    params = value.get('params')
+                    if not isinstance(params, dict) or not isinstance(params.get('subscriptionId'), str) or len(params['subscriptionId']) > 256 or not isinstance(params.get('code'), str) or not re.fullmatch(r'[A-Z_]{1,64}', params['code']):
+                        raise LocalAIError('PROTOCOL_INVALID')
+                    queue = self._subscriptions.get(params['subscriptionId'])
+                    if queue:
+                        queue.fail(LocalAIError(params['code']))
                 elif value.get('method') == 'events.event':
                     params = value.get('params')
                     if not isinstance(params, dict) or not isinstance(params.get('subscriptionId'), str) or 'event' not in params:

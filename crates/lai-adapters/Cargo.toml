@@ -7,6 +7,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
+process-wrap = { version = "10.0.1", features = ["tokio1"] }
 lai-runtime = { path = "../lai-runtime" }
 lai-contracts = { path = "../lai-contracts" }
 lai-discovery = { path = "../lai-discovery" }
@@ -18,3 +19,6 @@ tempfile = "3"
 
 [lints]
 workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62.2", features = ["Win32_System_Threading"] }

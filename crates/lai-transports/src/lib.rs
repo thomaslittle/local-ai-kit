@@ -1,9 +1,14 @@
 //! Bounded, handshaken JSON-RPC over native streams. Caller identity is supplied by the host.
+pub mod http;
 mod wire;
 use lai_contracts::{ErrorCode, Result};
 use lai_service::NativeService;
 use serde_json::Value;
-use std::{collections::BTreeSet, sync::Arc, time::Duration};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::Arc,
+    time::Duration,
+};
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     task::JoinSet,
@@ -62,6 +67,14 @@ pub async fn serve_io<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
     {
         return Err(error(ErrorCode::InvalidRequest));
     }
+    let _lifetime = ClientLifetime {
+        service: service.clone(),
+        client: client.clone(),
+    };
+    let mut subscriptions: BTreeMap<String, Value> = BTreeMap::new();
+    let mut subscription_sequence = 0_u64;
+    let mut ticks = tokio::time::interval(Duration::from_millis(50));
+    ticks.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let mut buffer = Vec::new();
     let mut chunk = [0_u8; 8192];
     let mut ready = false;
@@ -75,6 +88,22 @@ pub async fn serve_io<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
                 let (key, id, outcome) = joined.ok_or_else(|| error(ErrorCode::ProviderUnavailable))?.map_err(|_| error(ErrorCode::ProviderUnavailable))?;
                 pending.remove(&key);
                 send(&mut writer, reply(id, outcome), &options).await?;
+            }
+            _=ticks.tick(), if !subscriptions.is_empty()&&!eof => {
+                for (id,query) in subscriptions.clone() {
+                    match service.handle(&client,"events.read",query).await {
+                        Ok(page)=>{
+                            if let Some(events)=page["events"].as_array(){for event in events {
+                                send(&mut writer,serde_json::json!({"jsonrpc":"2.0","method":"events.event","params":{"subscriptionId":id,"event":event}}),&options).await?;
+                            }}
+                            if let Some(query)=subscriptions.get_mut(&id){query["after"]=page["cursor"].clone();}
+                        },
+                        Err(problem)=>{
+                            subscriptions.remove(&id);
+                            send(&mut writer,serde_json::json!({"jsonrpc":"2.0","method":"events.error","params":{"subscriptionId":id,"code":problem.code}}),&options).await?;
+                        }
+                    }
+                }
             }
             read = reader.read(&mut chunk), if !eof => {
                 let count = read.map_err(|_| error(ErrorCode::ProviderUnavailable))?;
@@ -104,6 +133,23 @@ pub async fn serve_io<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
                         ready = outcome.is_ok(); send(&mut writer, reply(request.id, outcome), &options).await?; continue;
                     }
                     if !ready { send(&mut writer, reply(request.id, Err(error(ErrorCode::ProtocolIncompatible))), &options).await?; continue; }
+                    if request.method=="events.subscribe" {
+                        if subscriptions.len()>=16 {send(&mut writer,reply(request.id,Err(error(ErrorCode::RateLimited))),&options).await?;continue;}
+                        match service.handle(&client,"events.read",request.params.clone()).await {
+                            Ok(page)=>{
+                                subscription_sequence+=1;
+                                let id=format!("subscription-{subscription_sequence}");let mut query=request.params;
+                                if query.get("after").is_none(){query["after"]=page["cursor"].clone();}
+                                subscriptions.insert(id.clone(),query);
+                                send(&mut writer,reply(request.id,Ok(serde_json::json!({"subscriptionId":id}))),&options).await?;
+                            },Err(e)=>send(&mut writer,reply(request.id,Err(e)),&options).await?
+                        }
+                        continue;
+                    }
+                    if request.method=="events.unsubscribe" {
+                        let result=if request.params.as_object().is_some_and(|p|p.len()==1){request.params["subscriptionId"].as_str().and_then(|id|subscriptions.remove(id)).map(|_|serde_json::json!({"unsubscribed":true})).ok_or_else(||error(ErrorCode::NotFound))}else{Err(error(ErrorCode::InvalidRequest))};
+                        send(&mut writer,reply(request.id,result),&options).await?;continue;
+                    }
                     let key = request.id.to_string();
                     if pending.contains(&key) {
                         send(&mut writer, reply(request.id, Err(error(ErrorCode::Conflict))), &options).await?;
@@ -120,4 +166,14 @@ pub async fn serve_io<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
         }
     }
     Ok(())
+}
+
+struct ClientLifetime {
+    service: Arc<NativeService>,
+    client: String,
+}
+impl Drop for ClientLifetime {
+    fn drop(&mut self) {
+        self.service.revoke_execution(&self.client);
+    }
 }

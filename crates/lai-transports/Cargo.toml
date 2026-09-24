@@ -7,14 +7,20 @@ license.workspace = true
 publish = false
 
 [dependencies]
+axum = "0.8.9"
+async-stream = "0.3"
+getrandom = "0.3"
+sha2.workspace = true
 lai-contracts = { path = "../lai-contracts" }
 lai-core = { path = "../lai-core" }
 lai-service = { path = "../lai-service" }
 serde.workspace = true
 serde_json.workspace = true
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "io-util", "io-std"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "io-util", "io-std", "net", "fs"] }
 
 [dev-dependencies]
+lai-runtime = { path = "../lai-runtime" }
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
 lai-discovery = { path = "../lai-discovery" }
 
 [lints]

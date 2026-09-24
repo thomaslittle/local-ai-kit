@@ -62,6 +62,10 @@ export async function openStdioTransport(options){
     if(!value.error||typeof value.error.code!=='number')throw failCode('PROTOCOL_INVALID');
     request.finish(failCode(typeof value.error.data?.code==='string'?value.error.data.code:'REMOTE_ERROR'));
    }else request.finish(null,value.result);
+  }else if(value.method==='events.error'){
+   const p=value.params;
+   if(!p||typeof p.subscriptionId!=='string'||p.subscriptionId.length>256||typeof p.code!=='string'||!/^[_A-Z]{1,64}$/.test(p.code))throw failCode('PROTOCOL_INVALID');
+   subscriptions.get(p.subscriptionId)?.fail(failCode(p.code));
   }else if(value.method==='events.event'){
    const p=value.params;
    if(!p||typeof p.subscriptionId!=='string'||p.subscriptionId.length>256||!Object.hasOwn(p,'event'))throw failCode('PROTOCOL_INVALID');

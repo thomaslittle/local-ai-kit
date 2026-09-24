@@ -11,6 +11,7 @@ createInterface({input:process.stdin,crlfDelay:Infinity}).on('line',line=>{
  else if(r.method==='test.large')process.stdout.write('x'.repeat(2048));
  else if(r.method==='test.stderr'){process.stderr.write('SECRET_SHOULD_NOT_ESCAPE');result(r.id,{ok:true});}
  else if(r.method==='test.env')result(r.id,{nodeOptions:process.env.NODE_OPTIONS??null,custom:process.env.EXPLICIT_VALUE??null});
+ else if(r.method==='test.gap'){write({jsonrpc:'2.0',method:'events.error',params:{subscriptionId:'synthetic-sub',code:'EVENT_GAP'}});result(r.id,{ok:true});}
  else if(r.method==='test.flood'){
   for(let i=0;i<20;i++)write({jsonrpc:'2.0',method:'events.event',params:{subscriptionId:'synthetic-sub',event:{sequence:String(i+2)}}});result(r.id,{sent:true});
  }

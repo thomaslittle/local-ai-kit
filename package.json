@@ -3,8 +3,13 @@
   "private": true,
   "version": "0.1.0-alpha.1",
   "type": "module",
-  "workspaces": ["packages/sdk-typescript", "packages/selector-core"],
-  "engines": {"node": ">=22.16"},
+  "workspaces": [
+    "packages/sdk-typescript",
+    "packages/selector-core"
+  ],
+  "engines": {
+    "node": ">=22.16"
+  },
   "scripts": {
     "build": "tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json",
     "test:unit": "python scripts/verify.py --profile javascript",
@@ -12,5 +17,8 @@
     "typecheck": "npm run build",
     "check:generated": "python scripts/check_generated.py"
   },
-  "devDependencies": {"typescript": "5.8.3"}
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "typescript": "5.8.3"
+  }
 }

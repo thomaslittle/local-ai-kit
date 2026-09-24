@@ -15,3 +15,9 @@ Connect the native event subscriptions and HTTP/SSE bridge, wire the CLI executi
 ## Existing evidence
 
 See `docs/qualification/2026-09-24-codex-metadata.md` for the previous 209-test checkpoint and live non-generative Codex metadata check. See `docs/qualification/2026-09-24-native-execution.md` for this continuation. The full original 18-task release candidate is not yet complete. No merge to main, publication, additional paid coding agents, or unrestricted credential export is authorized.
+
+## Native HTTP and live demo increment
+
+The CLI now supports loopback HTTP, explicit single-use pairing, a native-served demo, and separately authorized Codex execution in a named workspace. Stdio event subscriptions and native SSE use the real session engine. Node/Python receive typed event-gap errors without losing unrelated RPC requests. The actual browser displayed real Codex models using a non-generative metadata check. See `docs/integration/live-demo.md` and `docs/qualification/2026-09-24-native-http-demo.md`.
+
+Next: expand shared native adapters, strengthen process-tree cleanup and session freshness handling, generate SDK/domain contracts and API documentation, complete reusable React controls, and qualify packaged artifacts. The full release candidate remains incomplete; do not restart the already connected SDK/native/browser chain.

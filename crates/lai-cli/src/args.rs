@@ -1,5 +1,5 @@
 use lai_contracts::{DomainError, ErrorCode, Result};
-use std::{ffi::OsString, path::PathBuf};
+use std::{collections::BTreeSet, ffi::OsString, path::PathBuf};
 #[derive(Debug)]
 pub enum Action {
     Help,
@@ -12,6 +12,27 @@ pub struct Args {
     pub home: Option<PathBuf>,
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
+    pub http: bool,
+    pub port: u16,
+    pub assets: Option<PathBuf>,
+    pub allow_execution: bool,
+    pub workspace: Option<PathBuf>,
+    pub allow_writes: bool,
+    pub review_requests: bool,
+    pub allow_paid: bool,
+}
+fn absolute(value: OsString) -> Result<PathBuf> {
+    let path = PathBuf::from(value);
+    let text = path.to_string_lossy();
+    if !path.is_absolute()
+        || text.starts_with(r"\\")
+        || text.starts_with("//")
+        || text.chars().any(char::is_control)
+    {
+        Err(invalid())
+    } else {
+        Ok(path)
+    }
 }
 impl Args {
     pub fn parse(input: impl IntoIterator<Item = OsString>) -> Result<Self> {
@@ -24,51 +45,83 @@ impl Args {
             Some("serve") => Action::Serve,
             _ => return Err(invalid()),
         };
-        let mut home = None;
-        let mut allow_passive = false;
-        let mut allow_codex_metadata = false;
-        let mut json = false;
-        let mut stdio = false;
-        while let Some(arg) = input.next() {
-            match arg.to_str() {
-                Some("--json") if matches!(action, Action::Scan) && !json => json = true,
-                Some("--stdio") if matches!(action, Action::Serve) && !stdio => stdio = true,
-                Some("--allow-passive-discovery")
-                    if matches!(action, Action::Serve) && !allow_passive =>
-                {
-                    allow_passive = true
+        let mut args = Self {
+            action,
+            home: None,
+            allow_passive: false,
+            allow_codex_metadata: false,
+            http: false,
+            port: 4499,
+            assets: None,
+            allow_execution: false,
+            workspace: None,
+            allow_writes: false,
+            review_requests: false,
+            allow_paid: false,
+        };
+        let mut seen = BTreeSet::new();
+        let (mut json, mut stdio) = (false, false);
+        while let Some(flag) = input.next() {
+            let flag = flag.to_str().ok_or_else(invalid)?;
+            if !seen.insert(flag.to_owned()) {
+                return Err(invalid());
+            }
+            match flag {
+                "--json" if matches!(args.action, Action::Scan) => json = true,
+                "--home" if matches!(args.action, Action::Scan | Action::Serve) => {
+                    args.home = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
-                Some("--allow-codex-metadata")
-                    if matches!(action, Action::Serve) && !allow_codex_metadata =>
-                {
-                    allow_codex_metadata = true;
+                "--stdio" if matches!(args.action, Action::Serve) => stdio = true,
+                "--http" if matches!(args.action, Action::Serve) => args.http = true,
+                "--allow-passive-discovery" if matches!(args.action, Action::Serve) => {
+                    args.allow_passive = true
                 }
-                Some("--home")
-                    if matches!(action, Action::Scan | Action::Serve) && home.is_none() =>
-                {
-                    let path = PathBuf::from(input.next().ok_or_else(invalid)?);
-                    let text = path.to_string_lossy();
-                    if !path.is_absolute()
-                        || text.starts_with(r"\\")
-                        || text.starts_with("//")
-                        || text.chars().any(char::is_control)
-                    {
-                        return Err(invalid());
-                    }
-                    home = Some(path);
+                "--allow-codex-metadata" if matches!(args.action, Action::Serve) => {
+                    args.allow_codex_metadata = true
+                }
+                "--allow-codex-execution" if matches!(args.action, Action::Serve) => {
+                    args.allow_execution = true
+                }
+                "--workspace" if matches!(args.action, Action::Serve) => {
+                    args.workspace = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--assets" if matches!(args.action, Action::Serve) => {
+                    args.assets = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--port" if matches!(args.action, Action::Serve) => {
+                    args.port = input
+                        .next()
+                        .and_then(|s| s.to_str().and_then(|s| s.parse().ok()))
+                        .ok_or_else(invalid)?
+                }
+                "--allow-writes" if matches!(args.action, Action::Serve) => {
+                    args.allow_writes = true
+                }
+                "--review-native-requests" if matches!(args.action, Action::Serve) => {
+                    args.review_requests = true
+                }
+                "--allow-paid-options" if matches!(args.action, Action::Serve) => {
+                    args.allow_paid = true
                 }
                 _ => return Err(invalid()),
             }
         }
-        if matches!(action, Action::Scan) && !json || matches!(action, Action::Serve) && !stdio {
+        if matches!(args.action, Action::Scan) && !json
+            || matches!(args.action, Action::Serve) && (stdio == args.http)
+        {
             return Err(invalid());
         }
-        Ok(Self {
-            action,
-            home,
-            allow_passive,
-            allow_codex_metadata,
-        })
+        if (!args.http && (args.assets.is_some() || seen.contains("--port")))
+            || (args.allow_execution && (args.workspace.is_none() || !args.allow_codex_metadata))
+            || (!args.allow_execution
+                && (args.allow_writes
+                    || args.review_requests
+                    || args.allow_paid
+                    || args.workspace.is_some()))
+        {
+            return Err(invalid());
+        }
+        Ok(args)
     }
 }
 fn invalid() -> DomainError {
@@ -76,4 +129,56 @@ fn invalid() -> DomainError {
         ErrorCode::InvalidRequest,
         "Invalid command arguments. Run local-ai-kit --help.",
     )
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn parse(args: &[&str]) -> Result<Args> {
+        Args::parse(args.iter().map(OsString::from))
+    }
+    #[test]
+    fn explicit_http_serving_and_assets_are_supported() {
+        let directory = std::env::temp_dir();
+        let path = directory.to_str().unwrap();
+        assert!(
+            parse(&[
+                "serve",
+                "--http",
+                "--port",
+                "0",
+                "--assets",
+                path,
+                "--allow-passive-discovery"
+            ])
+            .is_ok()
+        );
+    }
+    #[test]
+    fn execution_needs_explicit_workspace_and_metadata_permission() {
+        let directory = std::env::temp_dir();
+        let path = directory.to_str().unwrap();
+        assert!(
+            parse(&[
+                "serve",
+                "--stdio",
+                "--allow-codex-metadata",
+                "--allow-codex-execution",
+                "--workspace",
+                path
+            ])
+            .is_ok()
+        );
+        assert!(parse(&["serve", "--stdio", "--allow-codex-execution"]).is_err());
+    }
+    #[test]
+    fn unsafe_or_conflicting_flags_are_rejected() {
+        for args in [
+            vec!["serve", "--http", "--stdio"],
+            vec!["serve", "--http", "--port", "99999"],
+            vec!["serve", "--stdio", "--allow-writes"],
+            vec!["serve", "--http", "--host", "0.0.0.0"],
+        ] {
+            assert!(parse(&args).is_err());
+        }
+    }
 }

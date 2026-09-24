@@ -49,3 +49,7 @@ test('close is idempotent and does not leave pending requests',async()=>{
 test('stderr is drained but not returned or logged',async()=>{
  const t=await open();try{assert.deepEqual(await t.request('test.stderr'),{ok:true});assert.equal(JSON.stringify(t).includes('SECRET'),false);}finally{await t.close();}
 });
+
+test('server event gap fails only its subscription and preserves request transport',async()=>{
+ const t=await open();try{const iterator=t.subscribe({after:'manual'})[Symbol.asyncIterator]();await iterator.next();assert.deepEqual(await t.request('test.gap'),{ok:true});await assert.rejects(iterator.next(),/EVENT_GAP/);assert.deepEqual(await t.request('test.echo',{alive:true}),{alive:true});}finally{await t.close();}
+});
