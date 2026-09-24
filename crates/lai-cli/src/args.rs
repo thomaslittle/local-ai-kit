@@ -11,6 +11,7 @@ pub struct Args {
     pub action: Action,
     pub home: Option<PathBuf>,
     pub allow_passive: bool,
+    pub allow_codex_metadata: bool,
 }
 impl Args {
     pub fn parse(input: impl IntoIterator<Item = OsString>) -> Result<Self> {
@@ -25,6 +26,7 @@ impl Args {
         };
         let mut home = None;
         let mut allow_passive = false;
+        let mut allow_codex_metadata = false;
         let mut json = false;
         let mut stdio = false;
         while let Some(arg) = input.next() {
@@ -35,6 +37,11 @@ impl Args {
                     if matches!(action, Action::Serve) && !allow_passive =>
                 {
                     allow_passive = true
+                }
+                Some("--allow-codex-metadata")
+                    if matches!(action, Action::Serve) && !allow_codex_metadata =>
+                {
+                    allow_codex_metadata = true;
                 }
                 Some("--home")
                     if matches!(action, Action::Scan | Action::Serve) && home.is_none() =>
@@ -60,6 +67,7 @@ impl Args {
             action,
             home,
             allow_passive,
+            allow_codex_metadata,
         })
     }
 }

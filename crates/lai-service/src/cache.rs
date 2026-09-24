@@ -14,6 +14,8 @@ use tokio::sync::watch;
 type RefreshResult = Option<Result<()>>;
 struct CacheState {
     snapshot: Snapshot,
+    metadata: BTreeMap<String, (Instant, lai_contracts::ConnectionMetadata)>,
+    metadata_failures: BTreeMap<String, (Instant, DomainError)>,
     // Native-only: never serialize filesystem locations into public responses.
     _locations: BTreeMap<String, LocatedClient>,
     updated: Option<Instant>,
@@ -32,6 +34,8 @@ impl InventoryCache {
             ttl,
             state: Mutex::new(CacheState {
                 snapshot: Snapshot::empty(DataMode::Live),
+                metadata: BTreeMap::new(),
+                metadata_failures: BTreeMap::new(),
                 _locations: BTreeMap::new(),
                 updated: None,
                 failure: None,
@@ -40,12 +44,70 @@ impl InventoryCache {
         }
     }
     pub fn snapshot(&self) -> Result<Snapshot> {
-        Ok(self
-            .state
-            .lock()
-            .map_err(|_| unavailable())?
+        let state = self.state.lock().map_err(|_| unavailable())?;
+        let mut snapshot = state.snapshot.clone();
+        for (at, report) in state.metadata.values() {
+            crate::metadata::merge_report(
+                &mut snapshot,
+                report,
+                at.elapsed() >= Duration::from_secs(60),
+            );
+        }
+        Ok(snapshot)
+    }
+    pub(crate) fn probe_input(&self, connection: &str) -> Result<(LocatedClient, String, String)> {
+        let state = self.state.lock().map_err(|_| unavailable())?;
+        let client = state._locations.get(connection).cloned().ok_or_else(|| {
+            lai_contracts::DomainError::new(ErrorCode::NotFound, "Connection is unavailable")
+        })?;
+        let route = state
             .snapshot
-            .clone())
+            .routes
+            .iter()
+            .find(|r| r.connection_id == connection)
+            .ok_or_else(unavailable)?;
+        Ok((client, route.id.clone(), state.snapshot.revision.clone()))
+    }
+    pub(crate) fn has_fresh_metadata(&self, connection: &str) -> Result<bool> {
+        let state = self.state.lock().map_err(|_| unavailable())?;
+        Ok(state
+            .metadata
+            .get(connection)
+            .is_some_and(|(at, _)| at.elapsed() < Duration::from_secs(60)))
+    }
+    pub(crate) fn publish_metadata(
+        &self,
+        base: &str,
+        report: lai_contracts::ConnectionMetadata,
+    ) -> Result<()> {
+        let mut state = self.state.lock().map_err(|_| unavailable())?;
+        if state.snapshot.revision != base {
+            return Err(DomainError::new(
+                ErrorCode::SelectionStale,
+                "Inventory changed during the metadata probe",
+            ));
+        }
+        state.metadata_failures.remove(&report.connection_id);
+        state
+            .metadata
+            .insert(report.connection_id.clone(), (Instant::now(), report));
+        Ok(())
+    }
+    pub(crate) fn metadata_failure(&self, connection: &str) -> Result<Option<DomainError>> {
+        let state = self.state.lock().map_err(|_| unavailable())?;
+        Ok(state
+            .metadata_failures
+            .get(connection)
+            .filter(|(at, _)| at.elapsed() < Duration::from_secs(5))
+            .map(|(_, e)| e.clone()))
+    }
+    pub(crate) fn fail_metadata(&self, connection: &str, error: DomainError) -> Result<()> {
+        let mut state = self.state.lock().map_err(|_| unavailable())?;
+        state.metadata.remove(connection);
+        state
+            .metadata_failures
+            .insert(connection.into(), (Instant::now(), error));
+        Ok(())
     }
     pub async fn refresh(self: &Arc<Self>) -> Result<()> {
         let mut receiver = {
@@ -105,6 +167,12 @@ impl InventoryCache {
         state.flight = None;
         match outcome {
             Ok(result) => {
+                state
+                    .metadata
+                    .retain(|id, _| result.snapshot.connections.iter().any(|c| c.id == *id));
+                state
+                    .metadata_failures
+                    .retain(|id, _| result.snapshot.connections.iter().any(|c| c.id == *id));
                 state.snapshot = result.snapshot;
                 state._locations = result.locations;
                 state.updated = Some(Instant::now());

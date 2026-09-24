@@ -1,37 +1,69 @@
 //! Native selection and permission-scoped projections. No I/O or provider code.
 mod projection;
 mod selection;
-pub use projection::project_snapshot;
-pub use selection::{resolve,validate_selection};
-use std::collections::BTreeSet;
 use lai_contracts::Selection;
-use serde::{Deserialize,Serialize};
-#[derive(Debug,Clone,Serialize,Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub use projection::project_snapshot;
+pub use selection::{resolve, validate_selection};
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ClientPolicy {
-    pub allow_passive_discovery:bool,
+    pub allow_passive_discovery: bool,
     /// None means all metadata; Some(empty) means none. Only the native host sets this.
-    pub connection_ids:Option<BTreeSet<String>>,
-    pub reveal_identity:bool,
-    pub probe_connection_ids:BTreeSet<String>,
+    pub connection_ids: Option<BTreeSet<String>>,
+    pub reveal_identity: bool,
+    pub probe_connection_ids: BTreeSet<String>,
+    #[serde(default)]
+    pub probe_provider_ids: BTreeSet<String>,
 }
 impl Default for ClientPolicy {
-    fn default()->Self {Self{allow_passive_discovery:false,connection_ids:Some(BTreeSet::new()),reveal_identity:false,probe_connection_ids:BTreeSet::new()}}
+    fn default() -> Self {
+        Self {
+            allow_passive_discovery: false,
+            connection_ids: Some(BTreeSet::new()),
+            reveal_identity: false,
+            probe_connection_ids: BTreeSet::new(),
+            probe_provider_ids: BTreeSet::new(),
+        }
+    }
 }
 impl ClientPolicy {
-    pub fn denied()->Self{Self::default()}
-    pub fn passive()->Self{Self{allow_passive_discovery:true,connection_ids:None,..Self::default()}}
-    pub fn allows(&self,id:&str)->bool{self.connection_ids.as_ref().is_none_or(|ids|ids.contains(id))}
+    pub fn denied() -> Self {
+        Self::default()
+    }
+    pub fn passive() -> Self {
+        Self {
+            allow_passive_discovery: true,
+            connection_ids: None,
+            ..Self::default()
+        }
+    }
+    pub fn allows(&self, id: &str) -> bool {
+        self.connection_ids
+            .as_ref()
+            .is_none_or(|ids| ids.contains(id))
+    }
 }
-#[derive(Debug,Clone,Default,Serialize,Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Requirements {
-    #[serde(default)]pub required_capabilities:Vec<String>,
-    #[serde(default)]pub allow_paid_fallback:bool,
-    #[serde(default)]pub eligible_only:bool,
-    #[serde(default)]pub billing_preference:Option<String>,
-    #[serde(default)]pub query:Option<String>,
+    #[serde(default)]
+    pub required_capabilities: Vec<String>,
+    #[serde(default)]
+    pub allow_paid_fallback: bool,
+    #[serde(default)]
+    pub eligible_only: bool,
+    #[serde(default)]
+    pub billing_preference: Option<String>,
+    #[serde(default)]
+    pub query: Option<String>,
 }
-#[derive(Debug,Clone,Serialize,Deserialize)]
-#[serde(rename_all="camelCase")]
-pub struct Candidate {pub selection:Selection,pub connection_id:String,pub eligible:bool,pub reasons:Vec<String>}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Candidate {
+    pub selection: Selection,
+    pub connection_id: String,
+    pub eligible: bool,
+    pub reasons: Vec<String>,
+}

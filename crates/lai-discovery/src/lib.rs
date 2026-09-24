@@ -3,10 +3,10 @@ mod environment;
 mod registry;
 mod scanner;
 pub use environment::{HostPlatform, ScanEnvironment};
-pub use registry::{ProviderDefinition, definitions};
-use std::{collections::BTreeMap, path::PathBuf};
 use lai_contracts::Snapshot;
 use lai_platform::LocalFilesystem;
+pub use registry::{ProviderDefinition, definitions};
+use std::{collections::BTreeMap, path::PathBuf};
 #[derive(Debug, Clone)]
 pub struct LocatedClient {
     pub provider_id: String,
@@ -19,7 +19,11 @@ pub struct ScanResult {
     pub locations: BTreeMap<String, LocatedClient>,
     pub metadata_probes: usize,
 }
-pub struct Scanner<F: LocalFilesystem> { filesystem: F }
+pub struct Scanner<F: LocalFilesystem> {
+    filesystem: F,
+}
 impl<F: LocalFilesystem> Scanner<F> {
-    pub fn new(filesystem: F) -> Self { Self { filesystem } }
+    pub fn new(filesystem: F) -> Self {
+        Self { filesystem }
+    }
 }

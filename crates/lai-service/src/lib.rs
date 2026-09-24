@@ -1,11 +1,13 @@
 //! One native service shared by every transport. Only the trusted host sets policies.
 mod cache;
+mod metadata;
 mod methods;
 mod params;
 use cache::InventoryCache;
 use lai_contracts::{DomainError, ErrorCode, Result, Snapshot};
 use lai_core::{ClientPolicy, project_snapshot};
 use lai_discovery::ScanResult;
+pub use metadata::{MetadataFuture, MetadataSource};
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
@@ -17,11 +19,15 @@ pub type InventorySource = Arc<dyn Fn(&AtomicBool) -> Result<ScanResult> + Send 
 pub struct NativeService {
     clients: RwLock<BTreeMap<String, ClientPolicy>>,
     cache: Arc<InventoryCache>,
+    metadata_source: Option<MetadataSource>,
+    metadata_locks: std::sync::Mutex<BTreeMap<String, Arc<tokio::sync::Mutex<()>>>>,
 }
 impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
         Self {
             clients: RwLock::new(BTreeMap::new()),
+            metadata_source: None,
+            metadata_locks: std::sync::Mutex::new(BTreeMap::new()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
         }
     }
@@ -79,6 +85,9 @@ impl NativeService {
             }
             let snapshot = self.projected(client)?;
             return Ok(serde_json::json!({"revision":snapshot.revision,"mode":snapshot.mode}));
+        }
+        if method == "connections.probe" {
+            return self.probe_connection(client, &params).await;
         }
         self.dispatch(client, method, &params)
     }

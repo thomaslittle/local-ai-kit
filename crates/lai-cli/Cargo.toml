@@ -2,6 +2,7 @@
 name = "lai-cli"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 publish = false
 
@@ -10,6 +11,7 @@ name = "local-ai-kit"
 path = "src/main.rs"
 
 [dependencies]
+lai-adapters = { path = "../lai-adapters" }
 lai-contracts = { path = "../lai-contracts" }
 lai-core = { path = "../lai-core" }
 lai-discovery = { path = "../lai-discovery" }

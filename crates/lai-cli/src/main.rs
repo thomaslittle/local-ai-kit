@@ -11,11 +11,14 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 const HELP: &str = "Local AI Kit - native discovery and SDK helper
 Usage:
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY]
-  local-ai-kit serve --stdio [--allow-passive-discovery] [--home ABSOLUTE_DIRECTORY]
+  local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
   local-ai-kit --version
 
 Serving never scans on startup. --allow-passive-discovery explicitly authorizes
 metadata-only scans requested by the owning SDK. No credentials or inference.
+--allow-codex-metadata separately permits explicit connections.probe requests
+through the installed Codex client. This may read its login and contact its
+account/catalog/usage services, but never starts threads or model generation.
 --home isolates all discovery roots and excludes the inherited PATH/overrides.";
 
 fn source(home: Option<PathBuf>) -> InventorySource {
@@ -36,15 +39,21 @@ fn source(home: Option<PathBuf>) -> InventorySource {
     })
 }
 async fn execute(args: Args) -> Result<()> {
-    let service = Arc::new(NativeService::new(
-        source(args.home),
-        Duration::from_secs(2),
-    ));
-    let policy = if args.allow_passive || matches!(args.action, Action::Scan) {
+    let service = Arc::new(
+        NativeService::new(source(args.home), Duration::from_secs(2)).with_metadata(Arc::new(
+            |located, connection, route| {
+                Box::pin(lai_adapters::codex::probe(located, connection, route))
+            },
+        )),
+    );
+    let mut policy = if args.allow_passive || matches!(args.action, Action::Scan) {
         ClientPolicy::passive()
     } else {
         ClientPolicy::denied()
     };
+    if args.allow_codex_metadata {
+        policy.probe_provider_ids.insert("codex".into());
+    }
     service.register_client("stdio-owner", policy)?;
     match args.action {
         Action::Scan => {

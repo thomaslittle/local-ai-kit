@@ -100,3 +100,40 @@ fn stdio_defaults_to_no_discovery_authorization() {
         .collect();
     assert_eq!(frames[1]["error"]["data"]["code"], "LOCAL_ACCESS_DENIED");
 }
+
+#[test]
+fn codex_probe_is_advertised_without_running_it_during_startup() {
+    let home = tempfile::tempdir().unwrap();
+    let mut child = Command::new(binary())
+        .args([
+            "serve",
+            "--stdio",
+            "--allow-passive-discovery",
+            "--allow-codex-metadata",
+            "--home",
+        ])
+        .arg(home.path())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+    writeln!(
+        stdin,
+        "{}",
+        json!({"jsonrpc":"2.0","id":1,"method":"runtime.handshake","params":{}})
+    )
+    .unwrap();
+    drop(stdin);
+    let output = child.wait_with_output().unwrap();
+    assert!(output.status.success());
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(
+        response["result"]["methods"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|m| m == "connections.probe")
+    );
+}

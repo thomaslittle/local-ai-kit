@@ -21,6 +21,13 @@ const METHODS: &[&str] = &[
     "grants.revoke",
 ];
 impl NativeService {
+    fn advertised_methods(&self) -> Vec<&'static str> {
+        let mut methods = METHODS.to_vec();
+        if self.metadata_source.is_some() {
+            methods.push("connections.probe");
+        }
+        methods
+    }
     pub(crate) fn dispatch(&self, client: &str, method: &str, p: &Value) -> Result<Value> {
         match method {
             "runtime.handshake" => {
@@ -36,7 +43,7 @@ impl NativeService {
                 }
                 params::text(p, "clientName")?;
                 Ok(
-                    json!({"protocolVersion":"1.0","runtimeVersion":env!("CARGO_PKG_VERSION"),"methods":METHODS}),
+                    json!({"protocolVersion":"1.0","runtimeVersion":env!("CARGO_PKG_VERSION"),"methods":self.advertised_methods()}),
                 )
             }
             "runtime.health" => {

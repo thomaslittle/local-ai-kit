@@ -1,36 +1,73 @@
-use std::collections::BTreeSet;
-use lai_contracts::*;
 use crate::ClientPolicy;
+use lai_contracts::*;
+use std::collections::BTreeSet;
 
-pub fn project_snapshot(source:&Snapshot,policy:&ClientPolicy)->Snapshot {
-    let mut snapshot=source.clone();
-    snapshot.connections.retain(|c|policy.allows(&c.id));
-    let connections:BTreeSet<_>=snapshot.connections.iter().map(|c|c.id.clone()).collect();
-    let profiles:BTreeSet<_>=snapshot.connections.iter().map(|c|c.profile_id.clone()).collect();
-    let installations:BTreeSet<_>=snapshot.connections.iter().map(|c|c.installation_id.clone()).collect();
-    let accounts:BTreeSet<_>=snapshot.connections.iter().filter_map(|c|c.account_id.clone()).collect();
-    let providers:BTreeSet<_>=snapshot.connections.iter().map(|c|c.provider_id.clone()).collect();
-    snapshot.routes.retain(|r|connections.contains(&r.connection_id));
-    let routes:BTreeSet<_>=snapshot.routes.iter().map(|r|r.id.clone()).collect();
-    snapshot.models.retain(|m|routes.contains(&m.route_id));
-    snapshot.profiles.retain(|p|profiles.contains(&p.id));
-    snapshot.installations.retain(|i|installations.contains(&i.id));
-    snapshot.accounts.retain(|a|accounts.contains(&a.id));
-    snapshot.providers.retain(|p|providers.contains(&p.id));
+pub fn project_snapshot(source: &Snapshot, policy: &ClientPolicy) -> Snapshot {
+    let mut snapshot = source.clone();
+    snapshot.connections.retain(|c| policy.allows(&c.id));
+    let connections: BTreeSet<_> = snapshot.connections.iter().map(|c| c.id.clone()).collect();
+    let profiles: BTreeSet<_> = snapshot
+        .connections
+        .iter()
+        .map(|c| c.profile_id.clone())
+        .collect();
+    let installations: BTreeSet<_> = snapshot
+        .connections
+        .iter()
+        .map(|c| c.installation_id.clone())
+        .collect();
+    let accounts: BTreeSet<_> = snapshot
+        .connections
+        .iter()
+        .filter_map(|c| c.account_id.clone())
+        .collect();
+    let providers: BTreeSet<_> = snapshot
+        .connections
+        .iter()
+        .map(|c| c.provider_id.clone())
+        .collect();
+    snapshot
+        .routes
+        .retain(|r| connections.contains(&r.connection_id));
+    let routes: BTreeSet<_> = snapshot.routes.iter().map(|r| r.id.clone()).collect();
+    snapshot.models.retain(|m| routes.contains(&m.route_id));
+    snapshot.profiles.retain(|p| profiles.contains(&p.id));
+    snapshot
+        .installations
+        .retain(|i| installations.contains(&i.id));
+    snapshot.accounts.retain(|a| accounts.contains(&a.id));
+    snapshot.providers.retain(|p| providers.contains(&p.id));
     for pool in &mut snapshot.quota_pools {
-        pool.connection_ids.retain(|id|connections.contains(id));
-        pool.route_ids.retain(|id|routes.contains(id));
-        if pool.account_id.as_ref().is_some_and(|id|!accounts.contains(id)){pool.account_id=None;}
+        pool.connection_ids.retain(|id| connections.contains(id));
+        pool.route_ids.retain(|id| routes.contains(id));
+        if pool
+            .account_id
+            .as_ref()
+            .is_some_and(|id| !accounts.contains(id))
+        {
+            pool.account_id = None;
+        }
     }
-    snapshot.quota_pools.retain(|p|!p.connection_ids.is_empty()&&!p.route_ids.is_empty());
+    snapshot
+        .quota_pools
+        .retain(|p| !p.connection_ids.is_empty() && !p.route_ids.is_empty());
     if !policy.reveal_identity {
         for account in &mut snapshot.accounts {
-            account.display_label=Observation::unknown("IDENTITY_PERMISSION_REQUIRED");
-            account.identity_source=Observation::unknown("IDENTITY_PERMISSION_REQUIRED");
+            account.display_label = Observation::unknown("IDENTITY_PERMISSION_REQUIRED");
+            account.identity_source = Observation::unknown("IDENTITY_PERMISSION_REQUIRED");
         }
     }
     // Global diagnostic strings may reference a provider invisible to this client.
     snapshot.diagnostics.clear();
-    snapshot.revision=stable_id("projection",&[&serde_json::to_string(&(&snapshot.connections,&snapshot.routes,&snapshot.models,&snapshot.quota_pools)).unwrap_or_default()]);
+    snapshot.revision = stable_id(
+        "projection",
+        &[&serde_json::to_string(&(
+            &snapshot.connections,
+            &snapshot.routes,
+            &snapshot.models,
+            &snapshot.quota_pools,
+        ))
+        .unwrap_or_default()],
+    );
     snapshot
 }

@@ -2,7 +2,7 @@ import { LocalAIError } from './errors.ts';
 import type { CallOptions, Handshake, Transport } from './types.ts';
 const families = {
   runtime: ['health'], discovery: ['refresh', 'cancel'], snapshot: ['get'],
-  connections: ['list', 'setupInstructions', 'authenticate'], models: ['list'], usage: ['read'], capabilities: ['read'],
+  connections: ['list', 'setupInstructions', 'authenticate', 'probe'], models: ['list'], usage: ['read'], capabilities: ['read'],
   selection: ['resolve', 'validate'], grants: ['request', 'list', 'revoke'],
   sessions: ['create', 'get', 'updateOptions', 'close'], turns: ['start', 'cancel'], approvals: ['respond'],
   artifacts: ['read'], diagnostics: ['report'], adapters: ['list'],

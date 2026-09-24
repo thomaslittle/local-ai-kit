@@ -1,8 +1,8 @@
-use std::str::FromStr;
+use crate::{Observation, Timestamp};
 use bigdecimal::{BigDecimal, ToPrimitive};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::{Observation, Timestamp};
+use std::str::FromStr;
 
 /// Nonnegative, finite decimal, represented losslessly across all SDKs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -11,58 +11,100 @@ pub struct DecimalString(String);
 impl TryFrom<String> for DecimalString {
     type Error = String;
     fn try_from(value: String) -> Result<Self, String> {
-        if value.is_empty() || value.len() > 128 { return Err("decimal length out of bounds".into()); }
+        if value.is_empty() || value.len() > 128 {
+            return Err("decimal length out of bounds".into());
+        }
         let mut parts = value.split('.');
         let integer = parts.next().unwrap_or("");
         let fraction = parts.next();
-        if integer.is_empty() || !integer.bytes().all(|b| b.is_ascii_digit()) || parts.next().is_some()
-            || fraction.is_some_and(|p| p.is_empty() || !p.bytes().all(|b| b.is_ascii_digit())) {
+        if integer.is_empty()
+            || !integer.bytes().all(|b| b.is_ascii_digit())
+            || parts.next().is_some()
+            || fraction.is_some_and(|p| p.is_empty() || !p.bytes().all(|b| b.is_ascii_digit()))
+        {
             return Err("expected a nonnegative plain decimal string".into());
         }
         Ok(Self(value))
     }
 }
-impl From<DecimalString> for String { fn from(value: DecimalString) -> Self { value.0 } }
+impl From<DecimalString> for String {
+    fn from(value: DecimalString) -> Self {
+        value.0
+    }
+}
 impl DecimalString {
-    pub fn as_str(&self) -> &str { &self.0 }
-    fn decimal(&self) -> BigDecimal { BigDecimal::from_str(&self.0).expect("validated decimal") }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+    fn decimal(&self) -> BigDecimal {
+        BigDecimal::from_str(&self.0).expect("validated decimal")
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct UsageInput { pub unit: String, pub used: DecimalString, pub limit: Option<DecimalString> }
+pub struct UsageInput {
+    pub unit: String,
+    pub used: DecimalString,
+    pub limit: Option<DecimalString>,
+}
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UsageReading {
-    pub unit: String, pub used: DecimalString, pub limit: Option<DecimalString>,
-    pub remaining: Option<DecimalString>, pub used_fraction: Option<f64>,
+    pub unit: String,
+    pub used: DecimalString,
+    pub limit: Option<DecimalString>,
+    pub remaining: Option<DecimalString>,
+    pub used_fraction: Option<f64>,
 }
 impl TryFrom<UsageInput> for UsageReading {
     type Error = String;
     fn try_from(input: UsageInput) -> Result<Self, String> {
-        if input.unit.is_empty() || input.unit.len() > 64 { return Err("invalid usage unit".into()); }
+        if input.unit.is_empty() || input.unit.len() > 64 {
+            return Err("invalid usage unit".into());
+        }
         let used = input.used.decimal();
         let zero = BigDecimal::from(0);
         let (remaining, used_fraction) = match &input.limit {
             Some(limit) => {
                 let total = limit.decimal();
-                let remaining = (&total - &used).max(zero.clone()).normalized().to_plain_string();
-                let fraction = if total > zero { (&used / total).to_f64().filter(|x| x.is_finite()) } else { None };
+                let remaining = (&total - &used)
+                    .max(zero.clone())
+                    .normalized()
+                    .to_plain_string();
+                let fraction = if total > zero {
+                    (&used / total).to_f64().filter(|x| x.is_finite())
+                } else {
+                    None
+                };
                 (Some(DecimalString::try_from(remaining)?), fraction)
             }
             None => (None, None),
         };
-        Ok(Self { unit: input.unit, used: input.used, limit: input.limit, remaining, used_fraction })
+        Ok(Self {
+            unit: input.unit,
+            used: input.used,
+            limit: input.limit,
+            remaining,
+            used_fraction,
+        })
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UsageWindow {
-    pub id: String, pub label: String, pub reading: Observation<UsageReading>,
-    pub resets_at: Option<Timestamp>, pub duration_seconds: Option<u32>,
+    pub id: String,
+    pub label: String,
+    pub reading: Observation<UsageReading>,
+    pub resets_at: Option<Timestamp>,
+    pub duration_seconds: Option<u32>,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct QuotaPool {
-    pub id: String, pub account_id: Option<String>, pub connection_ids: Vec<String>,
-    pub route_ids: Vec<String>, pub sharing: String, pub windows: Vec<UsageWindow>,
+    pub id: String,
+    pub account_id: Option<String>,
+    pub connection_ids: Vec<String>,
+    pub route_ids: Vec<String>,
+    pub sharing: String,
+    pub windows: Vec<UsageWindow>,
 }

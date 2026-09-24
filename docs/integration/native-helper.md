@@ -60,3 +60,7 @@ with Client.from_stdio(
 ## Current evidence
 
 Windows x64: Rust 1.97.1, Node 22.20.0, Python 3.13.7. 71 Rust tests plus six Node/Python-to-native integration tests pass. A single passive scan of the authorized development PC found 21 client/profile connections across nine providers in approximately 34 ms including process startup. This is one observation, not a percentile benchmark or a count of active subscriptions. Accounts, plans, usage, and models remain unprobed by passive scanning.
+
+## Codex metadata enrichment
+
+`--allow-codex-metadata` separately authorizes the SDK's `connections.probe({connectionId})` method. It is not implied by passive discovery permission. See [Codex adapter](../adapters/codex.md) and [Python example](../../examples/python/inspect_codex.py). The installed client handles its own sign-in; the adapter performs no generation.

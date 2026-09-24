@@ -7,7 +7,7 @@ from .stdio import AsyncStdioTransport
 
 FAMILIES = {
     'runtime': ('health',), 'snapshot': ('get',), 'discovery': ('refresh','cancel'),
-    'connections': ('list','setupInstructions','authenticate'), 'models': ('list',),
+    'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list',),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
     'grants': ('request','list','revoke'), 'sessions': ('create','get','updateOptions','close'),
     'turns': ('start','cancel'), 'approvals': ('respond',), 'artifacts': ('read',),
