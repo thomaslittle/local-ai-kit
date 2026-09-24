@@ -1,0 +1,133 @@
+/** Node-only transport. Import does not spawn, scan, read credentials, or connect. */
+import { spawn } from 'node:child_process';
+import { isAbsolute } from 'node:path';
+import { tmpdir } from 'node:os';
+import { LocalAIError } from '../dist/errors.js';
+const failCode=code=>new LocalAIError(code);
+const bounded=(v,min,max)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw failCode('INVALID_LIMIT');return v;};
+class EventQueue {
+ #values=[]; #waiter; #error; #max;
+ constructor(max){this.#max=max;}
+ push(value){
+  if(this.#error)return;
+  if(this.#waiter){const w=this.#waiter;this.#waiter=undefined;w.resolve(value);return;}
+  if(this.#values.length>=this.#max){this.fail(failCode('EVENT_GAP'));return;}
+  this.#values.push(value);
+ }
+ fail(error){this.#error=error;this.#values=[];this.#waiter?.reject(error);this.#waiter=undefined;}
+ next(){
+  if(this.#error)return Promise.reject(this.#error);
+  if(this.#values.length)return Promise.resolve(this.#values.shift());
+  return new Promise((resolve,reject)=>{this.#waiter={resolve,reject};});
+ }
+}
+/** Explicitly launch one approved native helper, without shell interpolation. */
+export async function openStdioTransport(options){
+ if(typeof options.executable!=='string'||!isAbsolute(options.executable)||/\.(cmd|bat|ps1)$/i.test(options.executable))throw failCode('INVALID_EXECUTABLE');
+ const args=options.args??[];
+ if(!Array.isArray(args)||args.length>128||args.some(a=>typeof a!=='string'||a.includes('\0')||a.length>32768))throw failCode('INVALID_REQUEST');
+ if(options.cwd!==undefined&&(!isAbsolute(options.cwd)||options.cwd.includes('\0')))throw failCode('INVALID_WORKSPACE');
+ const max=bounded(options.maxFrameBytes??1048576,1024,16777216);
+ const maxPending=bounded(options.maxPendingRequests??64,1,1024);
+ const maxEvents=bounded(options.maxQueuedEvents??256,1,4096);
+ const timeoutMs=bounded(options.timeoutMs??30000,1,3600000);
+ const env={};
+ for(const key of ['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS'])if(process.env[key]!==undefined)env[key]=process.env[key];
+ for(const [key,value] of Object.entries(options.env??{})){
+  if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)||typeof value!=='string'||value.includes('\0')||['NODE_OPTIONS','LD_PRELOAD','DYLD_INSERT_LIBRARIES'].includes(key.toUpperCase()))throw failCode('INVALID_ENVIRONMENT');
+  env[key]=value;
+ }
+ const child=spawn(options.executable,[...args],{cwd:options.cwd??tmpdir(),env,shell:false,windowsHide:true,stdio:['pipe','pipe','pipe']});
+ const pending=new Map(),subscriptions=new Map();let sequence=0,buffer=Buffer.alloc(0),ended=false,closing;
+ let resolveExit;const exited=new Promise(resolve=>{resolveExit=resolve;});
+ function fail(error){
+  if(ended)return;ended=true;
+  for(const request of pending.values())request.finish(error);
+  for(const queue of subscriptions.values())queue.fail(error);
+  subscriptions.clear();
+  if(child.exitCode===null&&!child.killed)child.kill();
+ }
+ child.stderr.on('data',()=>{});
+ child.stdin.on('error',()=>fail(failCode('TRANSPORT_CLOSED')));
+ child.once('exit',()=>{resolveExit();fail(failCode('TRANSPORT_CLOSED'));});
+ child.once('error',()=>{resolveExit();fail(failCode('RUNTIME_MISSING'));});
+ function frame(line){
+  let value;
+  try{value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(line));}catch{throw failCode('PROTOCOL_INVALID');}
+  if(!value||typeof value!=='object'||value.jsonrpc!=='2.0')throw failCode('PROTOCOL_INVALID');
+  if(Object.hasOwn(value,'id')){
+   if(!Number.isSafeInteger(value.id)||Object.hasOwn(value,'result')===Object.hasOwn(value,'error'))throw failCode('PROTOCOL_INVALID');
+   const request=pending.get(value.id);if(!request)return;
+   if(Object.hasOwn(value,'error')){
+    if(!value.error||typeof value.error.code!=='number')throw failCode('PROTOCOL_INVALID');
+    request.finish(failCode(typeof value.error.data?.code==='string'?value.error.data.code:'REMOTE_ERROR'));
+   }else request.finish(null,value.result);
+  }else if(value.method==='events.event'){
+   const p=value.params;
+   if(!p||typeof p.subscriptionId!=='string'||p.subscriptionId.length>256||!Object.hasOwn(p,'event'))throw failCode('PROTOCOL_INVALID');
+   subscriptions.get(p.subscriptionId)?.push(p.event);
+  }else throw failCode('PROTOCOL_INVALID');
+ }
+ child.stdout.on('data',chunk=>{
+  if(ended)return;
+  try{
+   buffer=Buffer.concat([buffer,chunk]);let position;
+   while((position=buffer.indexOf(10))!==-1){
+    if(position>max)throw failCode('FRAME_TOO_LARGE');
+    const line=buffer.subarray(0,position);buffer=buffer.subarray(position+1);
+    if(line.length)frame(line);
+   }
+   if(buffer.length>max)throw failCode('FRAME_TOO_LARGE');
+  }catch(error){fail(error instanceof LocalAIError?error:failCode('PROTOCOL_INVALID'));}
+ });
+ await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',()=>reject(failCode('RUNTIME_MISSING')));});
+ function request(method,params={},call={},onResult){
+  if(ended)return Promise.reject(failCode('CLOSED'));
+  if(call.signal?.aborted)return Promise.reject(failCode('CANCELLED'));
+  if(typeof method!=='string'||method.length>128||!/^[a-zA-Z][a-zA-Z0-9]*\.[a-zA-Z][a-zA-Z0-9]*$/.test(method))return Promise.reject(failCode('INVALID_METHOD'));
+  if(pending.size>=maxPending)return Promise.reject(failCode('TOO_MANY_REQUESTS'));
+  if(sequence>=Number.MAX_SAFE_INTEGER)return Promise.reject(failCode('REQUEST_ID_EXHAUSTED'));
+  let body,duration;const id=++sequence;
+  try{body=JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n';duration=bounded(call.timeoutMs??timeoutMs,1,3600000);}catch(error){return Promise.reject(error instanceof LocalAIError?error:failCode('INVALID_REQUEST'));}
+  if(Buffer.byteLength(body)>max)return Promise.reject(failCode('FRAME_TOO_LARGE'));
+  return new Promise((resolve,reject)=>{
+   let timer;
+   const abort=()=>finish(failCode('CANCELLED'));
+   const finish=(error,value)=>{
+    if(!pending.has(id))return;
+    pending.delete(id);clearTimeout(timer);call.signal?.removeEventListener('abort',abort);
+    if(error){reject(error);return;}
+    try{onResult?.(value);resolve(value);}catch(e){reject(e);}
+   };
+   pending.set(id,{finish});
+   timer=setTimeout(()=>finish(failCode('TIMEOUT')),duration);
+   call.signal?.addEventListener('abort',abort,{once:true});
+   child.stdin.write(body,error=>{if(error)finish(failCode('TRANSPORT_CLOSED'));});
+  });
+ }
+ return {
+  request,
+  async *subscribe(query={},call={}){
+   let id,queue;
+   await request('events.subscribe',query,call,result=>{
+    if(!result||typeof result.subscriptionId!=='string'||!result.subscriptionId||result.subscriptionId.length>256||subscriptions.has(result.subscriptionId))throw failCode('PROTOCOL_INVALID');
+    id=result.subscriptionId;queue=new EventQueue(maxEvents);subscriptions.set(id,queue);
+   });
+   const abort=()=>queue.fail(failCode('CANCELLED'));
+   if(call.signal?.aborted)abort();else call.signal?.addEventListener('abort',abort,{once:true});
+   try{while(true)yield await queue.next();}
+   finally{
+    call.signal?.removeEventListener('abort',abort);subscriptions.delete(id);
+    if(!ended)await request('events.unsubscribe',{subscriptionId:id},{timeoutMs:1000}).catch(()=>{});
+   }
+  },
+  async close(){
+   if(closing)return closing;
+   closing=(async()=>{
+    fail(failCode('CLOSED'));
+    const timer=setTimeout(()=>{if(child.exitCode===null)child.kill('SIGKILL');},1000);
+    await exited;clearTimeout(timer);
+   })();return closing;
+  },
+ };
+}
