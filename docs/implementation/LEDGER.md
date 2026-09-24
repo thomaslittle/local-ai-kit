@@ -50,3 +50,6 @@ Bounded event replay, closed-session capacity recycling, session-level billing c
 
 ## Resumed provider expansion
 Remote/local checkpoint 0ce8f18 already includes execution, paired HTTP/SSE, and Claude native integration. Preserved the pending gateway-route changes and verified the whole baseline. Ruling: finish route identity before adding gateways; metadata alone must never imply an installed execution driver. A new gateway runtime-capability regression failed first. Shared ACP/native adapter expansion follows the original Tasks 8-12.
+
+## ACP core
+Task 8 increment: nine catalog and eight owned-child protocol tests observed red then green. Native models, grouped controls, capability defaults, permission denial, event routing, cancellation, and model-switch detection are tested. Ruling: ACP alone is not a sandbox or subscription evidence; register execution only through a provider-specific permission policy. First live Grok check used initialize/session-new only, with tools disabled. Full native workspace: 177 passing tests.

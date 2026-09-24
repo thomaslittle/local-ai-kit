@@ -27,3 +27,6 @@ Claude Code now has native control metadata and text-only structured execution, 
 
 ## Gateway route boundary
 Pending multi-provider gateway metadata is integrated with route-scoped model IDs, vendor identity, and billing. Extra routes remain execution-disabled unless an executor is registered. The gateway regression and full Windows native baseline pass. Next: shared ACP engine and native Google/Grok adapters.
+
+## Shared ACP core
+ACP parsing and process/runtime integration are now implemented. Nine catalog tests and eight synthetic-child execution tests pass, alongside the full Windows workspace. Grok native initialization/session metadata was checked without inference. Next: wire provider-specific launch/account/usage evidence, then OpenCode/local APIs, SDK generated contracts, reusable React components, and release qualification. See docs/adapters/acp.md.

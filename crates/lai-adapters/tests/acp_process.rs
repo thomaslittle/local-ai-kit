@@ -1,0 +1,191 @@
+use lai_adapters::{acp::client, process::LaunchSpec};
+use lai_contracts::*;
+use lai_runtime::Runtime;
+use serde_json::json;
+use std::{collections::BTreeMap, path::PathBuf, sync::Arc, time::Duration};
+fn spec(mode: &str) -> LaunchSpec {
+    LaunchSpec {
+        executable: std::env::var_os("LAI_TEST_PYTHON")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                PathBuf::from(if cfg!(windows) {
+                    "C:/Python313/python.exe"
+                } else {
+                    "/usr/bin/python3"
+                })
+            }),
+        args: vec![
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/support/acp_peer.py")
+                .into(),
+            mode.into(),
+        ],
+        cwd: std::env::temp_dir(),
+        env: BTreeMap::new(),
+    }
+}
+async fn setup(mode: &str) -> (Runtime, Session) {
+    let c = client::inspect(spec("normal"), "fixture", "r")
+        .await
+        .unwrap();
+    let model = c.models[0].clone();
+    let agent = client::open(
+        spec(mode),
+        "fixture".into(),
+        "r".into(),
+        model.clone(),
+        true,
+    )
+    .await
+    .unwrap();
+    let r = Runtime::new();
+    let s = r
+        .insert(
+            "owner",
+            "c".into(),
+            Selection {
+                route_id: "r".into(),
+                model_id: model.id,
+                revision: model.revision,
+                options: BTreeMap::from([("thought".into(), json!("future"))]),
+            },
+            agent,
+            Arc::new(|| Ok(())),
+        )
+        .unwrap();
+    (r, s)
+}
+async fn finish(r: &Runtime, s: &Session) {
+    tokio::time::timeout(Duration::from_secs(4), async {
+        loop {
+            if matches!(
+                r.get("owner", &s.id).unwrap().state,
+                SessionState::Completed | SessionState::Cancelled | SessionState::Error
+            ) {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .unwrap();
+}
+#[tokio::test]
+async fn actual_acp_exchange_preserves_native_config_without_generation() {
+    let c = client::inspect(spec("normal"), "fixture", "r")
+        .await
+        .unwrap();
+    assert_eq!(c.models.len(), 2);
+    assert_eq!(c.config_options[1].id, "thought");
+}
+#[tokio::test]
+async fn negotiation_mismatch_is_rejected_before_session() {
+    assert!(
+        matches!(client::inspect(spec("version"),"fixture","r").await,Err(e) if e.code==ErrorCode::ProtocolIncompatible)
+    );
+}
+#[tokio::test]
+async fn native_stream_arrives_before_prompt_response_and_session_reuses_context() {
+    let (r, s) = setup("normal").await;
+    for i in 1..=2 {
+        r.start("owner", &s.id, "hello".into(), i.to_string())
+            .await
+            .unwrap();
+        finish(&r, &s).await;
+        assert_eq!(
+            r.get("owner", &s.id).unwrap().state,
+            SessionState::Completed
+        );
+    }
+    let text = r.events("owner", None, None).unwrap().to_string();
+    assert!(text.contains("native reply 1") && text.contains("native reply 2"));
+    r.close("owner", &s.id).await.unwrap();
+}
+#[tokio::test]
+async fn foreign_session_cannot_inject_output() {
+    let (r, s) = setup("foreign").await;
+    r.start("owner", &s.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Error);
+    assert!(
+        !r.events("owner", None, None)
+            .unwrap()
+            .to_string()
+            .contains("native reply")
+    );
+}
+#[tokio::test]
+async fn native_cancel_completes_without_prompt_retry() {
+    let (r, s) = setup("hang").await;
+    let t = r
+        .start("owner", &s.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    tokio::time::sleep(Duration::from_millis(30)).await;
+    r.cancel("owner", t["turnId"].as_str().unwrap())
+        .await
+        .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(
+        r.get("owner", &s.id).unwrap().state,
+        SessionState::Cancelled
+    );
+}
+#[tokio::test]
+async fn file_callbacks_not_advertised_are_denied() {
+    let (r, s) = setup("fs").await;
+    r.start("owner", &s.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Error);
+    assert!(
+        !r.events("owner", None, None)
+            .unwrap()
+            .to_string()
+            .contains("private-sentinel")
+    );
+}
+#[tokio::test]
+async fn provider_switch_during_turn_fails_without_silent_model_fallback() {
+    let (r, s) = setup("changed").await;
+    r.start("owner", &s.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Error);
+}
+#[tokio::test]
+async fn approval_is_scoped_and_rejection_reaches_native_agent() {
+    let (r, s) = setup("permission").await;
+    r.start("owner", &s.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    let id = tokio::time::timeout(Duration::from_secs(3), async {
+        loop {
+            let events = r.events("owner", None, None).unwrap();
+            if let Some(e) = events["events"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["payload"]["type"] == "approval_request")
+            {
+                break e["payload"]["approvalId"].as_str().unwrap().to_owned();
+            }
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert!(r.approve("other", &id, true).is_err());
+    r.approve("owner", &id, false).unwrap();
+    finish(&r, &s).await;
+    assert!(
+        r.events("owner", None, None)
+            .unwrap()
+            .to_string()
+            .contains("denied")
+    );
+}
