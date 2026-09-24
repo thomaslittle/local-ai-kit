@@ -6,6 +6,7 @@ pub enum Action {
     Version,
     Scan,
     Serve,
+    Connect,
 }
 pub struct Args {
     pub action: Action,
@@ -14,6 +15,7 @@ pub struct Args {
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
     pub http: bool,
+    pub ipc: Option<String>,
     pub port: u16,
     pub assets: Option<PathBuf>,
     pub allow_execution: bool,
@@ -41,6 +43,16 @@ impl Args {
     pub fn parse(input: impl IntoIterator<Item = OsString>) -> Result<Self> {
         let mut input = input.into_iter();
         let command = input.next().unwrap_or_else(|| "--help".into());
+        if command == "connect" {
+            let rest: Vec<_> = input.collect();
+            if rest.len() != 2 || rest[0] != "--ipc" {
+                return Err(invalid());
+            }
+            let mut args = Self::parse([OsString::from("serve"), OsString::from("--stdio")])?;
+            args.action = Action::Connect;
+            args.ipc = Some(rest[1].clone().into_string().map_err(|_| invalid())?);
+            return Ok(args);
+        }
         let action = match command.to_str() {
             Some("--help" | "-h") => Action::Help,
             Some("--version" | "-V") => Action::Version,
@@ -55,6 +67,7 @@ impl Args {
             allow_passive: false,
             allow_codex_metadata: false,
             http: false,
+            ipc: None,
             port: 4499,
             assets: None,
             allow_execution: false,
@@ -84,6 +97,14 @@ impl Args {
                 }
                 "--stdio" if matches!(args.action, Action::Serve) => stdio = true,
                 "--http" if matches!(args.action, Action::Serve) => args.http = true,
+                "--ipc" if matches!(args.action, Action::Serve) => {
+                    args.ipc = Some(
+                        input
+                            .next()
+                            .and_then(|s| s.into_string().ok())
+                            .ok_or_else(invalid)?,
+                    )
+                }
                 "--allow-passive-discovery" if matches!(args.action, Action::Serve) => {
                     args.allow_passive = true
                 }
@@ -148,7 +169,8 @@ impl Args {
             }
         }
         if matches!(args.action, Action::Scan) && !json
-            || matches!(args.action, Action::Serve) && (stdio == args.http)
+            || matches!(args.action, Action::Serve)
+                && (u8::from(stdio) + u8::from(args.http) + u8::from(args.ipc.is_some()) != 1)
         {
             return Err(invalid());
         }

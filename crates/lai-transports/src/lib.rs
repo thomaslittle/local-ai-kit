@@ -1,5 +1,7 @@
 //! Bounded, handshaken JSON-RPC over native streams. Caller identity is supplied by the host.
 pub mod http;
+pub mod local_ipc;
+pub mod native_messaging;
 mod wire;
 use lai_contracts::{ErrorCode, Result};
 use lai_service::NativeService;

@@ -11,3 +11,6 @@ export interface StdioOptions {
   maxQueuedEvents?: number;
 }
 export declare function openStdioTransport(options: StdioOptions): Promise<Transport>;
+
+export interface BrokerOptions extends Omit<StdioOptions,"args"> { address: string; token: string }
+export declare function openBrokerTransport(options: BrokerOptions): Promise<Transport>;

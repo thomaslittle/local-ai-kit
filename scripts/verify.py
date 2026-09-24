@@ -12,11 +12,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 def run(command, required=None):
     if required and not (ROOT / required).exists():
         raise RuntimeError(f"NOT IMPLEMENTED: {required}")
-    executable = shutil.which(command[0])
+    local = ROOT / "node_modules" / ".bin" / (command[0] + (".cmd" if os.name == "nt" else ""))
+    executable = str(local) if local.is_file() else shutil.which(command[0])
     if not executable:
         raise RuntimeError(f"MISSING TOOL: {command[0]}")
     if os.name == "nt" and executable.lower().endswith((".cmd", ".bat")):
         command = [os.environ.get("COMSPEC", "cmd.exe"), "/d", "/c", executable, *command[1:]]
+    elif executable:
+        command = [executable, *command[1:]]
     completed = subprocess.run(command, cwd=ROOT)
     if completed.returncode:
         raise subprocess.CalledProcessError(completed.returncode, command)

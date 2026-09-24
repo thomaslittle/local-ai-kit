@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Local AI Kit \u2014 connection explorer",
+  "version": "0.1.0",
+  "description": "Explicitly connect to your installed Local AI Kit host. No content scripts or website access.",
+  "permissions": [
+    "nativeMessaging"
+  ],
+  "action": {
+    "default_title": "Open Local AI Kit"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

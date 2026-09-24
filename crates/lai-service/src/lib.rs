@@ -62,6 +62,13 @@ impl NativeService {
         clients.insert(id.to_owned(), policy);
         Ok(())
     }
+    /// Host-only cleanup for an application connection; other clients remain live.
+    pub fn unregister_client(&self, id: &str) {
+        self.execution_state.revoke(id);
+        if let Ok(mut clients) = self.clients.write() {
+            clients.remove(id);
+        }
+    }
     fn policy(&self, id: &str) -> Result<ClientPolicy> {
         self.clients
             .read()

@@ -135,3 +135,10 @@ export async function openStdioTransport(options){
   },
  };
 }
+
+export async function openBrokerTransport(options){
+ if(typeof options.address!=='string'||!options.address||options.address.length>200||options.address.includes('\0')||typeof options.token!=='string'||!/^[0-9a-f]{64}$/.test(options.token))throw failCode('INVALID_REQUEST');
+ const transport=await openStdioTransport({...options,args:['connect','--ipc',options.address]});
+ try{const result=await transport.request('broker.authenticate',{token:options.token});if(result?.authenticated!==true)throw failCode('LOCAL_ACCESS_DENIED');return transport;}
+ catch(error){await transport.close();throw error;}
+}

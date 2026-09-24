@@ -15,6 +15,7 @@ def main():
     binary=target/'debug'/('local-ai-kit.exe' if os.name=='nt' else 'local-ai-kit')
     if not binary.is_file():raise RuntimeError('Compiled native helper is missing')
     env={**os.environ,'LAI_NATIVE_BINARY':str(binary.resolve())}
-    run(['node','--test','tests/integration/sdk-native.test.mjs'],env)
+    run(['node','--test','tests/integration/sdk-native.test.mjs','tests/integration/broker-native.test.mjs'],env)
     run([sys.executable,'tests/integration/test_sdk_native.py','-v'],env)
+    run([sys.executable,'tests/integration/test_broker_native.py','-v'],env)
 if __name__=='__main__':main()

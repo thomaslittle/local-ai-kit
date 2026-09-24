@@ -7,6 +7,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
+interprocess = { version = "2.4.4", features = ["tokio"] }
 axum = "0.8.9"
 async-stream = "0.3"
 getrandom = "0.3"
@@ -25,3 +26,6 @@ lai-discovery = { path = "../lai-discovery" }
 
 [lints]
 workspace = true
+
+[target.'cfg(windows)'.dependencies]
+widestring = "1"

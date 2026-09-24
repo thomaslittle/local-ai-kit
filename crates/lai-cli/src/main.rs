@@ -1,17 +1,20 @@
 mod adapter_info;
 mod args;
+mod inventory;
+use inventory::source;
+use lai_service::InventorySource;
+mod broker_cli;
 mod endpoints;
 mod host;
 use args::{Action, Args};
 use lai_contracts::{DomainError, ErrorCode, Result};
-use lai_discovery::{HostPlatform, ScanEnvironment, Scanner};
-use lai_platform::NativeFilesystem;
-use lai_service::InventorySource;
 use serde_json::json;
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 const HELP: &str = "Local AI Kit - native discovery and SDK helper
 Usage:
+  local-ai-kit serve --ipc LOCAL_ADDRESS [--allow-passive-discovery]
+  local-ai-kit connect --ipc LOCAL_ADDRESS
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY]
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
   local-ai-kit serve --http --port 4499 --assets ABSOLUTE_DIST_DIRECTORY
@@ -34,24 +37,10 @@ approval review, and paid options each require their own flag. HTTP is loopback-
 and requires explicit single-use browser pairing. No tokens are printed.
 --home isolates all discovery roots and excludes the inherited PATH/overrides.";
 
-fn source(home: Option<PathBuf>) -> InventorySource {
-    Arc::new(move |cancel| {
-        let environment = if let Some(home) = &home {
-            let platform = if cfg!(windows) {
-                HostPlatform::Windows
-            } else if cfg!(target_os = "macos") {
-                HostPlatform::Macos
-            } else {
-                HostPlatform::Linux
-            };
-            ScanEnvironment::for_home(home.clone(), platform)
-        } else {
-            ScanEnvironment::from_process()?
-        };
-        Scanner::new(NativeFilesystem).scan(&environment, cancel, |_| {})
-    })
-}
 async fn execute(args: Args) -> Result<()> {
+    if matches!(args.action, Action::Connect) {
+        return broker_cli::connect(args.ipc.as_deref().unwrap()).await;
+    }
     let registry = Arc::new(endpoints::load(args.endpoints.as_deref())?);
     let original = source(args.home.clone());
     let scan_registry = registry.clone();
@@ -80,6 +69,9 @@ async fn execute(args: Args) -> Result<()> {
                     .await?
             );
             Ok(())
+        }
+        Action::Serve if args.ipc.is_some() => {
+            broker_cli::serve(service, args.ipc.as_deref().unwrap(), policy, grant).await
         }
         Action::Serve if args.http => {
             let server = lai_transports::http::start(

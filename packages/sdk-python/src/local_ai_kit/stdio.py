@@ -40,6 +40,22 @@ class _EventQueue:
 
 class AsyncStdioTransport:
     @classmethod
+    async def open_broker(cls, *, executable: str, address: str, token: str, **options):
+        if not isinstance(address, str) or not 0 < len(address) <= 200 or '\0' in address:
+            raise LocalAIError('INVALID_REQUEST')
+        if not isinstance(token, str) or not re.fullmatch(r'[0-9a-f]{64}', token) or 'args' in options:
+            raise LocalAIError('INVALID_REQUEST')
+        transport = await cls.open(executable=executable, args=['connect', '--ipc', address], **options)
+        try:
+            result = await transport.request('broker.authenticate', {'token': token})
+            if not isinstance(result, dict) or result.get('authenticated') is not True:
+                raise LocalAIError('LOCAL_ACCESS_DENIED')
+            return transport
+        except BaseException:
+            await transport.close()
+            raise
+
+    @classmethod
     async def open(cls, *, executable: str, args: list[str] | None = None, cwd: str | None = None,
                    env: dict[str, str] | None = None, timeout: float = 30,
                    max_frame_bytes: int = 1048576, max_pending_requests: int = 64,

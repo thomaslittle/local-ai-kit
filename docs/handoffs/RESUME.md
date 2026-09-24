@@ -45,3 +45,6 @@ Rust owns request/response maps as well as domain records. Deterministic generat
 
 ## Optional reusable React packages
 Added side-effect-free immutable SnapshotStore, React external-store bindings, and eight reusable styled selector variants. Model lists virtualize 5,000 entries and preserve route identity; sensitive options require a host callback and stale approvals are rejected. Node SDK 39, selector 24, React/components 13 tests pass. See packages/react, packages/ui-react, examples/react, and the React qualification report. Remaining: native client coverage/host transports, clean-package/platform and security/performance qualification.
+
+## Shared native transports
+Implemented owner-protected native IPC broker, single-use per-app credentials, Node/Python broker adapters, browser Native Messaging binary and SDK transport, explicit host preparation/registration script, and generic extension example. Native workspace reached 240 passing tests; latest complete run is recorded in qualification logs. Continue remaining provider launch metadata, artifact/reporting, installable release/consumer checks, UI qualification and source/status matrix; no paid inference used.
