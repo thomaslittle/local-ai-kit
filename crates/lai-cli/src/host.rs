@@ -44,8 +44,9 @@ pub fn build_service_with_endpoints(
     registry: Arc<Registry>,
 ) -> Arc<NativeService> {
     let metadata_registry = registry.clone();
-    let service = NativeService::new(source, Duration::from_secs(2)).with_metadata(Arc::new(
-        move |located, connection, route| {
+    let service = NativeService::new(source, Duration::from_secs(2))
+        .with_adapters(crate::adapter_info::descriptors())
+        .with_metadata(Arc::new(move |located, connection, route| {
             let endpoint = metadata_registry.for_connection(&connection, &located.provider_id);
             Box::pin(async move {
                 if let Some(config) = endpoint {
@@ -78,8 +79,7 @@ pub fn build_service_with_endpoints(
                     )),
                 }
             })
-        },
-    ));
+        }));
     if !execute {
         return Arc::new(service);
     }

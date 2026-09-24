@@ -1,4 +1,8 @@
 //! Canonical, serializable contracts. Importing this crate performs no I/O.
+mod adapters;
+pub use adapters::*;
+mod api;
+pub use api::*;
 mod errors;
 mod events;
 mod evidence;
@@ -28,6 +32,9 @@ pub struct PublicContracts {
     session: Session,
     event: Event,
     error: DomainError,
+    method_inputs: MethodInputs,
+    method_outputs: MethodOutputs,
+    metadata: ConnectionMetadata,
 }
 pub fn schema_document() -> Value {
     serde_json::to_value(schemars::schema_for!(PublicContracts)).expect("schema serialization")

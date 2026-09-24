@@ -39,3 +39,6 @@ Seven HTTP protocol families now implement catalog normalization and text sessio
 
 ## OpenCode gateway
 Implemented distinct upstream catalogs/native variants and permission-verified text sessions through local HTTP/SSE. Config supports kind opencode with explicit providerBilling declarations when the gateway omits billing evidence. Session cleanup never deletes user-owned conversations. Next: remaining native clients, generated contracts, reusable React controls, host packaging and platform qualification.
+
+## Canonical SDK and API generation
+Rust owns request/response maps as well as domain records. Deterministic generation now creates TypeScript/Python types, Python client stubs, OpenAPI and the JSON-RPC manifest; drift verification is implemented. Runtime health and adapter coverage distinguish implementation from user grants. Next: reusable React controls, remaining native clients and host integration/packaging qualification.

@@ -20,6 +20,7 @@ use std::{
 pub type InventorySource = Arc<dyn Fn(&AtomicBool) -> Result<ScanResult> + Send + Sync>;
 pub struct NativeService {
     clients: Arc<RwLock<BTreeMap<String, ClientPolicy>>>,
+    adapters: Vec<lai_contracts::AdapterDescriptor>,
     execution_state: execution::ExecutionState,
     cache: Arc<InventoryCache>,
     metadata_source: Option<MetadataSource>,
@@ -29,11 +30,16 @@ impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
         Self {
             clients: Arc::new(RwLock::new(BTreeMap::new())),
+            adapters: Vec::new(),
             execution_state: Default::default(),
             metadata_source: None,
             metadata_locks: std::sync::Mutex::new(BTreeMap::new()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
         }
+    }
+    pub fn with_adapters(mut self, adapters: Vec<lai_contracts::AdapterDescriptor>) -> Self {
+        self.adapters = adapters;
+        self
     }
     /// Host-only API. Duplicate registration cannot silently replace a grant.
     pub fn register_client(&self, id: &str, policy: ClientPolicy) -> Result<()> {

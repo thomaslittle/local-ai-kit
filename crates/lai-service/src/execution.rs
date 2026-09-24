@@ -4,7 +4,6 @@ use lai_contracts::*;
 use lai_core::{project_snapshot, validate_selection};
 use lai_discovery::LocatedClient;
 use lai_runtime::{Agent, BoxFuture, Runtime};
-use serde::Deserialize;
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -58,31 +57,9 @@ impl ExecutionState {
         }
     }
 }
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Create {
-    selection: Selection,
-    workspace_id: String,
-    #[serde(default)]
-    permission_mode: Option<String>,
-    #[serde(default)]
-    review_requests: bool,
-    #[serde(default)]
-    allow_paid: bool,
-}
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Start {
-    session_id: String,
-    prompt: String,
-    request_id: String,
-}
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Update {
-    session_id: String,
-    options: BTreeMap<String, Value>,
-}
+type Create = SessionCreateParams;
+type Start = TurnStartParams;
+type Update = SessionOptionsParams;
 fn decode<T: serde::de::DeserializeOwned>(p: Value) -> Result<T> {
     serde_json::from_value(p).map_err(|_| params::invalid())
 }

@@ -1,0 +1,2867 @@
+{
+  "$defs": {
+    "AccessRoute": {
+      "additionalProperties": false,
+      "properties": {
+        "billing": {
+          "$ref": "#/$defs/Observation4"
+        },
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/Capability"
+          },
+          "type": "array"
+        },
+        "catalogRevision": {
+          "type": "string"
+        },
+        "connectionId": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "providerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "connectionId",
+        "providerId",
+        "displayName",
+        "billing",
+        "capabilities",
+        "catalogRevision"
+      ],
+      "type": "object"
+    },
+    "Account": {
+      "additionalProperties": false,
+      "properties": {
+        "displayLabel": {
+          "$ref": "#/$defs/Observation"
+        },
+        "id": {
+          "type": "string"
+        },
+        "identitySource": {
+          "$ref": "#/$defs/Observation"
+        },
+        "providerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "providerId",
+        "displayLabel",
+        "identitySource"
+      ],
+      "type": "object"
+    },
+    "AdapterDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "cancellation": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "integration": {
+          "type": "string"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "metadata": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nativeToolApproval": {
+          "type": "boolean"
+        },
+        "passiveDiscovery": {
+          "type": "boolean"
+        },
+        "persistentResumption": {
+          "type": "boolean"
+        },
+        "qualification": {
+          "description": "Static implementation scope, not proof this machine/account has been qualified.",
+          "type": "string"
+        },
+        "textSessions": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "integration",
+        "passiveDiscovery",
+        "metadata",
+        "textSessions",
+        "nativeToolApproval",
+        "cancellation",
+        "persistentResumption",
+        "qualification",
+        "limitations"
+      ],
+      "type": "object"
+    },
+    "ApprovalParams": {
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "boolean"
+        },
+        "approvalId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "approvalId",
+        "allow"
+      ],
+      "type": "object"
+    },
+    "AuthState": {
+      "enum": [
+        "authenticated",
+        "unauthenticated",
+        "expired",
+        "unchecked"
+      ],
+      "type": "string"
+    },
+    "BillingMode": {
+      "enum": [
+        "subscription",
+        "api_metered",
+        "prepaid_credits",
+        "local",
+        "mixed",
+        "unknown"
+      ],
+      "type": "string"
+    },
+    "Candidate": {
+      "properties": {
+        "connectionId": {
+          "type": "string"
+        },
+        "eligible": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "selection": {
+          "$ref": "#/$defs/Selection"
+        }
+      },
+      "required": [
+        "selection",
+        "connectionId",
+        "eligible",
+        "reasons"
+      ],
+      "type": "object"
+    },
+    "Capability": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Observation"
+        },
+        "id": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/CapabilityOrigin"
+        },
+        "support": {
+          "$ref": "#/$defs/Support"
+        }
+      },
+      "required": [
+        "id",
+        "support",
+        "origin",
+        "evidence",
+        "conditions"
+      ],
+      "type": "object"
+    },
+    "CapabilityOrigin": {
+      "enum": [
+        "model",
+        "agent_tool",
+        "runtime",
+        "transport"
+      ],
+      "type": "string"
+    },
+    "Choice": {
+      "additionalProperties": false,
+      "properties": {
+        "disabledReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "type": "object"
+    },
+    "Connection": {
+      "additionalProperties": false,
+      "properties": {
+        "accountId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "auth": {
+          "$ref": "#/$defs/Observation2"
+        },
+        "diagnostics": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "installationId": {
+          "type": "string"
+        },
+        "plan": {
+          "$ref": "#/$defs/Observation3"
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "providerId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "providerId",
+        "installationId",
+        "profileId",
+        "displayName",
+        "auth",
+        "plan",
+        "status",
+        "diagnostics"
+      ],
+      "type": "object"
+    },
+    "ConnectionMetadata": {
+      "additionalProperties": false,
+      "description": "Allowlisted adapter output. The service projects this into authorized snapshots.\nThis record never contains native credential material or private filesystem paths.",
+      "properties": {
+        "account": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Account"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "additionalRoutes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AccessRoute"
+          },
+          "type": "array"
+        },
+        "auth": {
+          "$ref": "#/$defs/Observation2"
+        },
+        "billing": {
+          "$ref": "#/$defs/Observation4"
+        },
+        "connectionId": {
+          "type": "string"
+        },
+        "diagnostics": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includedUsageAllowed": {
+          "$ref": "#/$defs/Observation6"
+        },
+        "models": {
+          "items": {
+            "$ref": "#/$defs/Model"
+          },
+          "type": "array"
+        },
+        "plan": {
+          "$ref": "#/$defs/Observation3"
+        },
+        "providers": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Provider"
+          },
+          "type": "array"
+        },
+        "quotaPools": {
+          "items": {
+            "$ref": "#/$defs/QuotaPool"
+          },
+          "type": "array"
+        },
+        "routeId": {
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/Observation"
+        }
+      },
+      "required": [
+        "connectionId",
+        "routeId",
+        "version",
+        "auth",
+        "plan",
+        "billing",
+        "models",
+        "quotaPools",
+        "includedUsageAllowed",
+        "diagnostics"
+      ],
+      "type": "object"
+    },
+    "ConnectionParams": {
+      "additionalProperties": false,
+      "properties": {
+        "connectionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "connectionId"
+      ],
+      "type": "object"
+    },
+    "DataMode": {
+      "enum": [
+        "live",
+        "synthetic"
+      ],
+      "type": "string"
+    },
+    "DecimalString": {
+      "description": "Nonnegative, finite decimal, represented losslessly across all SDKs.",
+      "type": "string"
+    },
+    "DiscoveryParams": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "DiscoveryResult": {
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/DataMode"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "revision",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "DomainError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable"
+      ],
+      "type": "object"
+    },
+    "EmptyParams": {
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ErrorCode": {
+      "enum": [
+        "INVALID_REQUEST",
+        "LOCAL_ACCESS_DENIED",
+        "AUTH_REQUIRED",
+        "KEYRING_LOCKED",
+        "RUNTIME_MISSING",
+        "INTEGRATION_RESTRICTED",
+        "PROTOCOL_INCOMPATIBLE",
+        "CAPABILITY_UNKNOWN",
+        "CAPABILITY_UNSUPPORTED",
+        "OPTION_UNSUPPORTED",
+        "SELECTION_STALE",
+        "RATE_LIMITED",
+        "BILLING_CONSENT_REQUIRED",
+        "APPROVAL_REQUIRED",
+        "SESSION_ROUTE_MISMATCH",
+        "EVENT_GAP",
+        "PROVIDER_UNAVAILABLE",
+        "TIMEOUT",
+        "CANCELLED",
+        "CONFLICT",
+        "FRAME_TOO_LARGE",
+        "NOT_FOUND",
+        "NOT_IMPLEMENTED"
+      ],
+      "type": "string"
+    },
+    "Event": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterId": {
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/EventPayload"
+        },
+        "schemaVersion": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "timestamp": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "turnId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "sequence",
+        "timestamp",
+        "adapterId",
+        "schemaVersion",
+        "payload"
+      ],
+      "type": "object"
+    },
+    "EventPage": {
+      "properties": {
+        "cursor": {
+          "type": "string"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/Event"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "events",
+        "cursor"
+      ],
+      "type": "object"
+    },
+    "EventPayload": {
+      "oneOf": [
+        {
+          "properties": {
+            "state": {
+              "$ref": "#/$defs/SessionState"
+            },
+            "type": {
+              "const": "state",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "state"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "type": {
+              "const": "text_delta",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "type": {
+              "const": "reasoning_summary",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "approvalId": {
+              "type": "string"
+            },
+            "detail": {
+              "type": "string"
+            },
+            "type": {
+              "const": "approval_request",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "approvalId",
+            "action",
+            "detail"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "allowed": {
+              "type": "boolean"
+            },
+            "approvalId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "approval_resolved",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "approvalId",
+            "allowed"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "type": {
+              "const": "tool",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "name",
+            "status"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "usage",
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "used": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "unit",
+            "used"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "artifactId": {
+              "type": "string"
+            },
+            "mediaType": {
+              "type": "string"
+            },
+            "size": {
+              "type": "string"
+            },
+            "type": {
+              "const": "artifact",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "artifactId",
+            "mediaType",
+            "size"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "revision": {
+              "type": "string"
+            },
+            "type": {
+              "const": "options_changed",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "revision"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "type": {
+              "const": "warning",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "code",
+            "message"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "type": {
+              "const": "error",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "code",
+            "message"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "type": {
+              "const": "final",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "status"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "data": true,
+            "namespace": {
+              "type": "string"
+            },
+            "type": {
+              "const": "extension",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "namespace",
+            "data"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "EventsParams": {
+      "additionalProperties": false,
+      "properties": {
+        "after": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sessionId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "official_protocol",
+        "official_api",
+        "local_config",
+        "local_log",
+        "community_endpoint",
+        "user_supplied",
+        "derived",
+        "synthetic"
+      ],
+      "type": "string"
+    },
+    "EvidenceSource": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterId": {
+          "type": "string"
+        },
+        "adapterVersion": {
+          "type": "string"
+        },
+        "clientVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "adapterId",
+        "adapterVersion"
+      ],
+      "type": "object"
+    },
+    "Freshness": {
+      "enum": [
+        "fresh",
+        "stale"
+      ],
+      "type": "string"
+    },
+    "GrantParams": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPaid": {
+          "default": false,
+          "type": "boolean"
+        },
+        "connectionIds": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "scopes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "HandshakeParams": {
+      "additionalProperties": false,
+      "properties": {
+        "clientName": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "protocolVersion": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "HandshakeResult": {
+      "properties": {
+        "methods": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "protocolVersion": {
+          "type": "string"
+        },
+        "runtimeVersion": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "runtimeVersion",
+        "methods"
+      ],
+      "type": "object"
+    },
+    "Installation": {
+      "additionalProperties": false,
+      "properties": {
+        "environmentId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "locationHint": {
+          "type": "string"
+        },
+        "providerId": {
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/Observation"
+        }
+      },
+      "required": [
+        "id",
+        "providerId",
+        "environmentId",
+        "locationHint",
+        "version"
+      ],
+      "type": "object"
+    },
+    "MethodInputs": {
+      "additionalProperties": false,
+      "description": "This is the superset of compiled public methods, not a grant or an assertion of live provider support.",
+      "properties": {
+        "adapters.list": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "approvals.respond": {
+          "$ref": "#/$defs/ApprovalParams"
+        },
+        "capabilities.read": {
+          "$ref": "#/$defs/ModelParams"
+        },
+        "connections.list": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "connections.probe": {
+          "$ref": "#/$defs/ConnectionParams"
+        },
+        "diagnostics.report": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "discovery.refresh": {
+          "$ref": "#/$defs/DiscoveryParams"
+        },
+        "events.read": {
+          "$ref": "#/$defs/EventsParams"
+        },
+        "events.subscribe": {
+          "$ref": "#/$defs/EventsParams"
+        },
+        "events.unsubscribe": {
+          "$ref": "#/$defs/SubscriptionParams"
+        },
+        "grants.list": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "grants.request": {
+          "$ref": "#/$defs/GrantParams"
+        },
+        "grants.revoke": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "models.list": {
+          "$ref": "#/$defs/ModelsParams"
+        },
+        "runtime.handshake": {
+          "$ref": "#/$defs/HandshakeParams"
+        },
+        "runtime.health": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "selection.resolve": {
+          "$ref": "#/$defs/Requirements"
+        },
+        "selection.validate": {
+          "$ref": "#/$defs/SelectionParams"
+        },
+        "sessions.close": {
+          "$ref": "#/$defs/SessionParams"
+        },
+        "sessions.create": {
+          "$ref": "#/$defs/SessionCreateParams"
+        },
+        "sessions.get": {
+          "$ref": "#/$defs/SessionParams"
+        },
+        "sessions.updateOptions": {
+          "$ref": "#/$defs/SessionOptionsParams"
+        },
+        "snapshot.get": {
+          "$ref": "#/$defs/SnapshotParams"
+        },
+        "turns.cancel": {
+          "$ref": "#/$defs/TurnParams"
+        },
+        "turns.start": {
+          "$ref": "#/$defs/TurnStartParams"
+        },
+        "usage.read": {
+          "$ref": "#/$defs/EmptyParams"
+        }
+      },
+      "required": [
+        "runtime.handshake",
+        "runtime.health",
+        "snapshot.get",
+        "discovery.refresh",
+        "connections.list",
+        "connections.probe",
+        "models.list",
+        "usage.read",
+        "capabilities.read",
+        "selection.resolve",
+        "selection.validate",
+        "grants.request",
+        "grants.list",
+        "grants.revoke",
+        "sessions.create",
+        "sessions.get",
+        "sessions.close",
+        "sessions.updateOptions",
+        "turns.start",
+        "turns.cancel",
+        "approvals.respond",
+        "events.read",
+        "events.subscribe",
+        "events.unsubscribe",
+        "adapters.list",
+        "diagnostics.report"
+      ],
+      "type": "object"
+    },
+    "MethodOutputs": {
+      "additionalProperties": false,
+      "properties": {
+        "adapters.list": {
+          "items": {
+            "$ref": "#/$defs/AdapterDescriptor"
+          },
+          "type": "array"
+        },
+        "approvals.respond": true,
+        "capabilities.read": {
+          "items": {
+            "$ref": "#/$defs/Capability"
+          },
+          "type": "array"
+        },
+        "connections.list": {
+          "items": {
+            "$ref": "#/$defs/Connection"
+          },
+          "type": "array"
+        },
+        "connections.probe": true,
+        "diagnostics.report": true,
+        "discovery.refresh": {
+          "$ref": "#/$defs/DiscoveryResult"
+        },
+        "events.read": {
+          "$ref": "#/$defs/EventPage"
+        },
+        "events.subscribe": true,
+        "events.unsubscribe": true,
+        "grants.list": true,
+        "grants.request": true,
+        "grants.revoke": true,
+        "models.list": {
+          "items": {
+            "$ref": "#/$defs/Model"
+          },
+          "type": "array"
+        },
+        "runtime.handshake": {
+          "$ref": "#/$defs/HandshakeResult"
+        },
+        "runtime.health": {
+          "$ref": "#/$defs/RuntimeHealth"
+        },
+        "selection.resolve": {
+          "items": {
+            "$ref": "#/$defs/Candidate"
+          },
+          "type": "array"
+        },
+        "selection.validate": {
+          "$ref": "#/$defs/ValidationResult"
+        },
+        "sessions.close": true,
+        "sessions.create": {
+          "$ref": "#/$defs/Session"
+        },
+        "sessions.get": {
+          "$ref": "#/$defs/Session"
+        },
+        "sessions.updateOptions": {
+          "$ref": "#/$defs/Session"
+        },
+        "snapshot.get": {
+          "$ref": "#/$defs/Snapshot"
+        },
+        "turns.cancel": true,
+        "turns.start": {
+          "$ref": "#/$defs/TurnStarted"
+        },
+        "usage.read": {
+          "items": {
+            "$ref": "#/$defs/QuotaPool"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "runtime.handshake",
+        "runtime.health",
+        "snapshot.get",
+        "discovery.refresh",
+        "connections.list",
+        "connections.probe",
+        "models.list",
+        "usage.read",
+        "capabilities.read",
+        "selection.resolve",
+        "selection.validate",
+        "grants.request",
+        "grants.list",
+        "grants.revoke",
+        "sessions.create",
+        "sessions.get",
+        "sessions.close",
+        "sessions.updateOptions",
+        "turns.start",
+        "turns.cancel",
+        "approvals.respond",
+        "events.read",
+        "events.subscribe",
+        "events.unsubscribe",
+        "adapters.list",
+        "diagnostics.report"
+      ],
+      "type": "object"
+    },
+    "Model": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/Capability"
+          },
+          "type": "array"
+        },
+        "contextWindow": {
+          "$ref": "#/$defs/Observation"
+        },
+        "id": {
+          "type": "string"
+        },
+        "isDefault": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nativeId": {
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/OptionDescriptor"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "routeId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "routeId",
+        "nativeId",
+        "name",
+        "revision",
+        "isDefault",
+        "capabilities",
+        "options",
+        "contextWindow"
+      ],
+      "type": "object"
+    },
+    "ModelParams": {
+      "additionalProperties": false,
+      "properties": {
+        "modelId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "modelId"
+      ],
+      "type": "object"
+    },
+    "ModelsParams": {
+      "additionalProperties": false,
+      "properties": {
+        "routeId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Observation": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expiresAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "freshness": {
+              "$ref": "#/$defs/Freshness"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "source": {
+              "$ref": "#/$defs/EvidenceSource"
+            },
+            "state": {
+              "const": "known",
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "verification": {
+              "$ref": "#/$defs/Verification"
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "source",
+            "observedAt",
+            "freshness",
+            "verification"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unknown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unavailable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Observation2": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expiresAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "freshness": {
+              "$ref": "#/$defs/Freshness"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "source": {
+              "$ref": "#/$defs/EvidenceSource"
+            },
+            "state": {
+              "const": "known",
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/AuthState"
+            },
+            "verification": {
+              "$ref": "#/$defs/Verification"
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "source",
+            "observedAt",
+            "freshness",
+            "verification"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unknown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unavailable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Observation3": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expiresAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "freshness": {
+              "$ref": "#/$defs/Freshness"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "source": {
+              "$ref": "#/$defs/EvidenceSource"
+            },
+            "state": {
+              "const": "known",
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/Plan"
+            },
+            "verification": {
+              "$ref": "#/$defs/Verification"
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "source",
+            "observedAt",
+            "freshness",
+            "verification"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unknown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unavailable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Observation4": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expiresAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "freshness": {
+              "$ref": "#/$defs/Freshness"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "source": {
+              "$ref": "#/$defs/EvidenceSource"
+            },
+            "state": {
+              "const": "known",
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/BillingMode"
+            },
+            "verification": {
+              "$ref": "#/$defs/Verification"
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "source",
+            "observedAt",
+            "freshness",
+            "verification"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unknown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unavailable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Observation5": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expiresAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "freshness": {
+              "$ref": "#/$defs/Freshness"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "source": {
+              "$ref": "#/$defs/EvidenceSource"
+            },
+            "state": {
+              "const": "known",
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/UsageReading"
+            },
+            "verification": {
+              "$ref": "#/$defs/Verification"
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "source",
+            "observedAt",
+            "freshness",
+            "verification"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unknown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unavailable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Observation6": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expiresAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "freshness": {
+              "$ref": "#/$defs/Freshness"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "source": {
+              "$ref": "#/$defs/EvidenceSource"
+            },
+            "state": {
+              "const": "known",
+              "type": "string"
+            },
+            "value": {
+              "type": "boolean"
+            },
+            "verification": {
+              "$ref": "#/$defs/Verification"
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "source",
+            "observedAt",
+            "freshness",
+            "verification"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unknown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "state": {
+              "const": "unavailable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "OptionControl": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "choices": {
+              "items": {
+                "$ref": "#/$defs/Choice"
+              },
+              "type": "array"
+            },
+            "defaultValue": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "select",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "choices"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "boolean",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "max": {
+              "format": "double",
+              "type": "number"
+            },
+            "min": {
+              "format": "double",
+              "type": "number"
+            },
+            "step": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": {
+              "const": "number",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "min",
+            "max",
+            "step"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "maxLength": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "maxLength"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "nativeType": {
+              "type": "string"
+            },
+            "type": {
+              "const": "unknown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "nativeType"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "OptionDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "billingSensitive": {
+          "default": false,
+          "type": "boolean"
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "control": {
+          "$ref": "#/$defs/OptionControl"
+        },
+        "currentValue": true,
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "permissionSensitive": {
+          "default": false,
+          "type": "boolean"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/OptionScope"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "scope",
+        "revision",
+        "control"
+      ],
+      "type": "object"
+    },
+    "OptionScope": {
+      "enum": [
+        "model",
+        "session",
+        "turn"
+      ],
+      "type": "string"
+    },
+    "Plan": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "nativeId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "nativeId",
+        "label"
+      ],
+      "type": "object"
+    },
+    "Profile": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "installationId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "installationId",
+        "label"
+      ],
+      "type": "object"
+    },
+    "Provider": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "QuotaPool": {
+      "additionalProperties": false,
+      "properties": {
+        "accountId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "connectionIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "routeIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sharing": {
+          "type": "string"
+        },
+        "windows": {
+          "items": {
+            "$ref": "#/$defs/UsageWindow"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "connectionIds",
+        "routeIds",
+        "sharing",
+        "windows"
+      ],
+      "type": "object"
+    },
+    "Requirements": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPaidFallback": {
+          "default": false,
+          "type": "boolean"
+        },
+        "billingPreference": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "eligibleOnly": {
+          "default": false,
+          "type": "boolean"
+        },
+        "query": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requiredCapabilities": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "RuntimeHealth": {
+      "properties": {
+        "executionAvailable": {
+          "type": "boolean"
+        },
+        "metadataAvailable": {
+          "type": "boolean"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "mode",
+        "executionAvailable",
+        "metadataAvailable"
+      ],
+      "type": "object"
+    },
+    "Selection": {
+      "additionalProperties": false,
+      "properties": {
+        "modelId": {
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "routeId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "routeId",
+        "modelId",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "SelectionParams": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPaid": {
+          "default": false,
+          "type": "boolean"
+        },
+        "selection": {
+          "$ref": "#/$defs/Selection"
+        }
+      },
+      "required": [
+        "selection"
+      ],
+      "type": "object"
+    },
+    "Session": {
+      "additionalProperties": false,
+      "properties": {
+        "connectionId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nativeResumption": {
+          "type": "boolean"
+        },
+        "selection": {
+          "$ref": "#/$defs/Selection"
+        },
+        "state": {
+          "$ref": "#/$defs/SessionState"
+        }
+      },
+      "required": [
+        "id",
+        "connectionId",
+        "selection",
+        "state",
+        "createdAt",
+        "nativeResumption"
+      ],
+      "type": "object"
+    },
+    "SessionCreateParams": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPaid": {
+          "default": false,
+          "type": "boolean"
+        },
+        "permissionMode": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewRequests": {
+          "default": false,
+          "type": "boolean"
+        },
+        "selection": {
+          "$ref": "#/$defs/Selection"
+        },
+        "workspaceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "selection",
+        "workspaceId"
+      ],
+      "type": "object"
+    },
+    "SessionOptionsParams": {
+      "additionalProperties": false,
+      "properties": {
+        "options": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sessionId",
+        "options"
+      ],
+      "type": "object"
+    },
+    "SessionParams": {
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sessionId"
+      ],
+      "type": "object"
+    },
+    "SessionState": {
+      "enum": [
+        "ready",
+        "running",
+        "awaiting_approval",
+        "completed",
+        "error",
+        "cancelled",
+        "closed"
+      ],
+      "type": "string"
+    },
+    "Snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "$ref": "#/$defs/Account"
+          },
+          "type": "array"
+        },
+        "connections": {
+          "items": {
+            "$ref": "#/$defs/Connection"
+          },
+          "type": "array"
+        },
+        "diagnostics": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "installations": {
+          "items": {
+            "$ref": "#/$defs/Installation"
+          },
+          "type": "array"
+        },
+        "mode": {
+          "$ref": "#/$defs/DataMode"
+        },
+        "models": {
+          "items": {
+            "$ref": "#/$defs/Model"
+          },
+          "type": "array"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "profiles": {
+          "items": {
+            "$ref": "#/$defs/Profile"
+          },
+          "type": "array"
+        },
+        "protocolVersion": {
+          "type": "string"
+        },
+        "providers": {
+          "items": {
+            "$ref": "#/$defs/Provider"
+          },
+          "type": "array"
+        },
+        "quotaPools": {
+          "items": {
+            "$ref": "#/$defs/QuotaPool"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "routes": {
+          "items": {
+            "$ref": "#/$defs/AccessRoute"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "revision",
+        "observedAt",
+        "mode",
+        "providers",
+        "installations",
+        "profiles",
+        "accounts",
+        "connections",
+        "routes",
+        "models",
+        "quotaPools",
+        "diagnostics"
+      ],
+      "type": "object"
+    },
+    "SnapshotParams": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "default": null,
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "SubscriptionParams": {
+      "additionalProperties": false,
+      "properties": {
+        "subscriptionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "subscriptionId"
+      ],
+      "type": "object"
+    },
+    "Support": {
+      "enum": [
+        "supported",
+        "unsupported",
+        "conditional",
+        "unknown"
+      ],
+      "type": "string"
+    },
+    "Timestamp": {
+      "description": "Validated RFC 3339 timestamp, kept as text on the wire.",
+      "type": "string"
+    },
+    "TurnParams": {
+      "additionalProperties": false,
+      "properties": {
+        "turnId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "turnId"
+      ],
+      "type": "object"
+    },
+    "TurnStartParams": {
+      "additionalProperties": false,
+      "properties": {
+        "prompt": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sessionId",
+        "prompt",
+        "requestId"
+      ],
+      "type": "object"
+    },
+    "TurnStarted": {
+      "properties": {
+        "turnId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "turnId"
+      ],
+      "type": "object"
+    },
+    "UsageReading": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DecimalString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "remaining": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DecimalString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "used": {
+          "$ref": "#/$defs/DecimalString"
+        },
+        "usedFraction": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "unit",
+        "used"
+      ],
+      "type": "object"
+    },
+    "UsageWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "durationSeconds": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "reading": {
+          "$ref": "#/$defs/Observation5"
+        },
+        "resetsAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "reading"
+      ],
+      "type": "object"
+    },
+    "ValidationResult": {
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/DataMode"
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "valid",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "Verification": {
+      "enum": [
+        "reported",
+        "observed",
+        "inferred"
+      ],
+      "type": "string"
+    }
+  },
+  "methods": [
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "adapters.list",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": {
+        "items": {
+          "$ref": "#/$defs/AdapterDescriptor"
+        },
+        "type": "array"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "approvals.respond",
+      "paramsSchema": {
+        "$ref": "#/$defs/ApprovalParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "capabilities.read",
+      "paramsSchema": {
+        "$ref": "#/$defs/ModelParams"
+      },
+      "resultSchema": {
+        "items": {
+          "$ref": "#/$defs/Capability"
+        },
+        "type": "array"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "connections.list",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": {
+        "items": {
+          "$ref": "#/$defs/Connection"
+        },
+        "type": "array"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "connections.probe",
+      "paramsSchema": {
+        "$ref": "#/$defs/ConnectionParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "diagnostics.report",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "discovery.refresh",
+      "paramsSchema": {
+        "$ref": "#/$defs/DiscoveryParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/DiscoveryResult"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "events.read",
+      "paramsSchema": {
+        "$ref": "#/$defs/EventsParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/EventPage"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "events.subscribe",
+      "paramsSchema": {
+        "$ref": "#/$defs/EventsParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "events.unsubscribe",
+      "paramsSchema": {
+        "$ref": "#/$defs/SubscriptionParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "grants.list",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "grants.request",
+      "paramsSchema": {
+        "$ref": "#/$defs/GrantParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "grants.revoke",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "models.list",
+      "paramsSchema": {
+        "$ref": "#/$defs/ModelsParams"
+      },
+      "resultSchema": {
+        "items": {
+          "$ref": "#/$defs/Model"
+        },
+        "type": "array"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "runtime.handshake",
+      "paramsSchema": {
+        "$ref": "#/$defs/HandshakeParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/HandshakeResult"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "runtime.health",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/RuntimeHealth"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "selection.resolve",
+      "paramsSchema": {
+        "$ref": "#/$defs/Requirements"
+      },
+      "resultSchema": {
+        "items": {
+          "$ref": "#/$defs/Candidate"
+        },
+        "type": "array"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "selection.validate",
+      "paramsSchema": {
+        "$ref": "#/$defs/SelectionParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/ValidationResult"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "sessions.close",
+      "paramsSchema": {
+        "$ref": "#/$defs/SessionParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "sessions.create",
+      "paramsSchema": {
+        "$ref": "#/$defs/SessionCreateParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/Session"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "sessions.get",
+      "paramsSchema": {
+        "$ref": "#/$defs/SessionParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/Session"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "sessions.updateOptions",
+      "paramsSchema": {
+        "$ref": "#/$defs/SessionOptionsParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/Session"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "snapshot.get",
+      "paramsSchema": {
+        "$ref": "#/$defs/SnapshotParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/Snapshot"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "turns.cancel",
+      "paramsSchema": {
+        "$ref": "#/$defs/TurnParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "turns.start",
+      "paramsSchema": {
+        "$ref": "#/$defs/TurnStartParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/TurnStarted"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "usage.read",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": {
+        "items": {
+          "$ref": "#/$defs/QuotaPool"
+        },
+        "type": "array"
+      }
+    }
+  ],
+  "protocolVersion": "1.0"
+}

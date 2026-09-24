@@ -49,7 +49,9 @@ impl NativeService {
             }
             "runtime.health" => {
                 params::allow(p, &[])?;
-                Ok(json!({"status":"ok","mode":"live","executionAvailable":false}))
+                Ok(
+                    json!({"status":"ok","mode":"live","executionAvailable":self.execution_state.source.is_some(),"metadataAvailable":self.metadata_source.is_some()}),
+                )
             }
             "grants.request" => {
                 params::allow(p, &["scopes", "connectionIds", "allowPaid"])?;
@@ -60,7 +62,7 @@ impl NativeService {
                 params::allow(p, &[])?;
                 let policy = self.policy(client)?;
                 Ok(
-                    json!({"allowPassiveDiscovery":policy.allow_passive_discovery,"connectionIds":policy.connection_ids,"revealIdentity":policy.reveal_identity,"execution":false}),
+                    json!({"allowPassiveDiscovery":policy.allow_passive_discovery,"connectionIds":policy.connection_ids,"revealIdentity":policy.reveal_identity,"execution":self.execution_state.grants.read().map_err(|_|denied())?.contains_key(client)}),
                 )
             }
             "grants.revoke" => {
@@ -71,9 +73,7 @@ impl NativeService {
             }
             "adapters.list" => {
                 params::allow(p, &[])?;
-                Ok(
-                    json!({"operation":"passive_inventory","liveQualified":false,"executionAvailable":false}),
-                )
+                Ok(json!(self.adapters))
             }
             _ => self.read_data(client, method, p),
         }
@@ -144,7 +144,7 @@ impl NativeService {
             "diagnostics.report" => {
                 params::allow(p, &[])?;
                 Ok(
-                    json!({"mode":snapshot.mode,"connections":snapshot.connections.len(),"models":snapshot.models.len(),"quotaPools":snapshot.quota_pools.len(),"executionAvailable":false,"limitations":["Passive discovery does not verify authentication, plans, or available models."]}),
+                    json!({"mode":snapshot.mode,"connections":snapshot.connections.len(),"models":snapshot.models.len(),"quotaPools":snapshot.quota_pools.len(),"executionAvailable":self.execution_state.source.is_some(),"metadataAvailable":self.metadata_source.is_some(),"limitations":["Passive discovery alone does not verify authentication or plan access.","Adapter implementation is not a live account qualification."]}),
                 )
             }
             _ => Err(unsupported()),

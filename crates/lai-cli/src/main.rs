@@ -1,3 +1,4 @@
+mod adapter_info;
 mod args;
 mod endpoints;
 mod host;

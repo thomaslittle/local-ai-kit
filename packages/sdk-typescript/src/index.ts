@@ -1,4 +1,5 @@
 export type * from './types.ts';
+export type * from './generated.ts';
 export type { HttpOptions } from './http.ts';
 export type { LocalAIClient } from './client.ts';
 export { LocalAIError } from './errors.ts';

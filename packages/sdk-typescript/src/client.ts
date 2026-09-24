@@ -1,5 +1,6 @@
 import { LocalAIError } from './errors.ts';
 import type { CallOptions, Handshake, Transport } from './types.ts';
+import type { MethodInputs, MethodOutputs, Snapshot, Event } from './generated.ts';
 const families = {
   runtime: ['health'], discovery: ['refresh', 'cancel'], snapshot: ['get'],
   connections: ['list', 'setupInstructions', 'authenticate', 'probe'], models: ['list'], usage: ['read'], capabilities: ['read'],
@@ -8,8 +9,22 @@ const families = {
   artifacts: ['read'], diagnostics: ['report'], adapters: ['list'],
 } as const;
 type Method = <T = unknown>(params?: unknown, options?: CallOptions) => Promise<T>;
-type Families = { [F in keyof typeof families]: { [M in typeof families[F][number]]: Method } };
-export type LocalAIClient = Families & { handshake: Readonly<Handshake>; close(): Promise<void>; events: { subscribe: NonNullable<Transport['subscribe']> } };
+type Input<K extends string> = K extends keyof MethodInputs ? MethodInputs[K] : unknown;
+type Output<K extends string> = K extends keyof MethodOutputs ? MethodOutputs[K] : unknown;
+type TypedMethod<K extends string> = {} extends Input<K>
+  ? <T = Output<K>>(params?: Input<K>, options?: CallOptions) => Promise<T>
+  : <T = Output<K>>(params: Input<K>, options?: CallOptions) => Promise<T>;
+type Families = { [F in keyof typeof families]: { [M in typeof families[F][number]]: TypedMethod<`${F}.${M}`> } };
+interface SnapshotMethods {
+  get<T = Snapshot>(params?: { fields?: undefined }, options?: CallOptions): Promise<T>;
+  get<K extends keyof Snapshot>(params: { fields: K[] }, options?: CallOptions): Promise<Pick<Snapshot, K>>;
+}
+export type LocalAIClient = Omit<Families, 'snapshot'> & {
+  snapshot: SnapshotMethods;
+  handshake: Readonly<Handshake>;
+  close(): Promise<void>;
+  events: { subscribe<T = Event>(query?: { sessionId?: string; after?: string }, options?: CallOptions): AsyncIterable<T> };
+};
 export async function createLocalAI(options: { transport: Transport; clientName?: string; signal?: AbortSignal }): Promise<LocalAIClient> {
   const transport = options.transport;
   let handshake: Handshake;

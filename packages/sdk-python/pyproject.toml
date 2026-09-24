@@ -14,4 +14,4 @@ classifiers = ["Private :: Do Not Upload"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-local_ai_kit = ["py.typed"]
+local_ai_kit = ["py.typed", "*.pyi"]

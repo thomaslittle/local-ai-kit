@@ -1,7 +1,7 @@
 //! Native selection and permission-scoped projections. No I/O or provider code.
 mod projection;
 mod selection;
-use lai_contracts::Selection;
+pub use lai_contracts::{Candidate, Requirements};
 pub use projection::project_snapshot;
 pub use selection::{resolve, validate_selection};
 use serde::{Deserialize, Serialize};
@@ -44,26 +44,4 @@ impl ClientPolicy {
             .as_ref()
             .is_none_or(|ids| ids.contains(id))
     }
-}
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Requirements {
-    #[serde(default)]
-    pub required_capabilities: Vec<String>,
-    #[serde(default)]
-    pub allow_paid_fallback: bool,
-    #[serde(default)]
-    pub eligible_only: bool,
-    #[serde(default)]
-    pub billing_preference: Option<String>,
-    #[serde(default)]
-    pub query: Option<String>,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Candidate {
-    pub selection: Selection,
-    pub connection_id: String,
-    pub eligible: bool,
-    pub reasons: Vec<String>,
 }
