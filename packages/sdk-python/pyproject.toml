@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-ai-kit-preview"
+version = "0.1.0a1"
+description = "Thin native-helper protocol client for Local AI Kit"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+classifiers = ["Private :: Do Not Upload"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+local_ai_kit = ["py.typed"]
