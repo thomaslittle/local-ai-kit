@@ -23,6 +23,7 @@ const METHODS: &[&str] = &[
 impl NativeService {
     fn advertised_methods(&self) -> Vec<&'static str> {
         let mut methods = METHODS.to_vec();
+        methods.extend(self.execution_methods());
         if self.metadata_source.is_some() {
             methods.push("connections.probe");
         }

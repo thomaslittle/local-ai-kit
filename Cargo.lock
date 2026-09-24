@@ -243,6 +243,7 @@ dependencies = [
  "chrono",
  "lai-contracts",
  "lai-discovery",
+ "lai-runtime",
  "serde",
  "serde_json",
  "tempfile",
@@ -308,12 +309,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "lai-runtime"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "lai-contracts",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "lai-service"
 version = "0.1.0-alpha.1"
 dependencies = [
  "lai-contracts",
  "lai-core",
  "lai-discovery",
+ "lai-runtime",
  "serde",
  "serde_json",
  "tokio",

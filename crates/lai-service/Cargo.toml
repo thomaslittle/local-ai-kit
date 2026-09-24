@@ -7,6 +7,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
+lai-runtime = { path = "../lai-runtime" }
 lai-contracts = { path = "../lai-contracts" }
 lai-core = { path = "../lai-core" }
 lai-discovery = { path = "../lai-discovery" }

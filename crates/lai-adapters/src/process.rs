@@ -22,12 +22,12 @@ pub struct LaunchSpec {
     pub cwd: PathBuf,
     pub env: BTreeMap<OsString, OsString>,
 }
-struct Peer {
+pub(crate) struct Peer {
     child: Child,
     input: ChildStdin,
     output: BufReader<ChildStdout>,
     stderr: JoinHandle<()>,
-    sequence: u64,
+    pub(crate) sequence: u64,
     account_established: bool,
 }
 fn error(code: ErrorCode) -> DomainError {
@@ -77,7 +77,7 @@ fn validate(spec: &LaunchSpec) -> Result<()> {
     Ok(())
 }
 impl Peer {
-    async fn spawn(spec: LaunchSpec) -> Result<Self> {
+    pub(crate) async fn spawn(spec: LaunchSpec) -> Result<Self> {
         validate(&spec)?;
         let mut command = Command::new(&spec.executable);
         command
@@ -143,7 +143,7 @@ impl Peer {
             account_established: false,
         })
     }
-    async fn send(&mut self, value: Value) -> Result<()> {
+    pub(crate) async fn send(&mut self, value: Value) -> Result<()> {
         let mut bytes = serde_json::to_vec(&value).map_err(|_| error(ErrorCode::InvalidRequest))?;
         if bytes.len() as u64 >= MAX_FRAME {
             return Err(error(ErrorCode::FrameTooLarge));
@@ -158,7 +158,7 @@ impl Peer {
             .await
             .map_err(|_| error(ErrorCode::ProviderUnavailable))
     }
-    async fn read(&mut self) -> Result<Value> {
+    pub(crate) async fn read(&mut self) -> Result<Value> {
         let mut bytes = Vec::new();
         let count = (&mut self.output)
             .take(MAX_FRAME + 1)
@@ -176,7 +176,7 @@ impl Peer {
         }
         serde_json::from_slice(&bytes).map_err(|_| error(ErrorCode::ProtocolIncompatible))
     }
-    async fn request(&mut self, method: &str, params: Value) -> Result<Value> {
+    pub(crate) async fn request(&mut self, method: &str, params: Value) -> Result<Value> {
         self.sequence += 1;
         let id = self.sequence;
         self.send(json!({"id":id,"method":method,"params":params}))
@@ -206,7 +206,7 @@ impl Peer {
         }
         Err(error(ErrorCode::FrameTooLarge))
     }
-    async fn shutdown(&mut self) {
+    pub(crate) async fn shutdown(&mut self) {
         let _ = self.input.shutdown().await;
         if tokio::time::timeout(Duration::from_millis(250), self.child.wait())
             .await
@@ -241,7 +241,11 @@ pub async fn codex_metadata(
     peer.shutdown().await;
     result
 }
-async fn exchange(peer: &mut Peer, connection: &str, route: &str) -> Result<ConnectionMetadata> {
+pub(crate) async fn exchange(
+    peer: &mut Peer,
+    connection: &str,
+    route: &str,
+) -> Result<ConnectionMetadata> {
     let initialize=peer.request("initialize",json!({"clientInfo":{"name":"local_ai_kit","title":"Local AI Kit","version":env!("CARGO_PKG_VERSION")},"capabilities":{"experimentalApi":false}})).await?;
     peer.send(json!({"method":"initialized","params":{}}))
         .await?;

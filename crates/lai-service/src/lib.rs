@@ -1,4 +1,6 @@
 //! One native service shared by every transport. Only the trusted host sets policies.
+mod execution;
+pub use execution::{ExecutionGrant, ExecutionInput, ExecutionSource};
 mod cache;
 mod metadata;
 mod methods;
@@ -17,7 +19,8 @@ use std::{
 
 pub type InventorySource = Arc<dyn Fn(&AtomicBool) -> Result<ScanResult> + Send + Sync>;
 pub struct NativeService {
-    clients: RwLock<BTreeMap<String, ClientPolicy>>,
+    clients: Arc<RwLock<BTreeMap<String, ClientPolicy>>>,
+    execution_state: execution::ExecutionState,
     cache: Arc<InventoryCache>,
     metadata_source: Option<MetadataSource>,
     metadata_locks: std::sync::Mutex<BTreeMap<String, Arc<tokio::sync::Mutex<()>>>>,
@@ -25,7 +28,8 @@ pub struct NativeService {
 impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
         Self {
-            clients: RwLock::new(BTreeMap::new()),
+            clients: Arc::new(RwLock::new(BTreeMap::new())),
+            execution_state: Default::default(),
             metadata_source: None,
             metadata_locks: std::sync::Mutex::new(BTreeMap::new()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
@@ -63,7 +67,9 @@ impl NativeService {
     fn projected(&self, id: &str) -> Result<Snapshot> {
         // Acquire policy after loading data; never reuse a policy from before an await.
         let snapshot = self.cache.snapshot()?;
-        Ok(project_snapshot(&snapshot, &self.policy(id)?))
+        let mut snapshot = project_snapshot(&snapshot, &self.policy(id)?);
+        execution::decorate(&mut snapshot, &self.execution_state.providers);
+        Ok(snapshot)
     }
     pub async fn handle(&self, client: &str, method: &str, params: Value) -> Result<Value> {
         self.policy(client)?;
@@ -88,6 +94,18 @@ impl NativeService {
         }
         if method == "connections.probe" {
             return self.probe_connection(client, &params).await;
+        }
+        if method == "grants.revoke" {
+            let value = self.dispatch(client, method, &params)?;
+            self.execution_state.revoke(client);
+            return Ok(value);
+        }
+        if method.starts_with("sessions.")
+            || method.starts_with("turns.")
+            || method == "approvals.respond"
+            || method == "events.read"
+        {
+            return self.execute_method(client, method, params).await;
         }
         self.dispatch(client, method, &params)
     }
