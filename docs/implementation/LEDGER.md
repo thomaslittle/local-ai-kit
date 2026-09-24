@@ -1,18 +1,24 @@
-# Execution ledger — 2026-09-24 Local AI Kit implementation plan
+# Execution ledger — Local AI Kit
 
-Base: `1a49571b2ea5759b383966f1eae80162f4f7f4b1`.
-Branch: `feature/initial-implementation`. Executor: this ChatGPT session; no external coding agent.
+Base: `1a49571b2ea5759b383966f1eae80162f4f7f4b1`. Branch: `feature/initial-implementation`. No external coding agent or paid inference used.
 
-## Preflight
+## Implemented/tested slices
 
-Plan and architecture read. All 18 tasks initially pending. Reference repositories remain read-only.
-Contracts feed platform/core/discovery/runtime/adapters and the service; transports wrap the service; SDKs and demo consume public contracts. Runtime adapter traits cannot depend on concrete adapters (avoids a dependency cycle).
+- Canonical Rust contracts: 13 Windows tests pass on Rust 1.97.1.
+- Native filesystem primitives: 7 Windows tests pass, including requested-byte reads of a sparse 1 GiB file. Unix-only behavior still requires a Unix Rust runner.
+- Headless selector: 24 Node tests pass and TypeScript build passes.
+- TypeScript HTTP/SSE/stdio SDK: 32 tests pass, actual synthetic subprocesses and local HTTP streams.
+- Python async/sync SDK: 18 tests pass, plus isolated wheel installation.
+- Synthetic showcase service: 22 tests pass, including real HTTP/SSE.
+- Eight-selector browser interface: 13 Chromium tests pass via offline test transport; real browser-to-HTTP navigation still unqualified due managed browser policy.
+- JavaScript tarball/Python wheel clean-consumer checks passed in the assistant container.
 
-Ruling: Rust 1.97.1 was verified installed on the Windows machine. Use it for this checkpoint, edition 2024; lock actual dependency resolutions before qualification.
-Ruling: test helpers deserialize canonical Rust types, not a parallel SDK provider implementation.
-Ruling: move CI setup forward from Task 18 because the local remote-desktop connection became unresponsive after the first red test run. CI results are separate evidence from Windows results.
+These are partial deliverables across Tasks 1/2/7/13/14/15. No complete native provider or full release acceptance is claimed.
 
-## Task 1 — in progress
+## Native discovery increment
 
-Red test run observed on Windows with Rust 1.97.1: `cargo test -p lai-contracts`; compiled successfully, all 13 behavioral tests failed on explicit unimplemented function scaffolds. No personal credentials or inference were used.
-The canonical type implementation replaces those scaffolds in this commit. Green CI verification is pending; this task is not marked complete yet.
+Task 2/4 passive inventory tests are being introduced before implementation. Scans are explicitly invoked and must use metadata only, no file-content/credential reads, process spawning, or provider network calls. Inventories preserve profile/environment identity, stream partial snapshots, and never infer active subscriptions from installed files. Next: run the native inventory red tests, implement registry/scanner, and connect it to the real native service/CLI.
+
+## Development environment
+
+The Windows device briefly disconnected, and GitHub CI failed before runner assignment. Tested SDK/UI work continued in the Linux container instead of using paid agents. The device has reconnected; native tests now run on Windows. Pre-offline local changes were preserved in labeled git stashes before fast-forwarding the worktree.

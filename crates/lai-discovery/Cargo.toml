@@ -1,0 +1,18 @@
+[package]
+name = "lai-discovery"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+lai-contracts = { path = "../lai-contracts" }
+lai-platform = { path = "../lai-platform" }
+serde_json.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true
