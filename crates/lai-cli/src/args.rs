@@ -104,6 +104,7 @@ impl Args {
                                 "gemini_api",
                                 "xai_api",
                                 "compatible_api",
+                                "opencode",
                             ]
                             .contains(&v.as_str())
                                 || (flag == "--allow-metadata" && v == "grok")

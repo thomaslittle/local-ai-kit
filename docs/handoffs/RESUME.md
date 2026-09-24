@@ -36,3 +36,6 @@ Implemented the pending HTTP client and verified all 189 Windows native tests. G
 
 ## HTTP provider routes
 Seven HTTP protocol families now implement catalog normalization and text sessions through the existing runtime. The CLI accepts explicit endpoint files and provider grants; local runtimes use known loopback defaults only after probing permission. All 207 Windows Rust tests passed before the current checkpoint. API input capability assertions are explicitly host-declared when the model catalog lacks evidence. Next: OpenCode and native Google/Grok execution, generated contracts, React packages, host examples, packaging and qualification. See docs/adapters/http-providers.md.
+
+## OpenCode gateway
+Implemented distinct upstream catalogs/native variants and permission-verified text sessions through local HTTP/SSE. Config supports kind opencode with explicit providerBilling declarations when the gateway omits billing evidence. Session cleanup never deletes user-owned conversations. Next: remaining native clients, generated contracts, reusable React controls, host packaging and platform qualification.

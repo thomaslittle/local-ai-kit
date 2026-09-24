@@ -172,7 +172,15 @@ impl Endpoint {
     fn query_url(&self, path: &str, query: &[(&str, &str)]) -> Result<Url> {
         if query.len() > 8
             || query.iter().any(|(key, value)| {
-                !["alt", "pageToken", "pageSize", "limit", "after_id"].contains(key)
+                ![
+                    "alt",
+                    "pageToken",
+                    "pageSize",
+                    "limit",
+                    "after_id",
+                    "directory",
+                ]
+                .contains(key)
                     || value.len() > 4096
                     || value.chars().any(char::is_control)
             })
@@ -237,6 +245,49 @@ impl Endpoint {
             }));
         }
         Ok(response)
+    }
+    pub async fn action(&self, path: &str, query: &[(&str, &str)], body: Value) -> Result<Value> {
+        let mut response = self
+            .send_url(self.query_url(path, query)?, Some(body), false)
+            .await?;
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response.chunk().await.map_err(network)? {
+            if bytes.len() + chunk.len() > BODY_LIMIT {
+                return Err(error(ErrorCode::FrameTooLarge));
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        if bytes.is_empty() {
+            Ok(Value::Null)
+        } else {
+            serde_json::from_slice(&bytes).map_err(|_| error(ErrorCode::ProtocolIncompatible))
+        }
+    }
+    pub async fn event_stream(&self, path: &str, query: &[(&str, &str)]) -> Result<LineStream> {
+        let response = self
+            .send_url(self.query_url(path, query)?, None, true)
+            .await?;
+        Ok(LineStream {
+            response,
+            pending: Vec::new(),
+            total: 0,
+            done: false,
+        })
+    }
+    pub async fn delete(&self, path: &str, query: &[(&str, &str)]) -> Result<()> {
+        let response = self
+            .client
+            .delete(self.query_url(path, query)?)
+            .headers(self.headers.clone())
+            .timeout(Duration::from_secs(5))
+            .send()
+            .await
+            .map_err(network)?;
+        if response.status().is_success() {
+            Ok(())
+        } else {
+            Err(error(ErrorCode::ProviderUnavailable))
+        }
     }
     pub async fn json(&self, path: &str, body: Option<Value>) -> Result<Value> {
         self.json_query(path, &[], body).await

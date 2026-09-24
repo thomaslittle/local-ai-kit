@@ -10,6 +10,7 @@ pub enum HttpKind {
     Gemini,
     Xai,
     Compatible,
+    Opencode,
 }
 impl HttpKind {
     pub fn id(self) -> &'static str {
@@ -21,6 +22,7 @@ impl HttpKind {
             Self::Gemini => "gemini_api",
             Self::Xai => "xai_api",
             Self::Compatible => "compatible_api",
+            Self::Opencode => "opencode",
         }
     }
     pub fn local(self) -> bool {

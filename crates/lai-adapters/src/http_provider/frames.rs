@@ -38,6 +38,7 @@ pub fn decode(kind: HttpKind, v: &Value) -> Result<Frame> {
         usage: vec![],
     };
     match kind {
+        HttpKind::Opencode => return Err(fail()),
         HttpKind::Ollama => {
             if v["message"]["tool_calls"]
                 .as_array()

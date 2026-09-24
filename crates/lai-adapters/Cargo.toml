@@ -26,4 +26,5 @@ workspace = true
 windows = { version = "0.62.2", features = ["Win32_System_Threading"] }
 
 [dev-dependencies]
+tokio-stream = { version = "0.1", features = ["sync"] }
 axum = "0.8.9"

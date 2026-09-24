@@ -72,3 +72,13 @@ fn parsing_does_not_require_or_read_an_api_key() {
         ErrorCode::AuthRequired
     );
 }
+
+#[test]
+fn opencode_route_billing_configuration_is_explicit_and_transport_stays_local() {
+    let value = json!({"endpoints":[{"id":"gateway","label":"OpenCode","kind":"opencode","baseUrl":"http://127.0.0.1:4096/","providerBilling":{"openai":"subscription","anthropic":"api_metered"}}]});
+    let registry = Registry::parse(&value.to_string(), "host").unwrap();
+    assert_eq!(registry.entries.len(), 1);
+    let mut bad = value;
+    bad["endpoints"][0]["baseUrl"] = json!("https://remote.example/");
+    assert!(Registry::parse(&bad.to_string(), "host").is_err());
+}

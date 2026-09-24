@@ -18,6 +18,8 @@ pub struct EndpointConfig {
     pub key_env: Option<String>,
     #[serde(default)]
     pub text_models: Vec<String>,
+    #[serde(default)]
+    pub provider_billing: BTreeMap<String, BillingMode>,
 }
 #[derive(Clone, Default)]
 pub struct Registry {
@@ -70,7 +72,16 @@ impl Registry {
             {
                 return Err(invalid());
             }
-            Endpoint::new(&config.base_url, Authentication::None, config.kind.local())?;
+            if config.provider_billing.len() > 128
+                || config.provider_billing.keys().any(|id| !identifier(id))
+            {
+                return Err(invalid());
+            }
+            Endpoint::new(
+                &config.base_url,
+                Authentication::None,
+                config.kind.local() || config.kind == HttpKind::Opencode,
+            )?;
             let id = stable_id(
                 "connection",
                 &[scope, &config.id, config.kind.id(), &config.base_url],
@@ -84,6 +95,7 @@ impl Registry {
             let (kind, url) = match provider {
                 "ollama" => (HttpKind::Ollama, "http://127.0.0.1:11434/"),
                 "lmstudio" => (HttpKind::Lmstudio, "http://127.0.0.1:1234/"),
+                "opencode" => (HttpKind::Opencode, "http://127.0.0.1:4096/"),
                 _ => return None,
             };
             Some(EndpointConfig {
@@ -93,6 +105,7 @@ impl Registry {
                 base_url: url.into(),
                 key_env: None,
                 text_models: vec![],
+                provider_billing: BTreeMap::new(),
             })
         })
     }
@@ -165,12 +178,14 @@ impl EndpointConfig {
     pub fn endpoint_with_credential(&self, credential: Option<String>) -> Result<Endpoint> {
         let auth = match credential {
             Some(value) => match self.kind {
+                HttpKind::Opencode => Authentication::Basic("opencode".into(), value),
                 HttpKind::Anthropic => Authentication::Header("x-api-key".into(), value),
                 HttpKind::Gemini => Authentication::Header("x-goog-api-key".into(), value),
                 _ => Authentication::Bearer(value),
             },
             None if self.key_env.is_none()
-                && (self.kind.local() || self.kind == HttpKind::Compatible) =>
+                && (self.kind.local()
+                    || matches!(self.kind, HttpKind::Compatible | HttpKind::Opencode)) =>
             {
                 Authentication::None
             }
@@ -181,7 +196,11 @@ impl EndpointConfig {
                 ));
             }
         };
-        Endpoint::new(&self.base_url, auth, self.kind.local())
+        Endpoint::new(
+            &self.base_url,
+            auth,
+            self.kind.local() || self.kind == HttpKind::Opencode,
+        )
     }
     pub fn endpoint(&self) -> Result<Endpoint> {
         self.endpoint_with_credential(None)

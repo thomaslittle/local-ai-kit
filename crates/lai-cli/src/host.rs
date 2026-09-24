@@ -50,6 +50,15 @@ pub fn build_service_with_endpoints(
             Box::pin(async move {
                 if let Some(config) = endpoint {
                     let client = configured_endpoint(&config)?;
+                    if config.kind == http_provider::HttpKind::Opencode {
+                        let raw = client.json("provider", None).await?;
+                        return lai_adapters::opencode::catalog(
+                            &connection,
+                            &route,
+                            &raw,
+                            &config.provider_billing,
+                        );
+                    }
                     return http_provider::probe(
                         config.kind,
                         client,
@@ -86,6 +95,7 @@ pub fn build_service_with_endpoints(
                 "gemini_api",
                 "xai_api",
                 "compatible_api",
+                "opencode",
             ]
             .into_iter()
             .map(str::to_owned)
@@ -102,6 +112,15 @@ pub fn build_service_with_endpoints(
                             ));
                         }
                         let client = configured_endpoint(&config)?;
+                        if config.kind == http_provider::HttpKind::Opencode {
+                            return lai_adapters::opencode::client::open(
+                                client,
+                                input.model,
+                                input.route_provider_id,
+                                input.workspace,
+                            )
+                            .await;
+                        }
                         return Ok(http_provider::executor(config.kind, client, input.model));
                     }
                     if input.located.provider_id == "claude_code" {

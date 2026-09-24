@@ -67,6 +67,7 @@ impl Chat {
             ));
         }
         let (path, body) = match self.kind {
+            HttpKind::Opencode => return Err(invalid()),
             HttpKind::Ollama => (
                 "api/chat".into(),
                 json!({"model":self.model.native_id,"messages":history,"stream":true}),
