@@ -1,19 +1,26 @@
 //! Native selection and permission-scoped projections. No I/O or provider code.
+mod projection;
+mod selection;
+pub use projection::project_snapshot;
+pub use selection::{resolve,validate_selection};
 use std::collections::BTreeSet;
-use lai_contracts::*;
+use lai_contracts::Selection;
 use serde::{Deserialize,Serialize};
-#[derive(Debug,Clone,Default,Serialize,Deserialize)]
+#[derive(Debug,Clone,Serialize,Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct ClientPolicy {
     pub allow_passive_discovery:bool,
-    /// None means all connection metadata; Some(empty) means none. Set only by the native host.
+    /// None means all metadata; Some(empty) means none. Only the native host sets this.
     pub connection_ids:Option<BTreeSet<String>>,
     pub reveal_identity:bool,
     pub probe_connection_ids:BTreeSet<String>,
 }
+impl Default for ClientPolicy {
+    fn default()->Self {Self{allow_passive_discovery:false,connection_ids:Some(BTreeSet::new()),reveal_identity:false,probe_connection_ids:BTreeSet::new()}}
+}
 impl ClientPolicy {
-    pub fn denied()->Self{Self{connection_ids:Some(BTreeSet::new()),..Self::default()}}
-    pub fn passive()->Self{Self{allow_passive_discovery:true,..Self::default()}}
+    pub fn denied()->Self{Self::default()}
+    pub fn passive()->Self{Self{allow_passive_discovery:true,connection_ids:None,..Self::default()}}
     pub fn allows(&self,id:&str)->bool{self.connection_ids.as_ref().is_none_or(|ids|ids.contains(id))}
 }
 #[derive(Debug,Clone,Default,Serialize,Deserialize)]
@@ -28,6 +35,3 @@ pub struct Requirements {
 #[derive(Debug,Clone,Serialize,Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct Candidate {pub selection:Selection,pub connection_id:String,pub eligible:bool,pub reasons:Vec<String>}
-pub fn project_snapshot(_: &Snapshot,_:&ClientPolicy)->Snapshot{unimplemented!("test-first projection")}
-pub fn resolve(_: &Snapshot,_:&Requirements)->Vec<Candidate>{unimplemented!("test-first native selection")}
-pub fn validate_selection<'a>(_: &'a Snapshot,_:&Selection,_:bool)->Result<&'a Model>{unimplemented!("test-first runtime validation")}
