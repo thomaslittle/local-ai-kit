@@ -1074,6 +1074,9 @@
           "models.list": {
             "$ref": "#/components/schemas/ModelsParams"
           },
+          "runtime.closeClient": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
           "runtime.handshake": {
             "$ref": "#/components/schemas/HandshakeParams"
           },
@@ -1112,6 +1115,7 @@
           }
         },
         "required": [
+          "runtime.closeClient",
           "artifacts.read",
           "runtime.handshake",
           "runtime.health",
@@ -1186,6 +1190,7 @@
             },
             "type": "array"
           },
+          "runtime.closeClient": true,
           "runtime.handshake": {
             "$ref": "#/components/schemas/HandshakeResult"
           },
@@ -1226,6 +1231,7 @@
           }
         },
         "required": [
+          "runtime.closeClient",
           "artifacts.read",
           "runtime.handshake",
           "runtime.health",
@@ -3290,6 +3296,32 @@
                       },
                       "params": {
                         "$ref": "#/components/schemas/ModelsParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "runtime.closeClient"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
                       }
                     },
                     "required": [

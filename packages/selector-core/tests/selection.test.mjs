@@ -118,3 +118,10 @@ test('5000 models are indexed and queried without per-row catalog scans',()=>{
  const start=performance.now();const catalog=createCatalog(s);assert.equal(resolveCandidates(catalog,{query:'native-4999'}).length,1);
  const elapsed=performance.now()-start;console.log(`5000-model index + search: ${elapsed.toFixed(2)}ms`);assert.ok(elapsed<1000);
 });
+
+test('explicit backend denial of included usage is not overridden by paid fallback or elapsed reset time',()=>{
+ const s=snapshot();s.routes[0].capabilities.push({...cap('usage.included_allowed','unsupported'),origin:'runtime'});
+ for(const paid of [false,true]){const choice=resolveCandidates(createCatalog(s),{allowPaidFallback:paid}).find(c=>c.connection.id==='personal');assert.equal(choice.eligible,false);assert.ok(choice.reasons.includes('RATE_LIMITED'));}
+ s.routes[0].capabilities[0].evidence.freshness='stale';assert.equal(resolveCandidates(createCatalog(s)).find(c=>c.connection.id==='personal').eligible,false);
+ s.routes[0].capabilities[0].support='supported';assert.equal(resolveCandidates(createCatalog(s)).find(c=>c.connection.id==='personal').eligible,true);
+});

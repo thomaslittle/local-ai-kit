@@ -1,0 +1,24 @@
+[package]
+name = "lai-kit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+lai-contracts = { path = "../lai-contracts" }
+lai-core = { path = "../lai-core" }
+lai-service = { path = "../lai-service" }
+lai-adapters = { path = "../lai-adapters" }
+lai-discovery = { path = "../lai-discovery" }
+lai-platform = { path = "../lai-platform" }
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tempfile = "3"
+
+[lints]
+workspace = true

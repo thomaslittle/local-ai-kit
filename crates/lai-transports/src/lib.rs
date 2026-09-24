@@ -176,6 +176,6 @@ struct ClientLifetime {
 }
 impl Drop for ClientLifetime {
     fn drop(&mut self) {
-        self.service.revoke_execution(&self.client);
+        self.service.close_client(&self.client);
     }
 }

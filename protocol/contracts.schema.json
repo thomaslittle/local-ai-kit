@@ -1073,6 +1073,9 @@
         "models.list": {
           "$ref": "#/$defs/ModelsParams"
         },
+        "runtime.closeClient": {
+          "$ref": "#/$defs/EmptyParams"
+        },
         "runtime.handshake": {
           "$ref": "#/$defs/HandshakeParams"
         },
@@ -1111,6 +1114,7 @@
         }
       },
       "required": [
+        "runtime.closeClient",
         "artifacts.read",
         "runtime.handshake",
         "runtime.health",
@@ -1185,6 +1189,7 @@
           },
           "type": "array"
         },
+        "runtime.closeClient": true,
         "runtime.handshake": {
           "$ref": "#/$defs/HandshakeResult"
         },
@@ -1225,6 +1230,7 @@
         }
       },
       "required": [
+        "runtime.closeClient",
         "artifacts.read",
         "runtime.handshake",
         "runtime.health",

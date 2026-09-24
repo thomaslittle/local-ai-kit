@@ -1,4 +1,3 @@
-mod adapter_info;
 mod args;
 mod inventory;
 use inventory::source;

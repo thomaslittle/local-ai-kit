@@ -1,5 +1,4 @@
 //! Installed native host. Registration configuration is owned by the installing application.
-mod adapter_info;
 mod args;
 mod endpoints;
 mod host;

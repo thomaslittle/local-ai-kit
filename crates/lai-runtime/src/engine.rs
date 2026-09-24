@@ -402,12 +402,15 @@ impl Runtime {
                     }
                 }
                 let cell = cell.clone();
-                tokio::spawn(async move {
-                    let mut agent = cell.agent.lock().await;
-                    if let Some(mut driver) = agent.take() {
-                        let _ = tokio::time::timeout(Duration::from_secs(2), driver.close()).await;
-                    }
-                });
+                if let Ok(handle) = tokio::runtime::Handle::try_current() {
+                    handle.spawn(async move {
+                        let mut agent = cell.agent.lock().await;
+                        if let Some(mut driver) = agent.take() {
+                            let _ =
+                                tokio::time::timeout(Duration::from_secs(2), driver.close()).await;
+                        }
+                    });
+                }
                 false
             });
         }

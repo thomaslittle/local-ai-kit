@@ -20,6 +20,7 @@ export function resolveCandidates(catalog: Catalog, requirements: Requirements =
     else if (auth.value !== 'authenticated') reasons.push('AUTH_REQUIRED');
     const billing = entry.route.billing;
     const billingValue = billing.state === 'known' && billing.freshness === 'fresh' ? billing.value : 'unknown';
+    if (billingValue === 'subscription' && entry.route.capabilities.some(c => c.id === 'usage.included_allowed' && c.support === 'unsupported')) reasons.push('RATE_LIMITED');
     if (billingValue === 'unknown') reasons.push('BILLING_UNKNOWN');
     else if (!['subscription', 'local'].includes(billingValue) && !requirements.allowPaidFallback) reasons.push('BILLING_CONSENT_REQUIRED');
     for (const id of requirements.requiredCapabilities ?? []) {

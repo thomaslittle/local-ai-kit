@@ -744,6 +744,7 @@ dependencies = [
  "lai-contracts",
  "lai-core",
  "lai-discovery",
+ "lai-kit",
  "lai-platform",
  "lai-service",
  "lai-transports",
@@ -784,6 +785,22 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+]
+
+[[package]]
+name = "lai-kit"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "lai-adapters",
+ "lai-contracts",
+ "lai-core",
+ "lai-discovery",
+ "lai-platform",
+ "lai-service",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]

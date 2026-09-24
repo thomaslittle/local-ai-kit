@@ -2,7 +2,7 @@ import { LocalAIError } from './errors.ts';
 import type { CallOptions, Handshake, Transport } from './types.ts';
 import type { MethodInputs, MethodOutputs, Snapshot, Event } from './generated.ts';
 const families = {
-  runtime: ['health'], discovery: ['refresh', 'cancel'], snapshot: ['get'],
+  runtime: ['health', 'closeClient'], discovery: ['refresh', 'cancel'], snapshot: ['get'],
   connections: ['list', 'setupInstructions', 'authenticate', 'probe'], models: ['list'], usage: ['read'], capabilities: ['read'],
   selection: ['resolve', 'validate'], grants: ['request', 'list', 'revoke'],
   sessions: ['create', 'get', 'updateOptions', 'close'], turns: ['start', 'cancel'], approvals: ['respond'],
@@ -32,7 +32,7 @@ export async function createLocalAI(options: { transport: Transport; clientName?
     handshake = await transport.request<Handshake>('runtime.handshake', { protocolVersion: '1.0', clientName: options.clientName ?? 'local-ai-kit-sdk' }, { signal: options.signal });
     if (!handshake || !/^1\.\d+$/.test(handshake.protocolVersion) || !Array.isArray(handshake.methods) || !handshake.methods.every(m => typeof m === 'string')) throw new LocalAIError('PROTOCOL_INCOMPATIBLE');
   } catch (error) { await transport.close(); throw error; }
-  const methods = new Set(handshake.methods); let closed = false;
+  const methods = new Set(handshake.methods); let closed = false; let closing: Promise<void> | undefined;
   const requireAvailable = (method: string) => {
     if (closed) throw new LocalAIError('CLOSED');
     if (!methods.has(method)) throw new LocalAIError('CAPABILITY_UNSUPPORTED');
@@ -48,7 +48,16 @@ export async function createLocalAI(options: { transport: Transport; clientName?
   }
   return Object.assign(client, {
     handshake: Object.freeze({ ...handshake, methods: Object.freeze([...handshake.methods]) }),
-    async close() { if (!closed) { closed = true; await transport.close(); } },
+    async close() {
+      if (closing) return closing;
+      closed=true;
+      closing=(async()=>{
+        try { if(methods.has('runtime.closeClient')) await transport.request('runtime.closeClient',{}, {timeoutMs:1000}); }
+        catch { /* A disconnected peer must not prevent local cleanup or leak native errors. */ }
+        finally { await transport.close(); }
+      })();
+      return closing;
+    },
     events: Object.freeze({ async *subscribe<T>(query = {}, call = {}) {
       requireAvailable('events.subscribe');
       if (!transport.subscribe) throw new LocalAIError('CAPABILITY_UNSUPPORTED');

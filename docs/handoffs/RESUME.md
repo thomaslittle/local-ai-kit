@@ -51,3 +51,6 @@ Implemented owner-protected native IPC broker, single-use per-app credentials, N
 
 ## Owned artifacts
 Added expiring, owner/session-scoped result storage and public artifacts.read across native transports. Completed text turns emit response.txt; binary adapter results use the same API. Six runtime, three store, and one service test were added; complete Windows Rust suite reached 250 passing tests. No arbitrary filesystem path reads, persistent output, or paid inference. Packaging and remaining provider work continue in docs/implementation/CONTINUATION.md.
+
+## Embedded facade and release consumers
+The lai-kit crate centralizes provider assembly for embedded Rust and CLI consumers. Runtime closeClient releases a single app without exhausting long-lived broker capacity. Release build, manifest/integrity checks, JS/Python bundle resolvers, and clean tarball/wheel consumer tests are implemented; a first Windows release bundle passed isolated installs and native scans. Final source-qualified bundles must be rebuilt after commits; no registry publication or signing is claimed.

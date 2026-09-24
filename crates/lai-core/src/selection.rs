@@ -24,6 +24,17 @@ fn access(route: &AccessRoute, connection: &Connection, paid: bool) -> Result<()
             "Current authentication is not verified",
         ));
     }
+    if route.billing.value() == Some(&BillingMode::Subscription)
+        && route
+            .capabilities
+            .iter()
+            .any(|c| c.id == "usage.included_allowed" && c.support == Support::Unsupported)
+    {
+        return Err(error(
+            ErrorCode::RateLimited,
+            "Provider denied included usage; refresh allowance evidence before retrying",
+        ));
+    }
     match route.billing.fresh_value() {
         Some(BillingMode::Subscription | BillingMode::Local) => Ok(()),
         Some(BillingMode::ApiMetered | BillingMode::PrepaidCredits | BillingMode::Mixed)

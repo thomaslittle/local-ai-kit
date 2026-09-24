@@ -69,6 +69,13 @@ impl NativeService {
             clients.remove(id);
         }
     }
+    /// Release only this host-registered application. Other clients and shared metadata survive.
+    pub fn close_client(&self, id: &str) {
+        if let Ok(mut clients) = self.clients.write() {
+            clients.remove(id);
+        }
+        self.execution_state.revoke(id);
+    }
     fn policy(&self, id: &str) -> Result<ClientPolicy> {
         self.clients
             .read()
@@ -89,6 +96,11 @@ impl NativeService {
         params::object(&params)?;
         if method.len() > 128 || params.get("clientId").is_some() {
             return Err(params::invalid());
+        }
+        if method == "runtime.closeClient" {
+            params::allow(&params, &[])?;
+            self.close_client(client);
+            return Ok(serde_json::json!({"closed":true}));
         }
         if method == "discovery.refresh" {
             params::allow(&params, &["level"])?;

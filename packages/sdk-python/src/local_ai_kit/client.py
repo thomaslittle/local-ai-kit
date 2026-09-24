@@ -6,7 +6,7 @@ from .errors import LocalAIError
 from .stdio import AsyncStdioTransport
 
 FAMILIES = {
-    'runtime': ('health',), 'snapshot': ('get',), 'discovery': ('refresh','cancel'),
+    'runtime': ('health','closeClient'), 'snapshot': ('get',), 'discovery': ('refresh','cancel'),
     'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list',),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
     'grants': ('request','list','revoke'), 'sessions': ('create','get','updateOptions','close'),
@@ -70,7 +70,13 @@ class AsyncClient:
     async def close(self):
         if not self._closed:
             self._closed = True
-            await self._transport.close()
+            try:
+                if 'runtime.closeClient' in self._methods:
+                    await self._transport.request('runtime.closeClient', {}, timeout=1)
+            except Exception:
+                pass  # Remote cleanup cannot prevent local shutdown or expose error bodies.
+            finally:
+                await self._transport.close()
 
     async def __aenter__(self):
         return self

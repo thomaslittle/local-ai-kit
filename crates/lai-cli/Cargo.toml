@@ -11,6 +11,7 @@ name = "local-ai-kit"
 path = "src/main.rs"
 
 [dependencies]
+lai-kit = { path = "../lai-kit" }
 lai-adapters = { path = "../lai-adapters" }
 lai-contracts = { path = "../lai-contracts" }
 lai-core = { path = "../lai-core" }

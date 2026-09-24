@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 const METHODS: &[&str] = &[
     "runtime.handshake",
     "runtime.health",
+    "runtime.closeClient",
     "snapshot.get",
     "connections.list",
     "models.list",

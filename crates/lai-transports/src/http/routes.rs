@@ -64,7 +64,9 @@ pub(super) async fn rpc(
             }
         }
     }
-    if request.method == "grants.revoke" && outcome.is_ok() {
+    if ["grants.revoke", "runtime.closeClient"].contains(&request.method.as_str())
+        && outcome.is_ok()
+    {
         if let Ok(mut tokens) = state.tokens.lock() {
             tokens.remove(&key);
         }
