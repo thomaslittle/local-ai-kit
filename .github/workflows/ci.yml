@@ -1,0 +1,33 @@
+name: Build and contracts
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.97.1 --profile minimal --component rustfmt --component clippy
+      - name: Test workspace
+        run: cargo test --workspace --all-targets
+      - name: Generate schema
+        run: |
+          mkdir -p protocol
+          cargo run -q -p lai-contracts --example schema > protocol/domain.schema.json
+      - name: Preserve verification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-evidence
+          path: |
+            Cargo.lock
+            protocol/domain.schema.json
