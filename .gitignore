@@ -34,3 +34,8 @@ Thumbs.db
 *.tmp
 *.log
 # Keep lockfiles tracked when Task 1 creates them.
+
+# Local verification and isolated worktrees
+.verification/
+.worktrees/
+.superpowers/
