@@ -42,15 +42,37 @@ impl Journal {
                 return Err(err(ErrorCode::EventGap));
             }
         }
-        let events: Vec<_> = self
-            .records
-            .iter()
-            .map(|(e, _)| e)
-            .filter(|e| {
-                session.is_none_or(|s| s == e.session_id)
-                    && after.is_none_or(|a| e.sequence.parse::<u64>().unwrap_or(0) > a)
-            })
-            .collect();
-        Ok(json!({"events":events,"cursor":self.sequence.to_string()}))
+        let mut events = Vec::new();
+        let mut bytes = 0;
+        let mut cursor = after.unwrap_or_else(|| {
+            self.records
+                .front()
+                .and_then(|(e, _)| e.sequence.parse::<u64>().ok())
+                .unwrap_or(1)
+                .saturating_sub(1)
+        });
+        for (event, size) in &self.records {
+            let sequence = event
+                .sequence
+                .parse::<u64>()
+                .map_err(|_| err(ErrorCode::EventGap))?;
+            if sequence <= cursor {
+                continue;
+            }
+            if session.is_none_or(|s| s == event.session_id) {
+                if !events.is_empty() && (events.len() >= 128 || bytes + size > 262_144) {
+                    break;
+                }
+                bytes += size;
+                events.push(event);
+            }
+            cursor = sequence;
+        }
+        if self.records.is_empty() {
+            cursor = self.sequence;
+        }
+        Ok(
+            json!({"events":events,"cursor":cursor.to_string(),"tailCursor":self.sequence.to_string(),"hasMore":cursor<self.sequence}),
+        )
     }
 }

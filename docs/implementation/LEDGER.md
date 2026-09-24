@@ -44,3 +44,6 @@ Eight runtime, six Codex protocol, and five service execution tests went red and
 
 ## Native HTTP and browser increment
 Six HTTP tests, two native stream tests, three host CLI tests, and two actual Chromium tests passed. Real Codex metadata reached the browser without generation. Native static assets are served by Rust; the separate Node fixture server is never a live fallback. SDK event-gap handling preserves unrelated requests.
+
+## Lifecycle review fixes
+Bounded event replay, closed-session capacity recycling, session-level billing consent, stale metadata during an active turn, and native account checks before each prompt now have red/green regressions. Workspace tests and strict Clippy passed. No generation was submitted.

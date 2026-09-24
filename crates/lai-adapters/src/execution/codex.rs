@@ -56,6 +56,9 @@ impl CodexAgent {
             d.validate(value)
                 .map_err(|_| failure(ErrorCode::OptionUnsupported))?;
         }
+        tokio::time::timeout(Duration::from_secs(10), self.peer.verify_account())
+            .await
+            .map_err(|_| failure(ErrorCode::Timeout))??;
         let thread = self.ensure_thread().await?;
         let access = json!({"type":"restricted","includePlatformDefaults":true,"readableRoots":[self.workspace]});
         let sandbox = if self.config.writable {

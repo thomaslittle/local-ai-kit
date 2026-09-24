@@ -44,6 +44,7 @@ pub(crate) struct ExecutionState {
     pub source: Option<ExecutionSource>,
     pub runtime: Arc<Runtime>,
     pub grants: Arc<RwLock<BTreeMap<String, ExecutionGrant>>>,
+    session_billing: RwLock<BTreeMap<String, (String, bool)>>,
 }
 impl ExecutionState {
     pub fn revoke(&self, client: &str) {
@@ -51,6 +52,9 @@ impl ExecutionState {
             grants.remove(client);
         }
         self.runtime.revoke(client);
+        if let Ok(mut sessions) = self.session_billing.write() {
+            sessions.retain(|_, (owner, _)| owner != client);
+        }
     }
 }
 #[derive(Deserialize)]
@@ -156,6 +160,16 @@ impl NativeService {
             ]
         }
     }
+    fn accepted_paid(&self, client: &str, session: &str) -> Result<bool> {
+        self.execution_state
+            .session_billing
+            .read()
+            .map_err(|_| denied())?
+            .get(session)
+            .filter(|(owner, _)| owner == client)
+            .map(|(_, allowed)| *allowed)
+            .ok_or_else(denied)
+    }
     fn execution_grant(&self, client: &str) -> Result<ExecutionGrant> {
         self.execution_state
             .grants
@@ -254,6 +268,8 @@ impl NativeService {
                 let connection_id = connection.id.clone();
                 let workspace_id = request.workspace_id.clone();
                 let paid = request.allow_paid;
+                let expected_account = connection.account_id.clone();
+                let expected_billing = route.billing.value().cloned();
                 let guard = Arc::new(move || {
                     let policy = clients
                         .read()
@@ -280,7 +296,32 @@ impl NativeService {
                     {
                         return Err(denied());
                     }
-                    validate_selection(&snapshot, &selected, paid && grant.allow_paid)?;
+                    // Pre-turn validation requires fresh metadata; active streaming checks identity
+                    // and revocation without treating the passage of time as an account change.
+                    if c.account_id != expected_account
+                        || c.auth.value() != Some(&AuthState::Authenticated)
+                        || (paid && !grant.allow_paid)
+                    {
+                        return Err(denied());
+                    }
+                    let current = snapshot
+                        .models
+                        .iter()
+                        .find(|m| m.id == selected.model_id && m.route_id == selected.route_id)
+                        .ok_or_else(denied)?;
+                    let route = snapshot
+                        .routes
+                        .iter()
+                        .find(|r| r.id == selected.route_id)
+                        .ok_or_else(denied)?;
+                    if current.revision != selected.revision
+                        || route.billing.value() != expected_billing.as_ref()
+                    {
+                        return Err(DomainError::new(
+                            ErrorCode::SelectionStale,
+                            "Session identity changed",
+                        ));
+                    }
                     Ok(())
                 });
                 guard()?;
@@ -296,14 +337,19 @@ impl NativeService {
                     let _ = agent.close().await;
                     return Err(error);
                 }
-                serde_json::to_value(runtime.insert(
+                let session = runtime.insert(
                     client,
                     connection.id.clone(),
                     request.selection,
                     agent,
                     guard,
-                )?)
-                .map_err(|_| params::invalid())
+                )?;
+                self.execution_state
+                    .session_billing
+                    .write()
+                    .map_err(|_| denied())?
+                    .insert(session.id.clone(), (client.into(), request.allow_paid));
+                serde_json::to_value(session).map_err(|_| params::invalid())
             }
             "sessions.get" => {
                 params::allow(&p, &["sessionId"])?;
@@ -330,7 +376,8 @@ impl NativeService {
                 validate_selection(
                     &self.projected(client)?,
                     &selected,
-                    self.execution_grant(client)?.allow_paid,
+                    self.execution_grant(client)?.allow_paid
+                        && self.accepted_paid(client, &request.session_id)?,
                 )?;
                 serde_json::to_value(runtime.update_options(
                     client,
@@ -345,7 +392,8 @@ impl NativeService {
                 validate_selection(
                     &self.projected(client)?,
                     &session.selection,
-                    self.execution_grant(client)?.allow_paid,
+                    self.execution_grant(client)?.allow_paid
+                        && self.accepted_paid(client, &request.session_id)?,
                 )?;
                 runtime
                     .start(

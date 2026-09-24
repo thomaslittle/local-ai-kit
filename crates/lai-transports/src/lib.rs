@@ -139,7 +139,7 @@ pub async fn serve_io<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
                             Ok(page)=>{
                                 subscription_sequence+=1;
                                 let id=format!("subscription-{subscription_sequence}");let mut query=request.params;
-                                if query.get("after").is_none(){query["after"]=page["cursor"].clone();}
+                                if query.get("after").is_none(){query["after"]=page["tailCursor"].clone();}
                                 subscriptions.insert(id.clone(),query);
                                 send(&mut writer,reply(request.id,Ok(serde_json::json!({"subscriptionId":id}))),&options).await?;
                             },Err(e)=>send(&mut writer,reply(request.id,Err(e)),&options).await?

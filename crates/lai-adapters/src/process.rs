@@ -29,6 +29,7 @@ pub(crate) struct Peer {
     stderr: JoinHandle<()>,
     pub(crate) sequence: u64,
     account_established: bool,
+    account_stamp: Option<String>,
 }
 fn error(code: ErrorCode) -> DomainError {
     DomainError::new(code, "Native client metadata request failed")
@@ -152,7 +153,23 @@ impl Peer {
             stderr: drain,
             sequence: 0,
             account_established: false,
+            account_stamp: None,
         })
+    }
+    pub(crate) async fn verify_account(&mut self) -> Result<()> {
+        let current = self
+            .request("account/read", json!({"refreshToken":false}))
+            .await?;
+        if current["account"].is_null()
+            || self.account_stamp.as_deref()
+                != Some(
+                    lai_contracts::stable_id("account", &[&current["account"].to_string()])
+                        .as_str(),
+                )
+        {
+            return Err(error(ErrorCode::SelectionStale));
+        }
+        Ok(())
     }
     pub(crate) async fn send(&mut self, value: Value) -> Result<()> {
         let mut bytes = serde_json::to_vec(&value).map_err(|_| error(ErrorCode::InvalidRequest))?;
@@ -265,6 +282,10 @@ pub(crate) async fn exchange(
         .request("account/read", json!({"refreshToken":false}))
         .await?;
     peer.account_established = true;
+    peer.account_stamp = Some(lai_contracts::stable_id(
+        "account",
+        &[&account["account"].to_string()],
+    ));
     if account["account"].is_null() {
         return crate::codex::parse_metadata(connection, route, &initialize, &account, &[], None);
     }

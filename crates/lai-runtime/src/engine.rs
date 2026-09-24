@@ -81,6 +81,12 @@ impl Runtime {
             .sessions
             .lock()
             .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
+        sessions.retain(|_, cell| {
+            cell.state
+                .lock()
+                .map(|s| s.view.state != SessionState::Closed)
+                .unwrap_or(true)
+        });
         if sessions.len() >= 64 || sessions.values().filter(|s| s.owner == owner).count() >= 16 {
             return Err(err(ErrorCode::RateLimited));
         }
@@ -267,13 +273,13 @@ impl Runtime {
             .cloned()
             .collect();
         for cell in cells {
-            (cell.guard)()?;
             let pending = cell
                 .approvals
                 .lock()
                 .map_err(|_| err(ErrorCode::ProviderUnavailable))?
                 .remove(approval);
             if let Some(p) = pending {
+                (cell.guard)()?;
                 if p.session
                     != cell
                         .state

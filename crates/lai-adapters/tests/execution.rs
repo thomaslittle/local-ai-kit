@@ -166,3 +166,19 @@ async fn account_switch_aborts_without_retry() {
     finish(&r, &s).await;
     assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Error);
 }
+
+#[tokio::test]
+async fn account_is_rechecked_before_submitting_each_turn() {
+    let (r, s) = setup("account-changed-before-turn").await;
+    r.start("owner", &s.id, "hi".into(), "first".into())
+        .await
+        .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Error);
+    assert!(
+        !r.events("owner", None, None)
+            .unwrap()
+            .to_string()
+            .contains("native reply")
+    );
+}

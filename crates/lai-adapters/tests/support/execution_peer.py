@@ -5,11 +5,14 @@ def send(v): print(json.dumps(v),flush=True)
 def emit(method,params): send({"method":method,"params":params})
 def reply(id,value): send({"id":id,"result":value})
 turn=''
+account_reads=0
 for line in sys.stdin:
  r=json.loads(line);method=r.get('method');p=r.get('params',{});id=r.get('id')
  if method=='initialize':reply(id,{"userAgent":"codex/0.156.1"})
  elif method=='initialized':pass
- elif method=='account/read':reply(id,{"account":{"type":"chatgpt","email":"test@example.test","planType":"test"},"requiresOpenaiAuth":True})
+ elif method=='account/read':
+  account_reads+=1
+  reply(id,{"account":{"type":"chatgpt","email":"changed@example.test" if mode=='account-changed-before-turn' and account_reads>1 else "test@example.test","planType":"test"},"requiresOpenaiAuth":True})
  elif method=='model/list':reply(id,{"data":[model],"nextCursor":None})
  elif method=='account/rateLimits/read':reply(id,{"rateLimits":{}})
  elif method=='thread/start':
