@@ -41,6 +41,7 @@ pub fn build_service(source: InventorySource, execute: bool) -> Arc<NativeServic
                 match located.provider_id.as_str() {
                     "codex" => codex::probe(located, connection, route).await,
                     "claude_code" => claude::probe(located, connection, route).await,
+                    "grok" => lai_adapters::grok::probe(located, connection, route).await,
                     _ => Err(DomainError::new(
                         ErrorCode::CapabilityUnsupported,
                         "No metadata adapter registered",

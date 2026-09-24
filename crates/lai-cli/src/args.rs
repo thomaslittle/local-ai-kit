@@ -88,7 +88,10 @@ impl Args {
                     let provider = input
                         .next()
                         .and_then(|v| v.into_string().ok())
-                        .filter(|v| ["codex", "claude_code"].contains(&v.as_str()))
+                        .filter(|v| {
+                            ["codex", "claude_code"].contains(&v.as_str())
+                                || (flag == "--allow-metadata" && v == "grok")
+                        })
                         .ok_or_else(invalid)?;
                     if flag == "--allow-metadata" {
                         args.metadata_providers.insert(provider);
@@ -209,5 +212,21 @@ mod tests {
         ] {
             assert!(parse(&args).is_err());
         }
+    }
+}
+
+#[cfg(test)]
+mod additional_provider_tests {
+    use super::*;
+    #[test]
+    fn grok_metadata_is_explicit_and_does_not_imply_execution() {
+        let args = Args::parse(
+            ["serve", "--stdio", "--allow-metadata", "grok"]
+                .into_iter()
+                .map(OsString::from),
+        )
+        .unwrap();
+        assert!(args.metadata_providers.contains("grok"));
+        assert!(!args.allow_execution);
     }
 }

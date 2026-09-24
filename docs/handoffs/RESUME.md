@@ -30,3 +30,6 @@ Pending multi-provider gateway metadata is integrated with route-scoped model ID
 
 ## Shared ACP core
 ACP parsing and process/runtime integration are now implemented. Nine catalog tests and eight synthetic-child execution tests pass, alongside the full Windows workspace. Grok native initialization/session metadata was checked without inference. Next: wire provider-specific launch/account/usage evidence, then OpenCode/local APIs, SDK generated contracts, reusable React components, and release qualification. See docs/adapters/acp.md.
+
+## Bounded HTTP foundation
+Implemented the pending HTTP client and verified all 189 Windows native tests. Grok metadata is wired; native execution remains gated separately. Next: registered local/API endpoints, provider-specific execution, generated SDK contracts, React controls, and packaged release checks.

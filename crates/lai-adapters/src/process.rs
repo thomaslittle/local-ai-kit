@@ -333,3 +333,39 @@ pub(crate) async fn exchange(
         limits.as_ref(),
     )
 }
+
+/// Execute an explicitly chosen metadata command. No shell or unbounded output.
+pub async fn capture(spec: LaunchSpec, deadline: Duration) -> Result<String> {
+    if deadline.is_zero() || deadline > Duration::from_secs(60) {
+        return Err(error(ErrorCode::InvalidRequest));
+    }
+    let mut peer = Peer::spawn(spec).await?;
+    let result = tokio::time::timeout(deadline, async {
+        peer.input
+            .shutdown()
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        let mut bytes = Vec::new();
+        (&mut peer.output)
+            .take(MAX_FRAME + 1)
+            .read_to_end(&mut bytes)
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        if bytes.len() as u64 > MAX_FRAME {
+            return Err(error(ErrorCode::FrameTooLarge));
+        }
+        let status = peer
+            .child
+            .wait()
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        if !status.success() {
+            return Err(error(ErrorCode::ProviderUnavailable));
+        }
+        String::from_utf8(bytes).map_err(|_| error(ErrorCode::ProtocolIncompatible))
+    })
+    .await
+    .unwrap_or_else(|_| Err(error(ErrorCode::Timeout)));
+    peer.shutdown().await;
+    result
+}

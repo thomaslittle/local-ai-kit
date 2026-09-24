@@ -1,0 +1,94 @@
+use axum::{
+    Json, Router,
+    http::{HeaderMap, StatusCode},
+    routing::{get, post},
+};
+use lai_adapters::http::*;
+use lai_contracts::ErrorCode;
+use serde_json::json;
+async fn server() -> (String, tokio::task::JoinHandle<()>) {
+    let app=Router::new().route("/ok",get(||async{Json(json!({"ok":true}))})).route("/auth",get(|h:HeaderMap|async move{Json(json!({"authorized":h.get("authorization").is_some_and(|s|s=="Bearer synthetic-secret")}))})).route("/redirect",get(||async{(StatusCode::FOUND,[("location","http://example.invalid/steal")],"secret-sentinel")})).route("/denied",get(||async{(StatusCode::UNAUTHORIZED,"secret-sentinel")})).route("/limited",get(||async{(StatusCode::TOO_MANY_REQUESTS,"secret-sentinel")})).route("/large",get(||async{Json(json!({"body":"x".repeat(2_200_000)}))})).route("/stream",post(||async{([("content-type","application/x-ndjson")],"{\"text\":\"native\"}\n{\"done\":true}\n")})).route("/unfinished",post(||async{"{\"text\":\"truncated\"}"}));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let task = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (format!("http://{address}/"), task)
+}
+#[test]
+fn endpoints_reject_cleartext_remote_userinfo_and_query_credentials() {
+    for url in [
+        "http://example.com/",
+        "https://user:pass@example.com/",
+        "https://example.com/?key=secret",
+        "ftp://example.com/",
+        "http://127.0.0.1/#token",
+    ] {
+        assert!(Endpoint::new(url, Authentication::None, false).is_err());
+    }
+    assert!(Endpoint::new("https://example.com/", Authentication::None, true).is_err());
+    assert!(Endpoint::new("https://example.com/v1/", Authentication::None, false).is_ok());
+}
+#[tokio::test]
+async fn native_json_and_credentials_stay_bound_to_the_endpoint() {
+    let (url, t) = server().await;
+    let endpoint = Endpoint::new(
+        &url,
+        Authentication::Bearer("synthetic-secret".into()),
+        true,
+    )
+    .unwrap();
+    assert_eq!(
+        endpoint.json("auth", None).await.unwrap()["authorized"],
+        true
+    );
+    assert_eq!(endpoint.json("ok", None).await.unwrap()["ok"], true);
+    t.abort();
+}
+#[tokio::test]
+async fn redirects_are_not_followed_and_paths_cannot_escape() {
+    let (url, t) = server().await;
+    let endpoint = Endpoint::new(&url, Authentication::None, true).unwrap();
+    assert_eq!(
+        endpoint.json("redirect", None).await.unwrap_err().code,
+        ErrorCode::IntegrationRestricted
+    );
+    for path in [
+        "../ok",
+        "/ok",
+        "https://example.com/",
+        "ok?token=foo",
+        "%2e%2e/ok",
+    ] {
+        assert!(endpoint.json(path, None).await.is_err());
+    }
+    t.abort();
+}
+#[tokio::test]
+async fn auth_rate_limits_and_large_bodies_return_safe_errors() {
+    let (url, t) = server().await;
+    let endpoint = Endpoint::new(&url, Authentication::None, true).unwrap();
+    for (path, code) in [
+        ("denied", ErrorCode::AuthRequired),
+        ("limited", ErrorCode::RateLimited),
+        ("large", ErrorCode::FrameTooLarge),
+    ] {
+        let error = endpoint.json(path, None).await.unwrap_err();
+        assert_eq!(error.code, code);
+        assert!(!error.to_string().contains("secret-sentinel"));
+    }
+    t.abort();
+}
+#[tokio::test]
+async fn line_stream_preserves_frames_and_rejects_truncated_output() {
+    let (url, t) = server().await;
+    let endpoint = Endpoint::new(&url, Authentication::None, true).unwrap();
+    let mut stream = endpoint.stream("stream", json!({})).await.unwrap();
+    assert!(stream.line().await.unwrap().unwrap().contains("native"));
+    assert!(stream.line().await.unwrap().unwrap().contains("done"));
+    assert!(stream.line().await.unwrap().is_none());
+    let mut stream = endpoint.stream("unfinished", json!({})).await.unwrap();
+    assert_eq!(
+        stream.line().await.unwrap_err().code,
+        ErrorCode::ProtocolIncompatible
+    );
+    t.abort();
+}

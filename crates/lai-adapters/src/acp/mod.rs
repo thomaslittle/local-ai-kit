@@ -34,3 +34,5 @@ pub mod client;
 
 mod events;
 mod wire;
+
+pub mod metadata;
