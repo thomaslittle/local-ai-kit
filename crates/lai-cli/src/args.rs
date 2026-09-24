@@ -20,6 +20,8 @@ pub struct Args {
     pub allow_writes: bool,
     pub review_requests: bool,
     pub allow_paid: bool,
+    pub metadata_providers: BTreeSet<String>,
+    pub execution_providers: BTreeSet<String>,
 }
 fn absolute(value: OsString) -> Result<PathBuf> {
     let path = PathBuf::from(value);
@@ -58,12 +60,16 @@ impl Args {
             allow_writes: false,
             review_requests: false,
             allow_paid: false,
+            metadata_providers: BTreeSet::new(),
+            execution_providers: BTreeSet::new(),
         };
         let mut seen = BTreeSet::new();
         let (mut json, mut stdio) = (false, false);
         while let Some(flag) = input.next() {
             let flag = flag.to_str().ok_or_else(invalid)?;
-            if !seen.insert(flag.to_owned()) {
+            if !seen.insert(flag.to_owned())
+                && !["--allow-metadata", "--allow-execution"].contains(&flag)
+            {
                 return Err(invalid());
             }
             match flag {
@@ -75,6 +81,21 @@ impl Args {
                 "--http" if matches!(args.action, Action::Serve) => args.http = true,
                 "--allow-passive-discovery" if matches!(args.action, Action::Serve) => {
                     args.allow_passive = true
+                }
+                "--allow-metadata" | "--allow-execution"
+                    if matches!(args.action, Action::Serve) =>
+                {
+                    let provider = input
+                        .next()
+                        .and_then(|v| v.into_string().ok())
+                        .filter(|v| ["codex", "claude_code"].contains(&v.as_str()))
+                        .ok_or_else(invalid)?;
+                    if flag == "--allow-metadata" {
+                        args.metadata_providers.insert(provider);
+                    } else {
+                        args.execution_providers.insert(provider);
+                        args.allow_execution = true;
+                    }
                 }
                 "--allow-codex-metadata" if matches!(args.action, Action::Serve) => {
                     args.allow_codex_metadata = true
@@ -111,8 +132,16 @@ impl Args {
         {
             return Err(invalid());
         }
+        if args.allow_codex_metadata {
+            args.metadata_providers.insert("codex".into());
+        }
+        if seen.contains("--allow-codex-execution") {
+            args.execution_providers.insert("codex".into());
+        }
         if (!args.http && (args.assets.is_some() || seen.contains("--port")))
-            || (args.allow_execution && (args.workspace.is_none() || !args.allow_codex_metadata))
+            || (args.allow_execution
+                && (args.workspace.is_none()
+                    || !args.execution_providers.is_subset(&args.metadata_providers)))
             || (!args.allow_execution
                 && (args.allow_writes
                     || args.review_requests

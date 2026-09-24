@@ -21,3 +21,6 @@ See `docs/qualification/2026-09-24-codex-metadata.md` for the previous 209-test 
 The CLI now supports loopback HTTP, explicit single-use pairing, a native-served demo, and separately authorized Codex execution in a named workspace. Stdio event subscriptions and native SSE use the real session engine. Node/Python receive typed event-gap errors without losing unrelated RPC requests. The actual browser displayed real Codex models using a non-generative metadata check. See `docs/integration/live-demo.md` and `docs/qualification/2026-09-24-native-http-demo.md`.
 
 Next: expand shared native adapters, strengthen process-tree cleanup and session freshness handling, generate SDK/domain contracts and API documentation, complete reusable React controls, and qualify packaged artifacts. The full release candidate remains incomplete; do not restart the already connected SDK/native/browser chain.
+
+## Additional native provider
+Claude Code now has native control metadata and text-only structured execution, alongside Codex. Use repeatable `--allow-metadata PROVIDER` and `--allow-execution PROVIDER` flags. See `docs/adapters/claude-code.md`. No live inference was submitted. Shared ACP, HTTP providers/gateways and the remaining release/SDK/UI requirements are next.

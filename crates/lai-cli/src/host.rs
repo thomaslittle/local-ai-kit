@@ -1,6 +1,6 @@
 use crate::args::{Action, Args};
 use lai_adapters::{
-    codex,
+    claude, codex,
     execution::{CodexExecution, open_codex},
     process::LaunchSpec,
 };
@@ -18,9 +18,7 @@ pub fn policy(args: &Args) -> ClientPolicy {
     } else {
         ClientPolicy::denied()
     };
-    if args.allow_codex_metadata {
-        policy.probe_provider_ids.insert("codex".into());
-    }
+    policy.probe_provider_ids = args.metadata_providers.clone();
     policy
 }
 pub fn execution_grant(args: &Args) -> Option<ExecutionGrant> {
@@ -28,7 +26,7 @@ pub fn execution_grant(args: &Args) -> Option<ExecutionGrant> {
         return None;
     }
     Some(ExecutionGrant {
-        provider_ids: BTreeSet::from(["codex".into()]),
+        provider_ids: args.execution_providers.clone(),
         workspaces: BTreeMap::from([("default".into(), args.workspace.clone()?)]),
         allow_paid: args.allow_paid,
         allow_writes: args.allow_writes,
@@ -38,15 +36,41 @@ pub fn execution_grant(args: &Args) -> Option<ExecutionGrant> {
 }
 pub fn build_service(source: InventorySource, execute: bool) -> Arc<NativeService> {
     let service = NativeService::new(source, Duration::from_secs(2)).with_metadata(Arc::new(
-        |located, connection, route| Box::pin(codex::probe(located, connection, route)),
+        |located, connection, route| {
+            Box::pin(async move {
+                match located.provider_id.as_str() {
+                    "codex" => codex::probe(located, connection, route).await,
+                    "claude_code" => claude::probe(located, connection, route).await,
+                    _ => Err(DomainError::new(
+                        ErrorCode::CapabilityUnsupported,
+                        "No metadata adapter registered",
+                    )),
+                }
+            })
+        },
     ));
     if !execute {
         return Arc::new(service);
     }
     Arc::new(service.with_execution(
-        BTreeSet::from(["codex".into()]),
+        BTreeSet::from(["codex".into(), "claude_code".into()]),
         Arc::new(|input| {
             Box::pin(async move {
+                if input.located.provider_id == "claude_code" {
+                    if input.writable || input.review_requests {
+                        return Err(DomainError::new(
+                            ErrorCode::IntegrationRestricted,
+                            "This Claude adapter exposes text-only execution",
+                        ));
+                    }
+                    let spec = claude::launch::launch(&input.located, input.workspace)?;
+                    return Ok(claude::client::executor(
+                        spec,
+                        input.model,
+                        input.connection_id,
+                        input.route_id,
+                    ));
+                }
                 if input.located.provider_id != "codex" {
                     return Err(DomainError::new(
                         ErrorCode::CapabilityUnsupported,

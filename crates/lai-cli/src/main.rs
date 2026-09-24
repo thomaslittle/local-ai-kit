@@ -16,6 +16,8 @@ Usage:
       [--allow-passive-discovery] [--allow-codex-metadata]
       [--allow-codex-execution --workspace ABSOLUTE_DIRECTORY]
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
+  Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
+  Providers currently registered: codex, claude_code. Repeated grants are supported.
   local-ai-kit --version
 
 Serving never scans on startup. --allow-passive-discovery explicitly authorizes
