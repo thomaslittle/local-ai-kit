@@ -204,3 +204,37 @@ fn relative_and_network_profile_roots_are_rejected() {
             .is_err()
     );
 }
+
+#[test]
+fn another_providers_agent_binary_is_not_misidentified_as_cursor() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bin = tmp.path().join(".grok/bin");
+    fs::create_dir_all(&bin).unwrap();
+    fs::write(bin.join("agent.exe"), b"DO_NOT_EXECUTE").unwrap();
+    let mut env = environment(tmp.path(), HostPlatform::Windows);
+    fs::create_dir_all(env.app_data.join("Cursor")).unwrap();
+    env.search_path = vec![bin];
+    let result = scan(&env);
+    let cursor = result
+        .snapshot
+        .connections
+        .iter()
+        .find(|c| c.provider_id == "cursor")
+        .unwrap();
+    assert_eq!(cursor.status, "configuration_only");
+    assert!(result.locations[&cursor.id].executable.is_none());
+}
+#[test]
+fn cursor_named_binary_remains_a_passive_candidate() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bin = tmp.path().join(".local/bin");
+    fs::create_dir_all(&bin).unwrap();
+    fs::write(bin.join("cursor-agent"), b"DO_NOT_EXECUTE").unwrap();
+    let result = scan(&environment(tmp.path(), HostPlatform::Linux));
+    assert!(
+        result
+            .locations
+            .values()
+            .any(|l| l.provider_id == "cursor" && l.executable.is_some())
+    );
+}

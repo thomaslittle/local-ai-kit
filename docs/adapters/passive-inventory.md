@@ -11,3 +11,5 @@ Public snapshots expose normalized hints and opaque path-derived IDs, not full p
 Limits: at most 128 home entries and PATH entries, 16 profile roots and 8 executable candidates per provider. Partial enumeration is explicitly diagnosed. Progress publishes one partial snapshot per provider; cancellation is checked between metadata probes. A filesystem metadata call can still block at the OS level; this synchronous library is not a deadline-enforced sandbox. Native service integration must keep it off request/UI threads.
 
 No automatic WSL/container/network inventory, no claims of inactive subscription detection, and no credentials are returned.
+
+Generic executables named `agent` are not attributed to Cursor: other clients, including Grok, ship that name. A Cursor configuration directory is insufficient evidence of executable ownership. The explicit `cursor-agent` command remains a passive candidate; ambiguous wrappers require a separately verified provider integration.

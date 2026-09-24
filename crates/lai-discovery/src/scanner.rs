@@ -83,15 +83,6 @@ impl<F: LocalFilesystem> Scanner<F> {
             let mut binaries = BTreeSet::new();
             for directory in &directories {
                 for command in definition.commands {
-                    // The generic `agent` executable is not proof of Cursor unless Cursor configuration exists.
-                    if *command == "agent"
-                        && !definition
-                            .roots(env)
-                            .iter()
-                            .any(|p| self.filesystem.probe(p).ok() == Some(EntryKind::Directory))
-                    {
-                        continue;
-                    }
                     for suffix in if env.platform == HostPlatform::Windows {
                         &[".exe", ".cmd", ".bat", ""][..]
                     } else {

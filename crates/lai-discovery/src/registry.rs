@@ -48,7 +48,7 @@ pub fn definitions() -> &'static [ProviderDefinition] {
         ProviderDefinition {
             id: "cursor",
             name: "Cursor",
-            commands: &["cursor-agent", "agent"],
+            commands: &["cursor-agent"],
             profile_prefix: None,
         },
         ProviderDefinition {
