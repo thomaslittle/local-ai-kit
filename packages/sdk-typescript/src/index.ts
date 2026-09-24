@@ -6,3 +6,5 @@ export { LocalAIError } from './errors.ts';
 export { createHttpTransport } from './http.ts';
 export { createLocalAI } from './client.ts';
 export { parseSSE } from './sse.ts';
+export { createSnapshotStore } from './store.ts';
+export type { SnapshotState, SnapshotStore } from './store.ts';

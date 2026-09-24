@@ -42,3 +42,6 @@ Implemented distinct upstream catalogs/native variants and permission-verified t
 
 ## Canonical SDK and API generation
 Rust owns request/response maps as well as domain records. Deterministic generation now creates TypeScript/Python types, Python client stubs, OpenAPI and the JSON-RPC manifest; drift verification is implemented. Runtime health and adapter coverage distinguish implementation from user grants. Next: reusable React controls, remaining native clients and host integration/packaging qualification.
+
+## Optional reusable React packages
+Added side-effect-free immutable SnapshotStore, React external-store bindings, and eight reusable styled selector variants. Model lists virtualize 5,000 entries and preserve route identity; sensitive options require a host callback and stale approvals are rejected. Node SDK 39, selector 24, React/components 13 tests pass. See packages/react, packages/ui-react, examples/react, and the React qualification report. Remaining: native client coverage/host transports, clean-package/platform and security/performance qualification.
