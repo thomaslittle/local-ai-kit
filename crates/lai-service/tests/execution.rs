@@ -189,3 +189,43 @@ async fn request_cannot_supply_native_arguments_or_paths() {
     assert!(s.handle("a", "sessions.create", p).await.is_err());
     assert_eq!(c.load(Ordering::SeqCst), 0);
 }
+
+#[tokio::test]
+async fn artifacts_are_read_through_the_public_service_and_never_by_path() {
+    let (s, _) = setup(true);
+    s.handle("a", "discovery.refresh", json!({})).await.unwrap();
+    let session = s.handle("a", "sessions.create", create()).await.unwrap();
+    s.handle(
+        "a",
+        "turns.start",
+        json!({"sessionId":session["id"],"prompt":"hello","requestId":"artifact-check"}),
+    )
+    .await
+    .unwrap();
+    let id = tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            let e = s.handle("a", "events.read", json!({})).await.unwrap();
+            if let Some(e) = e["events"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|e| e["payload"]["type"] == "artifact")
+            {
+                break e["payload"]["artifactId"].clone();
+            }
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    let p = json!({"sessionId":session["id"],"artifactId":id,"offset":"0","maxBytes":3});
+    let c = s.handle("a", "artifacts.read", p.clone()).await.unwrap();
+    assert_eq!(c["dataBase64"], "c2Vy");
+    assert_eq!(c["nextOffset"], "3");
+    assert!(s.handle("b", "artifacts.read", p.clone()).await.is_err());
+    let mut bad = p.clone();
+    bad["path"] = json!("private-sentinel");
+    assert!(s.handle("a", "artifacts.read", bad).await.is_err());
+    s.handle("a", "grants.revoke", json!({})).await.unwrap();
+    assert!(s.handle("a", "artifacts.read", p).await.is_err());
+}

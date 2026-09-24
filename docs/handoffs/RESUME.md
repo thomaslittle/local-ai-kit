@@ -48,3 +48,6 @@ Added side-effect-free immutable SnapshotStore, React external-store bindings, a
 
 ## Shared native transports
 Implemented owner-protected native IPC broker, single-use per-app credentials, Node/Python broker adapters, browser Native Messaging binary and SDK transport, explicit host preparation/registration script, and generic extension example. Native workspace reached 240 passing tests; latest complete run is recorded in qualification logs. Continue remaining provider launch metadata, artifact/reporting, installable release/consumer checks, UI qualification and source/status matrix; no paid inference used.
+
+## Owned artifacts
+Added expiring, owner/session-scoped result storage and public artifacts.read across native transports. Completed text turns emit response.txt; binary adapter results use the same API. Six runtime, three store, and one service test were added; complete Windows Rust suite reached 250 passing tests. No arbitrary filesystem path reads, persistent output, or paid inference. Packaging and remaining provider work continue in docs/implementation/CONTINUATION.md.

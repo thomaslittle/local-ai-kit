@@ -799,6 +799,7 @@ dependencies = [
 name = "lai-runtime"
 version = "0.1.0-alpha.1"
 dependencies = [
+ "base64",
  "lai-contracts",
  "serde",
  "serde_json",

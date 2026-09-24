@@ -125,6 +125,7 @@ impl NativeService {
             vec![]
         } else {
             vec![
+                "artifacts.read",
                 "sessions.create",
                 "sessions.get",
                 "sessions.updateOptions",
@@ -181,6 +182,26 @@ impl NativeService {
         }
         let runtime = &self.execution_state.runtime;
         match method {
+            "artifacts.read" => {
+                let request: ArtifactReadParams = decode(p)?;
+                self.check_session(client, &request.session_id)?;
+                let offset = if request.offset.is_empty() {
+                    0
+                } else {
+                    request
+                        .offset
+                        .parse::<u64>()
+                        .map_err(|_| params::invalid())?
+                };
+                serde_json::to_value(runtime.artifact(
+                    client,
+                    &request.session_id,
+                    &request.artifact_id,
+                    offset,
+                    request.max_bytes as usize,
+                )?)
+                .map_err(|_| params::invalid())
+            }
             "sessions.create" => {
                 let request: Create = decode(p)?;
                 let grant = self.execution_grant(client)?;

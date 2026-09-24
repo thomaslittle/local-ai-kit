@@ -172,6 +172,8 @@ pub struct ValidationResult {
 #[serde(deny_unknown_fields)]
 #[allow(dead_code)]
 pub struct MethodInputs {
+    #[serde(rename = "artifacts.read")]
+    artifact: ArtifactReadParams,
     #[serde(rename = "runtime.handshake")]
     handshake: HandshakeParams,
     #[serde(rename = "runtime.health")]
@@ -229,6 +231,8 @@ pub struct MethodInputs {
 #[serde(deny_unknown_fields)]
 #[allow(dead_code)]
 pub struct MethodOutputs {
+    #[serde(rename = "artifacts.read")]
+    artifact: ArtifactChunk,
     #[serde(rename = "runtime.handshake")]
     handshake: HandshakeResult,
     #[serde(rename = "runtime.health")]

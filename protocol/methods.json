@@ -135,6 +135,77 @@
       ],
       "type": "object"
     },
+    "ArtifactChunk": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dataBase64": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "eof": {
+          "type": "boolean"
+        },
+        "mediaType": {
+          "type": "string"
+        },
+        "nextOffset": {
+          "type": "string"
+        },
+        "offset": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "totalBytes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId",
+        "sessionId",
+        "displayName",
+        "mediaType",
+        "totalBytes",
+        "offset",
+        "nextOffset",
+        "dataBase64",
+        "eof"
+      ],
+      "type": "object"
+    },
+    "ArtifactReadParams": {
+      "additionalProperties": false,
+      "description": "Owned in-memory result. No public method accepts a filesystem path.",
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "maxBytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "offset": {
+          "default": "",
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sessionId",
+        "artifactId",
+        "maxBytes"
+      ],
+      "type": "object"
+    },
     "AuthState": {
       "enum": [
         "authenticated",
@@ -963,6 +1034,9 @@
         "approvals.respond": {
           "$ref": "#/$defs/ApprovalParams"
         },
+        "artifacts.read": {
+          "$ref": "#/$defs/ArtifactReadParams"
+        },
         "capabilities.read": {
           "$ref": "#/$defs/ModelParams"
         },
@@ -1037,6 +1111,7 @@
         }
       },
       "required": [
+        "artifacts.read",
         "runtime.handshake",
         "runtime.health",
         "snapshot.get",
@@ -1076,6 +1151,9 @@
           "type": "array"
         },
         "approvals.respond": true,
+        "artifacts.read": {
+          "$ref": "#/$defs/ArtifactChunk"
+        },
         "capabilities.read": {
           "items": {
             "$ref": "#/$defs/Capability"
@@ -1147,6 +1225,7 @@
         }
       },
       "required": [
+        "artifacts.read",
         "runtime.handshake",
         "runtime.health",
         "snapshot.get",
@@ -2624,6 +2703,16 @@
         "$ref": "#/$defs/ApprovalParams"
       },
       "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "artifacts.read",
+      "paramsSchema": {
+        "$ref": "#/$defs/ArtifactReadParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/ArtifactChunk"
+      }
     },
     {
       "availability": "Negotiate runtime.handshake; per-client grants apply.",

@@ -117,6 +117,7 @@ impl NativeService {
             || method.starts_with("turns.")
             || method == "approvals.respond"
             || method == "events.read"
+            || method == "artifacts.read"
         {
             return self.execute_method(client, method, params).await;
         }

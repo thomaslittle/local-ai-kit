@@ -136,6 +136,77 @@
         ],
         "type": "object"
       },
+      "ArtifactChunk": {
+        "additionalProperties": false,
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "dataBase64": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "eof": {
+            "type": "boolean"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "nextOffset": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "totalBytes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifactId",
+          "sessionId",
+          "displayName",
+          "mediaType",
+          "totalBytes",
+          "offset",
+          "nextOffset",
+          "dataBase64",
+          "eof"
+        ],
+        "type": "object"
+      },
+      "ArtifactReadParams": {
+        "additionalProperties": false,
+        "description": "Owned in-memory result. No public method accepts a filesystem path.",
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "maxBytes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "offset": {
+            "default": "",
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "artifactId",
+          "maxBytes"
+        ],
+        "type": "object"
+      },
       "AuthState": {
         "enum": [
           "authenticated",
@@ -964,6 +1035,9 @@
           "approvals.respond": {
             "$ref": "#/components/schemas/ApprovalParams"
           },
+          "artifacts.read": {
+            "$ref": "#/components/schemas/ArtifactReadParams"
+          },
           "capabilities.read": {
             "$ref": "#/components/schemas/ModelParams"
           },
@@ -1038,6 +1112,7 @@
           }
         },
         "required": [
+          "artifacts.read",
           "runtime.handshake",
           "runtime.health",
           "snapshot.get",
@@ -1077,6 +1152,9 @@
             "type": "array"
           },
           "approvals.respond": true,
+          "artifacts.read": {
+            "$ref": "#/components/schemas/ArtifactChunk"
+          },
           "capabilities.read": {
             "items": {
               "$ref": "#/components/schemas/Capability"
@@ -1148,6 +1226,7 @@
           }
         },
         "required": [
+          "artifacts.read",
           "runtime.handshake",
           "runtime.health",
           "snapshot.get",
@@ -2873,6 +2952,32 @@
                       },
                       "params": {
                         "$ref": "#/components/schemas/ApprovalParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "artifacts.read"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/ArtifactReadParams"
                       }
                     },
                     "required": [

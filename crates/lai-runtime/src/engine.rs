@@ -33,8 +33,59 @@ pub(crate) struct Cell {
     pub active: AtomicBool,
     pub approvals: Mutex<BTreeMap<String, Pending>>,
     pub journal: Arc<Mutex<Journal>>,
+    pub artifacts: Arc<Mutex<crate::artifact::ArtifactStore>>,
+    pub output: Mutex<Vec<u8>>,
 }
 impl Cell {
+    pub fn publish_artifact(
+        &self,
+        turn: &str,
+        name: &str,
+        media: &str,
+        bytes: Vec<u8>,
+    ) -> Result<String> {
+        (self.guard)()?;
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
+        if !self.active.load(Ordering::Acquire) || state.view.state == SessionState::Closed {
+            return Err(err(ErrorCode::LocalAccessDenied));
+        }
+        let session = state.view.id.clone();
+        let size = bytes.len().to_string();
+        drop(state);
+        let id = self
+            .artifacts
+            .lock()
+            .map_err(|_| err(ErrorCode::ProviderUnavailable))?
+            .insert(&self.owner, &session, name, media, bytes)?;
+        if let Err(error) = self.emit(
+            Some(turn.into()),
+            EventPayload::Artifact {
+                artifact_id: id.clone(),
+                media_type: media.into(),
+                size,
+            },
+        ) {
+            if let Ok(mut store) = self.artifacts.lock() {
+                store.remove(&id);
+            }
+            return Err(error);
+        }
+        // A concurrent revoke/close must not leave an artifact reachable or retained.
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
+        if !self.active.load(Ordering::Acquire) || state.view.state == SessionState::Closed {
+            if let Ok(mut store) = self.artifacts.lock() {
+                store.remove(&id);
+            }
+            return Err(err(ErrorCode::LocalAccessDenied));
+        }
+        Ok(id)
+    }
     pub fn emit(&self, turn: Option<String>, payload: EventPayload) -> Result<()> {
         if !self.active.load(Ordering::Acquire) {
             return Err(err(ErrorCode::LocalAccessDenied));
@@ -61,8 +112,24 @@ impl Cell {
 pub struct Runtime {
     sessions: Mutex<BTreeMap<String, Arc<Cell>>>,
     journals: Mutex<BTreeMap<String, Arc<Mutex<Journal>>>>,
+    artifacts: Arc<Mutex<crate::artifact::ArtifactStore>>,
 }
 impl Runtime {
+    pub fn artifact(
+        &self,
+        owner: &str,
+        session: &str,
+        artifact: &str,
+        offset: u64,
+        max: usize,
+    ) -> Result<ArtifactChunk> {
+        let cell = self.cell(owner, session)?;
+        (cell.guard)()?;
+        self.artifacts
+            .lock()
+            .map_err(|_| err(ErrorCode::ProviderUnavailable))?
+            .read(owner, session, artifact, offset, max)
+    }
     pub fn new() -> Self {
         Self::default()
     }
@@ -121,6 +188,8 @@ impl Runtime {
                 active: AtomicBool::new(true),
                 approvals: Mutex::new(BTreeMap::new()),
                 journal,
+                artifacts: self.artifacts.clone(),
+                output: Mutex::new(Vec::new()),
             }),
         );
         Ok(view)
@@ -209,6 +278,10 @@ impl Runtime {
                 state: SessionState::Running,
             },
         )?;
+        cell.output
+            .lock()
+            .map_err(|_| err(ErrorCode::ProviderUnavailable))?
+            .clear();
         let run_id = turn.clone();
         tokio::spawn(async move {
             run(cell, run_id, prompt, options, cancel).await;
@@ -251,6 +324,10 @@ impl Runtime {
                 cancel.send_replace(true);
             }
         }
+        self.artifacts
+            .lock()
+            .map_err(|_| err(ErrorCode::ProviderUnavailable))?
+            .clear_session(session);
         cell.approvals
             .lock()
             .map_err(|_| err(ErrorCode::ProviderUnavailable))?
@@ -337,6 +414,9 @@ impl Runtime {
         if let Ok(mut journals) = self.journals.lock() {
             journals.remove(owner);
         }
+        if let Ok(mut artifacts) = self.artifacts.lock() {
+            artifacts.clear_owner(owner);
+        }
     }
 }
 async fn run(
@@ -370,6 +450,18 @@ async fn run(
     } else {
         result
     };
+    let result = result.and_then(|()| {
+        let bytes = std::mem::take(
+            &mut *cell
+                .output
+                .lock()
+                .map_err(|_| err(ErrorCode::ProviderUnavailable))?,
+        );
+        if !bytes.is_empty() {
+            cell.publish_artifact(&turn, "response.txt", "text/plain; charset=utf-8", bytes)?;
+        }
+        Ok(())
+    });
     if result.is_err() {
         if let Some(mut driver) = agent.take() {
             let _ = tokio::time::timeout(Duration::from_secs(2), driver.close()).await;

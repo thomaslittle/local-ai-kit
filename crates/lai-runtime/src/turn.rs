@@ -14,6 +14,12 @@ pub struct TurnContext {
     pub(crate) cancel: watch::Receiver<bool>,
 }
 impl TurnContext {
+    pub fn artifact(&self, name: &str, media: &str, bytes: Vec<u8>) -> Result<String> {
+        if self.is_cancelled() {
+            return Err(err(ErrorCode::Cancelled));
+        }
+        self.cell.publish_artifact(&self.turn, name, media, bytes)
+    }
     pub fn emit(&self, payload: EventPayload) -> Result<()> {
         (self.cell.guard)()?;
         if *self.cancel.borrow() || !self.cell.active.load(Ordering::Acquire) {
@@ -22,11 +28,23 @@ impl TurnContext {
         if matches!(
             payload,
             EventPayload::Final { .. }
+                | EventPayload::Artifact { .. }
                 | EventPayload::State { .. }
                 | EventPayload::ApprovalRequest { .. }
                 | EventPayload::ApprovalResolved { .. }
         ) {
             return Err(err(ErrorCode::InvalidRequest));
+        }
+        if let EventPayload::TextDelta { text } = &payload {
+            let mut output = self
+                .cell
+                .output
+                .lock()
+                .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
+            if output.len() + text.len() > 4 * 1024 * 1024 {
+                return Err(err(ErrorCode::FrameTooLarge));
+            }
+            output.extend_from_slice(text.as_bytes());
         }
         self.cell.emit(Some(self.turn.clone()), payload)
     }
