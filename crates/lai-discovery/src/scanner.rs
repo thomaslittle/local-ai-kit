@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap,BTreeSet},path::{Path,PathBuf},sync::atomic::{AtomicBool,Ordering}};
+use std::{collections::{BTreeMap,BTreeSet},path::Path,sync::atomic::{AtomicBool,Ordering}};
 use sha2::{Digest,Sha256};
 use lai_contracts::*;
 use lai_platform::{EntryKind,LocalFilesystem};
@@ -60,8 +60,8 @@ impl<F:LocalFilesystem> Scanner<F> {
                     }
                     let label=if Some(&root)==default_root.as_ref(){"Default profile".into()}else{format!("Additional profile {}",index+1)};
                     result.snapshot.profiles.push(Profile{id:profile_id.clone(),installation_id:installation_id.clone(),label:label.clone()});
-                    result.snapshot.connections.push(Connection{id:connection_id.clone(),provider_id:definition.id.into(),installation_id,profile_id,display_name:format!("{} · {label}",definition.name),account_id:None,auth:Observation::unknown("AUTH_NOT_CHECKED_PASSIVE_SCAN"),plan:Observation::unknown("PLAN_NOT_REPORTED"),status:if executable.is_some(){"detected".into()}else{"configuration_only".into()},diagnostics:vec![if config_present{"CONFIGURATION_DIRECTORY_PRESENT".into()}else{"NO_CONFIGURATION_DIRECTORY".into()}]});
-                    result.snapshot.routes.push(AccessRoute{id:stable_id("route",&[&connection_id]),connection_id:connection_id.clone(),provider_id:definition.id.into(),display_name:format!("{} · {label}",definition.name),billing:Observation::unknown("BILLING_NOT_CHECKED"),capabilities:vec![],catalog_revision:"unprobed".into()});
+                    result.snapshot.connections.push(Connection{id:connection_id.clone(),provider_id:definition.id.into(),installation_id,profile_id,display_name:format!("{} Â· {label}",definition.name),account_id:None,auth:Observation::unknown("AUTH_NOT_CHECKED_PASSIVE_SCAN"),plan:Observation::unknown("PLAN_NOT_REPORTED"),status:if executable.is_some(){"detected".into()}else{"configuration_only".into()},diagnostics:vec![if config_present{"CONFIGURATION_DIRECTORY_PRESENT".into()}else{"NO_CONFIGURATION_DIRECTORY".into()}]});
+                    result.snapshot.routes.push(AccessRoute{id:stable_id("route",&[&connection_id]),connection_id:connection_id.clone(),provider_id:definition.id.into(),display_name:format!("{} Â· {label}",definition.name),billing:Observation::unknown("BILLING_NOT_CHECKED"),capabilities:vec![],catalog_revision:"unprobed".into()});
                     result.locations.insert(connection_id,LocatedClient{provider_id:definition.id.into(),profile_home:root.clone(),executable});
                 }
             }

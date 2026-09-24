@@ -52,6 +52,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
+name = "bytes"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+
+[[package]]
 name = "cc"
 version = "1.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -231,6 +237,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "lai-cli"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "lai-contracts",
+ "lai-core",
+ "lai-discovery",
+ "lai-platform",
+ "lai-service",
+ "lai-transports",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "lai-contracts"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -279,6 +300,19 @@ dependencies = [
  "lai-contracts",
  "lai-core",
  "lai-discovery",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "lai-transports"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "lai-contracts",
+ "lai-core",
+ "lai-discovery",
+ "lai-service",
  "serde",
  "serde_json",
  "tokio",
@@ -580,6 +614,7 @@ version = "1.53.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
 dependencies = [
+ "bytes",
  "pin-project-lite",
  "tokio-macros",
 ]
