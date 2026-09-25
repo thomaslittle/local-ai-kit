@@ -83,7 +83,7 @@ small, .fine-print, .list-footnote { font-size: 12px; color: var(--muted); }
 .variant-tabs { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; margin-bottom: 20px; }
 .variant-tab { background: transparent; color: var(--muted); border-color: var(--border); text-align: left; padding: 9px 11px; font-size: 11px; }
 .variant-tab > span { display: flex; gap: 10px; align-items: center; }
-.variant-tab small { font-size: 9px; opacity: .7; }
+.variant-tab small { font-size: 10px; color: var(--muted); }
 .variant-tab.active { color: var(--accent); border-color: #39715f; background: #142b24; }
 .catalog-toolbar { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-bottom: 18px; }
 .search-wrap { position: relative; flex: 1; min-width: 240px; }
