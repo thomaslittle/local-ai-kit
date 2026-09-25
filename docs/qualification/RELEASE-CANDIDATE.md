@@ -73,10 +73,30 @@ These items landed after source `991ec2b`; they are not qualified by the artifac
 
 ## Current qualification status
 
-The changes after `991ec2b` require a fresh clean-source release run and rebuilt distributions before inheriting any historical artifact, consumer, or benchmark result above. Windows deterministic verification now includes the new resumption, bounded-tail, and retry tests. GitHub Actions defines Windows, Ubuntu, and macOS jobs, but recent runs failed before any steps were created or executed and expose no runner-level cause. macOS therefore remains unexecuted and unqualified. Do not describe that failure as a billing issue without evidence.
+The changes after `991ec2b` have a fresh Windows release run on clean source `11d1926fef71ff39727f74a0959010220a9657ca`; see the current-source evidence below. The Windows distribution and package consumers were rebuilt from that exact SHA. Linux verification ran on WSL2 through the full Rust workspace and most deterministic SDK/integration checks, but did not finish the browser demo or produce a current-source Linux distribution. macOS remains unexecuted and unqualified.
 
-The remaining truthful gaps are provider-specific plan/usage fields without a documented verified source, actual macOS platform execution, and other original-plan scope explicitly marked incomplete in the implementation ledger. Gemini CLI and Antigravity do not have live-account qualification on this PC. Tauri remains an integration guide, not a separately qualified application. API billing remains separate from native subscription access.
+GitHub Actions run `36139898922` created Windows, Ubuntu, and macOS jobs but failed all three before any steps appeared. `gh run view --log` returned `log not found`, so the workflow service exposes no job output or external cause. Do not assign a billing or account explanation without evidence.
 
-No registry release, OS signing/notarization, main merge, live generation, or paid fallback was performed. A clean release run on the exact final source is still required before treating this as a freshly qualified developer-alpha build.
+The remaining truthful gaps include provider-specific plan/usage values without documented sources, current-source Linux package qualification, macOS platform execution, live Gemini CLI/Antigravity qualification, and other original-plan scope marked incomplete in the implementation ledger. Tauri remains an integration guide rather than a separately qualified application. API billing remains separate from native subscription access.
+
+No registry release, OS signing/notarization, main merge, live generation, or paid fallback was performed.
 
 Review in this session was author self-review, not an independent security audit. The review found and fixed the empty event-journal cursor issue and the offline React peer-cache assumption; focused regressions failed before the fixes and passed afterward.
+
+
+## Current-source Windows qualification — September 25, 2026
+
+Source `11d1926fef71ff39727f74a0959010220a9657ca`, clean working tree, Windows 11 x64:
+
+- `verify.py --profile all`: passed.
+- `cargo fmt --all --check` and strict all-target/all-feature Clippy: passed.
+- `verify.py --profile release`: passed, including the C# HTTP consumer against the local helper, adapter conformance, bundle validation, clean npm tarball consumers, installed Python wheel with the actual native helper, and React server rendering.
+- Current Windows archive: `dist/release/local-ai-kit-0.1.0-alpha.1-x86_64-pc-windows-msvc-11d1926fef71.zip`; SHA-256 `102edaa10e7a4737e173ec3a6c9396bd463a372fac1f441bc3131f8c9a000af1`.
+- Packaged native binary SHA-256: `0a183d80a4b2b5e1d65f466ad86547600127105bc4c200d0232cb9ec82f75b44`. Package smoke reports manifest, standalone native binary, npm tarballs, Python wheel, and React SSR all passing; inference requests: zero.
+- Fresh benchmark on that binary: 20 cold process-and-scan samples, p50 14.65 ms / p95 20.28 ms; 200 warm stdio snapshots, p50 0.31 ms / p95 0.43 ms; 60.35-second idle run, peak RSS 8.66 MiB, 0.0% one-core CPU. All recorded performance targets passed.
+
+## Current-source Linux and macOS status
+
+The clean-source WSL2 run at `11d1926` passed `cargo test --workspace --all-targets`, TypeScript and Python SDKs, generated contracts, React, native bridge/broker, and deterministic integration checks up to the browser demo. The first all-profile attempt stopped because the fresh Linux environment lacked the pinned Playwright dependency. After installing `requirements-build.txt`, Chromium downloaded, but Playwright returned `EIO` while removing its cache lock. WSL then failed to launch Ubuntu with `Wsl/Service/CreateInstance/E_FAIL` and later `Wsl/Service/E_UNEXPECTED`, including after terminating and shutting down the distro. The Linux UI/full profile and Linux distribution/package smoke/benchmark are therefore incomplete; old `991ec2b` Linux artifacts remain historical and do not qualify current source.
+
+The GitHub Actions matrix contains `windows-latest`, `ubuntu-latest`, and `macos-latest`, but run `36139898922` exposed zero executed steps on every job. Windows was qualified locally as above. Ubuntu has partial local platform execution as described above. macOS has not been platform-executed, and the Actions failure provides no cause.
