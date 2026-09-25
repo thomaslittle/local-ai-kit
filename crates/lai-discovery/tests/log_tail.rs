@@ -3,7 +3,7 @@ use lai_discovery::log_tail::{LogTailState, read_lines};
 use lai_platform::{DirectoryListing, EntryKind, LocalFilesystem, NativeFilesystem, ReadChunk};
 use std::{
     fs,
-    io::{Seek, SeekFrom, Write},
+    io::Write,
     path::Path,
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -110,20 +110,42 @@ impl LocalFilesystem for CountingFs {
         Ok(c)
     }
 }
+struct SyntheticLargeFs {
+    bytes: AtomicUsize,
+}
+impl LocalFilesystem for SyntheticLargeFs {
+    fn probe(&self, _: &Path) -> Result<EntryKind> {
+        Ok(EntryKind::File)
+    }
+    fn children(&self, _: &Path, _: usize) -> Result<DirectoryListing> {
+        Ok(DirectoryListing {
+            entries: Vec::new(),
+            truncated: false,
+        })
+    }
+    fn read_chunk(&self, _: &Path, offset: u64, max_bytes: usize) -> Result<ReadChunk> {
+        let total_size = 1_073_741_824u64;
+        let size = total_size.saturating_sub(offset).min(max_bytes as u64) as usize;
+        self.bytes.fetch_add(size, Ordering::SeqCst);
+        Ok(ReadChunk {
+            bytes: vec![0; size],
+            next_offset: offset + size as u64,
+            total_size,
+            truncated: offset + (size as u64) < total_size,
+            identity: Some(lai_platform::FileIdentity {
+                volume: 7,
+                file: 11,
+            }),
+        })
+    }
+}
 #[test]
-fn sparse_gigabyte_log_reads_only_the_bounded_window() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("huge");
-    let mut f = fs::File::create(&path).unwrap();
-    f.set_len(1_073_741_824).unwrap();
-    f.seek(SeekFrom::Start(1_073_741_820)).unwrap();
-    f.write_all(b"x\ny\n").unwrap();
-    drop(f);
-    let fs = CountingFs {
+fn synthetic_gigabyte_log_reads_only_the_bounded_window() {
+    let fs = SyntheticLargeFs {
         bytes: AtomicUsize::new(0),
     };
     let mut state = LogTailState::default();
-    let batch = read_lines(&fs, &path, &mut state, 4096, 32).unwrap();
+    let batch = read_lines(&fs, Path::new("synthetic-large-log"), &mut state, 4096, 32).unwrap();
     assert!(batch.lines.is_empty());
     assert!(batch.has_more);
     assert!(fs.bytes.load(Ordering::SeqCst) < 5000);
