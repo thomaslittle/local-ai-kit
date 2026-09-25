@@ -88,3 +88,9 @@ Added public `models.page` with caller/filter/revision-bound cursors, 1–500-ro
 Added `lai-platform::MetadataWatcher` using notify 8.2.0 OS events, explicit roots and metadata filenames, no credential-content reads or recursive profile traversal. Three Windows tests failed before implementation and now pass. Service integration was blocked; two service watcher acceptance tests remain explicitly ignored, and no watcher RPC is advertised. Do not count the ignored tests as passing or this primitive as automatic service refresh.
 
 The full Windows `all` profile passed after these additions with the two documented ignored service-watch tests. Next: qualify exact clean-commit distributions and native Ubuntu execution; preserve remaining original-plan gaps rather than marking the full project complete.
+
+## Final review corrections
+
+Author review found that an empty runtime journal returned no `tailCursor` and accepted a cursor ahead of its history. Two regressions failed first, then passed after empty journals were routed through the existing validated journal reader. Native streaming tests also pass. This corrects default subscriptions before the first turn without changing provider or permission behavior.
+
+Clean Linux consumer testing exposed `ENOTCACHED` for React registry metadata: npm ci had installed the peers, but the offline smoke test relied on a separate cached packument present on Windows. Four new peer-fixture tests failed first. The smoke now packs the already locked installed React peers and their actual runtime dependencies as explicit temporary tarballs; dependency resolution remains strict, with no force/legacy-peer flags. Windows package smoke passes with this change. Linux rerun and final exact-commit bundles follow.

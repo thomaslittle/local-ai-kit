@@ -386,7 +386,7 @@ impl Runtime {
                 .lock()
                 .map_err(|_| err(ErrorCode::ProviderUnavailable))?
                 .read(session, after),
-            None => Ok(json!({"events":[],"cursor":"0"})),
+            None => Journal::default().read(session, after),
         }
     }
     pub fn revoke(&self, owner: &str) {

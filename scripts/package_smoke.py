@@ -12,6 +12,23 @@ def run(command,cwd,env=None):
     if result.returncode:raise RuntimeError('Consumer check failed: '+str(command[0])+'\n'+result.stdout[-6000:]+result.stderr[-6000:])
     return result.stdout
 
+def peer_packages(root):
+    """Use installed peer packages without weakening dependency resolution."""
+    import re
+    tree=(root/'node_modules').resolve();pending=['react','react-dom'];found={}
+    while pending:
+        name=pending.pop()
+        if not re.fullmatch(r'(?:@[a-z0-9_.-]+/)?[a-z0-9][a-z0-9_.-]*',name):raise ValueError('Invalid peer package name')
+        if name in found:continue
+        if len(found)>=32:raise ValueError('Peer dependency graph exceeds its test budget')
+        path=(tree/name).resolve()
+        if not path.is_relative_to(tree) or not (path/'package.json').is_file():raise ValueError('Required installed peer is missing')
+        metadata=json.loads((path/'package.json').read_text(encoding='utf-8'))
+        if metadata.get('name')!=name:raise ValueError('Installed peer identity mismatch')
+        found[name]=path
+        pending.extend(metadata.get('dependencies',{}))
+    return [found[name] for name in sorted(found)]
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--bundle',type=pathlib.Path);args=parser.parse_args()
     if args.bundle:bundle=args.bundle.resolve()
@@ -30,8 +47,11 @@ def main():
         package_paths=sorted((bundle/'packages').glob('*.tgz'))
         if len(package_paths)!=4:raise RuntimeError('Expected four JavaScript artifacts')
         (consumer/'package.json').write_text(json.dumps({'private':True,'type':'module'}),encoding='utf-8')
-        dependencies=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['devDependencies']
-        run(['npm','install','--offline','--ignore-scripts','--no-audit','--no-fund',*package_paths,'react@'+dependencies['react'],'react-dom@'+dependencies['react-dom']],consumer)
+        peers_dir=base/'peers';peers_dir.mkdir()
+        for peer in peer_packages(ROOT):
+            run(['npm','pack',peer,'--ignore-scripts','--json','--pack-destination',peers_dir],ROOT)
+        peer_paths=sorted(peers_dir.glob('*.tgz'))
+        run(['npm','install','--offline','--ignore-scripts','--no-audit','--no-fund',*package_paths,*peer_paths],consumer)
         script="import assert from 'node:assert/strict';\nimport {createLocalAI,createSnapshotStore} from '@local-ai-kit/sdk';\nimport {openBundledTransport} from '@local-ai-kit/sdk/node';\nimport {createCatalog} from '@local-ai-kit/selector-core';\nimport {LocalAIProvider} from '@local-ai-kit/react';\nimport {ProviderModelSelector} from '@local-ai-kit/ui-react';\nimport React from 'react';\nimport {renderToString} from 'react-dom/server';\nconst t=await openBundledTransport({bundleDirectory:process.argv[2],args:['serve','--stdio','--home',process.argv[3],'--allow-passive-discovery']});\nconst ai=await createLocalAI({transport:t});\ntry {\n assert.equal((await ai.snapshot.get()).connections.length,0);\n await ai.discovery.refresh({level:'passive'});\n const snapshot=await ai.snapshot.get();assert.equal(snapshot.mode,'live');assert.equal(snapshot.connections.length,0);\n assert.equal(createCatalog(snapshot).models.size,0);\n const store=createSnapshotStore(ai);assert.equal(store.getSnapshot().snapshot,null);assert.equal(store.getSnapshot().loading,false);\n const html=renderToString(React.createElement(LocalAIProvider,{store},React.createElement(ProviderModelSelector,{snapshot,value:null,onValueChange:()=>{},variant:'rail'})));\n assert.ok(html.length>0);store.dispose();\n console.log('PASS packaged JS SDK/native scan and React server rendering');\n} finally {await ai.close();}\n"
         (consumer/'consumer.mjs').write_text(script,encoding='utf-8')
         js=run(['node',consumer/'consumer.mjs',bundle,home],consumer)
