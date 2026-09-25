@@ -1,5 +1,11 @@
 # Execution ledger â€” Local AI Kit
 
+## Current status — September 25, 2026
+
+The current checkout follows historical Windows/Linux artifact source `991ec2b` and later watcher/catalog/native ACP changes. Native subscription profiles for Gemini CLI, Antigravity, and Grok are implemented with explicit host registration and connection-scoped grants. Grok has metadata-only Windows evidence; Gemini CLI and Antigravity do not have live qualification. `sessions.suspend` / `sessions.resume` use ACP `loadSession` only when advertised, owner-scoped one-time in-memory tokens, and checks against the saved account, route, billing, model revision, workspace path, and current authorization. The incremental metadata tailer is provider-agnostic infrastructure; no adapter currently consumes it or derives quota from logs. Metadata failures use bounded retry backoff and sanitized Retry-After metadata.
+
+The worktree base at continuation was `d1705fd92a2d19b38bf8bf1134ee2c543c7ce82b`. Fresh Windows deterministic verification and strict formatting/Clippy passed after the current changes; exact release artifacts and performance must be regenerated from clean final source. GitHub Actions run `36128810500` failed before any steps were created on Windows, Ubuntu, and macOS; the run provides no external cause. The workflow includes all three platforms, but macOS execution evidence remains absent. Older entries below are chronological evidence from earlier checkpoints and do not describe the current feature set unless explicitly updated here.
+
 Base: `1a49571b2ea5759b383966f1eae80162f4f7f4b1`. Branch: `feature/initial-implementation`. No external coding agent or paid inference used.
 
 ## Implemented/tested slices
@@ -106,3 +112,5 @@ Remaining original scope is explicitly listed in RELEASE-CANDIDATE.md. This chec
 - Native subscription connectors: added explicit host-owned native profile registration for Gemini CLI, Antigravity ACP, and Grok. Passive detection remains inert; execution capability is connection-scoped, not provider-wide. ACP success is official-protocol auth evidence; plan/quota remain unknown unless reported, and host billing declarations remain user-supplied evidence.
 - Grok metadata qualification: Grok CLI 1.0.41 reused its existing native login without token export and returned Grok 4.7 plus reasoning_effort. No prompt/inference was submitted.
 - Verification: full deterministic Windows profile passed after the native connector wiring, alongside strict workspace Clippy and targeted ACP/CLI/native-profile regressions.
+
+- Refresh/usage infrastructure: added a provider-agnostic bounded incremental line tailer with partial-record buffering, truncation/replacement rotation detection, sparse-file bounded reads, and no automatic quota interpretation. Added Retry-After-aware, exponential+jitter metadata negative caching and exposed only sanitized retry timing through Rust/TypeScript/Python errors. No generation request is retried automatically.

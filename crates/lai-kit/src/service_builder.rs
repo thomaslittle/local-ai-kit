@@ -133,6 +133,11 @@ pub fn build_service_with_registries(
                                 "Native ACP subscription routes expose text sessions with mediated approvals only",
                             ));
                         }
+                        let request = lai_adapters::native_clients::client::NativeOpen {
+                            route: input.route_id,
+                            model: input.model,
+                            review: input.review_requests,
+                        };
                         return match input.native_resume.as_deref() {
                             Some(native_session_id) => {
                                 lai_adapters::native_clients::client::open_resume(
@@ -140,9 +145,7 @@ pub fn build_service_with_registries(
                                     &input.located,
                                     &input.workspace,
                                     native_browser.as_deref(),
-                                    input.route_id,
-                                    input.model,
-                                    input.review_requests,
+                                    request,
                                     native_session_id,
                                 )
                                 .await
@@ -153,9 +156,7 @@ pub fn build_service_with_registries(
                                     &input.located,
                                     &input.workspace,
                                     native_browser.as_deref(),
-                                    input.route_id,
-                                    input.model,
-                                    input.review_requests,
+                                    request,
                                 )
                                 .await
                             }

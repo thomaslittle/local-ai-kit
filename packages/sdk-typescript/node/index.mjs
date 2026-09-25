@@ -2,7 +2,7 @@
 import { spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
 import { tmpdir } from 'node:os';
-import { LocalAIError } from '../dist/errors.js';
+import { LocalAIError, remoteError } from '../dist/errors.js';
 const failCode=code=>new LocalAIError(code);
 const bounded=(v,min,max)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw failCode('INVALID_LIMIT');return v;};
 class EventQueue {
@@ -60,7 +60,7 @@ export async function openStdioTransport(options){
    const request=pending.get(value.id);if(!request)return;
    if(Object.hasOwn(value,'error')){
     if(!value.error||typeof value.error.code!=='number')throw failCode('PROTOCOL_INVALID');
-    request.finish(failCode(typeof value.error.data?.code==='string'?value.error.data.code:'REMOTE_ERROR'));
+    request.finish(remoteError(value.error.data));
    }else request.finish(null,value.result);
   }else if(value.method==='events.error'){
    const p=value.params;

@@ -78,28 +78,26 @@ pub async fn probe(
     result
 }
 
+pub struct NativeOpen {
+    pub route: String,
+    pub model: Model,
+    pub review: bool,
+}
 pub async fn open(
     profile: &NativeProfile,
     located: &LocatedClient,
     workspace: &Path,
     browser: Option<&Path>,
-    route: String,
-    model: Model,
-    review: bool,
+    request: NativeOpen,
 ) -> Result<Box<dyn Agent>> {
-    open_internal(
-        profile, located, workspace, browser, route, model, review, None,
-    )
-    .await
+    open_internal(profile, located, workspace, browser, request, None).await
 }
 pub async fn open_resume(
     profile: &NativeProfile,
     located: &LocatedClient,
     workspace: &Path,
     browser: Option<&Path>,
-    route: String,
-    model: Model,
-    review: bool,
+    request: NativeOpen,
     native_session_id: &str,
 ) -> Result<Box<dyn Agent>> {
     open_internal(
@@ -107,9 +105,7 @@ pub async fn open_resume(
         located,
         workspace,
         browser,
-        route,
-        model,
-        review,
+        request,
         Some(native_session_id),
     )
     .await
@@ -119,9 +115,7 @@ async fn open_internal(
     located: &LocatedClient,
     workspace: &Path,
     browser: Option<&Path>,
-    route: String,
-    model: Model,
-    review: bool,
+    request: NativeOpen,
     resume: Option<&str>,
 ) -> Result<Box<dyn Agent>> {
     if profile.provider.id() != located.provider_id
@@ -135,6 +129,11 @@ async fn open_internal(
     }
     let prepared = prepare_execution(profile, workspace, browser)?;
     let auth = prepared.auth_method.clone();
+    let NativeOpen {
+        route,
+        model,
+        review,
+    } = request;
     let inner = match resume {
         Some(native_session_id) => {
             acp_client::open_resume(

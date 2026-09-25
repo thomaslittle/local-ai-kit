@@ -31,6 +31,10 @@ test('provider error details are not reflected into SDK errors',async()=>{
  const t=createHttpTransport(config(async(_u,init)=>new Response(JSON.stringify({jsonrpc:'2.0',id:JSON.parse(init.body).id,error:{code:-32000,message:'secret synthetic-token',data:{code:'AUTH_REQUIRED',message:'private path',retryable:false}}}),{headers:{'content-type':'application/json'}})));
  await assert.rejects(t.request('snapshot.get'),e=>e.code==='AUTH_REQUIRED'&&!String(e).includes('synthetic-token')&&!String(e).includes('private path'));
 });
+test('safe retry metadata is exposed without provider details',async()=>{
+ const t=createHttpTransport(config(async(_u,init)=>new Response(JSON.stringify({jsonrpc:'2.0',id:JSON.parse(init.body).id,error:{code:-32000,message:'PRIVATE',data:{code:'RATE_LIMITED',message:'provider-secret',retryable:true,retryAfterMs:2750}}}),{headers:{'content-type':'application/json'}})));
+ await assert.rejects(t.request('connections.probe'),e=>e.code==='RATE_LIMITED'&&e.retryable===true&&e.retryAfterMs===2750&&!String(e).includes('provider-secret'));
+});
 test('no automatic retry on HTTP or ambiguous transport failure',async()=>{
  let calls=0;const t=createHttpTransport(config(async()=>{calls++;throw Error('request may have executed: secret');}));
  await assert.rejects(t.request('turns.start'),/TRANSPORT_FAILED/);assert.equal(calls,1);

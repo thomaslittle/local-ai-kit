@@ -22,6 +22,13 @@ fn spec(mode: &str) -> LaunchSpec {
         env: BTreeMap::new(),
     }
 }
+fn traced_spec(mode: &str, trace: &std::path::Path) -> LaunchSpec {
+    let mut launch = spec(mode);
+    launch
+        .env
+        .insert("LAI_ACP_TRACE".into(), trace.as_os_str().to_owned());
+    launch
+}
 #[tokio::test]
 async fn advertised_load_session_can_suspend_without_closing_and_resume_same_native_id() {
     let catalog = client::inspect(spec("normal"), "fixture", "r")
@@ -74,12 +81,14 @@ async fn missing_load_session_capability_fails_before_exposing_a_resume_id() {
 }
 #[tokio::test]
 async fn wrong_or_unavailable_native_session_is_not_recreated_as_a_new_chat() {
+    let tmp = tempfile::tempdir().unwrap();
+    let trace = tmp.path().join("protocol-methods.txt");
     let catalog = client::inspect(spec("normal"), "fixture", "r")
         .await
         .unwrap();
     let model = catalog.models[0].clone();
     let error = match client::open_resume(
-        spec("resume"),
+        traced_spec("resume", &trace),
         "fixture".into(),
         "r".into(),
         model,
@@ -96,4 +105,34 @@ async fn wrong_or_unavailable_native_session_is_not_recreated_as_a_new_chat() {
         error.code,
         ErrorCode::NotFound | ErrorCode::ProviderUnavailable
     ));
+    let methods = std::fs::read_to_string(trace).unwrap();
+    assert!(methods.contains("session/load"));
+    assert!(!methods.contains("session/new"));
+}
+
+#[tokio::test]
+async fn native_peer_cannot_substitute_a_different_session_id() {
+    let tmp = tempfile::tempdir().unwrap();
+    let trace = tmp.path().join("protocol-methods.txt");
+    let catalog = client::inspect(spec("normal"), "fixture", "r")
+        .await
+        .unwrap();
+    let error = match client::open_resume(
+        traced_spec("wrong_session", &trace),
+        "fixture".into(),
+        "r".into(),
+        catalog.models[0].clone(),
+        false,
+        None,
+        "session-native",
+    )
+    .await
+    {
+        Ok(_) => panic!("provider substituted a different native session"),
+        Err(error) => error,
+    };
+    assert_eq!(error.code, ErrorCode::SessionRouteMismatch);
+    let methods = std::fs::read_to_string(trace).unwrap();
+    assert!(methods.contains("session/load"));
+    assert!(!methods.contains("session/new"));
 }

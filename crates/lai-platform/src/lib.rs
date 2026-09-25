@@ -18,11 +18,17 @@ pub struct DirectoryListing {
     pub truncated: bool,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FileIdentity {
+    pub volume: u128,
+    pub file: u128,
+}
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReadChunk {
     pub bytes: Vec<u8>,
     pub next_offset: u64,
     pub total_size: u64,
     pub truncated: bool,
+    pub identity: Option<FileIdentity>,
 }
 pub trait LocalFilesystem: Send + Sync {
     fn probe(&self, path: &Path) -> Result<EntryKind>;

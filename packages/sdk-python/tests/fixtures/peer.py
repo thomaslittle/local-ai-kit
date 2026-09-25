@@ -27,6 +27,8 @@ for line in sys.stdin:
         sys.exit(0)
     elif method == 'test.error':
         emit({'jsonrpc':'2.0','id':r['id'],'error':{'code':-32000,'message':'SECRET_NATIVE_LOG','data':{'code':'AUTH_REQUIRED'}}})
+    elif method == 'test.retry':
+        emit({'jsonrpc':'2.0','id':r['id'],'error':{'code':-32000,'message':'SECRET_NATIVE_LOG','data':{'code':'RATE_LIMITED','retryable':True,'retryAfterMs':2750,'message':'PRIVATE'}}})
     elif method == 'test.gap':
         emit({'jsonrpc':'2.0','method':'events.error','params':{'subscriptionId':'synthetic','code':'EVENT_GAP'}})
         result(r['id'], {'ok':True})

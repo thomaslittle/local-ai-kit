@@ -1,9 +1,11 @@
-use crate::{DirectoryListing, EntryKind, LocalFilesystem, NativeFilesystem, ReadChunk};
+use crate::{
+    DirectoryListing, EntryKind, FileIdentity, LocalFilesystem, NativeFilesystem, ReadChunk,
+};
 use lai_contracts::{DomainError, ErrorCode, Result};
 use std::{
     fs::{self, OpenOptions},
     io::{Read, Seek, SeekFrom},
-    path::Path,
+    path::{Component, Path},
 };
 
 fn io_error(error: std::io::Error) -> DomainError {
@@ -16,6 +18,26 @@ fn io_error(error: std::io::Error) -> DomainError {
 }
 fn invalid(message: &str) -> DomainError {
     DomainError::new(ErrorCode::InvalidRequest, message)
+}
+fn reject_symlink_components(path: &Path) -> Result<()> {
+    if path
+        .components()
+        .any(|part| matches!(part, Component::ParentDir | Component::CurDir))
+    {
+        return Err(invalid("Path must not contain dot segments"));
+    }
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir().map_err(io_error)?.join(path)
+    };
+    for component in absolute.ancestors() {
+        let metadata = fs::symlink_metadata(component).map_err(io_error)?;
+        if metadata.file_type().is_symlink() {
+            return Err(invalid("Symlink paths are not readable"));
+        }
+    }
+    Ok(())
 }
 impl LocalFilesystem for NativeFilesystem {
     fn probe(&self, path: &Path) -> Result<EntryKind> {
@@ -56,6 +78,7 @@ impl LocalFilesystem for NativeFilesystem {
         if max_bytes == 0 || max_bytes > 16 * 1024 * 1024 {
             return Err(invalid("Read budget must be 1..16777216 bytes"));
         }
+        reject_symlink_components(path)?;
         if self.probe(path)? != EntryKind::File {
             return Err(invalid("Only regular files may be read"));
         }
@@ -77,6 +100,29 @@ impl LocalFilesystem for NativeFilesystem {
             return Err(invalid("Only regular files may be read"));
         }
         let total_size = metadata.len();
+        let identity = file_id::get_file_id(path).ok().map(|id| match id {
+            file_id::FileId::Inode {
+                device_id,
+                inode_number,
+            } => FileIdentity {
+                volume: u128::from(device_id),
+                file: u128::from(inode_number),
+            },
+            file_id::FileId::LowRes {
+                volume_serial_number,
+                file_index,
+            } => FileIdentity {
+                volume: u128::from(volume_serial_number),
+                file: u128::from(file_index),
+            },
+            file_id::FileId::HighRes {
+                volume_serial_number,
+                file_id,
+            } => FileIdentity {
+                volume: u128::from(volume_serial_number),
+                file: file_id,
+            },
+        });
         if offset > total_size {
             return Err(invalid("Read offset exceeds current file size"));
         }
@@ -93,6 +139,7 @@ impl LocalFilesystem for NativeFilesystem {
             next_offset,
             total_size,
             truncated: next_offset < total_size,
+            identity,
         })
     }
 }

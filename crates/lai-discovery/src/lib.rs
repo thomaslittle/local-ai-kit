@@ -1,5 +1,6 @@
 //! Explicit passive inventory. No client launches, secret reads, or network calls.
 mod environment;
+pub mod log_tail;
 mod registry;
 mod scanner;
 pub use environment::{HostPlatform, ScanEnvironment};

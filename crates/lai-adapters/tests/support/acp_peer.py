@@ -1,4 +1,4 @@
-import sys,json,time
+import sys,json,time,os
 mode=sys.argv[1] if len(sys.argv)>1 else 'normal'
 session='session-native'
 options=[{'id':'model','name':'Model','category':'model','type':'select','currentValue':'native-x','options':[{'value':'native-x','name':'Native X'},{'value':'native-y','name':'Native Y'}]}, {'id':'thought','name':'Thought','category':'thought_level','type':'select','currentValue':'future','options':[{'value':'future','name':'Future'},{'value':'tiny','name':'Tiny'}]}]
@@ -10,6 +10,8 @@ def answer(i,result):out({'id':i,'result':result})
 def update(kind,**data):out({'method':'session/update','params':{'sessionId':'foreign' if mode=='foreign' else session,'update':{'sessionUpdate':kind,**data}}})
 for line in sys.stdin:
  r=json.loads(line);m=r.get('method');i=r.get('id');p=r.get('params',{})
+ if os.environ.get('LAI_ACP_TRACE'):
+  with open(os.environ['LAI_ACP_TRACE'],'a',encoding='utf-8') as trace: trace.write(str(m)+'\n')
  if r.get('jsonrpc')!='2.0':sys.exit(7)
  if m=='initialize':
   if p.get('clientCapabilities',{}).get('terminal') or p.get('clientCapabilities',{}).get('fs',{}).get('writeTextFile'):sys.exit(8)
@@ -26,6 +28,7 @@ for line in sys.stdin:
  elif m=='session/load':
   if p.get('mcpServers')!=[]:sys.exit(12)
   if p.get('sessionId')!=session:out({'id':i,'error':{'code':-32004,'message':'session not found'}})
+  elif mode=='wrong_session':answer(i,{'sessionId':'different-session','configOptions':options})
   else:answer(i,{'configOptions':options})
  elif m=='session/set_config_option':
   for o in options:

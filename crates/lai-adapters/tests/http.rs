@@ -7,7 +7,7 @@ use lai_adapters::http::*;
 use lai_contracts::ErrorCode;
 use serde_json::json;
 async fn server() -> (String, tokio::task::JoinHandle<()>) {
-    let app=Router::new().route("/ok",get(||async{Json(json!({"ok":true}))})).route("/auth",get(|h:HeaderMap|async move{Json(json!({"authorized":h.get("authorization").is_some_and(|s|s=="Bearer synthetic-secret")}))})).route("/redirect",get(||async{(StatusCode::FOUND,[("location","http://example.invalid/steal")],"secret-sentinel")})).route("/denied",get(||async{(StatusCode::UNAUTHORIZED,"secret-sentinel")})).route("/limited",get(||async{(StatusCode::TOO_MANY_REQUESTS,"secret-sentinel")})).route("/large",get(||async{Json(json!({"body":"x".repeat(2_200_000)}))})).route("/stream",post(||async{([("content-type","application/x-ndjson")],"{\"text\":\"native\"}\n{\"done\":true}\n")})).route("/unfinished",post(||async{"{\"text\":\"truncated\"}"}));
+    let app=Router::new().route("/ok",get(||async{Json(json!({"ok":true}))})).route("/auth",get(|h:HeaderMap|async move{Json(json!({"authorized":h.get("authorization").is_some_and(|s|s=="Bearer synthetic-secret")}))})).route("/redirect",get(||async{(StatusCode::FOUND,[("location","http://example.invalid/steal")],"secret-sentinel")})).route("/denied",get(||async{(StatusCode::UNAUTHORIZED,"secret-sentinel")})).route("/limited",get(||async{(StatusCode::TOO_MANY_REQUESTS,"secret-sentinel")})).route("/limited-retry",get(||async{(StatusCode::TOO_MANY_REQUESTS,[("retry-after","3")],"secret-sentinel")})).route("/limited-retry-long",get(||async{(StatusCode::TOO_MANY_REQUESTS,[("retry-after","18446744073709551615")],"secret-sentinel")})).route("/large",get(||async{Json(json!({"body":"x".repeat(2_200_000)}))})).route("/stream",post(||async{([("content-type","application/x-ndjson")],"{\"text\":\"native\"}\n{\"done\":true}\n")})).route("/unfinished",post(||async{"{\"text\":\"truncated\"}"}));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     let task = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
@@ -75,6 +75,12 @@ async fn auth_rate_limits_and_large_bodies_return_safe_errors() {
         assert_eq!(error.code, code);
         assert!(!error.to_string().contains("secret-sentinel"));
     }
+    let retry = endpoint.json("limited-retry", None).await.unwrap_err();
+    assert_eq!(retry.code, ErrorCode::RateLimited);
+    assert!(retry.retryable);
+    assert_eq!(retry.retry_after_ms, Some(3000));
+    let long_retry = endpoint.json("limited-retry-long", None).await.unwrap_err();
+    assert_eq!(long_retry.retry_after_ms, Some(86_400_000));
     t.abort();
 }
 #[tokio::test]

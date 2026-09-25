@@ -34,6 +34,8 @@ pub struct DomainError {
     pub code: ErrorCode,
     pub message: String,
     pub retryable: bool,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub retry_after_ms: Option<u64>,
 }
 impl DomainError {
     pub fn new(code: ErrorCode, message: impl Into<String>) -> Self {
@@ -41,7 +43,17 @@ impl DomainError {
             code,
             message: message.into(),
             retryable: false,
+            retry_after_ms: None,
         }
+    }
+    pub fn retryable(mut self) -> Self {
+        self.retryable = true;
+        self
+    }
+    pub fn with_retry_after_ms(mut self, milliseconds: u64) -> Self {
+        self.retryable = true;
+        self.retry_after_ms = Some(milliseconds.min(86_400_000));
+        self
     }
 }
 pub type Result<T> = std::result::Result<T, DomainError>;

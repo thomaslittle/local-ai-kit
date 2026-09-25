@@ -40,7 +40,7 @@ export type DiscoveryResult = { "mode": DataMode; "revision": string; [key: stri
 
 export type DiscoveryWatchParams = { "enabled": boolean; };
 
-export type DomainError = { "code": ErrorCode; "message": string; "retryable": boolean; };
+export type DomainError = { "code": ErrorCode; "message": string; "retryAfterMs"?: number | null; "retryable": boolean; };
 
 export type EmptyParams = {  };
 

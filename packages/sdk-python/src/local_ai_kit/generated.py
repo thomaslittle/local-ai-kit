@@ -41,7 +41,7 @@ DiscoveryResult = TypedDict('DiscoveryResult', {'mode': Required['DataMode'], 'r
 
 DiscoveryWatchParams = TypedDict('DiscoveryWatchParams', {'enabled': Required[bool]}, total=False)
 
-DomainError = TypedDict('DomainError', {'code': Required['ErrorCode'], 'message': Required[str], 'retryable': Required[bool]}, total=False)
+DomainError = TypedDict('DomainError', {'code': Required['ErrorCode'], 'message': Required[str], 'retryAfterMs': NotRequired[Union[int, None]], 'retryable': Required[bool]}, total=False)
 
 EmptyParams: TypeAlias = Dict[str, Never]
 

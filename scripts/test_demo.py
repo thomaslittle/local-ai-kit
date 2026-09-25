@@ -125,6 +125,25 @@ class DemoTests(unittest.TestCase):
         self.page.get_by_role('button',name='Cancel turn',exact=True).click()
         expect(self.page.locator('#session-status')).to_contain_text('Cancelled')
 
+    def test_native_resume_token_stays_out_of_rendered_demo_and_diagnostics(self):
+        self.load({'nativeResumption': True})
+        self.page.get_by_role('button',name='Playground',exact=True).click()
+        self.page.get_by_label('Allow this simulated session',exact=True).check()
+        self.page.get_by_role('button',name='Simulate turn',exact=True).click()
+        expect(self.page.locator('#session-status')).to_contain_text('Completed')
+        self.page.get_by_role('button',name='Suspend native session',exact=True).click()
+        expect(self.page.locator('#session-status')).to_have_text('Suspended')
+        token='test-only-resume-token-sentinel'
+        self.assertNotIn(token,self.page.locator('body').inner_text())
+        self.assertNotIn(token,self.page.locator('body').inner_html())
+        self.page.get_by_role('button',name='Diagnostics',exact=True).click()
+        self.page.get_by_role('button',name='Refresh diagnostics',exact=True).click()
+        self.assertNotIn(token,self.page.locator('body').inner_text())
+        self.assertNotIn(token,self.page.locator('body').inner_html())
+        self.page.get_by_role('button',name='Playground',exact=True).click()
+        self.page.get_by_role('button',name='Resume native session',exact=True).click()
+        expect(self.page.locator('#session-status')).to_have_text('Ready')
+
     def test_failed_live_connection_never_keeps_fixture_accounts(self):
         self.load()
         self.page.get_by_role('button',name='Connect local runtime',exact=True).click()

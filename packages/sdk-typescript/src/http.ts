@@ -1,4 +1,4 @@
-import { LocalAIError, limit, requireMethod } from './errors.ts';
+import { LocalAIError, limit, remoteError, requireMethod } from './errors.ts';
 import { parseSSE } from './sse.ts';
 import type { CallOptions, EventQuery, Transport } from './types.ts';
 export interface HttpOptions {
@@ -67,10 +67,9 @@ export function createHttpTransport(options: HttpOptions): Transport {
         if (!envelope || typeof envelope !== 'object' || envelope.jsonrpc !== '2.0' || envelope.id !== id
           || Object.hasOwn(envelope, 'result') === Object.hasOwn(envelope, 'error')) throw new LocalAIError('PROTOCOL_INVALID');
         if (Object.hasOwn(envelope, 'error')) {
-          const error = envelope.error as { code?: unknown; data?: { code?: unknown; retryable?: unknown } };
+          const error = envelope.error as { code?: unknown; data?: unknown };
           if (!error || typeof error !== 'object' || typeof error.code !== 'number') throw new LocalAIError('PROTOCOL_INVALID');
-          const code = typeof error.data?.code === 'string' ? error.data.code : 'REMOTE_ERROR';
-          throw new LocalAIError(code, error.data?.retryable === true);
+          throw remoteError(error.data);
         }
         return envelope.result as T;
       } catch (error) { throw ctx.translate(error); } finally { ctx.dispose(); }

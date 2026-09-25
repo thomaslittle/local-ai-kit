@@ -1,5 +1,5 @@
 import type { CallOptions, Transport } from './types.ts';
-import { LocalAIError } from './errors.ts';
+import { LocalAIError, remoteError } from './errors.ts';
 export interface NativePort {
  postMessage(value: unknown):void; disconnect():void;
  onMessage:{addListener(fn:(v:unknown)=>void):void;removeListener(fn:(v:unknown)=>void):void};
@@ -27,7 +27,7 @@ export function createNativeMessagingTransport(options:{connect:()=>NativePort})
    if(Object.hasOwn(v,'id')){
     if(!Number.isSafeInteger(v.id)||Object.hasOwn(v,'result')===Object.hasOwn(v,'error'))throw failure('PROTOCOL_INVALID');
     const call=pending.get(v.id);if(!call)return;
-    if(v.error){if(typeof v.error.code!=='number')throw failure('PROTOCOL_INVALID');call.finish(failure(typeof v.error.data?.code==='string'?v.error.data.code:'REMOTE_ERROR'));}
+    if(v.error){if(typeof v.error.code!=='number')throw failure('PROTOCOL_INVALID');call.finish(remoteError(v.error.data));}
     else call.finish(undefined,v.result);
    }else if(v.method==='events.event'||v.method==='events.error'){
     const p=v.params;if(!p||typeof p.subscriptionId!=='string')throw failure('PROTOCOL_INVALID');

@@ -8,5 +8,25 @@ globalThis.mountTestApp=async(options={})=>{
  const snapshot=fixtureSnapshot();
  if(options.maliciousLabel)snapshot.models[0].name='<img src=x onerror="globalThis.__unsafeExecuted=true">';
  if(options.largeCatalog){const models=snapshot.models;snapshot.models=Array.from({length:5000},(_,i)=>({...models[i%models.length],id:'huge-'+i,name:'Catalog Model '+i,nativeId:'fixture/huge-'+i}));}
- return mountDemo({connectFixture:async()=>createLocalAI({transport:fixtureTransport(createFixtureService({snapshot}))}),connectLive:async()=>{throw new LocalAIError('TRANSPORT_FAILED');}});
+ const connectFixture=async()=>createLocalAI({transport:fixtureTransport(createFixtureService({snapshot}))});
+ let initialClient=null;
+ if(options.nativeResumption){
+  const service=createFixtureService({snapshot}),transport=fixtureTransport(service),request=transport.request.bind(transport);
+  let previousSession=null;
+  transport.request=async(method,params={},call={})=>{
+   if(method==='runtime.handshake'){
+    const handshake=await request(method,params,call);
+    return {...handshake,methods:[...handshake.methods,'sessions.suspend','sessions.resume']};
+   }
+   if(method==='sessions.create'){
+    previousSession={...await request(method,params,call),nativeResumption:true};
+    return previousSession;
+   }
+   if(method==='sessions.suspend')return {resumeToken:'test-only-resume-token-sentinel'};
+   if(method==='sessions.resume')return {...previousSession,id:'fixture-resumed-session',state:'ready'};
+   return request(method,params,call);
+  };
+  initialClient=await createLocalAI({transport});
+ }
+ return mountDemo({connectFixture,connectLive:async()=>{throw new LocalAIError('TRANSPORT_FAILED');},initialClient,initialMode:'synthetic'});
 };

@@ -6,7 +6,7 @@ import pathlib
 import re
 import tempfile
 from typing import Any, AsyncIterator, Callable
-from .errors import LocalAIError
+from .errors import LocalAIError, remote_error
 from .wire import encode_request, decode_message
 
 
@@ -137,9 +137,7 @@ class AsyncStdioTransport:
                         error = value['error']
                         if not isinstance(error, dict) or type(error.get('code')) is not int:
                             raise LocalAIError('PROTOCOL_INVALID')
-                        data = error.get('data')
-                        code = data.get('code') if isinstance(data, dict) else None
-                        future.set_exception(LocalAIError(code if isinstance(code, str) else 'REMOTE_ERROR'))
+                        future.set_exception(remote_error(error.get('data')))
                     else:
                         try:
                             if hook:

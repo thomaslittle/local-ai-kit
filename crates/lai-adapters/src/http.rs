@@ -2,7 +2,7 @@
 use lai_contracts::*;
 use reqwest::{
     Client, Response, Url,
-    header::{AUTHORIZATION, HeaderMap, HeaderName, HeaderValue},
+    header::{AUTHORIZATION, HeaderMap, HeaderName, HeaderValue, RETRY_AFTER},
 };
 use serde_json::Value;
 use std::{net::IpAddr, time::Duration};
@@ -35,6 +35,33 @@ fn network(e: reqwest::Error) -> DomainError {
     } else {
         ErrorCode::ProviderUnavailable
     })
+}
+fn retry_after(response: &Response) -> Option<u64> {
+    let value = response.headers().get(RETRY_AFTER)?.to_str().ok()?.trim();
+    if let Ok(seconds) = value.parse::<u64>() {
+        return Some(seconds.min(86_400) * 1000);
+    }
+    let at = chrono::DateTime::parse_from_rfc2822(value)
+        .ok()?
+        .with_timezone(&chrono::Utc);
+    let milliseconds = (at - chrono::Utc::now()).num_milliseconds();
+    (milliseconds > 0).then_some((milliseconds as u64).min(86_400_000))
+}
+fn response_error(response: &Response) -> DomainError {
+    let code = match response.status().as_u16() {
+        401 | 403 => ErrorCode::AuthRequired,
+        404 => ErrorCode::NotFound,
+        429 => ErrorCode::RateLimited,
+        _ => ErrorCode::ProviderUnavailable,
+    };
+    let mut error = error(code);
+    if matches!(error.code, ErrorCode::RateLimited) {
+        error = error.retryable();
+    }
+    if let Some(milliseconds) = retry_after(response) {
+        error = error.with_retry_after_ms(milliseconds);
+    }
+    error
 }
 fn local(url: &Url) -> bool {
     url.host_str()
@@ -237,12 +264,7 @@ impl Endpoint {
             return Err(error(ErrorCode::IntegrationRestricted));
         }
         if !status.is_success() {
-            return Err(error(match status.as_u16() {
-                401 | 403 => ErrorCode::AuthRequired,
-                404 => ErrorCode::NotFound,
-                429 => ErrorCode::RateLimited,
-                _ => ErrorCode::ProviderUnavailable,
-            }));
+            return Err(response_error(&response));
         }
         Ok(response)
     }

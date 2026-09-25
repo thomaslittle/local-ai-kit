@@ -338,6 +338,127 @@ async fn failed_metadata_probes_back_off_instead_of_respawning_for_each_caller()
     }
     assert_eq!(count.load(Ordering::SeqCst), 1);
 }
+#[tokio::test]
+async fn provider_retry_after_is_sanitized_preserved_and_expires() {
+    let count = Arc::new(AtomicUsize::new(0));
+    let calls = count.clone();
+    let source: MetadataSource = Arc::new(move |_, _, _| {
+        let calls = calls.clone();
+        Box::pin(async move {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Err(
+                DomainError::new(ErrorCode::RateLimited, "PRIVATE-RATE-LIMIT")
+                    .with_retry_after_ms(150),
+            )
+        })
+    });
+    let s = NativeService::new(Arc::new(|_| Ok(inventory())), Duration::from_secs(60))
+        .with_metadata(source);
+    s.register_client("app", probe_policy()).unwrap();
+    s.handle("app", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let first = s
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(first.code, ErrorCode::RateLimited);
+    assert!(first.retryable);
+    assert!(
+        first
+            .retry_after_ms
+            .is_some_and(|ms| (100..=400).contains(&ms))
+    );
+    assert!(!first.message.contains("PRIVATE"));
+    let cached = s
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(count.load(Ordering::SeqCst), 1);
+    assert!(
+        cached
+            .retry_after_ms
+            .is_some_and(|ms| ms <= first.retry_after_ms.unwrap())
+    );
+    tokio::time::sleep(Duration::from_millis(180)).await;
+    let _ = s
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(count.load(Ordering::SeqCst), 2);
+}
+#[tokio::test]
+async fn retryable_metadata_failures_use_increasing_bounded_backoff() {
+    let count = Arc::new(AtomicUsize::new(0));
+    let calls = count.clone();
+    let source: MetadataSource = Arc::new(move |_, _, _| {
+        let calls = calls.clone();
+        Box::pin(async move {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Err(DomainError::new(ErrorCode::ProviderUnavailable, "PRIVATE").retryable())
+        })
+    });
+    let s = NativeService::new(Arc::new(|_| Ok(inventory())), Duration::from_secs(60))
+        .with_metadata(source);
+    s.register_client("app", probe_policy()).unwrap();
+    s.handle("app", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let first = s
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap_err();
+    let first_delay = first.retry_after_ms.unwrap();
+    assert!((200..=400).contains(&first_delay));
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    let second = s
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(count.load(Ordering::SeqCst), 2);
+    let second_delay = second.retry_after_ms.unwrap();
+    assert!((400..=800).contains(&second_delay));
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    let _ = s
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(count.load(Ordering::SeqCst), 2);
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    let _ = s
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(count.load(Ordering::SeqCst), 3);
+}
 
 fn watched_service(
     root: std::path::PathBuf,

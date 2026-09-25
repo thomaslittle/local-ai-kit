@@ -46,9 +46,14 @@ pub type ExecutionSource =
 struct SessionContext {
     owner: String,
     workspace_id: String,
+    workspace_path: PathBuf,
     permission_mode: Option<String>,
     review_requests: bool,
     allow_paid: bool,
+    connection_id: String,
+    account_id: Option<String>,
+    route_id: String,
+    billing: Option<BillingMode>,
 }
 #[derive(Clone)]
 struct ResumeRecord {
@@ -302,6 +307,7 @@ impl NativeService {
         let native_policy = request.permission_mode.as_deref() == Some("native_policy");
         let expected_account = connection.account_id.clone();
         let expected_billing = route.billing.value().cloned();
+        let guard_workspace = workspace.clone();
         let guard = Arc::new(move || {
             let policy = clients
                 .read()
@@ -323,8 +329,8 @@ impl NativeService {
                 .find(|current| current.id == connection_id)
                 .ok_or_else(denied)?;
             if !grant.allows(current_connection)
-                || grant.workspaces.get(&workspace_id) != Some(&workspace)
-                || workspace.canonicalize().ok().as_ref() != Some(&workspace)
+                || grant.workspaces.get(&workspace_id) != Some(&guard_workspace)
+                || guard_workspace.canonicalize().ok().as_ref() != Some(&guard_workspace)
             {
                 return Err(denied());
             }
@@ -369,9 +375,14 @@ impl NativeService {
         let context = SessionContext {
             owner: client.into(),
             workspace_id: request.workspace_id.clone(),
+            workspace_path: workspace,
             permission_mode: request.permission_mode.clone(),
             review_requests: request.review_requests,
             allow_paid: request.allow_paid,
+            connection_id: connection.id.clone(),
+            account_id: connection.account_id.clone(),
+            route_id: route.id.clone(),
+            billing: route.billing.value().cloned(),
         };
         let session = self.execution_state.runtime.insert(
             client,
@@ -535,12 +546,56 @@ impl NativeService {
                     })?
                 };
                 let create = SessionCreateParams {
-                    selection: record.selection,
-                    workspace_id: record.context.workspace_id,
-                    permission_mode: record.context.permission_mode,
+                    selection: record.selection.clone(),
+                    workspace_id: record.context.workspace_id.clone(),
+                    permission_mode: record.context.permission_mode.clone(),
                     review_requests: record.context.review_requests,
                     allow_paid: record.context.allow_paid,
                 };
+                let snapshot = self.projected(client)?;
+                let grant = self.execution_grant(client)?;
+                let connection = snapshot
+                    .connections
+                    .iter()
+                    .find(|item| item.id == record.connection_id)
+                    .ok_or_else(denied)?;
+                let route = snapshot
+                    .routes
+                    .iter()
+                    .find(|item| item.id == record.context.route_id)
+                    .ok_or_else(|| {
+                        DomainError::new(
+                            ErrorCode::SessionRouteMismatch,
+                            "Native session route changed",
+                        )
+                    })?;
+                let model = snapshot
+                    .models
+                    .iter()
+                    .find(|item| {
+                        item.id == record.selection.model_id
+                            && item.route_id == record.selection.route_id
+                    })
+                    .ok_or_else(|| {
+                        DomainError::new(ErrorCode::SelectionStale, "Native session model changed")
+                    })?;
+                if connection.account_id != record.context.account_id
+                    || route.connection_id != record.context.connection_id
+                    || model.revision != record.selection.revision
+                    || route.billing.value().cloned() != record.context.billing
+                {
+                    return Err(DomainError::new(
+                        ErrorCode::SessionRouteMismatch,
+                        "Native session identity changed",
+                    ));
+                }
+                if grant.workspaces.get(&record.context.workspace_id)
+                    != Some(&record.context.workspace_path)
+                    || record.context.workspace_path.canonicalize().ok().as_ref()
+                        != Some(&record.context.workspace_path)
+                {
+                    return Err(denied());
+                }
                 let session = self
                     .open_session(client, create, Some(record.native_session_id))
                     .await?;

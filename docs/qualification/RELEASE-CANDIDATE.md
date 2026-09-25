@@ -1,8 +1,8 @@
-# Verified developer-alpha build
+# Historical verified developer-alpha build
 
 **Verified source:** `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91` on `feature/initial-implementation`.
 
-**Status:** the supported developer-alpha implementation has passing Windows release-profile verification and Linux native/package qualification. **The full original 18-task scope is not complete.** A successful verification command does not change the unresolved scope below. Registry publishing, signing, notarization, and merging to main were not performed.
+**Status at that source revision:** the supported developer-alpha implementation had passing Windows release-profile verification and Linux native/package qualification. **The full original 18-task scope was not complete.** These results apply only to source `991ec2b`; later changes are not covered by the historical counts or artifacts below. Registry publishing, signing, notarization, and merging to main were not performed.
 
 The source worktree was clean for both distributable builds. Any later report-only commit documents these artifacts; it does not change their source SHA. Machine-readable [verification summary](evidence/verification-summary.json), [Windows package results](evidence/windows-package.json), and [Linux package results](evidence/linux-package.json) are committed alongside this report.
 
@@ -60,12 +60,23 @@ The same clean-source release binaries were measured with nine registered passiv
 
 Zero sampled CPU delta is not a claim of no possible CPU use. These measurements are not latency guarantees or inference benchmarks. See full [Windows](evidence/windows-performance.json) and [Linux](evidence/linux-performance.json) distributions and binary hashes.
 
-## Unresolved original scope
+## Work completed after this artifact checkpoint
 
-1. Native Google/Grok subscription execution glue remains blocked/unregistered. Experimental ACP recipes are not a completed subscription connector. No bypass was attempted.
-2. Opt-in metadata watching and paged catalog assembly are now implemented after this artifact checkpoint. The historical binary/test counts above describe source `991ec2b`; later commits must be re-qualified before their binaries inherit those numbers.
-3. Durable cross-process session resumption, the complete incremental activity/usage-reader tranche, exhaustive credit normalization, native Google/Grok subscription execution, and macOS qualification remain unfinished. Tauri is an integration guide, not a separately executed Tauri application.
+These items landed after source `991ec2b`; they are not qualified by the artifact hashes, test counts, and performance measurements above:
 
-The supported implementation can be installed and exercised now. These gaps must remain visible until separately implemented and verified; do not mark the entire plan complete, turn ignored tests into successful evidence, or confuse explicit API routes with subscription access.
+- `discovery.watch` is wired through the service and invalidates only affected metadata; it does not probe or infer.
+- `models.page` is available through the SDK/store/showroom for large catalogs.
+- Gemini CLI, Antigravity ACP, and Grok have explicit host-registered native profiles and connection-scoped execution. ACP fixture coverage is implemented. Only Grok has the recorded Windows live metadata-only check; no inference was sent.
+- ACP native suspend/resume is gated by `loadSession`. It uses one-time owner-scoped runtime-memory tokens and revalidates account, route, billing, model revision, workspace, and grants. It does not promise durable history across helper restart.
+- `lai_discovery::log_tail` provides bounded, cancellable newline-record reads, file identity/anchor rotation checks, truncation reset, partial-record buffering, and symlink-safe native reads. No provider adapter currently uses it; it does not interpret usage.
+- Metadata probe failures expose sanitized retryability/Retry-After information and use bounded negative-cache backoff. Generation requests are never retried automatically.
+
+## Current qualification status
+
+The changes after `991ec2b` require a fresh clean-source release run and rebuilt distributions before inheriting any historical artifact, consumer, or benchmark result above. Windows deterministic verification now includes the new resumption, bounded-tail, and retry tests. GitHub Actions defines Windows, Ubuntu, and macOS jobs, but recent runs failed before any steps were created or executed and expose no runner-level cause. macOS therefore remains unexecuted and unqualified. Do not describe that failure as a billing issue without evidence.
+
+The remaining truthful gaps are provider-specific plan/usage fields without a documented verified source, actual macOS platform execution, and other original-plan scope explicitly marked incomplete in the implementation ledger. Gemini CLI and Antigravity do not have live-account qualification on this PC. Tauri remains an integration guide, not a separately qualified application. API billing remains separate from native subscription access.
+
+No registry release, OS signing/notarization, main merge, live generation, or paid fallback was performed. A clean release run on the exact final source is still required before treating this as a freshly qualified developer-alpha build.
 
 Review in this session was author self-review, not an independent security audit. The review found and fixed the empty event-journal cursor issue and the offline React peer-cache assumption; focused regressions failed before the fixes and passed afterward.

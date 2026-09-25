@@ -74,9 +74,18 @@ impl NativeService {
         let report = match result {
             Ok(report) => report,
             Err(error) => {
-                let safe = DomainError::new(error.code, "Client metadata is unavailable");
+                let retryable = error.retryable
+                    || matches!(
+                        error.code,
+                        ErrorCode::RateLimited
+                            | ErrorCode::ProviderUnavailable
+                            | ErrorCode::Timeout
+                    );
+                let mut safe = DomainError::new(error.code, "Client metadata is unavailable");
+                safe.retryable = retryable;
+                safe.retry_after_ms = error.retry_after_ms;
                 self.cache.fail_metadata(id, safe.clone())?;
-                return Err(safe);
+                return Err(self.cache.metadata_failure(id)?.unwrap_or(safe));
             }
         };
         validate_report(&report, id, &route)?;

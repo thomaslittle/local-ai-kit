@@ -13,10 +13,16 @@ use std::{
 use tokio::sync::watch;
 
 type RefreshResult = Option<Result<()>>;
+#[derive(Clone)]
+struct MetadataFailure {
+    until: Instant,
+    attempts: u32,
+    error: DomainError,
+}
 struct CacheState {
     snapshot: Snapshot,
     metadata: BTreeMap<String, (Instant, lai_contracts::ConnectionMetadata)>,
-    metadata_failures: BTreeMap<String, (Instant, DomainError)>,
+    metadata_failures: BTreeMap<String, MetadataFailure>,
     // Native-only: never serialize filesystem locations into public responses.
     _locations: BTreeMap<String, LocatedClient>,
     updated: Option<Instant>,
@@ -27,6 +33,24 @@ pub(crate) struct InventoryCache {
     state: Mutex<CacheState>,
     source: InventorySource,
     ttl: Duration,
+}
+fn metadata_backoff(connection: &str, attempts: u32, error: &DomainError) -> Duration {
+    if let Some(milliseconds) = error.retry_after_ms {
+        return Duration::from_millis(milliseconds.min(86_400_000));
+    }
+    if !error.retryable {
+        return Duration::from_secs(5);
+    }
+    let shift = attempts.saturating_sub(1).min(7);
+    let base_ms = 250u64.saturating_mul(1u64 << shift).min(30_000);
+    let mut hash = 0xcbf29ce484222325u64;
+    for byte in connection.bytes() {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash ^= u64::from(attempts).wrapping_mul(0x9e3779b97f4a7c15);
+    let jitter_window = (base_ms / 4).max(1);
+    Duration::from_millis(base_ms.saturating_add(hash % jitter_window).min(30_000))
 }
 impl InventoryCache {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
@@ -96,18 +120,40 @@ impl InventoryCache {
     }
     pub(crate) fn metadata_failure(&self, connection: &str) -> Result<Option<DomainError>> {
         let state = self.state.lock().map_err(|_| unavailable())?;
-        Ok(state
-            .metadata_failures
-            .get(connection)
-            .filter(|(at, _)| at.elapsed() < Duration::from_secs(5))
-            .map(|(_, e)| e.clone()))
+        let now = Instant::now();
+        Ok(state.metadata_failures.get(connection).and_then(|failure| {
+            (failure.until > now).then(|| {
+                let mut error = failure.error.clone();
+                if error.retryable {
+                    let remaining = failure.until.saturating_duration_since(now);
+                    error.retry_after_ms = Some(
+                        u64::try_from(remaining.as_millis())
+                            .unwrap_or(u64::MAX)
+                            .max(1),
+                    );
+                }
+                error
+            })
+        }))
     }
     pub(crate) fn fail_metadata(&self, connection: &str, error: DomainError) -> Result<()> {
         let mut state = self.state.lock().map_err(|_| unavailable())?;
         state.metadata.remove(connection);
-        state
+        let attempts = state
             .metadata_failures
-            .insert(connection.into(), (Instant::now(), error));
+            .get(connection)
+            .map(|failure| failure.attempts.saturating_add(1))
+            .unwrap_or(1)
+            .min(32);
+        let delay = metadata_backoff(connection, attempts, &error);
+        state.metadata_failures.insert(
+            connection.into(),
+            MetadataFailure {
+                until: Instant::now() + delay,
+                attempts,
+                error,
+            },
+        );
         Ok(())
     }
     pub(crate) fn watch_roots(&self) -> Result<BTreeMap<String, PathBuf>> {
@@ -211,4 +257,16 @@ fn unavailable() -> DomainError {
         ErrorCode::ProviderUnavailable,
         "Native inventory is unavailable",
     )
+}
+#[cfg(test)]
+mod backoff_tests {
+    use super::metadata_backoff;
+    use lai_contracts::{DomainError, ErrorCode};
+    use std::time::Duration;
+
+    #[test]
+    fn retry_jitter_never_exceeds_the_thirty_second_cap() {
+        let error = DomainError::new(ErrorCode::ProviderUnavailable, "safe").retryable();
+        assert!(metadata_backoff("cap", 32, &error) <= Duration::from_secs(30));
+    }
 }

@@ -82,6 +82,15 @@ class AsyncTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(caught.exception.code, 'AUTH_REQUIRED')
         self.assertNotIn('SECRET_NATIVE_LOG', repr(caught.exception))
 
+    async def test_retry_metadata_is_preserved_without_private_error_details(self):
+        t = await self.open()
+        with self.assertRaises(LocalAIError) as caught:
+            await t.request('test.retry')
+        self.assertEqual(caught.exception.code, 'RATE_LIMITED')
+        self.assertTrue(caught.exception.retryable)
+        self.assertEqual(caught.exception.retry_after_ms, 2750)
+        self.assertNotIn('PRIVATE', repr(caught.exception))
+
     async def test_events_after_ack_are_not_lost(self):
         t = await self.open()
         events = t.subscribe()
