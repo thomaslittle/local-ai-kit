@@ -28,3 +28,11 @@ Automatic filesystem-watch refresh, the full incremental activity/usage-reader t
 Windows qualification and native Ubuntu execution are separate records. GitHub Actions has been failing before any job steps run; a workflow matrix is not macOS evidence. Tauri currently has an integration guide and compiled embedded-Rust pattern, not a separately qualified Tauri application.
 
 No registry publication, OS signing, main-branch merge, paid inference, additional coding agents, token export, account cycling, or unrelated client configuration changes are authorized by these implementation tests. Preserve those boundaries while completing any remaining work.
+
+## Exact clean-build qualification
+
+Executable/source checkpoint: `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91`. Both Windows and Linux distributions were built from this clean source and passed isolated npm-tarball/Python-wheel consumers against their native executables. Windows full release profile exited zero; Linux release-profile native tests and SDK/package/benchmark checks exited zero. Each platform ran 301 native tests with two explicitly ignored watcher-integration tests. A later documentation-only commit records this evidence without changing the binary source.
+
+Read `docs/qualification/RELEASE-CANDIDATE.md` and `docs/qualification/evidence/verification-summary.json` for exact filenames, hashes, tests, toolchains, and unresolved scope. Windows bundle pointer: `dist/release/latest.json`; Linux archives copied to `dist/linux-release/`. The local artifacts are not GitHub Release assets and are not published registry packages.
+
+Final review fixed the default event-stream cursor for empty histories and removed offline package-smoke dependence on warm registry metadata. Do not recreate these fixes. The full original plan remains incomplete at the explicit boundaries above; verify future changes before changing any support claim.

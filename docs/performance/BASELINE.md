@@ -1,10 +1,20 @@
-# Measured baseline (development build, not final release qualification)
+# Measured clean-build baseline
 
-A release-mode Windows x86-64 build from source commit `67a5b15b07677d83fb2847146222a1d031c109fb` plus explicitly marked working-tree changes was measured using ten synthetic local profiles. No provider or inference request was made. Native helper memory excludes the browser and provider processes.
+Source `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91`; both builds had `workingTreeDirty=false`. These are measured developer-alpha values, not guarantees for every host, account, or future commit.
 
-- 20 cold process+scan measurements: p95 3.805 ms.
-- 200 cached stdio snapshot reads: p95 0.704 ms.
-- 60-second idle sample: peak resident set 7.223 MiB; sampled CPU delta 0% of one core.
-- Browser SDK bundle: 5,169 gzip bytes at that source state.
+| Measurement | Windows x86-64 | Ubuntu/WSL2 x86-64 |
+|---|---:|---:|
+| Cold process + passive scan p95 (20 samples) | 25.652 ms | 3.820 ms |
+| Cached stdio snapshot p95 (200 samples) | 0.580 ms | 0.646 ms |
+| Peak idle resident set | 7.727 MiB | 6.625 MiB |
+| Idle CPU delta as percentage of one core | 0.0% | 0.0% |
+| Idle interval | 60.55 s | 62.37 s |
+| Browser SDK gzip | 4,866 bytes | 4,866 bytes |
 
-These are measured development values, not guarantees for every host/catalog or a claim about later commits. `scripts/benchmark.py` records the exact binary SHA-256, commit, dirty state, platform, fixture size, sample distribution, and whether targets were met. Re-run it against each new release bundle; do not reuse this baseline as proof of a newer build.
+The fixture has nine registered passive adapters and ten synthetic profiles, not the full proposed 20-adapter benchmark. No network, provider startup, credential read, or inference is part of this measurement. Browser UI and native provider processes are excluded from helper memory. Zero sampled CPU delta is not a universal zero-CPU guarantee.
+
+Windows uses Rust 1.97.1; the installed Ubuntu toolchain was Rust 1.90.0. Both use Node 22.20.0. The machine reports 16 Windows logical CPUs and eight WSL virtual CPUs. WSL results do not certify every Linux distribution/libc or macOS.
+
+Exact distributions, binary hashes, host details, target evaluations, and sampling intervals: [Windows evidence](../qualification/evidence/windows-performance.json) and [Linux evidence](../qualification/evidence/linux-performance.json).
+
+Reproduce with `python scripts/benchmark.py --bundle ABSOLUTE_EXTRACTED_BUNDLE --idle-seconds 60`. The script records actual values in `.verification/performance.json`; rerun it against each changed binary rather than copying this table. Publication and signing are separate, unperformed actions.

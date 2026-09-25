@@ -14,7 +14,7 @@ This is the designated standalone repository, `thomaslittle/local-ai-kit`. The o
 
 Inspect `git status`, current HEAD, branch, and remote refs before writing. Start `feature/initial-implementation` from the latest clean `main`; resume existing work on that branch rather than replacing it. Make bounded commits, keep `docs/handoffs/RESUME.md` current, and use the configured `origin` without force-push. Do not merge into `main` or change repository visibility without separate authorization. A pre-existing file named under a task's "Create" list must be extended safely, not blindly replaced.
 
-Implement tasks in dependency order and use their targeted test-first verification. Product manifests and CI do not exist yet: Task 1 establishes compatible locked toolchains and real checks. Do not run nonexistent scripts and call their absence a product failure. Never replace required checks with success-printing stubs.
+Implement tasks in dependency order and use their targeted test-first verification. Product manifests, locked toolchains, native/SDK/UI code, distribution scripts, and CI already exist. Resume from the ledger and verified source checkpoint; do not restart Task 1 or overwrite implemented modules. Do not run nonexistent scripts and call their absence a product failure. Never replace required checks with success-printing stubs.
 
 ## Product invariants
 

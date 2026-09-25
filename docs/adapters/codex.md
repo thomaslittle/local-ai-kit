@@ -15,7 +15,7 @@ The native client continues to own authentication. This toolkit does not read `a
 - Percent-based rate windows, durations, reset times, and `ordinaryUsageAllowed` when reported. Historical and multi-bucket rate-limit views are not double-counted. No conversion to fictitious token counts.
 - Unknown usage remains unknown. Credit balances, reset-credit actions, and spend-control details are not fully normalized in this increment.
 
-Models are inspectable, but the native route explicitly reports text execution unsupported until the actual session engine is implemented. Metadata access is not authorization to perform generation. Billing-sensitive options require billing consent; permission-sensitive options fail closed pending a supported approval path.
+The native session engine and Codex text/approval/cancellation driver are implemented. Metadata-only hosts still advertise execution unavailable; an explicit execution grant and workspace are required. Billing-sensitive options require separate consent, and native permissions remain host-controlled. Execution protocol fixtures are not a live inference qualification.
 
 ## Explicit authorization
 
@@ -31,7 +31,7 @@ ai.connections.probe({'connectionId': selected_codex_connection_id})
 snapshot = ai.snapshot.get()
 ```
 
-An SDK application may inspect `runtime.handshake` and `grants.list`; the host must decide its authorization policy. Embedded Rust hosts can authorize specific connection IDs instead of an entire provider. The current local CLI intentionally uses one owner context, not the unfinished shared multi-app broker.
+An SDK application may inspect `runtime.handshake` and `grants.list`; the host must decide its authorization policy. Embedded Rust hosts can authorize specific connection IDs instead of an entire provider. The stdio CLI uses an owner context; the separate implemented IPC broker supports explicitly authorized applications without sharing their permissions.
 
 Successful probes are cached for 60 seconds; repeated concurrent requests share work. Failed probes have a five-second cooldown. Cached snapshots do not create new observation timestamps on each read. Account changes reported during a probe invalidate the result. A startup account announcement before the authoritative account read is not treated as an account switch.
 
@@ -51,4 +51,4 @@ The live end-to-end check used the Python SDK -> native Local AI Kit helper -> i
 
 ## Remaining limits
 
-Native generation/tool execution, approvals/resumption, continuous account-file watchers, cross-client authoritative quota linking, full balance normalization, per-field multi-app grants, hosted HTTP pairing, cross-platform live qualification, and release packaging remain separate work. A successful metadata probe is not a certification of those features.
+Native execution, approvals, paired local HTTP, shared IPC, and release bundles now have separate qualification records. Persistent cross-process resumption, automatic service-level file watching, cross-client authoritative quota linking, full balance normalization, and cross-platform live-account qualification remain unfinished. A metadata probe alone certifies none of those features. See ../qualification/RELEASE-CANDIDATE.md for the exact verified code and artifact scope.

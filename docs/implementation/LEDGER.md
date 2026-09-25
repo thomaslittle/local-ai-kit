@@ -94,3 +94,11 @@ The full Windows `all` profile passed after these additions with the two documen
 Author review found that an empty runtime journal returned no `tailCursor` and accepted a cursor ahead of its history. Two regressions failed first, then passed after empty journals were routed through the existing validated journal reader. Native streaming tests also pass. This corrects default subscriptions before the first turn without changing provider or permission behavior.
 
 Clean Linux consumer testing exposed `ENOTCACHED` for React registry metadata: npm ci had installed the peers, but the offline smoke test relied on a separate cached packument present on Windows. Four new peer-fixture tests failed first. The smoke now packs the already locked installed React peers and their actual runtime dependencies as explicit temporary tarballs; dependency resolution remains strict, with no force/legacy-peer flags. Windows package smoke passes with this change. Linux rerun and final exact-commit bundles follow.
+
+## Clean Windows/Linux artifact checkpoint
+
+Source `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91`, dirty=false, qualified on both platforms. Windows `verify.py --profile release` exited zero (227.18 seconds); native tests: 301 passed and two ignored. Linux release-profile native tests: 301 passed and two ignored; both SDK suites and clean package consumers passed after the peer-cache correction. The resulting Windows/Linux archives and full SHA-256 values are recorded in docs/qualification/evidence/verification-summary.json. No inference, publication, signing, or main merge occurred.
+
+Windows measured cold scan p95 25.652 ms, cached read p95 0.580 ms, idle peak 7.727 MiB. Linux measured 3.820 ms, 0.646 ms, and 6.625 MiB respectively. These are the documented nine-adapter/ten-profile fixture results, not universal guarantees. Binary hashes and raw sample summaries are committed as safe evidence JSON.
+
+Remaining original scope is explicitly listed in RELEASE-CANDIDATE.md. This checkpoint completes packaging/verification of supported alpha paths, not the entire original 18-task scope or the blocked provider/watch/UI glue.

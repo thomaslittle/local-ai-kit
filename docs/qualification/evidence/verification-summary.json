@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91",
+  "workingTreeDirty": false,
+  "windowsNative": {
+    "passed": 301,
+    "ignored": 2
+  },
+  "linuxNative": {
+    "passed": 301,
+    "ignored": 2
+  },
+  "typescriptSDK": 60,
+  "pythonSDK": 25,
+  "selectorCore": 27,
+  "reactComponents": 13,
+  "generator": 11,
+  "packagingTools": 17,
+  "showroomService": 22,
+  "showroomInteractions": 13,
+  "nativeBrowserPairing": 2,
+  "automatedAccessibility": 22,
+  "archives": [
+    {
+      "file": "dist/release/local-ai-kit-0.1.0-alpha.1-x86_64-pc-windows-msvc-991ec2bd827c.zip",
+      "bytes": 9091298,
+      "sha256": "9210cae549c895c6a8d145f4f46ec9b0e0f758de003c31105480cbb6fd03e6ec"
+    },
+    {
+      "file": "dist/linux-release/local-ai-kit-0.1.0-alpha.1-x86_64-unknown-linux-gnu-991ec2bd827c.zip",
+      "bytes": 10962354,
+      "sha256": "6bebb8c1e6cb8c07c27e6b05d7dd37477a4f753dcd611410424a9fec52d8f5f2"
+    }
+  ],
+  "limitations": [
+    "Two service-watcher integration tests explicitly ignored",
+    "No paid provider inference",
+    "No macOS runtime qualification",
+    "Full original implementation plan remains incomplete"
+  ]
+}
