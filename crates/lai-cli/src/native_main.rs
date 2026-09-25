@@ -3,6 +3,7 @@ mod args;
 mod endpoints;
 mod host;
 mod inventory;
+mod native_profiles;
 use lai_contracts::*;
 use serde::Deserialize;
 use std::{io::Read, time::Duration};
@@ -57,16 +58,22 @@ fn run() -> Result<()> {
         return Err(denied());
     }
     let registry = std::sync::Arc::new(endpoints::load(args.endpoints.as_deref())?);
+    let mut native = native_profiles::load(args.native_profiles.as_deref())?;
+    native.browser_blocker = native_profiles::packaged_browser_blocker();
+    let native = std::sync::Arc::new(native);
     let base = inventory::source(args.home.clone());
     let entries = registry.clone();
-    let service = host::build_service_with_endpoints(
+    let native_entries = native.clone();
+    let service = host::build_service_with_registries(
         std::sync::Arc::new(move |cancel| {
             let mut scan = base(cancel)?;
             entries.inject(&mut scan);
+            native_entries.inject(&mut scan);
             Ok(scan)
         }),
         args.allow_execution,
         registry,
+        native,
     );
     let client = stable_id("extension", &[&origin]);
     service.register_client(&client, host::policy(&args))?;

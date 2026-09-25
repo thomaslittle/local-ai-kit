@@ -1,13 +1,25 @@
-# Native Google/Grok execution status
+# Native Google/Grok client status
 
-The shared ACP protocol engine supports model catalogs, configuration, text events, permission callbacks, cancellation, and an explicitly advertised native authentication method. It has synthetic-process coverage and does not export subscription tokens.
+Local AI Kit now has an explicit native-profile registry for Gemini CLI, Antigravity ACP, and Grok. Registration is opt-in and records only a provider, exact executable path, profile directory, display label, optional Antigravity auth-method ID, and optional host-declared billing mode. Inline tokens, API keys, arbitrary arguments, command strings, and environment injection are rejected.
 
-The provider-specific Gemini CLI and Antigravity launch/configuration recipes are experimental library utilities, not registered execution adapters in the shipped CLI. A write connecting these recipes to authenticated native execution was blocked by an execution safety check during this development session. The blocked action was not retried through another tool. The successful recipe/authentication tests must not be described as a completed provider integration or live account qualification.
+The shared ACP engine negotiates native model catalogs/options, provider-owned authentication, streamed text, permission callbacks, cancellation, and session cleanup. The toolkit never exports a subscription token as an API credential. A successful authenticated ACP session proves that the native client accepted its own login for that session; it does **not** prove a plan name, quota, or billing source. Host-declared billing is labeled `user_supplied` evidence.
 
-Grok retains its existing native metadata adapter. It does not gain a runnable subscription route merely because the shared ACP engine or launch helper exists. Current billing and plan fields remain unknown unless a verified native interface actually supplies them.
+## Grok
 
-Cursor supports an explicitly requested, immutable, non-secret cached identity/plan read. These records remain stale and do not establish a current subscription, quota, or executable entitlement.
+The execution and metadata route is registered only for explicitly configured Grok connections. Passive discovery by itself does not enable execution. On Windows, the launcher requires the actual `grok.exe`, the default `~/.grok` profile, and an isolated leader socket owned by the toolkit. ACP permissions are denied unless the host explicitly enables review and approves the individual request.
 
-The direct Gemini/xAI API and configured OpenCode routes are separate implemented integrations. They are not substitutes advertised as access to a user's existing Google/Grok subscription. Their billing requires separate explicit authorization.
+Metadata-only qualification on September 25, 2026 used Grok CLI **1.0.41 (4220f3b224a6)** on Windows x64. It reused the existing native login and returned an authenticated ACP session, **Grok 4.7** and a native `reasoning_effort` option. No prompt/model turn was sent. Plan and quota remained unknown; the test profile's `subscription` billing value remained explicitly user-supplied evidence. This is not paid-generation qualification.
 
-Deferred implementation tests and incomplete sketches were removed from product sources rather than hidden behind passing stubs. The original implementation plan's native-provider completion requirement remains open. No claim of 18/18 completion, broad live-provider qualification, or production readiness is made.
+## Gemini CLI
+
+Gemini CLI uses its documented ACP mode and `GEMINI_CLI_HOME`. Browser authentication is disabled for normal probes/execution; an existing selected native login may be reused by the installed client. No API key is copied into the toolkit. The shared ACP route is implemented and fixture-tested, but no compatible Gemini CLI executable was available on the qualification PC, so live account/generation qualification remains untested.
+
+## Antigravity
+
+Antigravity requires the dedicated `agy_acp_server` runtime plus its sibling `localharness_external`; the desktop IDE's `antigravity.cmd` launcher is intentionally rejected. Interactive auth URLs are routed to the packaged browser-blocker during noninteractive integration rather than opened automatically. The ACP route is implemented and fixture-tested, but the dedicated ACP runtime was not installed on the qualification PC. The IDE installation is therefore not reported as a runnable ACP connector.
+
+## Safety and billing
+
+Native profile registration does not scan, launch, authenticate, or perform inference. Metadata probes and execution require separate host grants. Native text sessions reject workspace-write/native-policy escalation in this connector; individual ACP permission requests can be mediated when review is explicitly enabled. Billing remains unknown unless the provider reports it or the host deliberately supplies a billing classification. Paid fallback remains separately authorized.
+
+Direct Gemini/xAI API routes remain separate metered integrations. They are never substituted for a failed native subscription route without explicit API configuration and billing permission.

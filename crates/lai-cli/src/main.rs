@@ -5,6 +5,7 @@ use lai_service::InventorySource;
 mod broker_cli;
 mod endpoints;
 mod host;
+mod native_profiles;
 use args::{Action, Args};
 use lai_contracts::{DomainError, ErrorCode, Result};
 use serde_json::json;
@@ -21,8 +22,9 @@ Usage:
       [--allow-codex-execution --workspace ABSOLUTE_DIRECTORY]
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
-  Execution providers: codex, claude_code, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api. Metadata also supports grok.
+  Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
+  --native-profiles ABSOLUTE_JSON explicitly registers Gemini CLI, Antigravity ACP, or Grok native profiles; the file contains paths/labels, never tokens.
   local-ai-kit --version
 
 Serving never scans on startup. --allow-passive-discovery explicitly authorizes
@@ -41,14 +43,20 @@ async fn execute(args: Args) -> Result<()> {
         return broker_cli::connect(args.ipc.as_deref().unwrap()).await;
     }
     let registry = Arc::new(endpoints::load(args.endpoints.as_deref())?);
+    let mut native = native_profiles::load(args.native_profiles.as_deref())?;
+    native.browser_blocker = native_profiles::packaged_browser_blocker();
+    let native = Arc::new(native);
     let original = source(args.home.clone());
     let scan_registry = registry.clone();
+    let scan_native = native.clone();
     let inventory: InventorySource = Arc::new(move |cancel| {
         let mut result = original(cancel)?;
         scan_registry.inject(&mut result);
+        scan_native.inject(&mut result);
         Ok(result)
     });
-    let service = host::build_service_with_endpoints(inventory, args.allow_execution, registry);
+    let service =
+        host::build_service_with_registries(inventory, args.allow_execution, registry, native);
     let policy = host::policy(&args);
     let grant = host::execution_grant(&args);
     match args.action {

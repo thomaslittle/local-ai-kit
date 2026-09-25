@@ -12,6 +12,7 @@ pub struct Args {
     pub action: Action,
     pub home: Option<PathBuf>,
     pub endpoints: Option<PathBuf>,
+    pub native_profiles: Option<PathBuf>,
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
     pub http: bool,
@@ -64,6 +65,7 @@ impl Args {
             action,
             home: None,
             endpoints: None,
+            native_profiles: None,
             allow_passive: false,
             allow_codex_metadata: false,
             http: false,
@@ -94,6 +96,9 @@ impl Args {
                 }
                 "--endpoints" if matches!(args.action, Action::Serve | Action::Scan) => {
                     args.endpoints = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--native-profiles" if matches!(args.action, Action::Serve | Action::Scan) => {
+                    args.native_profiles = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
                 "--stdio" if matches!(args.action, Action::Serve) => stdio = true,
                 "--http" if matches!(args.action, Action::Serve) => args.http = true,
@@ -126,10 +131,12 @@ impl Args {
                                 "xai_api",
                                 "compatible_api",
                                 "opencode",
+                                "gemini_cli",
+                                "antigravity",
+                                "grok",
                             ]
                             .contains(&v.as_str())
-                                || (flag == "--allow-metadata"
-                                    && ["grok", "cursor"].contains(&v.as_str()))
+                                || (flag == "--allow-metadata" && v == "cursor")
                         })
                         .ok_or_else(invalid)?;
                     if flag == "--allow-metadata" {
@@ -181,7 +188,12 @@ impl Args {
         if seen.contains("--allow-codex-execution") {
             args.execution_providers.insert("codex".into());
         }
+        let native_execution = args
+            .execution_providers
+            .iter()
+            .any(|p| ["gemini_cli", "antigravity", "grok"].contains(&p.as_str()));
         if (!args.http && (args.assets.is_some() || seen.contains("--port")))
+            || (native_execution && args.native_profiles.is_none())
             || (args.allow_execution
                 && (args.workspace.is_none()
                     || !args.execution_providers.is_subset(&args.metadata_providers)))
@@ -268,5 +280,51 @@ mod additional_provider_tests {
         .unwrap();
         assert!(args.metadata_providers.contains("grok"));
         assert!(!args.allow_execution);
+    }
+    #[test]
+    fn native_subscription_execution_requires_an_explicit_profile_file() {
+        let workspace = std::env::temp_dir();
+        let value = workspace.to_str().unwrap();
+        assert!(
+            Args::parse(
+                [
+                    "serve",
+                    "--stdio",
+                    "--allow-metadata",
+                    "grok",
+                    "--allow-execution",
+                    "grok",
+                    "--workspace",
+                    value
+                ]
+                .into_iter()
+                .map(OsString::from)
+            )
+            .is_err()
+        );
+        let config = workspace.join("native-profiles.json");
+        let config = config.to_str().unwrap();
+        let args = Args::parse(
+            [
+                "serve",
+                "--stdio",
+                "--native-profiles",
+                config,
+                "--allow-metadata",
+                "grok",
+                "--allow-execution",
+                "grok",
+                "--workspace",
+                value,
+            ]
+            .into_iter()
+            .map(OsString::from),
+        )
+        .unwrap();
+        assert!(args.execution_providers.contains("grok"));
+        assert_eq!(
+            args.native_profiles.as_deref(),
+            Some(std::path::Path::new(config))
+        );
     }
 }

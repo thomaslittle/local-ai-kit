@@ -98,7 +98,11 @@ impl NativeService {
         // Acquire policy after loading data; never reuse a policy from before an await.
         let snapshot = self.cache.snapshot()?;
         let mut snapshot = project_snapshot(&snapshot, &self.policy(id)?);
-        execution::decorate(&mut snapshot, &self.execution_state.providers);
+        execution::decorate(
+            &mut snapshot,
+            &self.execution_state.providers,
+            &self.execution_state.connections,
+        );
         Ok(snapshot)
     }
     fn set_watch(&self, client: &str, enabled: bool) -> Result<Value> {

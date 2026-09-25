@@ -4,7 +4,7 @@
 
 A Rust implementation with an embedded library, standalone native helper, authenticated local transports, TypeScript/Python SDKs, and optional React selectors. Applications do not need to reproduce client-specific paths, metadata parsers, or streaming protocols.
 
-> **Unpublished developer alpha.** The native service, supported execution adapters, SDKs, reusable selectors, and installable bundles work. Provider coverage is operation-specific: Google/Grok native execution is not registered, and no universal subscription access or cross-process session resumption is claimed. Read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) and [qualification records](docs/qualification/).
+> **Unpublished developer alpha.** The native service, supported execution adapters, SDKs, reusable selectors, and installable bundles work. Provider coverage is operation-specific. Gemini CLI, Antigravity ACP, and Grok can be registered explicitly as native profiles and use the installed client's own ACP/login path; this does not imply universal subscription access, known quotas, or live-generation qualification. Read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) and [qualification records](docs/qualification/).
 
 ## What is included
 
@@ -50,6 +50,27 @@ npm run build:demo
 
 On Unix, use `./target/debug/local-ai-kit` and an absolute path to `apps/demo/dist`. Enter the printed one-use pairing code, then explicitly scan or check a connection. The metadata grant above allows Codex inspection, not inference. Actual turns additionally require a provider execution grant, a named workspace, and an explicit UI action. See the [live demo guide](docs/integration/live-demo.md).
 
+## Register an existing native AI client
+
+Native subscription-style integrations are explicit. A host-owned JSON file names the exact installed client/profile; it does not contain credentials:
+
+```json
+{
+  "profiles": [
+    {
+      "id": "grok-personal",
+      "label": "Grok personal",
+      "provider": "grok",
+      "executable": "C:\\\\Users\\\\you\\\\.grok\\\\bin\\\\grok.exe",
+      "profileHome": "C:\\\\Users\\\\you\\\\.grok",
+      "billing": "subscription"
+    }
+  ]
+}
+```
+
+Start the helper with `--native-profiles ABSOLUTE_JSON --allow-metadata grok` to inspect the registered native catalog. Text sessions additionally require `--allow-execution grok --workspace ABSOLUTE_DIRECTORY`. The installed client owns authentication; the toolkit sends no copied token/API key. Billing in this example is a host declaration and remains labeled user-supplied evidence.
+
 ## Use the packages
 
 The [distribution guide](docs/integration/distribution.md) shows how to build a checksummed native bundle and install its four npm tarballs or Python wheel. Registry publication and signing are separate, unperformed operations. The standalone native executables need neither Node nor Python.
@@ -89,7 +110,7 @@ Automated browser checks cover interaction, live pairing, and common WCAG A/AA v
 
 Start with the [support matrix](docs/adapters/SUPPORT-MATRIX.md), [native helper](docs/integration/native-helper.md), [generated API](docs/integration/generated-api.md), [result artifacts](docs/integration/artifacts.md), and [adapter authoring guide](docs/adapters/AUTHORING.md).
 
-Google/Grok native execution integration remains unavailable following the recorded tool safety boundary. Existing launch recipes and ACP tests do not establish a working subscription connector. Cursor exposes only separately authorized, stale non-secret cached metadata. Direct API routes never substitute for subscription access without explicit billing permission. Persistent cross-process resumption, exhaustive provider quota metadata, automatic file-watch refresh, and macOS qualification are not claimed by this alpha.
+Native Gemini CLI, Antigravity ACP, and Grok routes require explicit profile registration; passive detection alone never enables them. Grok metadata has been qualified without inference on one Windows client, while Gemini CLI/Antigravity live qualification remains unavailable on the current PC. Cursor exposes only separately authorized, stale non-secret cached metadata. Direct API routes never substitute for subscription access without explicit billing permission. Persistent cross-process resumption, exhaustive provider quota metadata, and macOS qualification are not claimed by this alpha. Opt-in local metadata watching is implemented through `discovery.watch`; it invalidates evidence without auto-probing providers.
 
 The original [architecture](docs/superpowers/specs/2026-09-24-local-ai-kit-design.md) and [18-task plan](docs/superpowers/plans/2026-09-24-local-ai-kit-implementation.md) remain the full intended scope, not a checklist retrospectively declared complete. [RESUME.md](docs/handoffs/RESUME.md) and the [implementation ledger](docs/implementation/LEDGER.md) distinguish implemented work from unresolved scope.
 

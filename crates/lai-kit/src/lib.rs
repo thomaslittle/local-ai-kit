@@ -3,6 +3,7 @@
 mod adapter_info;
 mod service_builder;
 pub use lai_adapters::http_provider::config::Registry as EndpointRegistry;
+pub use lai_adapters::native_clients::config::NativeRegistry as NativeClientRegistry;
 pub use lai_contracts::*;
 pub use lai_core::ClientPolicy;
 use lai_discovery::{HostPlatform, ScanEnvironment, Scanner};
@@ -10,7 +11,7 @@ use lai_platform::NativeFilesystem;
 pub use lai_service::{ExecutionGrant, InventorySource, NativeService};
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
-pub use service_builder::build_service_with_endpoints;
+pub use service_builder::{build_service_with_endpoints, build_service_with_registries};
 use std::{
     path::PathBuf,
     sync::{
@@ -27,6 +28,7 @@ pub struct KitBuilder {
     home: Option<PathBuf>,
     source: Option<InventorySource>,
     registry: EndpointRegistry,
+    native_registry: NativeClientRegistry,
     execute: bool,
 }
 pub struct EmbeddedClient {
@@ -77,6 +79,10 @@ impl KitBuilder {
         self.registry = registry;
         self
     }
+    pub fn native_clients(mut self, registry: NativeClientRegistry) -> Self {
+        self.native_registry = registry;
+        self
+    }
     /// Register executors, not execution permission. Each app still needs an explicit ExecutionGrant.
     pub fn execution(mut self, enabled: bool) -> Self {
         self.execute = enabled;
@@ -95,14 +101,22 @@ impl KitBuilder {
         }
         let source = self.source.unwrap_or_else(|| inventory_source(self.home));
         let registry = Arc::new(self.registry);
+        let native_registry = Arc::new(self.native_registry);
         let configs = registry.clone();
+        let native_configs = native_registry.clone();
         let inventory = Arc::new(move |cancel: &AtomicBool| {
             let mut result = source(cancel)?;
             configs.inject(&mut result);
+            native_configs.inject(&mut result);
             Ok(result)
         });
         Ok(Kit {
-            service: build_service_with_endpoints(inventory, self.execute, registry),
+            service: build_service_with_registries(
+                inventory,
+                self.execute,
+                registry,
+                native_registry,
+            ),
         })
     }
 }

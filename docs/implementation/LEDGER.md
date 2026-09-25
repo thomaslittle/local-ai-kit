@@ -102,3 +102,7 @@ Source `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91`, dirty=false, qualified on bot
 Windows measured cold scan p95 25.652 ms, cached read p95 0.580 ms, idle peak 7.727 MiB. Linux measured 3.820 ms, 0.646 ms, and 6.625 MiB respectively. These are the documented nine-adapter/ten-profile fixture results, not universal guarantees. Binary hashes and raw sample summaries are committed as safe evidence JSON.
 
 Remaining original scope is explicitly listed in RELEASE-CANDIDATE.md. This checkpoint completes packaging/verification of supported alpha paths, not the entire original 18-task scope or the blocked provider/watch/UI glue.
+
+- Native subscription connectors: added explicit host-owned native profile registration for Gemini CLI, Antigravity ACP, and Grok. Passive detection remains inert; execution capability is connection-scoped, not provider-wide. ACP success is official-protocol auth evidence; plan/quota remain unknown unless reported, and host billing declarations remain user-supplied evidence.
+- Grok metadata qualification: Grok CLI 1.0.41 reused its existing native login without token export and returned Grok 4.7 plus reasoning_effort. No prompt/inference was submitted.
+- Verification: full deterministic Windows profile passed after the native connector wiring, alongside strict workspace Clippy and targeted ACP/CLI/native-profile regressions.

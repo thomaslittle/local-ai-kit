@@ -5,11 +5,26 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
     for def in lai_discovery::definitions() {
         let metadata = matches!(
             def.id,
-            "codex" | "claude_code" | "grok" | "cursor" | "ollama" | "lmstudio" | "opencode"
+            "codex"
+                | "claude_code"
+                | "grok"
+                | "gemini_cli"
+                | "antigravity"
+                | "cursor"
+                | "ollama"
+                | "lmstudio"
+                | "opencode"
         );
         let execution = matches!(
             def.id,
-            "codex" | "claude_code" | "ollama" | "lmstudio" | "opencode"
+            "codex"
+                | "claude_code"
+                | "gemini_cli"
+                | "antigravity"
+                | "grok"
+                | "ollama"
+                | "lmstudio"
+                | "opencode"
         );
         items.push(AdapterDescriptor {
             id: def.id.into(),
@@ -23,7 +38,7 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
             passive_discovery: true,
             metadata,
             text_sessions: execution,
-            native_tool_approval: def.id == "codex",
+            native_tool_approval: matches!(def.id, "codex" | "gemini_cli" | "antigravity" | "grok"),
             cancellation: execution,
             persistent_resumption: false,
             qualification: "See per-operation qualification reports; no account capability implied"

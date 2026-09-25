@@ -44,6 +44,7 @@ pub type ExecutionSource =
 #[derive(Default)]
 pub(crate) struct ExecutionState {
     pub providers: BTreeSet<String>,
+    pub connections: BTreeSet<String>,
     pub source: Option<ExecutionSource>,
     pub runtime: Arc<Runtime>,
     pub grants: Arc<RwLock<BTreeMap<String, ExecutionGrant>>>,
@@ -66,13 +67,16 @@ type Update = SessionOptionsParams;
 fn decode<T: serde::de::DeserializeOwned>(p: Value) -> Result<T> {
     serde_json::from_value(p).map_err(|_| params::invalid())
 }
-pub(crate) fn decorate(snapshot: &mut Snapshot, providers: &BTreeSet<String>) {
+pub(crate) fn decorate(
+    snapshot: &mut Snapshot,
+    providers: &BTreeSet<String>,
+    connections: &BTreeSet<String>,
+) {
     for route in &mut snapshot.routes {
-        if snapshot
-            .connections
-            .iter()
-            .any(|c| c.id == route.connection_id && providers.contains(&c.provider_id))
-        {
+        if snapshot.connections.iter().any(|c| {
+            c.id == route.connection_id
+                && (providers.contains(&c.provider_id) || connections.contains(&c.id))
+        }) {
             for cap in &mut route.capabilities {
                 if cap.id == "generation.text" && cap.origin == CapabilityOrigin::Runtime {
                     cap.support = Support::Supported;
@@ -86,8 +90,17 @@ pub(crate) fn decorate(snapshot: &mut Snapshot, providers: &BTreeSet<String>) {
     }
 }
 impl NativeService {
-    pub fn with_execution(mut self, providers: BTreeSet<String>, source: ExecutionSource) -> Self {
+    pub fn with_execution(self, providers: BTreeSet<String>, source: ExecutionSource) -> Self {
+        self.with_execution_scoped(providers, BTreeSet::new(), source)
+    }
+    pub fn with_execution_scoped(
+        mut self,
+        providers: BTreeSet<String>,
+        connections: BTreeSet<String>,
+        source: ExecutionSource,
+    ) -> Self {
         self.execution_state.providers = providers;
+        self.execution_state.connections = connections;
         self.execution_state.source = Some(source);
         self
     }
@@ -268,6 +281,7 @@ impl NativeService {
                 let grants = self.execution_state.grants.clone();
                 let cache = self.cache.clone();
                 let providers = self.execution_state.providers.clone();
+                let execution_connections = self.execution_state.connections.clone();
                 let owner = client.to_owned();
                 let selected = request.selection.clone();
                 let connection_id = connection.id.clone();
@@ -290,7 +304,7 @@ impl NativeService {
                         .cloned()
                         .ok_or_else(denied)?;
                     let mut snapshot = project_snapshot(&cache.snapshot()?, &policy);
-                    decorate(&mut snapshot, &providers);
+                    decorate(&mut snapshot, &providers, &execution_connections);
                     let c = snapshot
                         .connections
                         .iter()

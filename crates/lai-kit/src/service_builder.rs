@@ -5,6 +5,7 @@ use lai_adapters::http_provider::{
 use lai_adapters::{
     claude, codex,
     execution::{CodexExecution, open_codex},
+    native_clients::config::NativeRegistry,
     process::LaunchSpec,
 };
 use lai_contracts::{DomainError, ErrorCode};
@@ -19,12 +20,38 @@ pub fn build_service_with_endpoints(
     execute: bool,
     registry: Arc<Registry>,
 ) -> Arc<NativeService> {
+    build_service_with_registries(
+        source,
+        execute,
+        registry,
+        Arc::new(NativeRegistry::default()),
+    )
+}
+pub fn build_service_with_registries(
+    source: InventorySource,
+    execute: bool,
+    registry: Arc<Registry>,
+    native_registry: Arc<NativeRegistry>,
+) -> Arc<NativeService> {
     let metadata_registry = registry.clone();
+    let metadata_native = native_registry.clone();
     let service = NativeService::new(source, Duration::from_secs(2))
         .with_adapters(crate::adapter_info::descriptors())
         .with_metadata(Arc::new(move |located, connection, route| {
             let endpoint = metadata_registry.for_connection(&connection, &located.provider_id);
+            let native_profile = metadata_native.profiles.get(&connection).cloned();
+            let native_browser = metadata_native.browser_blocker.clone();
             Box::pin(async move {
+                if let Some(profile) = native_profile {
+                    return lai_adapters::native_clients::client::probe(
+                        &profile,
+                        &located,
+                        &connection,
+                        &route,
+                        native_browser.as_deref(),
+                    )
+                    .await;
+                }
                 if let Some(config) = endpoint {
                     let client = configured_endpoint(&config)?;
                     if config.kind == http_provider::HttpKind::Opencode {
@@ -69,8 +96,14 @@ pub fn build_service_with_endpoints(
     if !execute {
         return Arc::new(service);
     }
+    let native_connections = native_registry
+        .profiles
+        .keys()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let execution_native = native_registry.clone();
     Arc::new(
-        service.with_execution(
+        service.with_execution_scoped(
             [
                 "codex",
                 "claude_code",
@@ -86,10 +119,31 @@ pub fn build_service_with_endpoints(
             .into_iter()
             .map(str::to_owned)
             .collect::<BTreeSet<_>>(),
+            native_connections,
             Arc::new(move |input| {
                 let endpoint =
                     registry.for_connection(&input.connection_id, &input.located.provider_id);
+                let native_profile = execution_native.profiles.get(&input.connection_id).cloned();
+                let native_browser = execution_native.browser_blocker.clone();
                 Box::pin(async move {
+                    if let Some(profile) = native_profile {
+                        if input.writable || input.native_policy {
+                            return Err(DomainError::new(
+                                ErrorCode::IntegrationRestricted,
+                                "Native ACP subscription routes expose text sessions with mediated approvals only",
+                            ));
+                        }
+                        return lai_adapters::native_clients::client::open(
+                            &profile,
+                            &input.located,
+                            &input.workspace,
+                            native_browser.as_deref(),
+                            input.route_id,
+                            input.model,
+                            input.review_requests,
+                        )
+                        .await;
+                    }
                     if let Some(config) = endpoint {
                         if input.writable || input.review_requests {
                             return Err(DomainError::new(

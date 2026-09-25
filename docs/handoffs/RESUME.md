@@ -36,3 +36,9 @@ Executable/source checkpoint: `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91`. Both W
 Read `docs/qualification/RELEASE-CANDIDATE.md` and `docs/qualification/evidence/verification-summary.json` for exact filenames, hashes, tests, toolchains, and unresolved scope. Windows bundle pointer: `dist/release/latest.json`; Linux archives copied to `dist/linux-release/`. The local artifacts are not GitHub Release assets and are not published registry packages.
 
 Final review fixed the default event-stream cursor for empty histories and removed offline package-smoke dependence on warm registry metadata. Do not recreate these fixes. The full original plan remains incomplete at the explicit boundaries above; verify future changes before changing any support claim.
+
+## September 25 native subscription checkpoint
+
+Explicit native profiles now wire Gemini CLI, Antigravity ACP, and Grok into the shared metadata/execution service. Registration is connection-scoped and contains no provider token/API key. Shared ACP fixtures cover negotiation, model/options, permissions, streaming, cancellation, and cleanup. A metadata-only Windows check against Grok CLI 1.0.41 reused the existing native login and returned Grok 4.7 + reasoning_effort; no model turn was sent. Gemini CLI and the dedicated Antigravity ACP runtime were not available for live qualification on this PC.
+
+Remaining high-value scope: capability-gated native resumption where the provider genuinely supports loadSession, final release/macos qualification, and provider-specific usage fields that can be obtained from supported interfaces without inventing data. No registry publication/main merge has been performed.
