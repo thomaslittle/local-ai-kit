@@ -16,6 +16,7 @@ const METHODS: &[&str] = &[
     "adapters.list",
     "diagnostics.report",
     "discovery.refresh",
+    "discovery.watch",
     "selection.resolve",
     "selection.validate",
     "grants.request",

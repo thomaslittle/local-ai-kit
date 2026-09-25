@@ -500,6 +500,18 @@
       ],
       "type": "object"
     },
+    "DiscoveryWatchParams": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "type": "object"
+    },
     "DomainError": {
       "additionalProperties": false,
       "properties": {
@@ -1052,6 +1064,9 @@
         "discovery.refresh": {
           "$ref": "#/$defs/DiscoveryParams"
         },
+        "discovery.watch": {
+          "$ref": "#/$defs/DiscoveryWatchParams"
+        },
         "events.read": {
           "$ref": "#/$defs/EventsParams"
         },
@@ -1123,6 +1138,7 @@
         "runtime.health",
         "snapshot.get",
         "discovery.refresh",
+        "discovery.watch",
         "connections.list",
         "connections.probe",
         "models.list",
@@ -1179,6 +1195,7 @@
         "discovery.refresh": {
           "$ref": "#/$defs/DiscoveryResult"
         },
+        "discovery.watch": true,
         "events.read": {
           "$ref": "#/$defs/EventPage"
         },
@@ -1243,6 +1260,7 @@
         "runtime.health",
         "snapshot.get",
         "discovery.refresh",
+        "discovery.watch",
         "connections.list",
         "connections.probe",
         "models.list",
@@ -2834,6 +2852,14 @@
       "resultSchema": {
         "$ref": "#/$defs/DiscoveryResult"
       }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "discovery.watch",
+      "paramsSchema": {
+        "$ref": "#/$defs/DiscoveryWatchParams"
+      },
+      "resultSchema": true
     },
     {
       "availability": "Negotiate runtime.handshake; per-client grants apply.",

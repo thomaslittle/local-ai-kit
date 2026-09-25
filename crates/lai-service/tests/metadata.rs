@@ -367,7 +367,6 @@ fn watched_service(
     )
 }
 #[tokio::test]
-#[ignore = "Service watcher integration remains unapplied; platform watcher is tested separately"]
 async fn explicit_watch_invalidates_changed_metadata_without_running_a_probe() {
     let temp = tempfile::tempdir().unwrap();
     for name in ["personal", "work"] {
@@ -404,7 +403,6 @@ async fn explicit_watch_invalidates_changed_metadata_without_running_a_probe() {
     assert_eq!(calls.load(Ordering::SeqCst), 1);
 }
 #[tokio::test]
-#[ignore = "Service watcher integration remains unapplied; platform watcher is tested separately"]
 async fn watching_needs_discovery_permission_and_can_be_stopped() {
     let temp = tempfile::tempdir().unwrap();
     for name in ["personal", "work"] {

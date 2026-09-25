@@ -3,6 +3,7 @@ use lai_contracts::{DataMode, DomainError, ErrorCode, Result, Snapshot};
 use lai_discovery::{LocatedClient, ScanResult};
 use std::{
     collections::BTreeMap,
+    path::PathBuf,
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
@@ -107,6 +108,23 @@ impl InventoryCache {
         state
             .metadata_failures
             .insert(connection.into(), (Instant::now(), error));
+        Ok(())
+    }
+    pub(crate) fn watch_roots(&self) -> Result<BTreeMap<String, PathBuf>> {
+        let state = self.state.lock().map_err(|_| unavailable())?;
+        Ok(state
+            ._locations
+            .iter()
+            .map(|(id, client)| (id.clone(), client.profile_home.clone()))
+            .collect())
+    }
+    pub(crate) fn invalidate_metadata(&self, connections: &[String]) -> Result<()> {
+        let mut state = self.state.lock().map_err(|_| unavailable())?;
+        for id in connections {
+            state.metadata.remove(id);
+            state.metadata_failures.remove(id);
+        }
+        state.updated = None;
         Ok(())
     }
     pub async fn refresh(self: &Arc<Self>) -> Result<()> {

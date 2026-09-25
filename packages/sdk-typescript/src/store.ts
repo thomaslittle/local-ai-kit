@@ -1,6 +1,7 @@
 import type { LocalAIClient } from './client.ts';
 import type { Snapshot } from './generated.ts';
 import { LocalAIError } from './errors.ts';
+import { readCatalogSnapshot } from './catalog.ts';
 export interface SnapshotState { readonly snapshot: Snapshot | null; readonly loading: boolean; readonly error: LocalAIError | null }
 export interface SnapshotStore {
  getSnapshot(): SnapshotState; getServerSnapshot(): SnapshotState;
@@ -35,7 +36,7 @@ export function createSnapshotStore(client: LocalAIClient, initial?: Snapshot): 
   if(loading)return loading;
   const version=epoch, abort=new AbortController();controller=abort;
   publish({...state,loading:true,error:null});
-  const work=client.snapshot.get(undefined,{signal:abort.signal}).then(value=>{
+  const work=readCatalogSnapshot(client,{signal:abort.signal}).then(value=>{
    if(closed)throw new LocalAIError('CLOSED');
    if(version!==epoch)throw new LocalAIError('CANCELLED');
    const snapshot=copy(value);publish({snapshot,loading:false,error:null});return snapshot;

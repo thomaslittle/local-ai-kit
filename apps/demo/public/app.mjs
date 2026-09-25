@@ -1,5 +1,5 @@
 import {createCatalog,resolveCandidates,reconcileSelection} from '/modules/selector/index.js';
-import {readArtifactBytes} from '/modules/sdk/index.js';
+import {readArtifactBytes,readCatalogSnapshot} from '/modules/sdk/index.js';
 import {el,button,badge} from './ui.mjs';
 import {renderPage} from './pages.mjs';
 import {openPalette,openConnectionDialog} from './dialogs.mjs';
@@ -62,7 +62,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
   let client;
   try{
    client=await factory();if(closed||epoch!==current){await client.close();return;}
-   const snapshot=await client.snapshot.get();if(closed||epoch!==current){await client.close();return;}
+   const snapshot=await readCatalogSnapshot(client);if(closed||epoch!==current){await client.close();return;}
    rebuild(snapshot);state.client=client;render();
    if(client.handshake.methods.includes('events.subscribe'))void observe(client,current);
   }catch(error){await client?.close().catch(()=>{});if(epoch===current){state.connectionError='Unable to connect. No account or model data has been substituted.';render();}}
@@ -95,8 +95,8 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
  }
  async function cancelTurn(){if(state.turnId&&state.client)await operate(async()=>{await state.client.turns.cancel({turnId:state.turnId});});}
  async function answerApproval(allow){if(state.approval&&state.client)await operate(async()=>{await state.client.approvals.respond({approvalId:state.approval.approvalId,allow});});}
- async function scan(){if(state.client)await operate(async()=>{await state.client.discovery.refresh({level:'passive'});rebuild(await state.client.snapshot.get());state.page='Connections';render();});}
- async function probeConnection(id){if(!state.client||state.probing)return;state.probing=id;render();await operate(async()=>{await state.client.connections.probe({connectionId:id});rebuild(await state.client.snapshot.get());});state.probing=null;render();}
+ async function scan(){if(state.client)await operate(async()=>{await state.client.discovery.refresh({level:'passive'});rebuild(await readCatalogSnapshot(state.client));state.page='Connections';render();});}
+ async function probeConnection(id){if(!state.client||state.probing)return;state.probing=id;render();await operate(async()=>{await state.client.connections.probe({connectionId:id});rebuild(await readCatalogSnapshot(state.client));});state.probing=null;render();}
  async function revokeConnection(){if(!state.client)return;await operate(async()=>{await state.client.grants.revoke({});await stopClient();catalog=null;all=[];state.snapshot=null;state.selection=null;state.notice='Connection revoked. Restart the native host and reload to pair again.';render();});}
  async function refreshDiagnostics(){if(state.client)await operate(async()=>{state.diagnostics={report:await state.client.diagnostics.report(),adapters:await state.client.adapters.list(),grants:await state.client.grants.list()};render();});}
  function render(){

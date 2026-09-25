@@ -10,6 +10,7 @@ use cache::InventoryCache;
 use lai_contracts::{DomainError, ErrorCode, Result, Snapshot};
 use lai_core::{ClientPolicy, project_snapshot};
 use lai_discovery::ScanResult;
+use lai_platform::watcher::MetadataWatcher;
 pub use metadata::{MetadataFuture, MetadataSource};
 use serde_json::Value;
 use std::{
@@ -26,6 +27,7 @@ pub struct NativeService {
     cache: Arc<InventoryCache>,
     metadata_source: Option<MetadataSource>,
     metadata_locks: std::sync::Mutex<BTreeMap<String, Arc<tokio::sync::Mutex<()>>>>,
+    watchers: std::sync::Mutex<BTreeMap<String, MetadataWatcher>>,
 }
 impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
@@ -35,6 +37,7 @@ impl NativeService {
             execution_state: Default::default(),
             metadata_source: None,
             metadata_locks: std::sync::Mutex::new(BTreeMap::new()),
+            watchers: std::sync::Mutex::new(BTreeMap::new()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
         }
     }
@@ -66,12 +69,18 @@ impl NativeService {
     /// Host-only cleanup for an application connection; other clients remain live.
     pub fn unregister_client(&self, id: &str) {
         self.execution_state.revoke(id);
+        if let Ok(mut watchers) = self.watchers.lock() {
+            watchers.remove(id);
+        }
         if let Ok(mut clients) = self.clients.write() {
             clients.remove(id);
         }
     }
     /// Release only this host-registered application. Other clients and shared metadata survive.
     pub fn close_client(&self, id: &str) {
+        if let Ok(mut watchers) = self.watchers.lock() {
+            watchers.remove(id);
+        }
         if let Ok(mut clients) = self.clients.write() {
             clients.remove(id);
         }
@@ -91,6 +100,35 @@ impl NativeService {
         let mut snapshot = project_snapshot(&snapshot, &self.policy(id)?);
         execution::decorate(&mut snapshot, &self.execution_state.providers);
         Ok(snapshot)
+    }
+    fn set_watch(&self, client: &str, enabled: bool) -> Result<Value> {
+        if !self.policy(client)?.allow_passive_discovery {
+            return Err(denied());
+        }
+        let mut watchers = self.watchers.lock().map_err(|_| denied())?;
+        if !enabled {
+            watchers.remove(client);
+            return Ok(serde_json::json!({"watching":false}));
+        }
+        if watchers.contains_key(client) {
+            return Ok(serde_json::json!({"watching":true}));
+        }
+        let roots = self.cache.watch_roots()?;
+        if roots.is_empty() {
+            return Err(DomainError::new(
+                ErrorCode::Conflict,
+                "Run passive discovery before enabling local metadata watching",
+            ));
+        }
+        let cache = self.cache.clone();
+        let watcher = MetadataWatcher::start(
+            roots,
+            Arc::new(move |ids| {
+                let _ = cache.invalidate_metadata(&ids);
+            }),
+        )?;
+        watchers.insert(client.to_owned(), watcher);
+        Ok(serde_json::json!({"watching":true}))
     }
     pub async fn handle(&self, client: &str, method: &str, params: Value) -> Result<Value> {
         self.policy(client)?;
@@ -118,12 +156,19 @@ impl NativeService {
             let snapshot = self.projected(client)?;
             return Ok(serde_json::json!({"revision":snapshot.revision,"mode":snapshot.mode}));
         }
+        if method == "discovery.watch" {
+            params::allow(&params, &["enabled"])?;
+            return self.set_watch(client, params::boolean(&params, "enabled")?);
+        }
         if method == "connections.probe" {
             return self.probe_connection(client, &params).await;
         }
         if method == "grants.revoke" {
             let value = self.dispatch(client, method, &params)?;
             self.execution_state.revoke(client);
+            if let Ok(mut watchers) = self.watchers.lock() {
+                watchers.remove(client);
+            }
             return Ok(value);
         }
         if method.starts_with("sessions.")

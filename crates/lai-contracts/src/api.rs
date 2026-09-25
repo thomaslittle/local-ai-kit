@@ -42,6 +42,11 @@ pub struct DiscoveryParams {
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DiscoveryWatchParams {
+    pub enabled: bool,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ConnectionParams {
     pub connection_id: String,
 }
@@ -184,6 +189,8 @@ pub struct MethodInputs {
     snapshot: SnapshotParams,
     #[serde(rename = "discovery.refresh")]
     discovery: DiscoveryParams,
+    #[serde(rename = "discovery.watch")]
+    discovery_watch: DiscoveryWatchParams,
     #[serde(rename = "connections.list")]
     connections: EmptyParams,
     #[serde(rename = "connections.probe")]
@@ -247,6 +254,8 @@ pub struct MethodOutputs {
     snapshot: Snapshot,
     #[serde(rename = "discovery.refresh")]
     discovery: DiscoveryResult,
+    #[serde(rename = "discovery.watch")]
+    discovery_watch: Value,
     #[serde(rename = "connections.list")]
     connections: Vec<Connection>,
     #[serde(rename = "connections.probe")]

@@ -23,7 +23,7 @@ See `docs/adapters/SUPPORT-MATRIX.md`, `docs/implementation/LEDGER.md`, `docs/qu
 
 Native Google/Grok client-to-execution glue was blocked by the tool safety boundary and was not bypassed. Those executors remain unregistered. ACP authentication and launch-recipe fixtures are not proof of a working subscription route. Do not restore ignored incomplete sketches or expose an unrestricted native-policy mode as a supposed read-only sandbox. See `docs/adapters/native-google-grok-status.md`.
 
-Automatic filesystem-watch refresh, the full incremental activity/usage-reader tranche, exhaustive provider credit metadata, and durable cross-process session resumption remain outside the implemented alpha. The original 18-task plan remains broader than this checkpoint. Unknown account fields are intentional, not fabricated successful discovery.
+The opt-in local metadata watcher is now wired through `discovery.watch`; it invalidates cached evidence without auto-probing providers. The public paged-catalog helper is also wired into the SDK store and showroom. The full incremental activity/usage-reader tranche, exhaustive provider credit metadata, native Google/Grok subscription execution, durable cross-process session resumption, and macOS qualification remain outside the implemented alpha. Unknown account fields are intentional, not fabricated successful discovery.
 
 Windows qualification and native Ubuntu execution are separate records. GitHub Actions has been failing before any job steps run; a workflow matrix is not macOS evidence. Tauri currently has an integration guide and compiled embedded-Rust pattern, not a separately qualified Tauri application.
 

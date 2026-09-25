@@ -501,6 +501,18 @@
         ],
         "type": "object"
       },
+      "DiscoveryWatchParams": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "type": "object"
+      },
       "DomainError": {
         "additionalProperties": false,
         "properties": {
@@ -1053,6 +1065,9 @@
           "discovery.refresh": {
             "$ref": "#/components/schemas/DiscoveryParams"
           },
+          "discovery.watch": {
+            "$ref": "#/components/schemas/DiscoveryWatchParams"
+          },
           "events.read": {
             "$ref": "#/components/schemas/EventsParams"
           },
@@ -1124,6 +1139,7 @@
           "runtime.health",
           "snapshot.get",
           "discovery.refresh",
+          "discovery.watch",
           "connections.list",
           "connections.probe",
           "models.list",
@@ -1180,6 +1196,7 @@
           "discovery.refresh": {
             "$ref": "#/components/schemas/DiscoveryResult"
           },
+          "discovery.watch": true,
           "events.read": {
             "$ref": "#/components/schemas/EventPage"
           },
@@ -1244,6 +1261,7 @@
           "runtime.health",
           "snapshot.get",
           "discovery.refresh",
+          "discovery.watch",
           "connections.list",
           "connections.probe",
           "models.list",
@@ -3177,6 +3195,32 @@
                       },
                       "params": {
                         "$ref": "#/components/schemas/DiscoveryParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "discovery.watch"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/DiscoveryWatchParams"
                       }
                     },
                     "required": [

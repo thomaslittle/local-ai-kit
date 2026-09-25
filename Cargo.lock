@@ -915,6 +915,7 @@ dependencies = [
  "lai-contracts",
  "lai-core",
  "lai-discovery",
+ "lai-platform",
  "lai-runtime",
  "serde",
  "serde_json",

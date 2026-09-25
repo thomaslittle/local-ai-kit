@@ -63,9 +63,8 @@ Zero sampled CPU delta is not a claim of no possible CPU use. These measurements
 ## Unresolved original scope
 
 1. Native Google/Grok subscription execution glue remains blocked/unregistered. Experimental ACP recipes are not a completed subscription connector. No bypass was attempted.
-2. The tested OS metadata watcher primitive is not connected to service invalidation; two corresponding integration tests remain explicitly ignored. Automatic refresh is not advertised.
-3. Public `models.page` works through native transports and generated SDKs. The tested TypeScript assembly helper is not root-exported or connected to the current showroom/store after its integration write was blocked. Very large live showroom snapshots therefore retain their response-size limit.
-4. Durable cross-process session resumption, the complete incremental activity/usage-reader tranche, exhaustive credit normalization, and macOS qualification remain unfinished. Tauri is an integration guide, not a separately executed Tauri application.
+2. Opt-in metadata watching and paged catalog assembly are now implemented after this artifact checkpoint. The historical binary/test counts above describe source `991ec2b`; later commits must be re-qualified before their binaries inherit those numbers.
+3. Durable cross-process session resumption, the complete incremental activity/usage-reader tranche, exhaustive credit normalization, native Google/Grok subscription execution, and macOS qualification remain unfinished. Tauri is an integration guide, not a separately executed Tauri application.
 
 The supported implementation can be installed and exercised now. These gaps must remain visible until separately implemented and verified; do not mark the entire plan complete, turn ignored tests into successful evidence, or confuse explicit API routes with subscription access.
 

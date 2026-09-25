@@ -6,7 +6,7 @@ from .errors import LocalAIError
 from .stdio import AsyncStdioTransport
 
 FAMILIES = {
-    'runtime': ('health','closeClient'), 'snapshot': ('get',), 'discovery': ('refresh','cancel'),
+    'runtime': ('health','closeClient'), 'snapshot': ('get',), 'discovery': ('refresh','watch','cancel'),
     'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list','page'),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
     'grants': ('request','list','revoke'), 'sessions': ('create','get','updateOptions','close'),
