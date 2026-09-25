@@ -338,3 +338,116 @@ async fn failed_metadata_probes_back_off_instead_of_respawning_for_each_caller()
     }
     assert_eq!(count.load(Ordering::SeqCst), 1);
 }
+
+fn watched_service(
+    root: std::path::PathBuf,
+    calls: Arc<AtomicUsize>,
+    delay: Duration,
+) -> Arc<NativeService> {
+    let source: MetadataSource = Arc::new(move |_, id, route| {
+        let calls = calls.clone();
+        Box::pin(async move {
+            calls.fetch_add(1, Ordering::SeqCst);
+            tokio::time::sleep(delay).await;
+            Ok(report(&id, &route))
+        })
+    });
+    Arc::new(
+        NativeService::new(
+            Arc::new(move |_| {
+                let mut scan = inventory();
+                for (id, location) in &mut scan.locations {
+                    location.profile_home = root.join(id);
+                }
+                Ok(scan)
+            }),
+            Duration::ZERO,
+        )
+        .with_metadata(source),
+    )
+}
+#[tokio::test]
+#[ignore = "Service watcher integration remains unapplied; platform watcher is tested separately"]
+async fn explicit_watch_invalidates_changed_metadata_without_running_a_probe() {
+    let temp = tempfile::tempdir().unwrap();
+    for name in ["personal", "work"] {
+        std::fs::create_dir(temp.path().join(name)).unwrap();
+    }
+    let calls = Arc::new(AtomicUsize::new(0));
+    let s = watched_service(temp.path().into(), calls.clone(), Duration::ZERO);
+    s.register_client("app", probe_policy()).unwrap();
+    s.handle("app", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    s.handle(
+        "app",
+        "connections.probe",
+        json!({"connectionId":"personal"}),
+    )
+    .await
+    .unwrap();
+    s.handle("app", "discovery.watch", json!({"enabled":true}))
+        .await
+        .unwrap();
+    std::fs::write(temp.path().join("personal/auth.json"), "secret never read").unwrap();
+    tokio::time::timeout(Duration::from_secs(3), async {
+        loop {
+            let snapshot = s.handle("app", "snapshot.get", json!({})).await.unwrap();
+            if snapshot["models"].as_array().unwrap().is_empty() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+}
+#[tokio::test]
+#[ignore = "Service watcher integration remains unapplied; platform watcher is tested separately"]
+async fn watching_needs_discovery_permission_and_can_be_stopped() {
+    let temp = tempfile::tempdir().unwrap();
+    for name in ["personal", "work"] {
+        std::fs::create_dir(temp.path().join(name)).unwrap();
+    }
+    let s = watched_service(
+        temp.path().into(),
+        Arc::new(AtomicUsize::new(0)),
+        Duration::ZERO,
+    );
+    s.register_client("app", probe_policy()).unwrap();
+    s.register_client("denied", ClientPolicy::denied()).unwrap();
+    assert!(
+        s.handle("denied", "discovery.watch", json!({"enabled":true}))
+            .await
+            .is_err()
+    );
+    s.handle("app", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    s.handle("app", "discovery.watch", json!({"enabled":true}))
+        .await
+        .unwrap();
+    s.handle("app", "discovery.watch", json!({"enabled":false}))
+        .await
+        .unwrap();
+    s.handle(
+        "app",
+        "connections.probe",
+        json!({"connectionId":"personal"}),
+    )
+    .await
+    .unwrap();
+    std::fs::write(
+        temp.path().join("personal/auth.json"),
+        "not observed after stop",
+    )
+    .unwrap();
+    tokio::time::sleep(Duration::from_millis(150)).await;
+    assert!(
+        !s.handle("app", "snapshot.get", json!({})).await.unwrap()["models"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+}

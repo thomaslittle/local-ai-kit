@@ -42,3 +42,13 @@ test('Node empty-home scan stays empty in live mode',async()=>{
  try{await ai.discovery.refresh();assert.deepEqual((await ai.snapshot.get()).connections,[]);}
  finally{await ai.close();await rm(home,{recursive:true,force:true});}
 });
+test('Node typed catalog pages are served by the actual native helper',async()=>{
+ const home=await mkdtemp(join(tmpdir(),'lai-paged-'));const ai=await connect(home);
+ try{
+  assert.ok(ai.handshake.methods.includes('models.page'));
+  const page=await ai.models.page({limit:10});
+  assert.deepEqual(page.models,[]);assert.equal(page.nextCursor,null);
+  assert.equal(page.revision,(await ai.snapshot.get({fields:['revision']})).revision);
+  await assert.rejects(ai.models.page({limit:0}),e=>e.code==='INVALID_REQUEST');
+ }finally{await ai.close();await rm(home,{recursive:true,force:true});}
+});

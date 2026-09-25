@@ -1074,6 +1074,9 @@
           "models.list": {
             "$ref": "#/components/schemas/ModelsParams"
           },
+          "models.page": {
+            "$ref": "#/components/schemas/ModelPageParams"
+          },
           "runtime.closeClient": {
             "$ref": "#/components/schemas/EmptyParams"
           },
@@ -1124,6 +1127,7 @@
           "connections.list",
           "connections.probe",
           "models.list",
+          "models.page",
           "usage.read",
           "capabilities.read",
           "selection.resolve",
@@ -1190,6 +1194,9 @@
             },
             "type": "array"
           },
+          "models.page": {
+            "$ref": "#/components/schemas/ModelPage"
+          },
           "runtime.closeClient": true,
           "runtime.handshake": {
             "$ref": "#/components/schemas/HandshakeResult"
@@ -1240,6 +1247,7 @@
           "connections.list",
           "connections.probe",
           "models.list",
+          "models.page",
           "usage.read",
           "capabilities.read",
           "selection.resolve",
@@ -1310,6 +1318,61 @@
           "options",
           "contextWindow"
         ],
+        "type": "object"
+      },
+      "ModelPage": {
+        "additionalProperties": false,
+        "properties": {
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/Model"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision",
+          "models"
+        ],
+        "type": "object"
+      },
+      "ModelPageParams": {
+        "additionalProperties": false,
+        "properties": {
+          "cursor": {
+            "default": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "default": null,
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "routeId": {
+            "default": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "ModelParams": {
@@ -3296,6 +3359,32 @@
                       },
                       "params": {
                         "$ref": "#/components/schemas/ModelsParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "models.page"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/ModelPageParams"
                       }
                     },
                     "required": [

@@ -80,3 +80,11 @@ Resumed existing worktree at 978824642e9ea26ad7ecbdf1b9400567173ae0f5; remote ma
 The full Windows `all` profile passed with 291 Rust workspace tests, 27 selector tests, SDK and generated-contract suites, real native-helper/broker bridges, 13 showroom interactions, two native browser-pairing checks, and 22 automated accessibility checks. The plain HTTP C# example separately built and completed a real pairing/scan/close flow using .NET 8.0.425. Added these checks to the release workflow and kept all package registries private/unpublished. Automatic accessibility tests do not certify manual screen-reader behavior.
 
 GitHub Actions run 36082359183 failed with no executed job steps; the available job summary does not explain the underlying runner failure. Do not present it as a passing Linux/macOS CI run or infer a billing cause. Local Ubuntu qualification is separate and must name the exact source snapshot tested.
+
+## Catalog paging and opt-in platform watcher
+
+Added public `models.page` with caller/filter/revision-bound cursors, 1–500-row limits, a serialized byte budget, and stale/permission validation. Five native page regressions failed before implementation and now pass. The typed TypeScript/Python method families and generated protocol artifacts include paging. A bounded TypeScript assembly helper has five passing tests, but its package-root/demo integration write was blocked and is not claimed complete.
+
+Added `lai-platform::MetadataWatcher` using notify 8.2.0 OS events, explicit roots and metadata filenames, no credential-content reads or recursive profile traversal. Three Windows tests failed before implementation and now pass. Service integration was blocked; two service watcher acceptance tests remain explicitly ignored, and no watcher RPC is advertised. Do not count the ignored tests as passing or this primitive as automatic service refresh.
+
+The full Windows `all` profile passed after these additions with the two documented ignored service-watch tests. Next: qualify exact clean-commit distributions and native Ubuntu execution; preserve remaining original-plan gaps rather than marking the full project complete.

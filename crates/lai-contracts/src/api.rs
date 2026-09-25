@@ -190,6 +190,8 @@ pub struct MethodInputs {
     probe: ConnectionParams,
     #[serde(rename = "models.list")]
     models: ModelsParams,
+    #[serde(rename = "models.page")]
+    model_page: ModelPageParams,
     #[serde(rename = "usage.read")]
     usage: EmptyParams,
     #[serde(rename = "capabilities.read")]
@@ -251,6 +253,8 @@ pub struct MethodOutputs {
     probe: Value,
     #[serde(rename = "models.list")]
     models: Vec<Model>,
+    #[serde(rename = "models.page")]
+    model_page: ModelPage,
     #[serde(rename = "usage.read")]
     usage: Vec<QuotaPool>,
     #[serde(rename = "capabilities.read")]

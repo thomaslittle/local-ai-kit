@@ -30,3 +30,5 @@ pub trait LocalFilesystem: Send + Sync {
     fn read_chunk(&self, path: &Path, offset: u64, max_bytes: usize) -> Result<ReadChunk>;
 }
 pub struct NativeFilesystem;
+
+pub mod watcher;

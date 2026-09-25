@@ -2,6 +2,7 @@
 mod execution;
 pub use execution::{ExecutionGrant, ExecutionInput, ExecutionSource};
 mod cache;
+mod catalog;
 mod metadata;
 mod methods;
 mod params;

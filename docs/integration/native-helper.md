@@ -1,17 +1,17 @@
 # Native helper and SDK bridge
 
-The native binary now runs the Rust service. It does not substitute the showcase's synthetic service.
+The standalone helper, embedded Rust facade, shared broker, and live showroom use the same native service. The separate synthetic demo never substitutes for a failed native connection.
 
 ## Build and verify
 
 ```sh
-npm install --ignore-scripts
-cargo build --locked -p lai-cli
+npm ci --ignore-scripts
 npm run build
+cargo build --locked -p lai-cli
 python scripts/test_native_bridge.py
 ```
 
-The verification command launches the actual helper from Node and Python with synthetic temporary home directories. It performs native filesystem discovery, concurrent requests, permission denial, and revocation. No provider client or credential is needed.
+Bridge tests run Node/Python against the actual executable with isolated temporary homes. They check discovery, concurrent requests, permission denial, broker ownership, and revocation without needing a provider account.
 
 ## Direct CLI
 
@@ -20,15 +20,13 @@ local-ai-kit scan --json
 local-ai-kit serve --stdio --allow-passive-discovery
 ```
 
-Serving alone grants no scanning permission. SDK import, handshake, and snapshot reads do not scan. `--allow-passive-discovery` authorizes metadata-only requests from the process owner. `--home ABSOLUTE_DIRECTORY` isolates all roots, PATH, and home overrides; useful for deterministic examples/tests. It never falls back to a real home.
+Imports, handshake, and cached snapshot reads do not scan. `--allow-passive-discovery` permits metadata-only requests. `--home ABSOLUTE_DIRECTORY` isolates roots/PATH/home overrides for deterministic tests and never falls back to the real home.
 
-The stream is newline-delimited JSON-RPC 2.0 over UTF-8. Negotiate `runtime.handshake` before other operations. A request ID is required for work; notifications cannot initiate scans. Frames and concurrent requests are bounded. stdout contains only protocol messages. Caller identity comes from the native host, not request parameters. There is no HTTP listener or browser pairing in this increment.
+Stdio uses bounded UTF-8 newline JSON-RPC. The host supplies caller identity; request parameters cannot grant permissions or choose an arbitrary executable. Handshake precedes other operations. Subscribe to native events only when advertised. Large model catalogs can be read with [bounded pages](catalog-pages.md).
 
-The handshake advertises only implemented methods. Agent execution and event subscriptions remain unavailable; clients must not imply they work because the SDK has a corresponding method wrapper.
+## TypeScript
 
-## Node
-
-```js
+```ts
 import { createLocalAI } from '@local-ai-kit/sdk';
 import { openStdioTransport } from '@local-ai-kit/sdk/node';
 const transport = await openStdioTransport({
@@ -38,12 +36,11 @@ const transport = await openStdioTransport({
 const ai = await createLocalAI({ transport });
 try {
   await ai.discovery.refresh({ level: 'passive' });
-  const snapshot = await ai.snapshot.get();
-  console.log(snapshot.connections);
+  console.log(await ai.connections.list());
 } finally { await ai.close(); }
 ```
 
-Use the full `.exe` path on Windows. No shell wrapper is needed to launch this native helper.
+Use the full `.exe` path on Windows. The package's optional `openBundledTransport` verifies a local distribution manifest before launching; no shell or implicit download is required.
 
 ## Python
 
@@ -54,13 +51,13 @@ with Client.from_stdio(
     args=['serve', '--stdio', '--allow-passive-discovery'],
 ) as ai:
     ai.discovery.refresh({'level': 'passive'})
-    print(ai.snapshot.get()['connections'])
+    print(ai.connections.list())
 ```
 
-## Current evidence
+## Metadata, execution, and browser access
 
-Windows x64: Rust 1.97.1, Node 22.20.0, Python 3.13.7. 71 Rust tests plus six Node/Python-to-native integration tests pass. A single passive scan of the authorized development PC found 21 client/profile connections across nine providers in approximately 34 ms including process startup. This is one observation, not a percentile benchmark or a count of active subscriptions. Accounts, plans, usage, and models remain unprobed by passive scanning.
+Provider metadata requires a separate host flag, for example `--allow-metadata codex`. Actual turns additionally require `--allow-execution codex --workspace ABSOLUTE_WORKSPACE` and explicit session/turn requests. A metadata probe is not an inference request. Inspect the [support matrix](../adapters/SUPPORT-MATRIX.md) for each provider's actual operations.
 
-## Codex metadata enrichment
+HTTP/SSE and browser pairing are implemented. Use `serve --http --assets ABSOLUTE_DEMO_DIRECTORY --allow-passive-discovery`; enter the one-use code printed by the host. See the [live demo guide](live-demo.md), [distribution guide](distribution.md), and [artifact interface](artifacts.md). Closing a client releases its own scopes, not another application's broker session.
 
-`--allow-codex-metadata` separately authorizes the SDK's `connections.probe({connectionId})` method. It is not implied by passive discovery permission. See [Codex adapter](../adapters/codex.md) and [Python example](../../examples/python/inspect_codex.py). The installed client handles its own sign-in; the adapter performs no generation.
+Current results live in the [qualification records](../qualification/). Earlier test counts were incremental checkpoints, not current totals. Passive inventory never reports an active subscription merely from a local installation. Native Google/Grok execution, automatic service-level watch refresh, and persistent cross-process resumption remain explicitly unavailable where documented.

@@ -10,6 +10,7 @@ const METHODS: &[&str] = &[
     "snapshot.get",
     "connections.list",
     "models.list",
+    "models.page",
     "usage.read",
     "capabilities.read",
     "adapters.list",
@@ -107,6 +108,7 @@ impl NativeService {
                 params::allow(p, &[])?;
                 Ok(json!(snapshot.connections))
             }
+            "models.page" => crate::catalog::page(snapshot, client, p),
             "models.list" => {
                 params::allow(p, &["routeId"])?;
                 let route = params::text(p, "routeId")?;

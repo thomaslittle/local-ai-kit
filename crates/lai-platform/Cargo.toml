@@ -8,6 +8,7 @@ publish = false
 
 [dependencies]
 lai-contracts = { path = "../lai-contracts" }
+notify = { version = "=8.2.0", default-features = false, features = ["macos_kqueue"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

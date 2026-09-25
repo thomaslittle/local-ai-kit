@@ -4,6 +4,8 @@ pub use adapters::*;
 mod api;
 pub use api::*;
 mod artifacts;
+mod catalog;
+pub use catalog::*;
 mod errors;
 pub use artifacts::*;
 mod events;

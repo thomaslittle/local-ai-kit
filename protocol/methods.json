@@ -1073,6 +1073,9 @@
         "models.list": {
           "$ref": "#/$defs/ModelsParams"
         },
+        "models.page": {
+          "$ref": "#/$defs/ModelPageParams"
+        },
         "runtime.closeClient": {
           "$ref": "#/$defs/EmptyParams"
         },
@@ -1123,6 +1126,7 @@
         "connections.list",
         "connections.probe",
         "models.list",
+        "models.page",
         "usage.read",
         "capabilities.read",
         "selection.resolve",
@@ -1189,6 +1193,9 @@
           },
           "type": "array"
         },
+        "models.page": {
+          "$ref": "#/$defs/ModelPage"
+        },
         "runtime.closeClient": true,
         "runtime.handshake": {
           "$ref": "#/$defs/HandshakeResult"
@@ -1239,6 +1246,7 @@
         "connections.list",
         "connections.probe",
         "models.list",
+        "models.page",
         "usage.read",
         "capabilities.read",
         "selection.resolve",
@@ -1309,6 +1317,61 @@
         "options",
         "contextWindow"
       ],
+      "type": "object"
+    },
+    "ModelPage": {
+      "additionalProperties": false,
+      "properties": {
+        "models": {
+          "items": {
+            "$ref": "#/$defs/Model"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "revision",
+        "models"
+      ],
+      "type": "object"
+    },
+    "ModelPageParams": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "routeId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
       "type": "object"
     },
     "ModelParams": {
@@ -2833,6 +2896,16 @@
           "$ref": "#/$defs/Model"
         },
         "type": "array"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "models.page",
+      "paramsSchema": {
+        "$ref": "#/$defs/ModelPageParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/ModelPage"
       }
     },
     {

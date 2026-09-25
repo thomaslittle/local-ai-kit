@@ -3,7 +3,7 @@ import type { CallOptions, Handshake, Transport } from './types.ts';
 import type { MethodInputs, MethodOutputs, Snapshot, Event } from './generated.ts';
 const families = {
   runtime: ['health', 'closeClient'], discovery: ['refresh', 'cancel'], snapshot: ['get'],
-  connections: ['list', 'setupInstructions', 'authenticate', 'probe'], models: ['list'], usage: ['read'], capabilities: ['read'],
+  connections: ['list', 'setupInstructions', 'authenticate', 'probe'], models: ['list', 'page'], usage: ['read'], capabilities: ['read'],
   selection: ['resolve', 'validate'], grants: ['request', 'list', 'revoke'],
   sessions: ['create', 'get', 'updateOptions', 'close'], turns: ['start', 'cancel'], approvals: ['respond'],
   artifacts: ['read'], diagnostics: ['report'], adapters: ['list'],

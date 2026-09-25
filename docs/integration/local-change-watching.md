@@ -1,0 +1,11 @@
+# Local metadata change notifications
+
+`lai_platform::watcher::MetadataWatcher` is an opt-in Rust primitive for host applications. Construct it only after the host has obtained permission to observe the selected local profile directories. Imports and ordinary passive discovery do not construct a watcher.
+
+The watcher uses OS notifications without recursively traversing profiles. Only explicit known metadata filenames produce notifications; unrelated session logs are ignored. Callback payloads contain the host's opaque connection IDs, not paths or file contents. A callback means cached evidence should be invalidated—not that authentication, plan, or quota has been verified. It must never trigger inference.
+
+The watcher rejects missing, relative, and symlink roots; dropping it disables subsequent callbacks. Windows tests cover watched-file modification/deletion, ignored logs, lifecycle shutdown, and invalid roots. Backend errors invalidate observed IDs rather than fabricating a healthy state. Native OS events are not a guarantee on remote/network filesystems.
+
+**Service integration is still pending.** The write connecting these notifications to `NativeService` was blocked by the tool boundary and was not retried through another tool. Two service-level acceptance tests are retained as explicitly ignored with that reason. `discovery.watch` is not advertised, and the CLI/demo must not be described as automatically refreshing account evidence. Existing explicit refresh and metadata TTLs continue to operate normally.
+
+Implementation source: `crates/lai-platform/src/watcher.rs`. Tests: `crates/lai-platform/tests/watcher.rs`. Upstream interface: https://docs.rs/notify/8.2.0/notify/.
