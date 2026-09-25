@@ -142,3 +142,11 @@ export async function openBrokerTransport(options){
  try{const result=await transport.request('broker.authenticate',{token:options.token});if(result?.authenticated!==true)throw failCode('LOCAL_ACCESS_DENIED');return transport;}
  catch(error){await transport.close();throw error;}
 }
+
+export {resolveBundledBinary} from './bundle.mjs';
+/** Explicitly verify and launch an extracted local release bundle. No download occurs. */
+export async function openBundledTransport({bundleDirectory,...options}) {
+ const {resolveBundledBinary}=await import('./bundle.mjs');
+ const executable=await resolveBundledBinary(bundleDirectory);
+ return openStdioTransport({...options,executable});
+}

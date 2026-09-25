@@ -39,3 +39,8 @@ Thumbs.db
 .verification/
 .worktrees/
 .superpowers/
+
+# Optional example/toolchain build products
+examples/**/bin/
+examples/**/obj/
+.venv-build/

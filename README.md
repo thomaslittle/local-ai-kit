@@ -1,91 +1,100 @@
 # Local AI Kit
 
-**One integration to discover, inspect, select, and use locally configured AI access.**
+**Discover, inspect, select, and use locally configured AI access through one integration.**
 
-A standalone Rust-centered toolkit with a native helper, JSON-RPC protocol, TypeScript/Python SDKs, and framework-neutral model selection.
+A Rust implementation with an embedded library, standalone native helper, authenticated local transports, TypeScript/Python SDKs, and optional React selectors. Applications do not need to reproduce client-specific paths, metadata parsers, or streaming protocols.
 
-> **Current status: working native discovery + Codex metadata alpha.** The SDK-to-native bridge is implemented and tested. Codex account/plan/model/effort/usage metadata has been exercised through an installed Windows client. Native generation and the other execution adapters are not finished. The selector showcase remains explicitly synthetic. This is not a release-ready implementation of the entire 18-task plan.
+> **Unpublished developer alpha.** The native service, supported execution adapters, SDKs, reusable selectors, and installable bundles work. Provider coverage is operation-specific: Google/Grok native execution is not registered, and no universal subscription access or cross-process session resumption is claimed. Read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) and [qualification records](docs/qualification/).
 
-## Run the native implementation
+## What is included
 
-Requires a Rust toolchain, Node.js, and Python for development. Registry packages and cross-platform native distributions have not been published.
+| Piece | Integration surface |
+|---|---|
+| Native engine | Passive discovery; account/plan/model/usage evidence; route-aware selection; granted sessions, streaming, approvals, cancellation, and scoped result artifacts. |
+| Rust facade | [`lai-kit`](crates/lai-kit/) embeds the same implementation without a separate process. |
+| TypeScript and Python | Thin clients for the actual native service, generated domain types, bounded streaming, cancellation, and verified bundle resolution. |
+| Local transports | Stdio JSON-RPC, paired HTTP/SSE, per-application Unix socket/Windows named-pipe broker, and opt-in browser Native Messaging. |
+| Optional UI | Framework-neutral selection plus React hooks and eight reusable selector layouts, with native model options. |
+| Developer tools | Live/synthetic showroom, generated OpenAPI/JSON Schema, contribution guidance, package smoke tests, and measured benchmarks. |
+
+Finding an installation does **not** establish an active subscription. Unknown plans, usage, capabilities, and billing remain unknown. The installed client owns its credentials; subscription tokens are never turned into generic API keys. Imports never scan, launch clients, contact providers, or generate output.
+
+## Build from source
+
+Development requires the pinned Rust toolchain, Node 22.16+, and Python 3.11+.
 
 ```sh
 npm ci --ignore-scripts
 npm run build
 cargo build --locked -p lai-cli
-python scripts/test_native_bridge.py
 ```
 
-The binary is `target/debug/local-ai-kit` (`local-ai-kit.exe` on Windows).
+The executable is `target/debug/local-ai-kit` (`.exe` on Windows). `scan --json` performs explicit metadata-only filesystem discovery. An empty or unverified account result is not replaced with sample data.
+
+## Run the showroom
+
+For a no-account demonstration of every selector:
 
 ```sh
-local-ai-kit scan --json
-local-ai-kit serve --stdio --allow-passive-discovery
+npm run demo
 ```
 
-Passive scanning checks supported local installation/profile metadata. It does not read tokens, verify subscriptions, start provider clients, contact providers, or run inference. A detected client is not an authenticated account.
+Open `http://127.0.0.1:4499`. This mode is explicitly **synthetic** and cannot inspect credentials or call a provider.
 
-## Inspect an existing Codex account
-
-The [public Python SDK example](examples/python/inspect_codex.py) works through the actual native service. Explicitly authorize the native client metadata probe:
+For the native, paired demo on Windows:
 
 ```powershell
-python examples/python/inspect_codex.py --binary ./target/debug/local-ai-kit.exe --allow-metadata
+npm run build:demo
+.\target\debug\local-ai-kit.exe serve --http --assets "$PWD\apps\demo\dist" --allow-passive-discovery --allow-metadata codex
 ```
 
-Without `--allow-metadata`, the example only performs passive discovery. `--connection ID` selects a specific discovered profile. The native helper separately enforces `--allow-codex-metadata`; RPC callers cannot grant this to themselves.
+On Unix, use `./target/debug/local-ai-kit` and an absolute path to `apps/demo/dist`. Enter the printed one-use pairing code, then explicitly scan or check a connection. The metadata grant above allows Codex inspection, not inference. Actual turns additionally require a provider execution grant, a named workspace, and an explicit UI action. See the [live demo guide](docs/integration/live-demo.md).
 
-Read the [native helper guide](docs/integration/native-helper.md) and [Codex adapter details](docs/adapters/codex.md). The installed client owns its login; the package never turns subscription tokens into generic API keys. No generation request is submitted by this example. Sensitive billing/permission settings remain gated.
+## Use the packages
 
-## What is implemented
+The [distribution guide](docs/integration/distribution.md) shows how to build a checksummed native bundle and install its four npm tarballs or Python wheel. Registry publication and signing are separate, unperformed operations. The standalone native executables need neither Node nor Python.
 
-| Area | Current evidence |
-| --- | --- |
-| Rust contracts/platform/core/service | Typed evidence, bounded reads, route identity, scoped projections, refresh deduplication, selection validation, and revocation; Windows tests. |
-| Passive inventory | Codex, Claude Code, Gemini CLI, Antigravity, Grok, OpenCode, Cursor, Ollama, LM Studio installation/profile patterns. Authentication remains unchecked until separately probed. |
-| Native helper | Real `scan --json` and bounded concurrent stdio JSON-RPC with required handshake and explicit discovery authorization. |
-| Codex metadata | Account/plan, dynamic models, native effort/service-tier choices, input modalities, percent quota windows, cached probes and backoff; installed Windows client qualified without inference. |
-| SDKs | TypeScript HTTP/SSE/stdio and Python async/sync stdio. Both have tests against the real compiled native helper, not only fake peers. |
-| Selection engine | Route-aware search/filter/grouping, option validation, reconciliation, and shared-quota presentation. |
-| Showcase | Eight selector layouts, including the vertical provider rail, plus synthetic connection/usage/session demonstrations. |
+```ts
+import { createLocalAI } from '@local-ai-kit/sdk';
+import { openBundledTransport } from '@local-ai-kit/sdk/node';
+const transport = await openBundledTransport({
+  bundleDirectory: '/absolute/path/to/extracted/bundle',
+  args: ['serve', '--stdio', '--allow-passive-discovery'],
+});
+const ai = await createLocalAI({ transport });
+try {
+  await ai.discovery.refresh({ level: 'passive' });
+  console.log(await ai.connections.list());
+} finally { await ai.close(); }
+```
 
-## Selector showcase
+Python and Rust examples use the same normalized service. [C# HTTP](examples/dotnet-http/), [React](examples/react/), [Tauri](examples/tauri/), and [browser extension](examples/browser-extension/) examples show optional host integration; check each example's qualification, not just its source presence.
+
+The [React package](packages/react/) supplies hooks. The [UI package](packages/ui-react/) supplies provider rail, compact, command-palette, capability-first, comparison, allowance-aware, preset, and mobile selectors. Both are optional; the SDK and native core do not require React.
+
+## Verify and package
+
+Install Python test/build dependencies in a project virtual environment using `scripts/requirements-build.txt`, and install Playwright Chromium with `npx --no-install playwright install chromium`.
 
 ```sh
-npm run build
-node apps/demo/server.mjs --fixture
+python scripts/verify.py --profile all
+python scripts/verify.py --profile release
 ```
 
-Open `http://127.0.0.1:4499`. The `--fixture` label is intentional. This preview does not silently substitute sample accounts for failed real discovery. The native stdio bridge does not yet provide the native HTTP/SSE host needed to connect this browser showcase to live data.
+The release profile additionally requires a .NET 8 SDK for the plain HTTP example. It runs lint, adapter conformance, checksummed packaging, isolated tarball/wheel consumers, and a 60-second idle benchmark. Nothing publishes packages or spends an AI allowance. Results are saved in `.verification/` and bundles in `dist/release/`; manifests identify the exact source commit and any dirty working tree.
 
-## Verification
+Automated browser checks cover interaction, live pairing, and common WCAG A/AA violations. They are not a complete manual accessibility certification. Platform and live-account qualification remain distinct from unit/fixture test results.
 
-```sh
-cargo fmt --all --check
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-targets
-npm run test:unit
-python -m unittest discover -s packages/sdk-python/tests -v
-python scripts/test_native_bridge.py
-```
+## Documentation and limitations
 
-See [qualification records](docs/qualification/) for exact tested scope. Windows execution, synthetic fixtures, and installed-account metadata are distinct evidence. macOS/Linux live qualification, native generation, approvals/resumption, shared multi-app broker, remaining adapters, native HTTP/SSE, React packages, generated SDK domain types, release packaging, and the full performance/security gates remain unfinished.
+Start with the [support matrix](docs/adapters/SUPPORT-MATRIX.md), [native helper](docs/integration/native-helper.md), [generated API](docs/integration/generated-api.md), [result artifacts](docs/integration/artifacts.md), and [adapter authoring guide](docs/adapters/AUTHORING.md).
 
-## Continue implementation
+Google/Grok native execution integration remains unavailable following the recorded tool safety boundary. Existing launch recipes and ACP tests do not establish a working subscription connector. Cursor exposes only separately authorized, stale non-secret cached metadata. Direct API routes never substitute for subscription access without explicit billing permission. Persistent cross-process resumption, exhaustive provider quota metadata, automatic file-watch refresh, and macOS qualification are not claimed by this alpha.
 
-Work on `feature/initial-implementation`, not `main`. Read [AGENTS.md](AGENTS.md) and the [current checkpoint](docs/handoffs/RESUME.md), then the [build instructions](CODEX-BUILD-PROMPT.md). Resume existing code; do not restart the original audit or recreate the implemented SDKs.
+The original [architecture](docs/superpowers/specs/2026-09-24-local-ai-kit-design.md) and [18-task plan](docs/superpowers/plans/2026-09-24-local-ai-kit-implementation.md) remain the full intended scope, not a checklist retrospectively declared complete. [RESUME.md](docs/handoffs/RESUME.md) and the [implementation ledger](docs/implementation/LEDGER.md) distinguish implemented work from unresolved scope.
 
-| Document | Purpose |
-| --- | --- |
-| [Architecture specification](docs/superpowers/specs/2026-09-24-local-ai-kit-design.md) | Product boundaries, identities, evidence, quotas, SDKs, security, demo, selectors. |
-| [18-task implementation plan](docs/superpowers/plans/2026-09-24-local-ai-kit-implementation.md) | Dependency-ordered tasks and release gates, not a claim that all tasks are complete. |
-| [Source audit](SOURCE-AUDIT.md) | T3 Code, CodeNotch, Prmptr, and protocol references. |
-| [Implementation ledger](docs/implementation/LEDGER.md) | Incremental work and technical decisions. |
-| [Resume checkpoint](docs/handoffs/RESUME.md) | Exact current state and next actions. |
+## License
 
-## Licensing and scope
+Original code uses [MIT](LICENSE). Preserve [third-party notices](THIRD_PARTY_NOTICES.md). The repository is private and the working package name is not an availability-cleared public brand. No registry release, notarization, signed binary, or hosted credential service is implied.
 
-The working name `local-ai-kit` is not an availability-cleared public package brand. The repository remains private. Original material uses the [MIT license](LICENSE); reused code must retain its notices. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [SECURITY.md](SECURITY.md), and [CONTRIBUTING.md](CONTRIBUTING.md).
-
-The toolkit is independent of Maps and image enhancement. `HANDOFF-MANIFEST.json` is a historical planning-bootstrap manifest, not the hash manifest for the evolving implementation.
+This toolkit is independent of Maps and image enhancement. `HANDOFF-MANIFEST.json` records the historical planning bootstrap only; current distribution checksums live in each build's `manifest.json`.

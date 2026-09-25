@@ -1,56 +1,30 @@
-# Resume - Local AI Kit
+# Resume — Local AI Kit
 
-Branch: `feature/initial-implementation`; main unchanged. Resolve current local and remote HEAD before working.
+Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 
-## Current continuation
+## Current implementation
 
-The real Rust session engine, Codex native execution driver, and permission-scoped execution service are now implemented and tested against synthetic native peers. Existing discovery, Codex metadata, Node/Python SDKs, and headless selectors remain intact. New tests: eight runtime lifecycle tests, six Codex execution tests, and five public-service execution tests. No live inference has been submitted.
+The native service is connected end to end to the TypeScript/Python SDKs, embedded Rust facade, native-served paired demo, shared broker, and Native Messaging bridge. Supported Codex/Claude/OpenCode/local/API text routes use the real session engine. Generated domain types/OpenAPI, scoped artifacts, owner cleanup, bundle resolution, four npm packages, Python wheel, and the eight reusable React selectors are implemented.
 
-Ephemeral Codex threads preserve in-process conversations but do not claim persisted cross-process resumption. Session creation validates account/catalog metadata; only an explicit turn starts inference. A host-owned execution grant controls named workspaces, writes, paid settings, and native request review. RPC cannot set these grants or choose arbitrary executables.
+The former palette failure is fixed in `af96d05`: exact account phrases rank before incidental substrings. All 13 showroom browser interaction tests pass. An additional 22 automated accessibility checks cover the showroom and reusable React components. The C# HTTP example has now been compiled and exercised against an actual isolated native host, not just inspected as source.
 
-## Active next work
+See `docs/adapters/SUPPORT-MATRIX.md`, `docs/implementation/LEDGER.md`, `docs/qualification/`, and `README.md` for operation-level support and runnable commands.
 
-Connect the native event subscriptions and HTTP/SSE bridge, wire the CLI execution factory and explicit browser pairing, and use the existing showcase against live native data. Then continue the remaining adapters, generated types, reusable React packages, packaging, and platform qualification from the original plan. Do not recreate implemented discovery/SDK/UI slices.
+## Verification and packaging
 
-## Existing evidence
+- `python scripts/verify.py --profile all` runs the native, SDK, generator, component, protocol-bridge, package-tool, browser, and accessibility checks.
+- `python scripts/verify.py --profile release` additionally requires a .NET 8 SDK, runs C# integration and strict lint/conformance, builds a checksummed bundle, tests clean tarball/wheel consumers, and measures a 60-second idle baseline.
+- Build-only Python dependencies are in `scripts/requirements-build.txt`; use a project virtual environment. Browser tests use Playwright Chromium. No normal test requires a paid account.
+- On the development PC, the isolated Python environment is `.verification/build-tools/Scripts/python.exe`; the optional .NET SDK is `.verification/dotnet/dotnet.exe`.
+- The current bundle pointer is `dist/release/latest.json`. Its manifest records source SHA, platform, profile, dirty state, and file hashes. `.verification/verify-last.json` and the per-check logs record actual results.
+- Do not count an older benchmark or a dirty development bundle as qualification of a later clean commit.
 
-See `docs/qualification/2026-09-24-codex-metadata.md` for the previous 209-test checkpoint and live non-generative Codex metadata check. See `docs/qualification/2026-09-24-native-execution.md` for this continuation. The full original 18-task release candidate is not yet complete. No merge to main, publication, additional paid coding agents, or unrestricted credential export is authorized.
+## Unresolved original scope — do not relabel it complete
 
-## Native HTTP and live demo increment
+Native Google/Grok client-to-execution glue was blocked by the tool safety boundary and was not bypassed. Those executors remain unregistered. ACP authentication and launch-recipe fixtures are not proof of a working subscription route. Do not restore ignored incomplete sketches or expose an unrestricted native-policy mode as a supposed read-only sandbox. See `docs/adapters/native-google-grok-status.md`.
 
-The CLI now supports loopback HTTP, explicit single-use pairing, a native-served demo, and separately authorized Codex execution in a named workspace. Stdio event subscriptions and native SSE use the real session engine. Node/Python receive typed event-gap errors without losing unrelated RPC requests. The actual browser displayed real Codex models using a non-generative metadata check. See `docs/integration/live-demo.md` and `docs/qualification/2026-09-24-native-http-demo.md`.
+Automatic filesystem-watch refresh, the full incremental activity/usage-reader tranche, exhaustive provider credit metadata, and durable cross-process session resumption remain outside the implemented alpha. The original 18-task plan remains broader than this checkpoint. Unknown account fields are intentional, not fabricated successful discovery.
 
-Next: expand shared native adapters, strengthen process-tree cleanup and session freshness handling, generate SDK/domain contracts and API documentation, complete reusable React controls, and qualify packaged artifacts. The full release candidate remains incomplete; do not restart the already connected SDK/native/browser chain.
+Windows qualification and native Ubuntu execution are separate records. GitHub Actions has been failing before any job steps run; a workflow matrix is not macOS evidence. Tauri currently has an integration guide and compiled embedded-Rust pattern, not a separately qualified Tauri application.
 
-## Additional native provider
-Claude Code now has native control metadata and text-only structured execution, alongside Codex. Use repeatable `--allow-metadata PROVIDER` and `--allow-execution PROVIDER` flags. See `docs/adapters/claude-code.md`. No live inference was submitted. Shared ACP, HTTP providers/gateways and the remaining release/SDK/UI requirements are next.
-
-## Gateway route boundary
-Pending multi-provider gateway metadata is integrated with route-scoped model IDs, vendor identity, and billing. Extra routes remain execution-disabled unless an executor is registered. The gateway regression and full Windows native baseline pass. Next: shared ACP engine and native Google/Grok adapters.
-
-## Shared ACP core
-ACP parsing and process/runtime integration are now implemented. Nine catalog tests and eight synthetic-child execution tests pass, alongside the full Windows workspace. Grok native initialization/session metadata was checked without inference. Next: wire provider-specific launch/account/usage evidence, then OpenCode/local APIs, SDK generated contracts, reusable React components, and release qualification. See docs/adapters/acp.md.
-
-## Bounded HTTP foundation
-Implemented the pending HTTP client and verified all 189 Windows native tests. Grok metadata is wired; native execution remains gated separately. Next: registered local/API endpoints, provider-specific execution, generated SDK contracts, React controls, and packaged release checks.
-
-## HTTP provider routes
-Seven HTTP protocol families now implement catalog normalization and text sessions through the existing runtime. The CLI accepts explicit endpoint files and provider grants; local runtimes use known loopback defaults only after probing permission. All 207 Windows Rust tests passed before the current checkpoint. API input capability assertions are explicitly host-declared when the model catalog lacks evidence. Next: OpenCode and native Google/Grok execution, generated contracts, React packages, host examples, packaging and qualification. See docs/adapters/http-providers.md.
-
-## OpenCode gateway
-Implemented distinct upstream catalogs/native variants and permission-verified text sessions through local HTTP/SSE. Config supports kind opencode with explicit providerBilling declarations when the gateway omits billing evidence. Session cleanup never deletes user-owned conversations. Next: remaining native clients, generated contracts, reusable React controls, host packaging and platform qualification.
-
-## Canonical SDK and API generation
-Rust owns request/response maps as well as domain records. Deterministic generation now creates TypeScript/Python types, Python client stubs, OpenAPI and the JSON-RPC manifest; drift verification is implemented. Runtime health and adapter coverage distinguish implementation from user grants. Next: reusable React controls, remaining native clients and host integration/packaging qualification.
-
-## Optional reusable React packages
-Added side-effect-free immutable SnapshotStore, React external-store bindings, and eight reusable styled selector variants. Model lists virtualize 5,000 entries and preserve route identity; sensitive options require a host callback and stale approvals are rejected. Node SDK 39, selector 24, React/components 13 tests pass. See packages/react, packages/ui-react, examples/react, and the React qualification report. Remaining: native client coverage/host transports, clean-package/platform and security/performance qualification.
-
-## Shared native transports
-Implemented owner-protected native IPC broker, single-use per-app credentials, Node/Python broker adapters, browser Native Messaging binary and SDK transport, explicit host preparation/registration script, and generic extension example. Native workspace reached 240 passing tests; latest complete run is recorded in qualification logs. Continue remaining provider launch metadata, artifact/reporting, installable release/consumer checks, UI qualification and source/status matrix; no paid inference used.
-
-## Owned artifacts
-Added expiring, owner/session-scoped result storage and public artifacts.read across native transports. Completed text turns emit response.txt; binary adapter results use the same API. Six runtime, three store, and one service test were added; complete Windows Rust suite reached 250 passing tests. No arbitrary filesystem path reads, persistent output, or paid inference. Packaging and remaining provider work continue in docs/implementation/CONTINUATION.md.
-
-## Embedded facade and release consumers
-The lai-kit crate centralizes provider assembly for embedded Rust and CLI consumers. Runtime closeClient releases a single app without exhausting long-lived broker capacity. Release build, manifest/integrity checks, JS/Python bundle resolvers, and clean tarball/wheel consumer tests are implemented; a first Windows release bundle passed isolated installs and native scans. Final source-qualified bundles must be rebuilt after commits; no registry publication or signing is claimed.
+No registry publication, OS signing, main-branch merge, paid inference, additional coding agents, token export, account cycling, or unrelated client configuration changes are authorized by these implementation tests. Preserve those boundaries while completing any remaining work.

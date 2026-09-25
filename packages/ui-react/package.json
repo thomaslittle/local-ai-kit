@@ -13,7 +13,9 @@
   },
   "files": [
     "dist",
-    "styles.css"
+    "styles.css",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "sideEffects": [
     "./styles.css"

@@ -5,11 +5,30 @@
   "type": "module",
   "description": "Thin permission-aware Local AI Kit protocol client",
   "exports": {
-    ".": {"types": "./dist/index.d.ts", "default": "./dist/index.js"},
-    "./node": {"types": "./node/index.d.mts", "default": "./node/index.mjs"}
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./node/index.d.mts",
+      "default": "./node/index.mjs"
+    }
   },
-  "files": ["dist", "node"],
-  "scripts": {"build": "tsc -p tsconfig.json", "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs"},
-  "devDependencies": {"typescript": "5.8.3"},
-  "engines": {"node": ">=22.16"}
+  "files": [
+    "dist",
+    "node",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=22.16"
+  },
+  "license": "MIT"
 }

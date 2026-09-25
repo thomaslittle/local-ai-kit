@@ -74,3 +74,9 @@ Embedded Rust facade and lifecycle: one lai-kit import now assembles the shared 
 ## Continuation: selector regression resolved
 
 Resumed existing worktree at 978824642e9ea26ad7ecbdf1b9400567173ae0f5; remote matched and all pending work was retained. The palette's `work workspace` query treated the `work` substring in every `workspace` equally. Added an exact-phrase relevance pass in the shared headless selector, retaining broad matches, stable tie order, billing preference, and route identity. New focused regression failed before the change. All 27 selector tests and all 13 real Chromium showroom tests now pass; all four TypeScript package builds pass. Previously blocked native execution glue remains unmodified/unavailable; no inference or credential export is authorized by these tests.
+
+## Distribution and additional qualification
+
+The full Windows `all` profile passed with 291 Rust workspace tests, 27 selector tests, SDK and generated-contract suites, real native-helper/broker bridges, 13 showroom interactions, two native browser-pairing checks, and 22 automated accessibility checks. The plain HTTP C# example separately built and completed a real pairing/scan/close flow using .NET 8.0.425. Added these checks to the release workflow and kept all package registries private/unpublished. Automatic accessibility tests do not certify manual screen-reader behavior.
+
+GitHub Actions run 36082359183 failed with no executed job steps; the available job summary does not explain the underlying runner failure. Do not present it as a passing Linux/macOS CI run or infer a billing cause. Local Ubuntu qualification is separate and must name the exact source snapshot tested.

@@ -1,4 +1,4 @@
-name: Build and contracts
+name: Native SDK and package verification
 on:
   push:
     branches: [main, 'feature/**']
@@ -10,24 +10,58 @@ concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  rust:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      CARGO_INCREMENTAL: '0'
+      CARGO_BUILD_JOBS: '2'
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
       - name: Install pinned Rust
         run: rustup toolchain install 1.97.1 --profile minimal --component rustfmt --component clippy
-      - name: Test workspace
-        run: cargo test --workspace --all-targets
-      - name: Generate schema
+      - name: Install build-only dependencies
         run: |
-          mkdir -p protocol
-          cargo run -q -p lai-contracts --example schema > protocol/domain.schema.json
-      - name: Preserve verification artifacts
+          npm ci --ignore-scripts
+          python -m pip install -r scripts/requirements-build.txt
+          npx --no-install playwright install --with-deps chromium
+      - name: Full deterministic verification (no provider inference)
+        run: python scripts/verify.py --profile all
+      - name: Plain HTTP C# consumer
+        run: python scripts/test_dotnet.py
+      - name: Formatting and lint
+        run: |
+          cargo fmt --all --check
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Build local artifacts and exercise clean consumers
+        run: |
+          python scripts/build_release.py --profile release
+          python scripts/package_smoke.py
+      - name: Preserve actual evidence and artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: contract-evidence
+          name: verification-${{ matrix.os }}
           path: |
-            Cargo.lock
-            protocol/domain.schema.json
+            .verification/verify-last.json
+            .verification/package-smoke.json
+            .verification/adapter-conformance.json
+            dist/release/*.zip
+            dist/release/*.sha256
+            dist/release/latest.json
+          if-no-files-found: warn

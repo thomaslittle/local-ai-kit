@@ -1,1 +1,25 @@
-{"name":"@local-ai-kit/selector-core","version":"0.1.0-alpha.1","private":true,"type":"module","description":"Side-effect-free route-aware AI selection logic","exports":"./dist/index.js","types":"./dist/index.d.ts","files":["dist"],"scripts":{"build":"tsc -p tsconfig.json","test":"node --experimental-strip-types --test tests/*.test.mjs"},"devDependencies":{"typescript":"5.8.3"},"engines":{"node":">=22.16"}}
+{
+  "name": "@local-ai-kit/selector-core",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "description": "Side-effect-free route-aware AI selection logic",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=22.16"
+  },
+  "license": "MIT"
+}

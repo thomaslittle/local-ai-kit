@@ -18,16 +18,22 @@
     "test:sdk": "python scripts/verify.py --profile sdk-typescript",
     "typecheck": "npm run build",
     "check:generated": "python scripts/check_generated.py",
-    "test:react": "npm run build && node --test packages/react/tests/*.test.mjs packages/ui-react/tests/*.test.mjs"
+    "test:react": "npm run build && node --test packages/react/tests/*.test.mjs packages/ui-react/tests/*.test.mjs",
+    "test": "python scripts/verify.py --profile all",
+    "test:ui": "python scripts/verify.py --profile ui",
+    "test:a11y": "npm run build && node --test scripts/test_accessibility.mjs scripts/test_component_accessibility.mjs",
+    "build:demo": "npm run build && node scripts/build_demo.mjs",
+    "demo": "node apps/demo/server.mjs --fixture"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.63.0",
-    "typescript": "5.8.3",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "esbuild": "0.25.12",
     "jsdom": "26.1.0",
-    "esbuild": "0.25.12"
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "5.8.3"
   }
 }

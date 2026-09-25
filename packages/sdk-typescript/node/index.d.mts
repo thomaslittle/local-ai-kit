@@ -14,3 +14,7 @@ export declare function openStdioTransport(options: StdioOptions): Promise<Trans
 
 export interface BrokerOptions extends Omit<StdioOptions,"args"> { address: string; token: string }
 export declare function openBrokerTransport(options: BrokerOptions): Promise<Transport>;
+
+export declare function resolveBundledBinary(directory: string): Promise<string>;
+export interface BundleOptions extends Omit<StdioOptions,"executable"> { bundleDirectory: string }
+export declare function openBundledTransport(options: BundleOptions): Promise<Transport>;

@@ -1,0 +1,25 @@
+# Local AI Kit threat model
+
+## Trusted boundaries
+
+The installed native helper and embedding application configure policy. Renderers, browser pages, model output, provider messages, and imported catalogs are untrusted. File presence is metadata, not a grant. Native provider clients retain their own authentication and tool policies; this toolkit is not a universal OS sandbox.
+
+## Controls
+
+Stdio is owned by its parent application. Shared broker sockets/pipes and loopback HTTP require explicit pairing; grants are not editable through an arbitrary RPC payload. HTTP checks origin and Host, rejects query-string credentials, bounds messages, and isolates each application identity. A closed app releases only its sessions and results.
+
+Account/profile/route/model/billing identities remain distinct. Account failure must not be hidden by old usage. Backend denial of included usage cannot be overridden by generic paid-option consent or inferred reset times. No automatic API fallback, token extraction, account rotation, overage purchase, or reset-credit consumption exists.
+
+Native commands are structured arguments with owned-process cleanup. Wrappers need verified launch recipes; ambiguous `agent` binaries are not attributed by filename alone. API credentials are bound to explicitly configured endpoints, redirects are rejected, and response bodies/streams are bounded. Error messages are sanitized.
+
+Artifacts are bounded memory-only bytes, expire, and are private to their owner/session. Reading them never accepts a filesystem path. Browser downloads must not execute returned content. Cached Cursor metadata queries only non-secret identity/plan fields and remains explicitly unverified.
+
+## Known limits
+
+A malicious application running as the same OS user can often inspect or replace that user's processes/files; checksums do not establish publisher authenticity. Native provider startup may honor user-configured extensions, hooks, or tools unless a supported isolated recipe is used. Unsupported provider policies fail closed rather than becoming a fictitious read-only mode.
+
+Live inference and macOS execution remain separate qualification requirements. The current native Google/Grok execution integration is not registered; its experimental recipes are not a supported authentication bypass. No compatibility with every installed client version is promised.
+
+## Verification
+
+Run the negative transport, grants, identity, artifact, native-process, endpoint, and package-integrity suites through `scripts/verify.py`. Use synthetic homes and local test servers. Qualification reports must identify the exact SHA and actual platform, not just an intended target.
