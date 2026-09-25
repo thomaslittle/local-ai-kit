@@ -21,9 +21,9 @@ class DemoTests(unittest.TestCase):
         result = subprocess.run(['node', 'scripts/bundle_demo_test.mjs', str(bundle)], cwd=ROOT, capture_output=True, text=True)
         if result.returncode:
             raise RuntimeError(result.stderr)
-        cls.bundle = bundle.read_text()
+        cls.bundle = bundle.read_text(encoding="utf-8")
         cls.playwright = sync_playwright().start()
-        executable = os.environ.get('CHROMIUM_EXECUTABLE', '/usr/bin/chromium')
+        executable = os.environ.get('CHROMIUM_EXECUTABLE')
         cls.browser = cls.playwright.chromium.launch(executable_path=executable, headless=True, args=['--no-sandbox'])
 
     @classmethod
@@ -44,13 +44,13 @@ class DemoTests(unittest.TestCase):
     def load(self, fixture_options=None):
         # Offline browser rendering respects the container's navigation restriction.
         # Network/HTTP semantics are tested independently by the real HTTP SDK tests.
-        html = (ROOT / 'apps/demo/public/index.html').read_text()
+        html = (ROOT / 'apps/demo/public/index.html').read_text(encoding="utf-8")
         html = re.sub(r'<script\b[^>]*>.*?</script>', '', html, flags=re.S)
         html = re.sub(r'<link\b[^>]*rel="stylesheet"[^>]*>', '', html)
         self.page.set_content(html)
         css = ROOT / 'apps/demo/public/style.css'
         if css.exists():
-            self.page.add_style_tag(content=css.read_text())
+            self.page.add_style_tag(content=css.read_text(encoding="utf-8"))
         self.page.add_script_tag(content=self.bundle)
         self.page.evaluate('(options) => window.mountTestApp(options)', fixture_options or {})
         expect(self.page.locator('#mode-banner')).to_contain_text('Synthetic')

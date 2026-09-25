@@ -33,6 +33,13 @@ export function resolveCandidates(catalog: Catalog, requirements: Requirements =
       : billingValue === 'unknown' ? 'Billing unknown' : billingValue === 'prepaid_credits' ? 'Prepaid credits' : 'Metered access';
     candidates.push({ ...entry, key: selectionKey(entry.route.id, entry.model.id), eligible, reasons, billingLabel });
   }
+  // Keep broad typeahead matches, but prefer the exact phrase the user entered.
+  // Stable sorting retains account/route identity and original order for ties.
+  if (terms.length) {
+    const phrase = terms.join(' ');
+    const relevance = (c: Candidate) => c.search.includes(phrase) ? 0 : 1;
+    candidates.sort((a, b) => relevance(a) - relevance(b));
+  }
   if (requirements.billingPreference === 'prefer-included') {
     const rank = (c: Candidate) => (c.eligible ? 0 : 2) + (['Included allowance', 'Local compute'].includes(c.billingLabel) ? 0 : 1);
     candidates.sort((a, b) => rank(a) - rank(b));

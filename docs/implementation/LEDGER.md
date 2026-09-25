@@ -70,3 +70,7 @@ Task 13/16: shared IPC and Native Messaging implemented against existing public 
 Owned artifacts: runtime and public-service regressions observed red then green. Full native 250 tests passed; strict Clippy and generated contracts rebuilt. Ruling: store bounded results in memory for 15 minutes, never import arbitrary native paths; this avoids file/symlink credential disclosure and leaves result saving explicit.
 
 Embedded Rust facade and lifecycle: one lai-kit import now assembles the shared CLI provider service. Four facade and three host-lifecycle cases pass; TypeScript/Python close sends native owner cleanup before transport close. A shared broker can release closed clients without losing another app. Explicit included-usage denial is now checked before subscription selection, regardless of generic paid-option consent or stale reset metadata.
+
+## Continuation: selector regression resolved
+
+Resumed existing worktree at 978824642e9ea26ad7ecbdf1b9400567173ae0f5; remote matched and all pending work was retained. The palette's `work workspace` query treated the `work` substring in every `workspace` equally. Added an exact-phrase relevance pass in the shared headless selector, retaining broad matches, stable tie order, billing preference, and route identity. New focused regression failed before the change. All 27 selector tests and all 13 real Chromium showroom tests now pass; all four TypeScript package builds pass. Previously blocked native execution glue remains unmodified/unavailable; no inference or credential export is authorized by these tests.

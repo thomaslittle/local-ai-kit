@@ -125,3 +125,19 @@ test('explicit backend denial of included usage is not overridden by paid fallba
  s.routes[0].capabilities[0].evidence.freshness='stale';assert.equal(resolveCandidates(createCatalog(s)).find(c=>c.connection.id==='personal').eligible,false);
  s.routes[0].capabilities[0].support='supported';assert.equal(resolveCandidates(createCatalog(s)).find(c=>c.connection.id==='personal').eligible,true);
 });
+
+test('exact account phrases outrank incidental substrings without collapsing routes',()=>{
+ const s=snapshot();
+ s.connections[0].displayName='Personal workspace';
+ s.connections[1].displayName='Work workspace';
+ const c=resolveCandidates(createCatalog(s),{query:'Work workspace'});
+ assert.equal(c[0].connection.id,'work');
+ assert.ok(c.some(x=>x.connection.id==='personal'));
+ assert.notEqual(c[0].key,c.find(x=>x.connection.id==='personal').key);
+});
+test('search ranking remains stable for equal matches and empty searches',()=>{
+ const s=snapshot();
+ const c=createCatalog(s);
+ assert.deepEqual(resolveCandidates(c).map(x=>x.connection.id),s.connections.map(x=>x.id));
+ assert.deepEqual(resolveCandidates(c,{query:'same model'}).map(x=>x.connection.id),s.connections.map(x=>x.id));
+});
