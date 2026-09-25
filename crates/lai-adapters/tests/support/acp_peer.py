@@ -13,15 +13,20 @@ for line in sys.stdin:
  if r.get('jsonrpc')!='2.0':sys.exit(7)
  if m=='initialize':
   if p.get('clientCapabilities',{}).get('terminal') or p.get('clientCapabilities',{}).get('fs',{}).get('writeTextFile'):sys.exit(8)
-  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':True},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
+  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':mode!='no_resume'},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
  elif m=='authenticate':
   if mode=='auth_fail':out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_URL'}})
   else:authenticated=True;answer(i,None)
  elif m=='session/new':
+  if mode=='resume':sys.exit(11)
   if mode in ('auth','auth_fail') and not authenticated:
    out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_REQUIRED'}});continue
   if p.get('mcpServers')!=[]:sys.exit(9)
   answer(i,{'sessionId':session,'configOptions':options})
+ elif m=='session/load':
+  if p.get('mcpServers')!=[]:sys.exit(12)
+  if p.get('sessionId')!=session:out({'id':i,'error':{'code':-32004,'message':'session not found'}})
+  else:answer(i,{'configOptions':options})
  elif m=='session/set_config_option':
   for o in options:
    if o['id']==p['configId']:o['currentValue']=p['value']

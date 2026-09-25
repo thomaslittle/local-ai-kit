@@ -113,6 +113,16 @@ pub struct SessionParams {
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SessionResumeParams {
+    pub resume_token: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SessionSuspendResult {
+    pub resume_token: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SessionOptionsParams {
     pub session_id: String,
     pub options: BTreeMap<String, Value>,
@@ -217,6 +227,10 @@ pub struct MethodInputs {
     create: SessionCreateParams,
     #[serde(rename = "sessions.get")]
     session: SessionParams,
+    #[serde(rename = "sessions.suspend")]
+    suspend_session: SessionParams,
+    #[serde(rename = "sessions.resume")]
+    resume_session: SessionResumeParams,
     #[serde(rename = "sessions.close")]
     close: SessionParams,
     #[serde(rename = "sessions.updateOptions")]
@@ -282,6 +296,10 @@ pub struct MethodOutputs {
     create: Session,
     #[serde(rename = "sessions.get")]
     session: Session,
+    #[serde(rename = "sessions.suspend")]
+    suspend_session: SessionSuspendResult,
+    #[serde(rename = "sessions.resume")]
+    resume_session: Session,
     #[serde(rename = "sessions.close")]
     close: Value,
     #[serde(rename = "sessions.updateOptions")]

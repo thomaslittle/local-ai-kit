@@ -133,16 +133,39 @@ pub fn build_service_with_registries(
                                 "Native ACP subscription routes expose text sessions with mediated approvals only",
                             ));
                         }
-                        return lai_adapters::native_clients::client::open(
-                            &profile,
-                            &input.located,
-                            &input.workspace,
-                            native_browser.as_deref(),
-                            input.route_id,
-                            input.model,
-                            input.review_requests,
-                        )
-                        .await;
+                        return match input.native_resume.as_deref() {
+                            Some(native_session_id) => {
+                                lai_adapters::native_clients::client::open_resume(
+                                    &profile,
+                                    &input.located,
+                                    &input.workspace,
+                                    native_browser.as_deref(),
+                                    input.route_id,
+                                    input.model,
+                                    input.review_requests,
+                                    native_session_id,
+                                )
+                                .await
+                            }
+                            None => {
+                                lai_adapters::native_clients::client::open(
+                                    &profile,
+                                    &input.located,
+                                    &input.workspace,
+                                    native_browser.as_deref(),
+                                    input.route_id,
+                                    input.model,
+                                    input.review_requests,
+                                )
+                                .await
+                            }
+                        };
+                    }
+                    if input.native_resume.is_some() {
+                        return Err(DomainError::new(
+                            ErrorCode::CapabilityUnsupported,
+                            "Selected integration does not support native session resumption",
+                        ));
                     }
                     if let Some(config) = endpoint {
                         if input.writable || input.review_requests {

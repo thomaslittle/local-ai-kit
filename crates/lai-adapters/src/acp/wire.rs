@@ -15,13 +15,12 @@ impl Wire {
     pub async fn connect(spec: LaunchSpec, provider: String, route: String) -> Result<Self> {
         Self::connect_with_auth(spec, provider, route, None).await
     }
-    pub async fn connect_with_auth(
+    async fn initialized(
         spec: LaunchSpec,
         provider: String,
         route: String,
         auth: Option<&str>,
     ) -> Result<Self> {
-        let cwd = spec.cwd.clone();
         let mut this = Self {
             peer: Peer::spawn(spec).await?,
             init: Value::Null,
@@ -30,19 +29,124 @@ impl Wire {
             provider,
             route,
         };
-        let outcome=tokio::time::timeout(Duration::from_secs(20),async {
-   this.init=this.call("initialize",json!({"protocolVersion":1,"clientInfo":{"name":"local-ai-kit","version":env!("CARGO_PKG_VERSION")},"clientCapabilities":{"fs":{"readTextFile":false,"writeTextFile":false},"terminal":false,"session":{"configOptions":{"boolean":{}}}}})).await?;
-   if this.init["protocolVersion"].as_u64()!=Some(1){return Err(invalid());}
-   if let Some(method)=auth {
-    let offered=this.init["authMethods"].as_array().filter(|a|a.len()<=64);
-    if method.len()>128||method.chars().any(char::is_control)||!offered.is_some_and(|a|a.iter().any(|v|v["id"]==method)){return Err(DomainError::new(ErrorCode::OptionUnsupported,"Native authentication method is not advertised"));}
-    this.call("authenticate",json!({"methodId":method})).await?;
-   }
-   this.session=this.call("session/new",json!({"cwd":cwd,"mcpServers":[]})).await?;
-   this.catalog()?;
-   this.apply_notices()?;
-   Ok(())
-  }).await.unwrap_or_else(|_|Err(DomainError::new(ErrorCode::Timeout,"ACP initialization timed out")));
+        let outcome = tokio::time::timeout(Duration::from_secs(20), async {
+            this.init = this
+                .call(
+                    "initialize",
+                    json!({"protocolVersion":1,"clientInfo":{"name":"local-ai-kit","version":env!("CARGO_PKG_VERSION")},"clientCapabilities":{"fs":{"readTextFile":false,"writeTextFile":false},"terminal":false,"session":{"configOptions":{"boolean":{}}}}}),
+                )
+                .await?;
+            if this.init["protocolVersion"].as_u64() != Some(1) {
+                return Err(invalid());
+            }
+            if let Some(method) = auth {
+                let offered = this.init["authMethods"].as_array().filter(|a| a.len() <= 64);
+                if method.len() > 128
+                    || method.chars().any(char::is_control)
+                    || !offered.is_some_and(|a| a.iter().any(|v| v["id"] == method))
+                {
+                    return Err(DomainError::new(
+                        ErrorCode::OptionUnsupported,
+                        "Native authentication method is not advertised",
+                    ));
+                }
+                this.call("authenticate", json!({"methodId":method})).await?;
+            }
+            Ok(())
+        })
+        .await
+        .unwrap_or_else(|_| {
+            Err(DomainError::new(
+                ErrorCode::Timeout,
+                "ACP initialization timed out",
+            ))
+        });
+        if let Err(error) = outcome {
+            this.peer.shutdown().await;
+            return Err(error);
+        }
+        Ok(this)
+    }
+    pub async fn connect_with_auth(
+        spec: LaunchSpec,
+        provider: String,
+        route: String,
+        auth: Option<&str>,
+    ) -> Result<Self> {
+        let cwd = spec.cwd.clone();
+        let mut this = Self::initialized(spec, provider, route, auth).await?;
+        let outcome = tokio::time::timeout(Duration::from_secs(20), async {
+            this.session = this
+                .call("session/new", json!({"cwd":cwd,"mcpServers":[]}))
+                .await?;
+            this.catalog()?;
+            this.apply_notices()?;
+            Ok(())
+        })
+        .await
+        .unwrap_or_else(|_| {
+            Err(DomainError::new(
+                ErrorCode::Timeout,
+                "ACP session creation timed out",
+            ))
+        });
+        if let Err(error) = outcome {
+            this.peer.shutdown().await;
+            return Err(error);
+        }
+        Ok(this)
+    }
+    pub async fn connect_resume_with_auth(
+        spec: LaunchSpec,
+        provider: String,
+        route: String,
+        auth: Option<&str>,
+        native_session_id: &str,
+    ) -> Result<Self> {
+        if native_session_id.is_empty()
+            || native_session_id.len() > 512
+            || native_session_id.chars().any(char::is_control)
+        {
+            return Err(invalid());
+        }
+        let cwd = spec.cwd.clone();
+        let mut this = Self::initialized(spec, provider, route, auth).await?;
+        if this.init["agentCapabilities"]["loadSession"].as_bool() != Some(true) {
+            this.peer.shutdown().await;
+            return Err(DomainError::new(
+                ErrorCode::CapabilityUnsupported,
+                "Native client does not support session resumption",
+            ));
+        }
+        let outcome = tokio::time::timeout(Duration::from_secs(20), async {
+            let mut session = this
+                .call(
+                    "session/load",
+                    json!({"sessionId":native_session_id,"cwd":cwd,"mcpServers":[]}),
+                )
+                .await?;
+            if let Some(id) = session.get("sessionId") {
+                if id.as_str() != Some(native_session_id) {
+                    return Err(DomainError::new(
+                        ErrorCode::SessionRouteMismatch,
+                        "Native client loaded a different session",
+                    ));
+                }
+            } else {
+                session["sessionId"] = json!(native_session_id);
+            }
+            this.session = session;
+            this.catalog()?;
+            this.apply_notices()?;
+            Ok(())
+        })
+        .await
+        .unwrap_or_else(|_| {
+            Err(DomainError::new(
+                ErrorCode::Timeout,
+                "ACP session resume timed out",
+            ))
+        });
         if let Err(error) = outcome {
             this.peer.shutdown().await;
             return Err(error);

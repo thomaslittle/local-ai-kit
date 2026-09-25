@@ -9,7 +9,7 @@ FAMILIES = {
     'runtime': ('health','closeClient'), 'snapshot': ('get',), 'discovery': ('refresh','watch','cancel'),
     'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list','page'),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
-    'grants': ('request','list','revoke'), 'sessions': ('create','get','updateOptions','close'),
+    'grants': ('request','list','revoke'), 'sessions': ('create','get','suspend','resume','updateOptions','close'),
     'turns': ('start','cancel'), 'approvals': ('respond',), 'artifacts': ('read',),
     'diagnostics': ('report',), 'adapters': ('list',), 'events': ('subscribe',),
 }

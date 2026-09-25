@@ -40,7 +40,10 @@ export function playgroundPage(ctx){
   live?el('label',{class:'field'},'Host workspace name',el('input',{'aria-label':'Host workspace name',value:state.workspaceId,onInput:e=>{state.workspaceId=e.target.value;}})):checkbox('Simulate a tool approval',state.simulateApproval,on=>{state.simulateApproval=on;ctx.render();}),
   el('div',{class:'actions'},
    button(live?'Run live turn':'Simulate turn',ctx.startTurn,{class:'primary',disabled:busy||!executable||!state.grantConsent||!state.selection}),
-   button('Cancel turn',ctx.cancelTurn,{disabled:!busy||!state.turnId}),badge(state.sessionStatus,busy?'accent':'muted')));
+   button('Cancel turn',ctx.cancelTurn,{disabled:!busy||!state.turnId}),
+   state.client?.handshake.methods.includes('sessions.suspend')?button('Suspend native session',ctx.suspendSession,{disabled:busy||!state.sessionId||!state.nativeResumption}):null,
+   state.client?.handshake.methods.includes('sessions.resume')?button('Resume native session',ctx.resumeSession,{disabled:busy||!state.resumeToken}):null,
+   badge(state.sessionStatus,busy?'accent':'muted')));
  const approval=state.approval?el('div',{class:'approval'},el('h3',{},state.approval.action),el('p',{},state.approval.detail),
   el('div',{class:'actions'},button('Approve',()=>ctx.answerApproval(true),{class:'primary'}),button('Deny',()=>ctx.answerApproval(false),{class:'danger'}))):null;
  const output=section('Stream output',null,

@@ -40,7 +40,7 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
             text_sessions: execution,
             native_tool_approval: matches!(def.id, "codex" | "gemini_cli" | "antigravity" | "grok"),
             cancellation: execution,
-            persistent_resumption: false,
+            persistent_resumption: matches!(def.id, "gemini_cli" | "antigravity" | "grok"),
             qualification: "See per-operation qualification reports; no account capability implied"
                 .into(),
             limitations: if metadata {

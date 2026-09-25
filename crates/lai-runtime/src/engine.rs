@@ -157,13 +157,14 @@ impl Runtime {
         if sessions.len() >= 64 || sessions.values().filter(|s| s.owner == owner).count() >= 16 {
             return Err(err(ErrorCode::RateLimited));
         }
+        let native_resumption = agent.native_resumption();
         let view = Session {
             id: id("session"),
             connection_id: connection,
             selection,
             state: SessionState::Ready,
             created_at: Timestamp::now(),
-            native_resumption: false,
+            native_resumption,
         };
         let journal = self
             .journals
@@ -310,6 +311,60 @@ impl Runtime {
             }
         }
         Err(err(ErrorCode::NotFound))
+    }
+    pub async fn suspend(&self, owner: &str, session: &str) -> Result<String> {
+        let cell = self.cell(owner, session)?;
+        (cell.guard)()?;
+        let previous = {
+            let mut state = cell
+                .state
+                .lock()
+                .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
+            if !state.view.native_resumption
+                || !matches!(
+                    state.view.state,
+                    SessionState::Ready | SessionState::Completed
+                )
+                || state.turn.is_some()
+            {
+                return Err(err(ErrorCode::Conflict));
+            }
+            let previous = state.view.state.clone();
+            state.usable = false;
+            state.view.state = SessionState::Closed;
+            previous
+        };
+        let mut agent = tokio::time::timeout(Duration::from_secs(5), cell.agent.lock())
+            .await
+            .map_err(|_| err(ErrorCode::Timeout))?;
+        let result = match agent.as_mut() {
+            Some(driver) => tokio::time::timeout(Duration::from_secs(5), driver.suspend())
+                .await
+                .map_err(|_| err(ErrorCode::Timeout))?,
+            None => Err(err(ErrorCode::ProviderUnavailable)),
+        };
+        match result {
+            Ok(native_session_id) => {
+                agent.take();
+                if let Ok(mut sessions) = self.sessions.lock() {
+                    sessions.remove(session);
+                }
+                if let Ok(mut artifacts) = self.artifacts.lock() {
+                    artifacts.clear_session(session);
+                }
+                if let Ok(mut approvals) = cell.approvals.lock() {
+                    approvals.clear();
+                }
+                Ok(native_session_id)
+            }
+            Err(error) => {
+                if let Ok(mut state) = cell.state.lock() {
+                    state.usable = true;
+                    state.view.state = previous;
+                }
+                Err(error)
+            }
+        }
     }
     pub async fn close(&self, owner: &str, session: &str) -> Result<Value> {
         let cell = self.cell(owner, session)?;

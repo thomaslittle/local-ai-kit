@@ -32,7 +32,23 @@ pub async fn open_with_auth(
     review: bool,
     auth: Option<&str>,
 ) -> Result<Box<dyn Agent>> {
-    let mut wire = Wire::connect_with_auth(spec, provider, route, auth).await?;
+    let wire = Wire::connect_with_auth(spec, provider, route, auth).await?;
+    finish_open(wire, model, review).await
+}
+pub async fn open_resume(
+    spec: LaunchSpec,
+    provider: String,
+    route: String,
+    model: Model,
+    review: bool,
+    auth: Option<&str>,
+    native_session_id: &str,
+) -> Result<Box<dyn Agent>> {
+    let wire =
+        Wire::connect_resume_with_auth(spec, provider, route, auth, native_session_id).await?;
+    finish_open(wire, model, review).await
+}
+async fn finish_open(mut wire: Wire, model: Model, review: bool) -> Result<Box<dyn Agent>> {
     if !wire
         .catalog()?
         .models
@@ -214,6 +230,25 @@ impl Agent for AcpAgent {
         Box::pin(async move {
             self.wire.close().await;
             Ok(())
+        })
+    }
+    fn native_resumption(&self) -> bool {
+        self.wire
+            .catalog()
+            .is_ok_and(|catalog| catalog.load_session)
+    }
+    fn suspend(&mut self) -> BoxFuture<'_, String> {
+        Box::pin(async move {
+            let catalog = self.wire.catalog()?;
+            if !catalog.load_session {
+                return Err(DomainError::new(
+                    ErrorCode::CapabilityUnsupported,
+                    "Native client does not support session resumption",
+                ));
+            }
+            let native_session_id = catalog.session_id;
+            self.wire.peer.shutdown().await;
+            Ok(native_session_id)
         })
     }
 }

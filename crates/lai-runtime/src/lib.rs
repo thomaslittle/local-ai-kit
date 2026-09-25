@@ -19,6 +19,17 @@ pub trait Agent: Send {
         context: TurnContext,
     ) -> BoxFuture<'a, ()>;
     fn close(&mut self) -> BoxFuture<'_, ()>;
+    fn native_resumption(&self) -> bool {
+        false
+    }
+    fn suspend(&mut self) -> BoxFuture<'_, String> {
+        Box::pin(async {
+            Err(DomainError::new(
+                ErrorCode::CapabilityUnsupported,
+                "Native session resumption is unavailable",
+            ))
+        })
+    }
 }
 pub(crate) fn err(code: ErrorCode) -> DomainError {
     DomainError::new(code, "Session operation failed")

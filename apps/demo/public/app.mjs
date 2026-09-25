@@ -18,9 +18,9 @@ const descriptions={
 export async function mountDemo({connectFixture,connectLive,initialClient=null,initialMode='synthetic'}){
  const root=document.querySelector('#app')??document.body;
  const state={page:'Selector lab',variant:'rail',mode:initialMode,snapshot:null,selection:null,provider:'codex',query:'',required:new Set(),onlyEligible:false,allowPaid:false,favorites:new Set(),sensitiveConsent:false,
-  mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,prompt:'Explain how an application can select an existing AI connection.',notice:'',connectionError:null,diagnostics:null};
+  mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,nativeResumption:false,resumeToken:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,prompt:'Explain how an application can select an existing AI connection.',notice:'',connectionError:null,diagnostics:null};
  let catalog=null,all=[],epoch=0,eventController=null,closed=false;
- const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,answerApproval,refreshDiagnostics,scan,probeConnection,revokeConnection,downloadArtifact,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
+ const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,suspendSession,resumeSession,answerApproval,refreshDiagnostics,scan,probeConnection,revokeConnection,downloadArtifact,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
  function rebuild(snapshot){
   if(!snapshot||!Array.isArray(snapshot.connections)||!Array.isArray(snapshot.models)||!Array.isArray(snapshot.routes)||!Array.isArray(snapshot.providers))throw Error('INVALID_SNAPSHOT');
   if(state.mode==='live'&&snapshot.mode!=='live')throw Error('SYNTHETIC_RUNTIME_REJECTED');
@@ -58,7 +58,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
  }
  async function attach(factory,mode){
   const current=++epoch;await stopClient();
-  state.mode=mode;state.snapshot=null;catalog=null;all=[];state.selection=null;state.connectionError=null;state.events=[];state.sessionId=null;state.turnId=null;state.sessionStatus='Ready';state.output='';state.approval=null;state.diagnostics=null;state.notice='';state.favorites.clear();state.grantConsent=false;render();
+  state.mode=mode;state.snapshot=null;catalog=null;all=[];state.selection=null;state.connectionError=null;state.events=[];state.sessionId=null;state.nativeResumption=false;state.resumeToken=null;state.turnId=null;state.sessionStatus='Ready';state.output='';state.approval=null;state.diagnostics=null;state.notice='';state.favorites.clear();state.grantConsent=false;render();
   let client;
   try{
    client=await factory();if(closed||epoch!==current){await client.close();return;}
@@ -76,7 +76,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
    if(state.sessionId)await client.sessions.close({sessionId:state.sessionId});
    if(state.mode==='synthetic')await client.grants.request({connectionIds:[model.connection.id],scopes:['execution'],allowPaid:state.allowPaid});
    const session=await client.sessions.create({selection,allowPaid:state.allowPaid,...(state.mode==='live'?{workspaceId:state.workspaceId,permissionMode:'read_only'}:{})});
-   if(epoch!==current)return;state.sessionId=session.id;state.turnId=null;state.sessionStatus='Running';render();
+   if(epoch!==current)return;state.sessionId=session.id;state.nativeResumption=Boolean(session.nativeResumption);state.resumeToken=null;state.turnId=null;state.sessionStatus='Running';render();
    const turn=await client.turns.start({sessionId:session.id,prompt:state.prompt,...(state.mode==='synthetic'?{simulateApproval:state.simulateApproval}:{requestId:crypto.randomUUID()})});
    if(epoch!==current)return;state.turnId=turn.turnId;render();
   });
@@ -94,6 +94,14 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
   });
  }
  async function cancelTurn(){if(state.turnId&&state.client)await operate(async()=>{await state.client.turns.cancel({turnId:state.turnId});});}
+ async function suspendSession(){
+  if(!state.client||!state.sessionId||!state.nativeResumption||!state.client.handshake.methods.includes('sessions.suspend'))return;
+  await operate(async()=>{const result=await state.client.sessions.suspend({sessionId:state.sessionId});state.resumeToken=result.resumeToken;state.sessionId=null;state.turnId=null;state.sessionStatus='Suspended';state.output='';state.approval=null;render();});
+ }
+ async function resumeSession(){
+  if(!state.client||!state.resumeToken||!state.client.handshake.methods.includes('sessions.resume'))return;
+  await operate(async()=>{const session=await state.client.sessions.resume({resumeToken:state.resumeToken});state.sessionId=session.id;state.nativeResumption=Boolean(session.nativeResumption);state.resumeToken=null;state.turnId=null;state.sessionStatus='Ready';state.output='';state.approval=null;render();});
+ }
  async function answerApproval(allow){if(state.approval&&state.client)await operate(async()=>{await state.client.approvals.respond({approvalId:state.approval.approvalId,allow});});}
  async function scan(){if(state.client)await operate(async()=>{await state.client.discovery.refresh({level:'passive'});rebuild(await readCatalogSnapshot(state.client));state.page='Connections';render();});}
  async function probeConnection(id){if(!state.client||state.probing)return;state.probing=id;render();await operate(async()=>{await state.client.connections.probe({connectionId:id});rebuild(await readCatalogSnapshot(state.client));});state.probing=null;render();}

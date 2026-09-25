@@ -1115,6 +1115,12 @@
         "sessions.get": {
           "$ref": "#/$defs/SessionParams"
         },
+        "sessions.resume": {
+          "$ref": "#/$defs/SessionResumeParams"
+        },
+        "sessions.suspend": {
+          "$ref": "#/$defs/SessionParams"
+        },
         "sessions.updateOptions": {
           "$ref": "#/$defs/SessionOptionsParams"
         },
@@ -1152,6 +1158,8 @@
         "grants.revoke",
         "sessions.create",
         "sessions.get",
+        "sessions.suspend",
+        "sessions.resume",
         "sessions.close",
         "sessions.updateOptions",
         "turns.start",
@@ -1236,6 +1244,12 @@
         "sessions.get": {
           "$ref": "#/$defs/Session"
         },
+        "sessions.resume": {
+          "$ref": "#/$defs/Session"
+        },
+        "sessions.suspend": {
+          "$ref": "#/$defs/SessionSuspendResult"
+        },
         "sessions.updateOptions": {
           "$ref": "#/$defs/Session"
         },
@@ -1274,6 +1288,8 @@
         "grants.revoke",
         "sessions.create",
         "sessions.get",
+        "sessions.suspend",
+        "sessions.resume",
         "sessions.close",
         "sessions.updateOptions",
         "turns.start",
@@ -2481,6 +2497,18 @@
       ],
       "type": "object"
     },
+    "SessionResumeParams": {
+      "additionalProperties": false,
+      "properties": {
+        "resumeToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "resumeToken"
+      ],
+      "type": "object"
+    },
     "SessionState": {
       "enum": [
         "ready",
@@ -2492,6 +2520,18 @@
         "closed"
       ],
       "type": "string"
+    },
+    "SessionSuspendResult": {
+      "additionalProperties": false,
+      "properties": {
+        "resumeToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "resumeToken"
+      ],
+      "type": "object"
     },
     "Snapshot": {
       "additionalProperties": false,
