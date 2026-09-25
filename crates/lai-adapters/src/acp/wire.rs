@@ -13,6 +13,14 @@ pub(super) struct Wire {
 }
 impl Wire {
     pub async fn connect(spec: LaunchSpec, provider: String, route: String) -> Result<Self> {
+        Self::connect_with_auth(spec, provider, route, None).await
+    }
+    pub async fn connect_with_auth(
+        spec: LaunchSpec,
+        provider: String,
+        route: String,
+        auth: Option<&str>,
+    ) -> Result<Self> {
         let cwd = spec.cwd.clone();
         let mut this = Self {
             peer: Peer::spawn(spec).await?,
@@ -25,6 +33,11 @@ impl Wire {
         let outcome=tokio::time::timeout(Duration::from_secs(20),async {
    this.init=this.call("initialize",json!({"protocolVersion":1,"clientInfo":{"name":"local-ai-kit","version":env!("CARGO_PKG_VERSION")},"clientCapabilities":{"fs":{"readTextFile":false,"writeTextFile":false},"terminal":false,"session":{"configOptions":{"boolean":{}}}}})).await?;
    if this.init["protocolVersion"].as_u64()!=Some(1){return Err(invalid());}
+   if let Some(method)=auth {
+    let offered=this.init["authMethods"].as_array().filter(|a|a.len()<=64);
+    if method.len()>128||method.chars().any(char::is_control)||!offered.is_some_and(|a|a.iter().any(|v|v["id"]==method)){return Err(DomainError::new(ErrorCode::OptionUnsupported,"Native authentication method is not advertised"));}
+    this.call("authenticate",json!({"methodId":method})).await?;
+   }
    this.session=this.call("session/new",json!({"cwd":cwd,"mcpServers":[]})).await?;
    this.catalog()?;
    this.apply_notices()?;
@@ -79,6 +92,12 @@ impl Wire {
             }
             if response["id"] != id {
                 return Err(invalid());
+            }
+            if method == "authenticate"
+                && response.get("result") == Some(&Value::Null)
+                && response.get("error").is_none()
+            {
+                return Ok(json!({}));
             }
             return response_result(&response);
         }
@@ -136,6 +155,8 @@ pub(super) fn response_result(value: &Value) -> Result<Value> {
         (None, Some(error)) => Err(DomainError::new(
             if error["code"].as_i64() == Some(-32601) {
                 ErrorCode::CapabilityUnsupported
+            } else if error["code"].as_i64() == Some(-32000) {
+                ErrorCode::AuthRequired
             } else {
                 ErrorCode::ProviderUnavailable
             },

@@ -11,3 +11,5 @@ export type { SnapshotState, SnapshotStore } from './store.ts';
 
 export { createNativeMessagingTransport } from './native.ts';
 export type { NativePort } from './native.ts';
+
+export {readArtifactBytes} from './artifacts.ts';

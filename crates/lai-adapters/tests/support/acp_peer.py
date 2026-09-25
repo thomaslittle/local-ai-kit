@@ -4,6 +4,7 @@ session='session-native'
 options=[{'id':'model','name':'Model','category':'model','type':'select','currentValue':'native-x','options':[{'value':'native-x','name':'Native X'},{'value':'native-y','name':'Native Y'}]}, {'id':'thought','name':'Thought','category':'thought_level','type':'select','currentValue':'future','options':[{'value':'future','name':'Future'},{'value':'tiny','name':'Tiny'}]}]
 pending=None
 turns=0
+authenticated=False
 def out(value):print(json.dumps({'jsonrpc':'2.0',**value}),flush=True)
 def answer(i,result):out({'id':i,'result':result})
 def update(kind,**data):out({'method':'session/update','params':{'sessionId':'foreign' if mode=='foreign' else session,'update':{'sessionUpdate':kind,**data}}})
@@ -12,8 +13,13 @@ for line in sys.stdin:
  if r.get('jsonrpc')!='2.0':sys.exit(7)
  if m=='initialize':
   if p.get('clientCapabilities',{}).get('terminal') or p.get('clientCapabilities',{}).get('fs',{}).get('writeTextFile'):sys.exit(8)
-  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':True}})
+  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':True},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
+ elif m=='authenticate':
+  if mode=='auth_fail':out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_URL'}})
+  else:authenticated=True;answer(i,None)
  elif m=='session/new':
+  if mode in ('auth','auth_fail') and not authenticated:
+   out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_REQUIRED'}});continue
   if p.get('mcpServers')!=[]:sys.exit(9)
   answer(i,{'sessionId':session,'configOptions':options})
  elif m=='session/set_config_option':

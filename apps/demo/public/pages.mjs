@@ -45,7 +45,8 @@ export function playgroundPage(ctx){
   el('div',{class:'actions'},button('Approve',()=>ctx.answerApproval(true),{class:'primary'}),button('Deny',()=>ctx.answerApproval(false),{class:'danger'}))):null;
  const output=section('Stream output',null,
   el('div',{id:'session-status',class:'session-status',role:'status','aria-live':'polite'},state.sessionStatus),
-  el('pre',{id:'response-text',class:'response'},state.output||'Output appears only after you explicitly start a turn.'),approval);
+  el('pre',{id:'response-text',class:'response'},state.output||'Output appears only after you explicitly start a turn.'),approval,
+  el('div',{class:'actions'},state.events.filter(e=>e.sessionId===state.sessionId&&e.payload.type==='artifact').map(e=>button('Download result ('+e.payload.size+' bytes)',()=>ctx.downloadArtifact(e),{disabled:!state.client?.handshake.methods.includes('artifacts.read')}))));
  const timeline=section('Event timeline',`${state.events.length} recent events; bounded to 100.`,
   el('div',{class:'timeline'},state.events.slice(-12).reverse().map(e=>el('div',{class:'event-row'},
    el('span',{class:'mono'},e.sequence),badge(e.payload.type),el('small',{class:'mono'},e.sessionId)))));

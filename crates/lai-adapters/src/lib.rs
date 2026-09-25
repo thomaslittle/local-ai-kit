@@ -11,3 +11,7 @@ pub mod grok;
 pub mod http;
 pub mod http_provider;
 pub mod opencode;
+
+pub mod cursor;
+
+pub mod native_clients;

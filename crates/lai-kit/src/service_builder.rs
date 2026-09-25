@@ -49,6 +49,16 @@ pub fn build_service_with_endpoints(
                     "codex" => codex::probe(located, connection, route).await,
                     "claude_code" => claude::probe(located, connection, route).await,
                     "grok" => lai_adapters::grok::probe(located, connection, route).await,
+                    "cursor" => tokio::task::spawn_blocking(move || {
+                        lai_adapters::cursor::read_cached(located, &connection, &route)
+                    })
+                    .await
+                    .map_err(|_| {
+                        DomainError::new(
+                            ErrorCode::ProviderUnavailable,
+                            "Cursor metadata worker unavailable",
+                        )
+                    })?,
                     _ => Err(DomainError::new(
                         ErrorCode::CapabilityUnsupported,
                         "No metadata adapter registered",

@@ -186,3 +186,35 @@ async fn malformed_requests_and_body_limits_are_enforced() {
     assert!(malformed.get("error").is_some());
     s.close().await;
 }
+
+#[tokio::test]
+async fn repeated_pair_and_revoke_does_not_exhaust_broker_client_slots() {
+    let (s, _) = setup().await;
+    for _ in 0..80 {
+        let code = s.issue_pairing_code().unwrap();
+        let response: Value = client()
+            .post(format!("{}/v1/pair", s.url))
+            .json(&json!({"code":code}))
+            .send()
+            .await
+            .unwrap()
+            .json()
+            .await
+            .unwrap();
+        let token = response["token"]
+            .as_str()
+            .expect("closed clients must release their registry slot");
+        rpc(
+            &s,
+            token,
+            "runtime.handshake",
+            json!({"protocolVersion":"1.0"}),
+        )
+        .await;
+        assert_eq!(
+            rpc(&s, token, "grants.revoke", json!({})).await["result"]["revoked"],
+            true
+        );
+    }
+    s.close().await;
+}

@@ -1,4 +1,5 @@
 import {createCatalog,resolveCandidates,reconcileSelection} from '/modules/selector/index.js';
+import {readArtifactBytes} from '/modules/sdk/index.js';
 import {el,button,badge} from './ui.mjs';
 import {renderPage} from './pages.mjs';
 import {openPalette,openConnectionDialog} from './dialogs.mjs';
@@ -19,7 +20,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
  const state={page:'Selector lab',variant:'rail',mode:initialMode,snapshot:null,selection:null,provider:'codex',query:'',required:new Set(),onlyEligible:false,allowPaid:false,favorites:new Set(),sensitiveConsent:false,
   mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,prompt:'Explain how an application can select an existing AI connection.',notice:'',connectionError:null,diagnostics:null};
  let catalog=null,all=[],epoch=0,eventController=null,closed=false;
- const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,answerApproval,refreshDiagnostics,scan,probeConnection,revokeConnection,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
+ const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,answerApproval,refreshDiagnostics,scan,probeConnection,revokeConnection,downloadArtifact,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
  function rebuild(snapshot){
   if(!snapshot||!Array.isArray(snapshot.connections)||!Array.isArray(snapshot.models)||!Array.isArray(snapshot.routes)||!Array.isArray(snapshot.providers))throw Error('INVALID_SNAPSHOT');
   if(state.mode==='live'&&snapshot.mode!=='live')throw Error('SYNTHETIC_RUNTIME_REJECTED');
@@ -81,12 +82,23 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
   });
   if(state.notice&&epoch===current){state.sessionStatus='Error';render();}
  }
+ async function downloadArtifact(event){
+  if(!state.client||event.sessionId!==state.sessionId||!state.client.handshake.methods.includes('artifacts.read'))return;
+  const client=state.client,current=epoch;
+  await operate(async()=>{
+   const result=await readArtifactBytes(client,event.sessionId,event.payload.artifactId);
+   if(closed||epoch!==current)return;
+   // Always download as inert bytes; never navigate to or render a provider's executable content.
+   const url=URL.createObjectURL(new Blob([result.bytes],{type:'application/octet-stream'}));
+   const anchor=document.createElement('a');anchor.href=url;anchor.download=result.displayName.replace(/[^a-zA-Z0-9_. -]/g,'_').slice(0,128)||'result.bin';anchor.rel='noreferrer';document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+ }
  async function cancelTurn(){if(state.turnId&&state.client)await operate(async()=>{await state.client.turns.cancel({turnId:state.turnId});});}
  async function answerApproval(allow){if(state.approval&&state.client)await operate(async()=>{await state.client.approvals.respond({approvalId:state.approval.approvalId,allow});});}
  async function scan(){if(state.client)await operate(async()=>{await state.client.discovery.refresh({level:'passive'});rebuild(await state.client.snapshot.get());state.page='Connections';render();});}
  async function probeConnection(id){if(!state.client||state.probing)return;state.probing=id;render();await operate(async()=>{await state.client.connections.probe({connectionId:id});rebuild(await state.client.snapshot.get());});state.probing=null;render();}
  async function revokeConnection(){if(!state.client)return;await operate(async()=>{await state.client.grants.revoke({});await stopClient();catalog=null;all=[];state.snapshot=null;state.selection=null;state.notice='Connection revoked. Restart the native host and reload to pair again.';render();});}
- async function refreshDiagnostics(){if(state.client)await operate(async()=>{state.diagnostics=await state.client.diagnostics.report();render();});}
+ async function refreshDiagnostics(){if(state.client)await operate(async()=>{state.diagnostics={report:await state.client.diagnostics.report(),adapters:await state.client.adapters.list(),grants:await state.client.grants.list()};render();});}
  function render(){
   if(closed)return;
   if(catalog)all=resolveCandidates(catalog,{allowPaidFallback:state.allowPaid});

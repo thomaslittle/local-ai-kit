@@ -5,7 +5,7 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
     for def in lai_discovery::definitions() {
         let metadata = matches!(
             def.id,
-            "codex" | "claude_code" | "grok" | "ollama" | "lmstudio" | "opencode"
+            "codex" | "claude_code" | "grok" | "cursor" | "ollama" | "lmstudio" | "opencode"
         );
         let execution = matches!(
             def.id,

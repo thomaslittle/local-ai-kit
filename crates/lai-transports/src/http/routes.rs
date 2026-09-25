@@ -70,6 +70,7 @@ pub(super) async fn rpc(
         if let Ok(mut tokens) = state.tokens.lock() {
             tokens.remove(&key);
         }
+        state.service.close_client(&client);
     }
     bounded_json(wire::reply(request.id, outcome))
 }

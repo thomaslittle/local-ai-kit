@@ -22,7 +22,17 @@ pub async fn open(
     model: Model,
     review: bool,
 ) -> Result<Box<dyn Agent>> {
-    let mut wire = Wire::connect(spec, provider, route).await?;
+    open_with_auth(spec, provider, route, model, review, None).await
+}
+pub async fn open_with_auth(
+    spec: LaunchSpec,
+    provider: String,
+    route: String,
+    model: Model,
+    review: bool,
+    auth: Option<&str>,
+) -> Result<Box<dyn Agent>> {
+    let mut wire = Wire::connect_with_auth(spec, provider, route, auth).await?;
     if !wire
         .catalog()?
         .models
@@ -206,4 +216,17 @@ impl Agent for AcpAgent {
             Ok(())
         })
     }
+}
+
+/// Explicit native auth negotiation; no token is sent by the host.
+pub async fn inspect_authenticated(
+    spec: LaunchSpec,
+    provider: &str,
+    route: &str,
+    auth: Option<&str>,
+) -> Result<AcpCatalog> {
+    let mut wire = Wire::connect_with_auth(spec, provider.into(), route.into(), auth).await?;
+    let result = wire.catalog();
+    wire.close().await;
+    result
 }

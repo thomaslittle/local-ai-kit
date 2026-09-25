@@ -15,8 +15,10 @@ lai-discovery = { path = "../lai-discovery" }
 lai-platform = { path = "../lai-platform" }
 serde.workspace = true
 serde_json.workspace = true
+tokio = { version = "1", features = ["rt"] }
 
 [dev-dependencies]
+lai-runtime = { path = "../lai-runtime" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tempfile = "3"
 

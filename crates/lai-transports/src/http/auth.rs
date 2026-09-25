@@ -75,6 +75,7 @@ pub(super) async fn pair(
         Ok(r) => r,
         Err(_) => return reject(StatusCode::BAD_REQUEST, "INVALID_REQUEST"),
     };
+    reap_expired(&state);
     let mut pairing = match state.pair.lock() {
         Ok(p) => p,
         Err(_) => return reject(StatusCode::SERVICE_UNAVAILABLE, "UNAVAILABLE"),
@@ -122,6 +123,7 @@ pub(super) async fn pair(
             .register_execution(&client, grant.clone())
             .is_err()
         {
+            state.service.close_client(&client);
             return reject(StatusCode::SERVICE_UNAVAILABLE, "EXECUTION_UNAVAILABLE");
         }
     }
@@ -141,6 +143,7 @@ pub(super) fn authorize(
     headers: &HeaderMap,
     require_ready: bool,
 ) -> Result<(String, [u8; 32]), Box<Response>> {
+    reap_expired(state);
     if headers.get_all("authorization").iter().count() != 1 {
         return Err(auth_error(StatusCode::UNAUTHORIZED, "AUTH_REQUIRED"));
     }
@@ -165,6 +168,105 @@ pub(super) fn authorize(
     Ok((entry.client.clone(), key))
 }
 
+fn reap_expired(state: &Shared) {
+    let expired = if let Ok(mut tokens) = state.tokens.lock() {
+        let ids = tokens
+            .values()
+            .filter(|t| t.created.elapsed() >= Duration::from_secs(3600))
+            .map(|t| t.client.clone())
+            .collect::<Vec<_>>();
+        tokens.retain(|_, t| t.created.elapsed() < Duration::from_secs(3600));
+        ids
+    } else {
+        Vec::new()
+    };
+    for client in expired {
+        state.service.close_client(&client);
+    }
+}
+
 fn auth_error(status: StatusCode, code: &str) -> Box<Response> {
     Box::new(reject(status, code))
+}
+
+#[cfg(test)]
+mod lifecycle_tests {
+    use super::*;
+    use crate::http::{HttpOptions, start};
+    use lai_contracts::{DataMode, Snapshot};
+    use lai_core::ClientPolicy;
+    use lai_discovery::ScanResult;
+    use lai_service::NativeService;
+    use std::collections::BTreeMap;
+    #[tokio::test]
+    async fn expiring_a_pairing_token_releases_only_that_client() {
+        let service = Arc::new(NativeService::new(
+            Arc::new(|_| {
+                Ok(ScanResult {
+                    snapshot: Snapshot::empty(DataMode::Live),
+                    locations: BTreeMap::new(),
+                    metadata_probes: 0,
+                })
+            }),
+            Duration::from_secs(60),
+        ));
+        service
+            .register_client("expired", ClientPolicy::passive())
+            .unwrap();
+        service
+            .register_client("fresh", ClientPolicy::passive())
+            .unwrap();
+        let server = start(
+            service.clone(),
+            HttpOptions {
+                port: 0,
+                policy: ClientPolicy::passive(),
+                execution: None,
+                assets: None,
+            },
+        )
+        .await
+        .unwrap();
+        let expired = "a".repeat(64);
+        let fresh = "b".repeat(64);
+        {
+            let mut tokens = server.shared.tokens.lock().unwrap();
+            tokens.insert(
+                hash(&expired),
+                Token {
+                    client: "expired".into(),
+                    created: Instant::now() - Duration::from_secs(3601),
+                    ready: true,
+                },
+            );
+            tokens.insert(
+                hash(&fresh),
+                Token {
+                    client: "fresh".into(),
+                    created: Instant::now(),
+                    ready: true,
+                },
+            );
+        }
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "authorization",
+            format!("Bearer {expired}").parse().unwrap(),
+        );
+        assert!(authorize(&server.shared, &headers, true).is_err());
+        assert!(
+            service
+                .handle("expired", "snapshot.get", json!({}))
+                .await
+                .is_err()
+        );
+        assert!(
+            service
+                .handle("fresh", "snapshot.get", json!({}))
+                .await
+                .is_ok()
+        );
+        assert_eq!(server.shared.tokens.lock().unwrap().len(), 1);
+        server.close().await;
+    }
 }

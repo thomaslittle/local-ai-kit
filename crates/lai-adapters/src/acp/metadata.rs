@@ -23,7 +23,17 @@ pub async fn probe(
     route: &str,
     access: AccountEvidence,
 ) -> Result<ConnectionMetadata> {
-    let mut wire = Wire::connect(spec, provider.into(), route.into()).await?;
+    probe_with_auth(spec, provider, connection, route, access, None).await
+}
+pub async fn probe_with_auth(
+    spec: LaunchSpec,
+    provider: &str,
+    connection: &str,
+    route: &str,
+    access: AccountEvidence,
+    auth: Option<&str>,
+) -> Result<ConnectionMetadata> {
+    let mut wire = Wire::connect_with_auth(spec, provider.into(), route.into(), auth).await?;
     let result = (|| {
         let catalog = wire.catalog()?;
         let version = wire.init["agentInfo"]["version"]

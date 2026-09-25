@@ -128,7 +128,8 @@ impl Args {
                                 "opencode",
                             ]
                             .contains(&v.as_str())
-                                || (flag == "--allow-metadata" && v == "grok")
+                                || (flag == "--allow-metadata"
+                                    && ["grok", "cursor"].contains(&v.as_str()))
                         })
                         .ok_or_else(invalid)?;
                     if flag == "--allow-metadata" {

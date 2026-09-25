@@ -19,6 +19,8 @@ pub struct ExecutionGrant {
     pub allow_paid: bool,
     pub allow_writes: bool,
     pub review_native: bool,
+    /// Explicit host trust in the installed client's native permission policy; not a Kit OS sandbox.
+    pub allow_native_policy: bool,
 }
 impl ExecutionGrant {
     fn allows(&self, c: &Connection) -> bool {
@@ -35,6 +37,7 @@ pub struct ExecutionInput {
     pub workspace: PathBuf,
     pub writable: bool,
     pub review_requests: bool,
+    pub native_policy: bool,
 }
 pub type ExecutionSource =
     Arc<dyn Fn(ExecutionInput) -> BoxFuture<'static, Box<dyn Agent>> + Send + Sync>;
@@ -241,6 +244,7 @@ impl NativeService {
                 let writable = match request.permission_mode.as_deref() {
                     None | Some("read_only") => false,
                     Some("workspace_write") if grant.allow_writes => true,
+                    Some("native_policy") if grant.allow_native_policy => false,
                     _ => return Err(denied()),
                 };
                 if (request.allow_paid && !grant.allow_paid)
@@ -258,6 +262,7 @@ impl NativeService {
                     workspace: workspace.clone(),
                     writable,
                     review_requests: request.review_requests,
+                    native_policy: request.permission_mode.as_deref() == Some("native_policy"),
                 };
                 let clients = self.clients.clone();
                 let grants = self.execution_state.grants.clone();
@@ -268,6 +273,7 @@ impl NativeService {
                 let connection_id = connection.id.clone();
                 let workspace_id = request.workspace_id.clone();
                 let paid = request.allow_paid;
+                let native_policy = request.permission_mode.as_deref() == Some("native_policy");
                 let expected_account = connection.account_id.clone();
                 let expected_billing = route.billing.value().cloned();
                 let guard = Arc::new(move || {
@@ -301,6 +307,7 @@ impl NativeService {
                     if c.account_id != expected_account
                         || c.auth.value() != Some(&AuthState::Authenticated)
                         || (paid && !grant.allow_paid)
+                        || (native_policy && !grant.allow_native_policy)
                     {
                         return Err(denied());
                     }
