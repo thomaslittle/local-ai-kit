@@ -100,13 +100,23 @@ impl LocalFilesystem for NativeFilesystem {
             return Err(invalid("Only regular files may be read"));
         }
         let total_size = metadata.len();
-        let identity = file_id::get_file_id(path).ok().map(|id| match id {
+        #[cfg(unix)]
+        let native_id = {
+            use std::os::unix::fs::MetadataExt;
+            // Use the opened file, not a second path lookup that may name a replacement.
+            Some(file_id::FileId::new_inode(metadata.dev(), metadata.ino()))
+        };
+        #[cfg(not(unix))]
+        let native_id = file_id::get_file_id(path).ok();
+        let created = metadata.created().ok();
+        let identity = native_id.map(|id| match id {
             file_id::FileId::Inode {
                 device_id,
                 inode_number,
             } => FileIdentity {
                 volume: u128::from(device_id),
                 file: u128::from(inode_number),
+                created,
             },
             file_id::FileId::LowRes {
                 volume_serial_number,
@@ -114,6 +124,7 @@ impl LocalFilesystem for NativeFilesystem {
             } => FileIdentity {
                 volume: u128::from(volume_serial_number),
                 file: u128::from(file_index),
+                created,
             },
             file_id::FileId::HighRes {
                 volume_serial_number,
@@ -121,6 +132,7 @@ impl LocalFilesystem for NativeFilesystem {
             } => FileIdentity {
                 volume: u128::from(volume_serial_number),
                 file: file_id,
+                created,
             },
         });
         if offset > total_size {

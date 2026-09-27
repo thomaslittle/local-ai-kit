@@ -8,6 +8,7 @@ const ANCHOR: usize = 64;
 pub struct LogTailState {
     pub offset: u64,
     identity: Option<FileIdentity>,
+    prefix: Vec<u8>,
     anchor: Vec<u8>,
     pending: Vec<u8>,
 }
@@ -38,6 +39,7 @@ impl LogTailState {
     pub fn reset(&mut self) {
         self.offset = 0;
         self.identity = None;
+        self.prefix.clear();
         self.anchor.clear();
         self.pending.clear();
     }
@@ -85,7 +87,7 @@ where
         return Err(invalid());
     }
     let mut next_state = state.clone();
-    let head = read_checked(fs, path, 0, 1, &mut cancelled)?;
+    let head = read_checked(fs, path, 0, ANCHOR, &mut cancelled)?;
     let total = head.total_size;
     let mut truncated = false;
     let mut rotated = false;
@@ -93,7 +95,7 @@ where
         next_state.reset();
         truncated = true
     } else if next_state.offset > 0 {
-        if next_state.identity != head.identity {
+        if next_state.identity != head.identity || !head.bytes.starts_with(&next_state.prefix) {
             next_state.reset();
             rotated = true;
         } else if !next_state.anchor.is_empty() {
@@ -143,6 +145,8 @@ where
         next_state.anchor.clear()
     }
     next_state.identity = head.identity.clone();
+    // Remember only bytes already consumed; append to a short file is not rotation.
+    next_state.prefix = head.bytes[..head.bytes.len().min(next_state.offset as usize)].to_vec();
     let mut lines = Vec::new();
     let mut consumed = 0usize;
     for (index, byte) in next_state.pending.iter().enumerate() {

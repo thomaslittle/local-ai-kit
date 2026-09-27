@@ -4,6 +4,8 @@ Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect
 
 ## Current implementation
 
+September 27 Linux qualification caught inode reuse in incremental-log rotation. Added birth-time evidence and a bounded leading fingerprint, with a deterministic reused-identity regression and append-stability coverage. Windows targeted filesystem/tail tests pass; both platforms require fresh full/release qualification after this correction. Source `43b7737` passed Windows release verification but is superseded for distribution qualification by this fix.
+
 September 27 readiness review: preserved the existing worktree and completed the real-data demo changes. Fixed OpenCode loopback authentication, local-runtime selection/execution, completed-turn suspend, revoke/regrant publication races, resumed demo continuation, concurrent SDK probes, and distinct-installation discovery. The live browser confirmed Codex (7), Claude Code (11), Grok (1), and OpenCode (111) model entries without inference. Ollama/LM Studio were detected but offline during this run. See [application integration](../integration/prompt-app.md). New qualification is recorded separately from the historical counts below.
 
 The live launcher runs a temporary helper copy so Windows builds can proceed while the demo stays open. `npm run demo` grants metadata only. The OpenCode subprocess now receives its actual server-password setting, and readiness requires anonymous HTTP 401 as well as an authenticated response.

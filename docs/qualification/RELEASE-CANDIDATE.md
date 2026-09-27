@@ -73,7 +73,7 @@ These items landed after source `991ec2b`; they are not qualified by the artifac
 - `lai_discovery::log_tail` provides bounded, cancellable newline-record reads, file identity/anchor rotation checks, truncation reset, partial-record buffering, and symlink-safe native reads. No provider adapter currently uses it; it does not interpret usage.
 - Metadata probe failures expose sanitized retryability/Retry-After information and use bounded negative-cache backoff. Generation requests are never retried automatically.
 
-## Current qualification status
+## Historical qualification status — September 25, 2026
 
 The changes after `991ec2b` have a fresh Windows release run on clean source `702d98d7cb77ba788f09ce5e890149fef8908ac2`; see the current-source evidence below. The Windows distribution and package consumers were rebuilt from that exact SHA. Linux verification ran on WSL2 through the full Rust workspace and most deterministic SDK/integration checks, but did not finish the browser demo or produce a current-source Linux distribution. macOS remains unexecuted and unqualified.
 
@@ -86,7 +86,7 @@ No registry release, OS signing/notarization, main merge, live generation, or pa
 Review in this session was author self-review, not an independent security audit. The review found and fixed the empty event-journal cursor issue and the offline React peer-cache assumption; focused regressions failed before the fixes and passed afterward.
 
 
-## Current-source Windows qualification — September 25, 2026
+## Historical Windows qualification — September 25, 2026
 
 Source 702d98d7cb77ba788f09ce5e890149fef8908ac2, clean working tree, Windows 11 x64:
 
@@ -98,7 +98,7 @@ Source 702d98d7cb77ba788f09ce5e890149fef8908ac2, clean working tree, Windows 11 
 - Packaged native binary SHA-256: 0a183d80a4b2b5e1d65f466ad86547600127105bc4c200d0232cb9ec82f75b44. Package smoke reports manifest, standalone native binary, npm tarballs, Python wheel, and React SSR all passing; inference requests: zero.
 - Fresh benchmark on that binary: 20 cold process-and-scan samples, p50 16.01 ms / p95 34.28 ms; 200 warm stdio snapshots, p50 0.35 ms / p95 0.48 ms; 60.40-second idle run, peak RSS 8.65 MiB, 0.0% one-core CPU. All recorded performance targets passed.
 
-## Current-source Linux and macOS status
+## Historical Linux and macOS status — September 25, 2026
 
 The WSL2 run at the preceding clean source checkpoint 11d1926 passed the full Rust workspace and TypeScript/Python SDK, generated-contract, React, helper/broker, and deterministic integration checks up to the browser demo. The large-log test has since been made synthetic and passed on Windows, so the prior WSL run does not verify that final test-fixture change. Playwright was initially missing from the fresh Linux environment. After installing the pinned dependency, Chromium downloaded, but Playwright returned EIO while removing its cache lock. WSL then failed to launch Ubuntu with Wsl/Service/CreateInstance/E_FAIL and later Wsl/Service/E_UNEXPECTED, including after terminating and shutting down the distro. No current-source Linux package, consumer smoke, or benchmark was produced. The old 991ec2b Linux artifact remains historical and does not qualify current source.
 

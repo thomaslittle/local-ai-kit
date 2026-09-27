@@ -21,6 +21,8 @@ pub struct DirectoryListing {
 pub struct FileIdentity {
     pub volume: u128,
     pub file: u128,
+    /// Birth time distinguishes reused file IDs when the filesystem supplies it.
+    pub created: Option<std::time::SystemTime>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReadChunk {

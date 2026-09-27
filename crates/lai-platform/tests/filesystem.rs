@@ -4,6 +4,30 @@ use std::{
     io::{Seek, SeekFrom, Write},
 };
 #[test]
+fn file_identity_uses_birth_time_when_available_and_survives_append() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("events");
+    fs::write(&path, b"one\n").unwrap();
+    let first = NativeFilesystem
+        .read_chunk(&path, 0, 4)
+        .unwrap()
+        .identity
+        .unwrap();
+    assert_eq!(first.created, fs::metadata(&path).unwrap().created().ok());
+    fs::OpenOptions::new()
+        .append(true)
+        .open(&path)
+        .unwrap()
+        .write_all(b"two\n")
+        .unwrap();
+    let second = NativeFilesystem
+        .read_chunk(&path, 4, 4)
+        .unwrap()
+        .identity
+        .unwrap();
+    assert_eq!(first, second);
+}
+#[test]
 fn detects_missing_file_directory_without_reading_content() {
     let tmp = tempfile::tempdir().unwrap();
     let fsys = NativeFilesystem;

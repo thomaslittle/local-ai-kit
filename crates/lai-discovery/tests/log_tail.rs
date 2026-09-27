@@ -97,6 +97,42 @@ fn line_limit_buffers_complete_records_without_duplicate_file_reads() {
 struct CountingFs {
     bytes: AtomicUsize,
 }
+struct ReusedIdentityFs;
+impl LocalFilesystem for ReusedIdentityFs {
+    fn probe(&self, path: &Path) -> Result<EntryKind> {
+        NativeFilesystem.probe(path)
+    }
+    fn children(&self, path: &Path, limit: usize) -> Result<DirectoryListing> {
+        NativeFilesystem.children(path, limit)
+    }
+    fn read_chunk(&self, path: &Path, offset: u64, limit: usize) -> Result<ReadChunk> {
+        let mut chunk = NativeFilesystem.read_chunk(path, offset, limit)?;
+        // Some filesystems reuse an inode immediately and do not expose birth time.
+        chunk.identity = None;
+        Ok(chunk)
+    }
+}
+#[test]
+fn changed_prefix_detects_rotation_when_identity_and_tail_anchor_are_reused() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("events");
+    let suffix = b"same\n".repeat(32);
+    fs::write(&path, [b"old\n".repeat(32), suffix.clone()].concat()).unwrap();
+    let mut state = LogTailState::default();
+    read_lines(&ReusedIdentityFs, &path, &mut state, 1024, 100).unwrap();
+    fs::write(
+        &path,
+        [b"new\n".repeat(32), suffix, b"last\n".to_vec()].concat(),
+    )
+    .unwrap();
+    let batch = read_lines(&ReusedIdentityFs, &path, &mut state, 1024, 100).unwrap();
+    assert!(batch.rotated);
+    assert_eq!(batch.lines.first().unwrap(), b"new");
+    assert_eq!(batch.lines.last().unwrap(), b"last");
+    let empty = read_lines(&ReusedIdentityFs, &path, &mut state, 1024, 100).unwrap();
+    assert!(empty.lines.is_empty());
+    assert!(!empty.rotated);
+}
 impl LocalFilesystem for CountingFs {
     fn probe(&self, p: &Path) -> Result<EntryKind> {
         NativeFilesystem.probe(p)
@@ -135,6 +171,7 @@ impl LocalFilesystem for SyntheticLargeFs {
             identity: Some(lai_platform::FileIdentity {
                 volume: 7,
                 file: 11,
+                created: None,
             }),
         })
     }
