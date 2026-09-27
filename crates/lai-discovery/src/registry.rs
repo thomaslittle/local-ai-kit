@@ -82,10 +82,10 @@ impl ProviderDefinition {
             "gemini_cli" => vec![env.home.join(".gemini")],
             "antigravity" => vec![env.home.join(".gemini/antigravity")],
             "grok" => vec![env.home.join(".grok")],
-            "opencode" => vec![
-                env.config_home.join("opencode"),
-                env.data_home.join("opencode"),
-            ],
+            // OpenCode stores configuration and account data under separate XDG roots.
+            // They describe one installation profile; use its data root as the stable
+            // identity because that is where its provider credentials are stored.
+            "opencode" => vec![env.data_home.join("opencode")],
             "cursor" => vec![match env.platform {
                 HostPlatform::Windows => env.app_data.join("Cursor"),
                 HostPlatform::Macos => env.home.join("Library/Application Support/Cursor"),

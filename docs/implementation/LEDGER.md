@@ -1,6 +1,18 @@
-# Execution ledger â€” Local AI Kit
+# Execution ledger — Local AI Kit
 
-## Current status — September 25, 2026
+## Readiness review — September 27, 2026
+
+Preserved and reviewed the dirty real-data demo/provider work on `74138c5`. Added regressions and fixes for accountless Ollama/LM Studio execution through the embedded facade; completed-turn suspend; fail-closed suspend errors/timeouts; native resumed-conversation continuation in the browser; grant-lifetime synchronization of session/token publication and revocation; concurrent successful SDK probes; Windows installation/shim identity; and OpenCode authenticated startup. Tests caught and corrected cold-process timing assumptions, a two-second heartbeat watchdog, and concurrent Windows test pipe-name collisions. Explicit timeout tests still enforce their short deadlines.
+
+Ruling: retain distinct executable directories as separate installation routes, while grouping Windows command shims within one directory. Do not collapse different installed versions merely to simplify the account list. Configuration-only OpenCode retains stable identity when its data directory appears.
+
+The manual paired browser run returned 130 model entries from Codex, Claude Code, Grok, and OpenCode; no model turn was sent. UI regression coverage includes continuing a resumed session without calling sessions.create, token non-disclosure, all eight selectors, and real-data-only failure states. Added `docs/integration/prompt-app.md` for application integration boundaries.
+
+GitHub's exact pre-job blocker is now known from check annotations: recent account payments failed or the spending limit needs increasing. No billing changes made. WSL starts again; new qualification must be reported independently of September 25 evidence.
+
+Windows pre-package gate passed: full `verify.py --profile all`, including 347 Rust tests, TypeScript SDK 63, selector-core 28, Python SDK 25, React 13, browser interactions 14, and accessibility 32. Fresh-context review found and drove the revoke/publication and installation-identity fixes; all review findings were resolved. Clean-source bundle qualification is the next gate.
+
+## Historical checkpoint — September 25, 2026
 
 The current source checkpoint `702d98d7cb77ba788f09ce5e890149fef8908ac2` passed Windows full/release verification and package/performance qualification; 332 Rust tests passed with zero failures or ignored tests. Linux WSL2 passed the Rust workspace and most deterministic SDK/integration suites at the prior source revision but did not complete UI/release qualification after a local Playwright/WSL runtime I/O failure; the final synthetic large-log fixture has only Windows execution evidence. Historical Windows/Linux artifacts at `991ec2b` do not qualify current source. Native subscription profiles for Gemini CLI, Antigravity, and Grok are implemented with explicit host registration and connection-scoped grants. Grok has metadata-only Windows evidence; Gemini CLI and Antigravity do not have live qualification. `sessions.suspend` / `sessions.resume` use ACP `loadSession` only when advertised, owner-scoped one-time in-memory tokens, and checks against the saved account, route, billing, model revision, workspace path, and current authorization. The incremental metadata tailer is provider-agnostic infrastructure; no adapter currently consumes it or derives quota from logs. Metadata failures use bounded retry backoff and sanitized Retry-After metadata.
 
@@ -65,7 +77,7 @@ Resumed existing worktree at 9a32086; retained in-progress Grok/ACP metadata and
 
 HTTP providers: catalog tests 7 red->green; frame tests 2 red->green; runtime/HTTP integration 2 red->green; endpoint registry 4 red->green; CLI endpoint tests 2 red->green plus one negative case. Full Windows workspace 207 passed. Ruling: explicit host textModels assertions are tagged user_supplied when catalogs do not publish text capability; no model-name eligibility guesses. Endpoint credentials remain an explicit host-resolver responsibility.
 
-OpenCode: four catalog tests red->green; two native HTTP/runtime tests red->green; explicit gateway configuration red->green. Source schema pinned to 0f549842. Execution is text-only with echoed deny-all native permissions, session-scoped streams, and owned abort/delete. Ruling: billing declarations remain user_supplied; private gateway keys are discarded and never converted into account evidence.
+OpenCode: four catalog tests red->green; two native HTTP/runtime tests red->green; explicit gateway configuration red->green. Source schema pinned to 0f549842. Execution is text-only with echoed deny-all native permissions, session-scoped streams, and owned abort/delete. A nonempty OpenCode `/provider` connected list is reported as profile-level authentication evidence; it does not validate every upstream credential. Billing declarations remain user_supplied; private gateway keys are discarded and never converted into account evidence.
 
 Generated-contract increment: six type-generator tests red->green, four protocol-document tests red->green, Rust request-map tests red->green, and three runtime-introspection regression tests red->green. The Python stub regression caught boolean JSON Schema response types and received a focused fix. TypeScript consumer compilation rejects incomplete sessions, unknown probe arguments, and unrequested projection fields.
 

@@ -43,7 +43,7 @@ def main():
         run(['npm','run','build']);run(['node','scripts/build_demo.mjs']);run(['node','scripts/build_extension.mjs']);run(['cargo','build','--locked','-p','lai-cli'])
         run(['node','--test',*sorted((ROOT/'apps/demo/tests').glob('*.test.mjs'))])
         run([sys.executable,'scripts/test_demo.py'])
-        run(['node','--test','scripts/test_live_demo.mjs'])
+        run(['node','--test','scripts/test_live_demo.mjs','scripts/test_live_demo_opencode.mjs','scripts/test_demo_profile_auth.mjs','scripts/test_demo_errors.mjs','scripts/test_demo_catalog_visibility.mjs'])
         run(['node','--test','scripts/test_accessibility.mjs','scripts/test_component_accessibility.mjs'])
     if a.profile=='release':
         run([sys.executable,'scripts/test_dotnet.py'])

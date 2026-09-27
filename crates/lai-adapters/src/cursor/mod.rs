@@ -3,6 +3,7 @@ use lai_contracts::*;
 use lai_discovery::LocatedClient;
 use rusqlite::{Connection, OpenFlags, OptionalExtension, limits::Limit};
 use std::time::Duration;
+const MAX_CACHE_DATABASE_BYTES: u64 = 8 * 1024 * 1024 * 1024;
 fn unavailable() -> DomainError {
     DomainError::new(
         ErrorCode::ProviderUnavailable,
@@ -42,7 +43,7 @@ pub fn read_cached(
     }
     let path = located.profile_home.join("User/globalStorage/state.vscdb");
     let info = path.symlink_metadata().map_err(|_| unavailable())?;
-    if !info.is_file() || info.file_type().is_symlink() || info.len() > 64 * 1024 * 1024 {
+    if !info.is_file() || info.file_type().is_symlink() || info.len() > MAX_CACHE_DATABASE_BYTES {
         return Err(unavailable());
     }
     let mut url = reqwest::Url::from_file_path(&path).map_err(|_| unavailable())?;
@@ -58,11 +59,28 @@ pub fn read_cached(
     .map_err(|_| unavailable())?;
     db.busy_timeout(Duration::from_millis(200))
         .map_err(|_| unavailable())?;
+    db.pragma_update(None, "cache_size", -1024)
+        .map_err(|_| unavailable())?;
     db.set_limit(Limit::SQLITE_LIMIT_LENGTH, 65536);
     db.set_limit(Limit::SQLITE_LIMIT_SQL_LENGTH, 4096);
-    // Validate the fixed schema before treating absent cache fields as meaningful.
-    db.prepare("SELECT key FROM ItemTable LIMIT 0")
+    // Large Cursor databases are common. Require SQLite to use an index on the
+    // exact key before reading, so a cache-size allowance never permits a table scan.
+    let mut plan = db
+        .prepare(
+            "EXPLAIN QUERY PLAN SELECT substr(value,1,1024) FROM ItemTable WHERE key=?1 LIMIT 1",
+        )
         .map_err(|_| unavailable())?;
+    let details = plan
+        .query_map(["cursorAuth/cachedEmail"], |row| row.get::<_, String>(3))
+        .map_err(|_| unavailable())?
+        .collect::<std::result::Result<Vec<_>, _>>()
+        .map_err(|_| unavailable())?;
+    if !details
+        .iter()
+        .any(|detail| detail.contains("USING INDEX") || detail.contains("USING COVERING INDEX"))
+    {
+        return Err(unavailable());
+    }
     let email = value(&db, "cursorAuth/cachedEmail");
     let plan = value(&db, "cursorAuth/stripeMembershipType");
     let account = email.map(|label| Account {

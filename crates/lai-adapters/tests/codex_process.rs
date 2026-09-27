@@ -122,7 +122,11 @@ async fn malformed_oversized_and_timed_out_peers_are_bounded() {
             launch(mode, tmp.path()),
             "c",
             "r",
-            Duration::from_millis(500),
+            if mode == "slow" {
+                Duration::from_millis(500)
+            } else {
+                Duration::from_secs(5)
+            },
         )
         .await
         .unwrap_err();

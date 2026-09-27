@@ -10,6 +10,73 @@ use std::{
     time::Duration,
 };
 struct TestAgent(Arc<AtomicUsize>);
+struct FailingSuspend(bool);
+impl Agent for FailingSuspend {
+    fn turn<'a>(
+        &'a mut self,
+        _: String,
+        _: BTreeMap<String, Value>,
+        _: TurnContext,
+    ) -> BoxFuture<'a, ()> {
+        Box::pin(async { panic!("uncertain session must never execute") })
+    }
+    fn close(&mut self) -> BoxFuture<'_, ()> {
+        Box::pin(async { Ok(()) })
+    }
+    fn native_resumption(&self) -> bool {
+        true
+    }
+    fn suspend(&mut self) -> BoxFuture<'_, String> {
+        Box::pin(async move {
+            if self.0 {
+                std::future::pending::<()>().await;
+            }
+            Err(DomainError::new(
+                ErrorCode::ProviderUnavailable,
+                "fixture failed",
+            ))
+        })
+    }
+}
+#[tokio::test]
+async fn failed_or_timed_out_suspend_never_reenables_an_uncertain_conversation() {
+    for timeout in [false, true] {
+        let runtime = Runtime::new();
+        let session = runtime
+            .insert(
+                "a",
+                "connection".into(),
+                Selection {
+                    route_id: "r".into(),
+                    model_id: "m".into(),
+                    revision: "1".into(),
+                    options: Default::default(),
+                },
+                Box::new(FailingSuspend(timeout)),
+                Arc::new(|| Ok(())),
+            )
+            .unwrap();
+        assert_eq!(
+            runtime.suspend("a", &session.id).await.unwrap_err().code,
+            if timeout {
+                ErrorCode::Timeout
+            } else {
+                ErrorCode::ProviderUnavailable
+            }
+        );
+        assert_eq!(
+            runtime.get("a", &session.id).unwrap().state,
+            SessionState::Error
+        );
+        assert!(
+            runtime
+                .start("a", &session.id, "hello".into(), "request".into())
+                .await
+                .is_err()
+        );
+        runtime.close("a", &session.id).await.unwrap();
+    }
+}
 impl Agent for TestAgent {
     fn turn<'a>(
         &'a mut self,

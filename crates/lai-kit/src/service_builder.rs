@@ -55,7 +55,9 @@ pub fn build_service_with_registries(
                 if let Some(config) = endpoint {
                     let client = configured_endpoint(&config)?;
                     if config.kind == http_provider::HttpKind::Opencode {
-                        let raw = client.json("provider", None).await?;
+                        let raw = client
+                            .json_query_limited("provider", &[], None, 16 * 1024 * 1024)
+                            .await?;
                         return lai_adapters::opencode::catalog(
                             &connection,
                             &route,

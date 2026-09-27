@@ -9,6 +9,7 @@ use std::{net::IpAddr, time::Duration};
 use zeroize::Zeroize;
 
 const BODY_LIMIT: usize = 2 * 1024 * 1024;
+const MAX_METADATA_BODY_LIMIT: usize = 16 * 1024 * 1024;
 const LINE_LIMIT: usize = 1024 * 1024;
 const STREAM_LIMIT: usize = 32 * 1024 * 1024;
 pub enum Authentication {
@@ -320,17 +321,29 @@ impl Endpoint {
         query: &[(&str, &str)],
         body: Option<Value>,
     ) -> Result<Value> {
+        self.json_query_limited(path, query, body, BODY_LIMIT).await
+    }
+    pub async fn json_query_limited(
+        &self,
+        path: &str,
+        query: &[(&str, &str)],
+        body: Option<Value>,
+        max_response_bytes: usize,
+    ) -> Result<Value> {
+        if max_response_bytes == 0 || max_response_bytes > MAX_METADATA_BODY_LIMIT {
+            return Err(invalid());
+        }
         let url = self.query_url(path, query)?;
         let mut response = self.send_url(url, body, false).await?;
         if response
             .content_length()
-            .is_some_and(|n| n > BODY_LIMIT as u64)
+            .is_some_and(|n| n > max_response_bytes as u64)
         {
             return Err(error(ErrorCode::FrameTooLarge));
         }
         let mut bytes = Vec::new();
         while let Some(chunk) = response.chunk().await.map_err(network)? {
-            if bytes.len() + chunk.len() > BODY_LIMIT {
+            if bytes.len() + chunk.len() > max_response_bytes {
                 return Err(error(ErrorCode::FrameTooLarge));
             }
             bytes.extend_from_slice(&chunk);

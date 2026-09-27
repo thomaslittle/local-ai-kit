@@ -94,6 +94,7 @@ fn legacy_and_multi_bucket_views_are_not_double_counted() {
     .unwrap();
     assert_eq!(report.quota_pools.len(), 1);
     assert_eq!(report.quota_pools[0].windows.len(), 2);
+    assert_eq!(report.quota_pools[0].windows[0].label, "Codex · primary");
     let reading = report.quota_pools[0].windows[0]
         .reading
         .fresh_value()

@@ -11,9 +11,11 @@ globalThis.mountTestApp=async(options={})=>{
  const connectFixture=async()=>createLocalAI({transport:fixtureTransport(createFixtureService({snapshot}))});
  let initialClient=null;
  if(options.nativeResumption){
+  globalThis.testNativeCalls=[];
   const service=createFixtureService({snapshot}),transport=fixtureTransport(service),request=transport.request.bind(transport);
   let previousSession=null;
   transport.request=async(method,params={},call={})=>{
+   if(['sessions.create','sessions.close','turns.start'].includes(method))globalThis.testNativeCalls.push(method);
    if(method==='runtime.handshake'){
     const handshake=await request(method,params,call);
     return {...handshake,methods:[...handshake.methods,'sessions.suspend','sessions.resume']};
@@ -23,7 +25,7 @@ globalThis.mountTestApp=async(options={})=>{
     return previousSession;
    }
    if(method==='sessions.suspend')return {resumeToken:'test-only-resume-token-sentinel'};
-   if(method==='sessions.resume')return {...previousSession,id:'fixture-resumed-session',state:'ready'};
+   if(method==='sessions.resume')return {...previousSession,state:'ready'};
    return request(method,params,call);
   };
   initialClient=await createLocalAI({transport});

@@ -11,6 +11,30 @@ use std::{
 fn path_key(path: &Path) -> String {
     format!("{:x}", Sha256::digest(path.as_os_str().as_encoded_bytes()))
 }
+fn preferred_executable(
+    binaries: &BTreeSet<std::path::PathBuf>,
+    platform: HostPlatform,
+) -> Option<std::path::PathBuf> {
+    binaries
+        .iter()
+        .min_by_key(|path| {
+            if platform != HostPlatform::Windows {
+                return 0;
+            }
+            match path
+                .extension()
+                .and_then(|extension| extension.to_str())
+                .map(str::to_ascii_lowercase)
+                .as_deref()
+            {
+                Some("exe") => 0,
+                Some("cmd") => 1,
+                Some("bat") => 2,
+                _ => 3,
+            }
+        })
+        .cloned()
+}
 fn cancelled(flag: &AtomicBool) -> Result<()> {
     if flag.load(Ordering::Relaxed) {
         Err(DomainError::new(
@@ -114,6 +138,23 @@ impl<F: LocalFilesystem> Scanner<F> {
                     .diagnostics
                     .push(format!("{}_INSTALLATION_LIST_PARTIAL", definition.id));
             }
+            // Windows launch shims in one directory represent one installation.
+            // Different directories may contain different versions; retain them.
+            let mut groups = BTreeMap::<_, BTreeSet<_>>::new();
+            for binary in &binaries {
+                groups
+                    .entry(binary.parent().map(Path::to_path_buf))
+                    .or_default()
+                    .insert(binary.clone());
+            }
+            let mut executables: Vec<_> = groups
+                .values()
+                .take(8)
+                .map(|group| preferred_executable(group, env.platform))
+                .collect();
+            if executables.is_empty() {
+                executables.push(None);
+            }
             let mut roots = definition.roots(env);
             if !definition.has_override(env) {
                 if let Some(prefix) = definition.profile_prefix {
@@ -141,7 +182,7 @@ impl<F: LocalFilesystem> Scanner<F> {
             for (index, root) in roots.into_iter().enumerate() {
                 cancelled(cancel)?;
                 result.metadata_probes += 1;
-                let config_present = match self.filesystem.probe(&root) {
+                let mut config_present = match self.filesystem.probe(&root) {
                     Ok(EntryKind::Directory) => true,
                     Ok(EntryKind::Missing) => false,
                     Ok(_) => {
@@ -159,26 +200,41 @@ impl<F: LocalFilesystem> Scanner<F> {
                         false
                     }
                 };
+                if !config_present
+                    && definition.id == "opencode"
+                    && root == env.data_home.join("opencode")
+                {
+                    result.metadata_probes += 1;
+                    config_present = matches!(
+                        self.filesystem.probe(&env.config_home.join("opencode")),
+                        Ok(EntryKind::Directory)
+                    );
+                }
                 if !config_present && (binaries.is_empty() || Some(&root) != default_root.as_ref())
                 {
                     continue;
                 }
-                let executable_options: Vec<_> = if binaries.is_empty() {
-                    vec![None]
-                } else {
-                    binaries.iter().take(8).map(|p| Some(p.clone())).collect()
-                };
-                for executable in executable_options {
+                for (installation_index, executable) in executables.iter().cloned().enumerate() {
                     let binary_key = executable
                         .as_ref()
-                        .map(|p| path_key(p))
+                        .map(|path| path_key(path))
                         .unwrap_or_else(|| format!("configuration-only-{}", definition.id));
                     let installation_id = stable_id(
                         "installation",
                         &[&environment_id, definition.id, &binary_key],
                     );
-                    let profile_id = stable_id("profile", &[&installation_id, &path_key(&root)]);
-                    let connection_id = stable_id("connection", &[&profile_id]);
+                    // A profile belongs to its provider configuration root. Multiple command shims
+                    // for the same root are installation candidates, not separate accounts.
+                    let profile_id = stable_id(
+                        "profile",
+                        &[
+                            &environment_id,
+                            definition.id,
+                            &path_key(&root),
+                            &installation_id,
+                        ],
+                    );
+                    let connection_id = stable_id("connection", &[&profile_id, &installation_id]);
                     if installations.insert(installation_id.clone()) {
                         result.snapshot.installations.push(Installation {
                             id: installation_id.clone(),
@@ -192,11 +248,14 @@ impl<F: LocalFilesystem> Scanner<F> {
                             version: Observation::unknown("VERSION_NOT_PROBED"),
                         });
                     }
-                    let label = if Some(&root) == default_root.as_ref() {
+                    let mut label = if Some(&root) == default_root.as_ref() {
                         "Default profile".into()
                     } else {
                         format!("Additional profile {}", index + 1)
                     };
+                    if executables.len() > 1 {
+                        label = format!("{label} · Installation {}", installation_index + 1);
+                    }
                     result.snapshot.profiles.push(Profile {
                         id: profile_id.clone(),
                         installation_id: installation_id.clone(),
@@ -207,7 +266,7 @@ impl<F: LocalFilesystem> Scanner<F> {
                         provider_id: definition.id.into(),
                         installation_id,
                         profile_id,
-                        display_name: format!("{} Â· {label}", definition.name),
+                        display_name: format!("{} · {label}", definition.name),
                         account_id: None,
                         auth: Observation::unknown("AUTH_NOT_CHECKED_PASSIVE_SCAN"),
                         plan: Observation::unknown("PLAN_NOT_REPORTED"),
@@ -226,7 +285,7 @@ impl<F: LocalFilesystem> Scanner<F> {
                         id: stable_id("route", &[&connection_id]),
                         connection_id: connection_id.clone(),
                         provider_id: definition.id.into(),
-                        display_name: format!("{} Â· {label}", definition.name),
+                        display_name: format!("{} · {label}", definition.name),
                         billing: Observation::unknown("BILLING_NOT_CHECKED"),
                         capabilities: vec![],
                         catalog_revision: "unprobed".into(),

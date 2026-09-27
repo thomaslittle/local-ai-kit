@@ -75,6 +75,10 @@ fn lmstudio_filters_embeddings_and_preserves_native_context() {
     assert_eq!(m.models[0].native_id, "llm-native");
     assert_eq!(m.models[0].context_window.value().unwrap(), "16384");
     assert_eq!(m.billing.value(), Some(&BillingMode::Local));
+    assert!(
+        m.auth.value().is_none(),
+        "a reachable local model server is not an authenticated account"
+    );
 }
 #[test]
 fn duplicate_or_malformed_catalogs_fail_without_echoing_secrets() {

@@ -1,9 +1,10 @@
 import {el,button,badge,code,known,empty} from './ui.mjs';
 import {validateOption} from '/modules/selector/index.js';
+import {reasonLabel} from './selectors.mjs';
 
 export function configuration(ctx){
  const selected=ctx.all.find(c=>c.model.id===ctx.state.selection?.modelId);
- if(!selected)return el('aside',{class:'configuration card',id:'configuration-panel'},empty('Choose a model','Inspect a route to see its native settings and execution identity.'));
+ if(!selected)return el('aside',{class:'configuration card',id:'configuration-panel'},empty(ctx.all.length?'Choose a model':'No model route available',ctx.all.length?'Inspect a route to see its native settings and execution identity.':'Check account and model metadata on an authorized connection to load a catalog.'),button('Open Connections',()=>{ctx.state.page='Connections';ctx.render();}));
  const {model,route,connection}=selected,selection=ctx.state.selection;
  const setOption=(descriptor,value)=>{
   if(value!==undefined){
@@ -28,7 +29,8 @@ export function configuration(ctx){
   }else if(control.type==='number')input=el('input',{...common,type:'number',min:control.min,max:control.max,step:control.step,value:value??'',placeholder:'Provider default',onChange:e=>setOption(descriptor,e.target.value===''?undefined:e.target.valueAsNumber)});
   else if(control.type==='text')input=el('input',{...common,type:'text',maxLength:control.maxLength,value:value??'',placeholder:'Provider default',onChange:e=>setOption(descriptor,e.target.value===''?undefined:e.target.value)});
   else input=el('div',{class:'unavailable'},`Inspectable, not editable: ${control.nativeType}`);
-  return el('div',{class:'field'},el('label',{for:id},descriptor.label),input,el('small',{class:'muted'},`${descriptor.scope} option · ${descriptor.revision}${descriptor.billingSensitive?' · may affect billing':''}${descriptor.permissionSensitive?' · changes permissions':''}`));
+  const note=[`${descriptor.scope} option`,descriptor.billingSensitive?'May affect billing':null,descriptor.permissionSensitive?'Changes permissions':null].filter(Boolean).join(' · ');
+  return el('div',{class:'field'},el('label',{for:id},descriptor.label),input,el('small',{class:'muted'},note));
  });
  const context=known(model.contextWindow);
  return el('aside',{class:'configuration card',id:'configuration-panel'},
@@ -38,7 +40,7 @@ export function configuration(ctx){
   el('dl',{class:'facts'},el('dt',{},'Provider'),el('dd',{},ctx.providers.find(p=>p.id===route.providerId)?.name??route.providerId),el('dt',{},'Native model'),el('dd',{class:'mono'},model.nativeId),el('dt',{},'Context'),el('dd',{},context?`${Number(context).toLocaleString()} · reported`:'Not reported'),el('dt',{},'Source'),el('dd',{},ctx.state.mode==='synthetic'?'Synthetic example':'Connected runtime')),
   el('div',{class:'config-options'},el('h3',{},'Native options'),optionNodes.length?optionNodes:el('p',{class:'muted'},'This model advertises no editable options. Nothing is assumed.')),
   model.options.some(o=>o.billingSensitive||o.permissionSensitive)?el('label',{class:'check'},el('input',{type:'checkbox',checked:ctx.state.sensitiveConsent,onChange:e=>{ctx.state.sensitiveConsent=e.target.checked;ctx.render();}}),'Allow sensitive configuration changes'):null,
-  selected.reasons.length?el('div',{class:'notice warning'},selected.reasons.join(' · ')):null,
-  el('details',{open:''},el('summary',{},'Exact selection payload'),el('pre',{id:'selection-json',class:'code'},JSON.stringify(selection,null,2))),
+  selected.reasons.length?el('div',{class:'notice warning'},selected.reasons.map(reasonLabel).join(' · ')):null,
+  el('details',{},el('summary',{},'Exact selection payload'),el('pre',{id:'selection-json',class:'code'},JSON.stringify(selection,null,2))),
   el('p',{class:'fine-print'},'Selection is not authorization. The runtime must recheck access, settings, and permissions before execution.'));
 }

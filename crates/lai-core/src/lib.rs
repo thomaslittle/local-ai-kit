@@ -3,7 +3,7 @@ mod projection;
 mod selection;
 pub use lai_contracts::{Candidate, Requirements};
 pub use projection::project_snapshot;
-pub use selection::{resolve, validate_selection};
+pub use selection::{is_accountless_local_route, resolve, validate_selection};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 #[derive(Debug, Clone, Serialize, Deserialize)]

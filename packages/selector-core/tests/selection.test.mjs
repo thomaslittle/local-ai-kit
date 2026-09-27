@@ -12,6 +12,21 @@ function snapshot() {
  return {connections,routes,models,quotaPools:[]};
 }
 const select={id:'effort',label:'Effort',scope:'turn',revision:'1',control:{type:'select',choices:[{value:'cosmic',label:'Cosmic'},{value:'blocked',label:'Blocked',disabledReason:'No entitlement'}],defaultValue:'cosmic'}};
+
+test('accountless local runtimes require matching providers and fresh local billing',()=>{
+ for(const provider of ['ollama','lmstudio']){
+  const s=snapshot();s.connections[0].providerId=provider;s.routes[0].providerId=provider;
+  s.connections[0].auth={state:'unknown',reason:'LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH'};s.routes[0].billing=known('local');
+  assert.equal(resolveCandidates(createCatalog(s))[0].eligible,true);
+  s.routes[0].billing.freshness='stale';
+  assert.equal(resolveCandidates(createCatalog(s))[0].eligible,false);
+ }
+ for(const provider of ['vendor','ollama']){
+  const s=snapshot();s.connections[0].providerId=provider;
+  s.connections[0].auth={state:'unknown',reason:'LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH'};s.routes[0].billing=known('local');
+  assert.equal(resolveCandidates(createCatalog(s))[0].eligible,false);
+ }
+});
 test('route identity and delimiter collisions stay distinct',()=>{
  assert.notEqual(selectionKey('a:b','c'),selectionKey('a','b:c'));
  assert.notEqual(selectionKey('personal','same'),selectionKey('work','same'));

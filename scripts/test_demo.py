@@ -143,6 +143,9 @@ class DemoTests(unittest.TestCase):
         self.page.get_by_role('button',name='Playground',exact=True).click()
         self.page.get_by_role('button',name='Resume native session',exact=True).click()
         expect(self.page.locator('#session-status')).to_have_text('Ready')
+        self.page.get_by_role('button',name='Simulate turn',exact=True).click()
+        expect(self.page.locator('#session-status')).to_have_text('Completed')
+        self.assertEqual(self.page.evaluate('window.testNativeCalls'), ['sessions.create','turns.start','turns.start'])
 
     def test_failed_live_connection_never_keeps_fixture_accounts(self):
         self.load()

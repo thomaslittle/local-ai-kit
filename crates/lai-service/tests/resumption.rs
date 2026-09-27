@@ -16,11 +16,16 @@ struct ResumeAgent;
 impl Agent for ResumeAgent {
     fn turn<'a>(
         &'a mut self,
-        _: String,
+        prompt: String,
         _: BTreeMap<String, Value>,
         mut context: TurnContext,
     ) -> BoxFuture<'a, ()> {
         Box::pin(async move {
+            if prompt == "complete" {
+                return context.emit(EventPayload::TextDelta {
+                    text: "fixture reply".into(),
+                });
+            }
             context.cancelled().await;
             Err(DomainError::new(ErrorCode::Cancelled, "fixture cancelled"))
         })
@@ -111,6 +116,50 @@ fn setup() -> (Arc<NativeService>, ResumeOpens) {
 }
 fn create() -> Value {
     json!({"selection":common::selection(),"workspaceId":"scratch"})
+}
+#[tokio::test]
+async fn completed_conversation_can_suspend_and_resume_without_a_fresh_session() {
+    let (s, opens) = setup();
+    s.handle("a", "discovery.refresh", json!({})).await.unwrap();
+    let session = s.handle("a", "sessions.create", create()).await.unwrap();
+    s.handle(
+        "a",
+        "turns.start",
+        json!({"sessionId":session["id"],"prompt":"complete","requestId":"completed"}),
+    )
+    .await
+    .unwrap();
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            let current = s
+                .handle("a", "sessions.get", json!({"sessionId":session["id"]}))
+                .await
+                .unwrap();
+            if current["state"] == "completed" {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    let suspended = s
+        .handle("a", "sessions.suspend", json!({"sessionId":session["id"]}))
+        .await
+        .unwrap();
+    let resumed = s
+        .handle(
+            "a",
+            "sessions.resume",
+            json!({"resumeToken":suspended["resumeToken"]}),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resumed["nativeResumption"], true);
+    assert_eq!(
+        *opens.lock().unwrap(),
+        vec![None, Some("native-secret-session".into())]
+    );
 }
 #[tokio::test]
 async fn resume_tokens_are_opaque_owner_scoped_and_one_time() {

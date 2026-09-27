@@ -2,6 +2,20 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {createSnapshotStore,LocalAIError} from '../dist/index.js';
 const snapshot=()=>({protocolVersion:'1.0',revision:'fixture',mode:'synthetic',observedAt:'2026-09-24T00:00:00Z',providers:[],installations:[],profiles:[],accounts:[],connections:[],routes:[],models:[],quotaPools:[],diagnostics:[]});
 function fixture(read=async()=>snapshot()) {const calls={read:0,scan:0,probe:0,close:0};return{calls,client:{snapshot:{get:async()=>{calls.read++;return read();}},discovery:{refresh:async()=>{calls.scan++;}},connections:{probe:async()=>{calls.probe++;}},close:async()=>{calls.close++;}}};}
+
+test('concurrent successful probes share the newest snapshot instead of cancelling each other',async()=>{
+ const reads=[];const f=fixture(()=>new Promise(resolve=>reads.push(resolve)));const store=createSnapshotStore(f.client);
+ const first=store.probe('first');
+ await new Promise(resolve=>setImmediate(resolve));
+ const second=store.probe('second');
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(reads.length,2);
+ const results=Promise.all([first,second]);
+ reads[0]({...snapshot(),revision:'old'});
+ reads[1]({...snapshot(),revision:'new'});
+ assert.deepEqual((await results).map(s=>s.revision),['new','new']);
+ assert.equal(store.getSnapshot().snapshot.revision,'new');store.dispose();
+});
 test('construction, subscription and reads do not start discovery or any request',()=>{const f=fixture();const store=createSnapshotStore(f.client);const initial=store.getSnapshot();const off=store.subscribe(()=>{});assert.equal(store.getSnapshot(),initial);assert.equal(store.getServerSnapshot(),initial);off();assert.deepEqual(f.calls,{read:0,scan:0,probe:0,close:0});store.dispose();assert.equal(f.calls.close,0);});
 test('concurrent snapshot loads share one public SDK request',async()=>{let finish;const f=fixture(()=>new Promise(r=>finish=r));const store=createSnapshotStore(f.client);const a=store.load(),b=store.load();assert.equal(f.calls.read,1);finish(snapshot());await Promise.all([a,b]);assert.equal(store.getSnapshot().loading,false);assert.equal(store.getSnapshot().snapshot.mode,'synthetic');store.dispose();});
 test('only explicit scan and probe calls enrich data',async()=>{const f=fixture();const store=createSnapshotStore(f.client);await store.load();assert.equal(f.calls.scan,0);await store.scan();assert.equal(f.calls.scan,1);await store.probe('chosen');assert.equal(f.calls.probe,1);store.dispose();});

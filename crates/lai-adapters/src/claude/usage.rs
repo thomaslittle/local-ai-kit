@@ -26,7 +26,7 @@ pub(super) fn parse(
             rows.push((
                 format!("{kind}-{index}"),
                 scope
-                    .map(|s| format!("{kind} Â· {s}"))
+                    .map(|s| format!("{kind} · {s}"))
                     .unwrap_or_else(|| kind.into()),
                 serde_json::json!({"percent":limit["percent"],"resetsAt":limit["resets_at"]}),
             ));

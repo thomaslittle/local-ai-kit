@@ -52,8 +52,23 @@ async fn closing_native_peer_stops_owned_descendants_but_not_separate_processes(
         .await
         .unwrap();
     tokio::time::sleep(Duration::from_millis(250)).await;
-    let before = std::fs::metadata(&owned).map(|m| m.len()).unwrap_or(0);
+    let before = std::fs::metadata(&owned)
+        .expect("owned child must start before close")
+        .len();
     let other = std::fs::metadata(&unrelated).map(|m| m.len()).unwrap_or(0);
+    // Wait for positive liveness evidence. A fixed 180ms window is scheduler
+    // dependent when the workspace suites run alongside other development apps.
+    tokio::time::timeout(Duration::from_secs(2), async {
+        while std::fs::metadata(&unrelated).unwrap().len() <= other {
+            assert!(
+                control.try_wait().unwrap().is_none(),
+                "independent process exited"
+            );
+            tokio::time::sleep(Duration::from_millis(30)).await;
+        }
+    })
+    .await
+    .expect("independent process must remain alive");
     tokio::time::sleep(Duration::from_millis(180)).await;
     assert_eq!(
         std::fs::metadata(&owned).map(|m| m.len()).unwrap_or(0),

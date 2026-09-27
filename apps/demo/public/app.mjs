@@ -2,6 +2,8 @@ import {createCatalog,resolveCandidates,reconcileSelection} from '/modules/selec
 import {readArtifactBytes,readCatalogSnapshot} from '/modules/sdk/index.js';
 import {el,button,badge} from './ui.mjs';
 import {renderPage} from './pages.mjs';
+import {userFacingError} from './errors.mjs';
+import {filterLiveCatalog} from './catalog_visibility.mjs';
 import {openPalette,openConnectionDialog} from './dialogs.mjs';
 const pages=[['Overview','◎'],['Connections','⌘'],['Models','◈'],['Usage','◴'],['Selector lab','▥'],['Playground','▷'],['Diagnostics','⌁']];
 const descriptions={
@@ -10,7 +12,7 @@ const descriptions={
  'Models':'A route-aware catalog. Native options, never guessed settings.',
  'Usage':'The right units. The right windows. No fictional totals.',
  'Selector lab':'One selection engine. Eight ways to make it yours.',
- 'Playground':'Inspect the complete flow before a real provider is involved.',
+ 'Playground':'Review session controls. A turn needs an explicit route and authorization.',
  'Diagnostics':'Understand the evidence behind every public response.',
 };
 
@@ -18,14 +20,16 @@ const descriptions={
 export async function mountDemo({connectFixture,connectLive,initialClient=null,initialMode='synthetic'}){
  const root=document.querySelector('#app')??document.body;
  const state={page:'Selector lab',variant:'rail',mode:initialMode,snapshot:null,selection:null,provider:'codex',query:'',required:new Set(),onlyEligible:false,allowPaid:false,favorites:new Set(),sensitiveConsent:false,
-  mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,nativeResumption:false,resumeToken:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,prompt:'Explain how an application can select an existing AI connection.',notice:'',connectionError:null,diagnostics:null};
+  mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,nativeResumption:false,resumeToken:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,probeResults:{},metadataBatch:null,prompt:'',notice:'',connectionError:null,diagnostics:null,detectedExpanded:true};
  let catalog=null,all=[],epoch=0,eventController=null,closed=false;
- const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,suspendSession,resumeSession,answerApproval,refreshDiagnostics,scan,probeConnection,revokeConnection,downloadArtifact,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
+ let sessionContext=null;
+ const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,suspendSession,resumeSession,answerApproval,refreshDiagnostics,scan,probeConnection,probeAllConnections,revokeConnection,downloadArtifact,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
  function rebuild(snapshot){
   if(!snapshot||!Array.isArray(snapshot.connections)||!Array.isArray(snapshot.models)||!Array.isArray(snapshot.routes)||!Array.isArray(snapshot.providers))throw Error('INVALID_SNAPSHOT');
   if(state.mode==='live'&&snapshot.mode!=='live')throw Error('SYNTHETIC_RUNTIME_REJECTED');
   if(state.mode==='synthetic'&&snapshot.mode!=='synthetic')throw Error('LIVE_RUNTIME_REJECTED');
-  catalog=createCatalog(snapshot);state.snapshot=snapshot;
+  const visible=state.mode==='live'?filterLiveCatalog(snapshot):snapshot;
+  catalog=createCatalog(visible);state.snapshot=visible;
   all=resolveCandidates(catalog,{allowPaidFallback:state.allowPaid});
   if(state.selection){const reconciled=reconcileSelection(catalog,state.selection);state.selection=reconciled.selection;if(reconciled.needsReview)state.notice='The catalog changed. Review the updated selection before use.';}
   if(!state.selection){const first=all.find(c=>c.eligible);if(first)state.selection={routeId:first.route.id,modelId:first.model.id,revision:first.model.revision,options:{}};}
@@ -34,7 +38,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
   state.selection={routeId:candidate.route.id,modelId:candidate.model.id,revision:candidate.model.revision,options:{}};
   state.sensitiveConsent=false;state.notice='';render();
  }
- function safeError(error){return typeof error?.code==='string'&&/^[A-Z_]{1,64}$/.test(error.code)?error.code:'REQUEST_FAILED';}
+ function safeError(error){return userFacingError(error);}
  async function operate(action){try{await action();}catch(error){state.notice=safeError(error);render();}}
  async function stopClient(){eventController?.abort();eventController=null;const client=state.client;state.client=null;if(client)await client.close();}
  async function observe(client,currentEpoch){
@@ -58,6 +62,8 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
  }
  async function attach(factory,mode){
   const current=++epoch;await stopClient();
+  sessionContext=null;
+  state.probing=null;state.probeResults={};state.metadataBatch=null;
   state.mode=mode;state.snapshot=null;catalog=null;all=[];state.selection=null;state.connectionError=null;state.events=[];state.sessionId=null;state.nativeResumption=false;state.resumeToken=null;state.turnId=null;state.sessionStatus='Ready';state.output='';state.approval=null;state.diagnostics=null;state.notice='';state.favorites.clear();state.grantConsent=false;render();
   let client;
   try{
@@ -65,17 +71,31 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
    const snapshot=await readCatalogSnapshot(client);if(closed||epoch!==current){await client.close();return;}
    rebuild(snapshot);state.client=client;render();
    if(client.handshake.methods.includes('events.subscribe'))void observe(client,current);
+   if(mode==='live'){
+    await scan();
+    // Pairing is an explicit action. Show provider-confirmed data right away using only
+    // metadata scopes already granted by the host; no model prompt or inference is sent.
+    if(epoch===current&&state.client)await probeAllConnections();
+   }
   }catch(error){await client?.close().catch(()=>{});if(epoch===current){state.connectionError='Unable to connect. No account or model data has been substituted.';render();}}
  }
  async function attachLive(endpoint,token){return attach(()=>connectLive(endpoint,token),'live');}
  async function startTurn(){
   if(!state.grantConsent||!state.selection||!state.client||['Starting','Running','Awaiting approval'].includes(state.sessionStatus))return;
-  const client=state.client,current=epoch,selection=structuredClone(state.selection);state.sessionStatus='Starting';state.output='';state.approval=null;state.notice='';render();
+  const client=state.client,current=epoch,selection=structuredClone(state.selection),previousStatus=state.sessionStatus;
+  const context=JSON.stringify({selection,workspaceId:state.workspaceId,allowPaid:state.allowPaid,mode:state.mode});
+  state.sessionStatus='Starting';state.output='';state.approval=null;state.notice='';render();
   await operate(async()=>{
    const model=all.find(c=>c.model.id===selection.modelId);if(!model)throw Error('SELECTION_STALE');
-   if(state.sessionId)await client.sessions.close({sessionId:state.sessionId});
-   if(state.mode==='synthetic')await client.grants.request({connectionIds:[model.connection.id],scopes:['execution'],allowPaid:state.allowPaid});
-   const session=await client.sessions.create({selection,allowPaid:state.allowPaid,...(state.mode==='live'?{workspaceId:state.workspaceId,permissionMode:'read_only'}:{})});
+   const reuse=state.sessionId&&sessionContext===context&&['Ready','Completed'].includes(previousStatus);
+   let session;
+   if(reuse)session=await client.sessions.get({sessionId:state.sessionId});
+   else {
+    if(state.sessionId)await client.sessions.close({sessionId:state.sessionId});
+    if(state.mode==='synthetic')await client.grants.request({connectionIds:[model.connection.id],scopes:['execution'],allowPaid:state.allowPaid});
+    session=await client.sessions.create({selection,allowPaid:state.allowPaid,...(state.mode==='live'?{workspaceId:state.workspaceId,permissionMode:'read_only'}:{})});
+    sessionContext=context;
+   }
    if(epoch!==current)return;state.sessionId=session.id;state.nativeResumption=Boolean(session.nativeResumption);state.resumeToken=null;state.turnId=null;state.sessionStatus='Running';render();
    const turn=await client.turns.start({sessionId:session.id,prompt:state.prompt,...(state.mode==='synthetic'?{simulateApproval:state.simulateApproval}:{requestId:crypto.randomUUID()})});
    if(epoch!==current)return;state.turnId=turn.turnId;render();
@@ -104,7 +124,39 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
  }
  async function answerApproval(allow){if(state.approval&&state.client)await operate(async()=>{await state.client.approvals.respond({approvalId:state.approval.approvalId,allow});});}
  async function scan(){if(state.client)await operate(async()=>{await state.client.discovery.refresh({level:'passive'});rebuild(await readCatalogSnapshot(state.client));state.page='Connections';render();});}
- async function probeConnection(id){if(!state.client||state.probing)return;state.probing=id;render();await operate(async()=>{await state.client.connections.probe({connectionId:id});rebuild(await readCatalogSnapshot(state.client));});state.probing=null;render();}
+ async function probeConnection(id){
+  if(!state.client||state.probing)return false;
+  const client=state.client,current=epoch;state.notice='';state.probing=id;render();
+  try{
+   await client.connections.probe({connectionId:id});
+   if(closed||epoch!==current)return false;
+   rebuild(await readCatalogSnapshot(client));
+   const connection=state.snapshot.connections.find(item=>item.id===id);
+   const routeIds=new Set(state.snapshot.routes.filter(route=>route.connectionId===id).map(route=>route.id));
+   const modelCount=state.snapshot.models.filter(model=>routeIds.has(model.routeId)).length;
+   const status=connection?.auth?.state==='known'?connection.auth.value:'authentication not reported';
+   state.probeResults[id]={ok:true,message:`Metadata check complete · ${status} · ${modelCount} model${modelCount===1?'':'s'} reported`};
+   return true;
+  }catch(error){
+   if(!closed&&epoch===current)state.probeResults[id]={ok:false,message:`Metadata check unavailable · ${safeError(error)}`};
+   return false;
+  }finally{
+   if(!closed&&epoch===current){state.probing=null;render();}
+  }
+ }
+ async function probeAllConnections(){
+  if(!state.client||state.probing||state.metadataBatch)return;
+  const current=epoch,ids=(state.snapshot?.connections??[]).map(connection=>connection.id);
+  if(!ids.length)return;
+  state.notice='';state.metadataBatch={completed:0,total:ids.length};render();
+  for(const id of ids){
+   if(closed||epoch!==current||!state.client)break;
+   await probeConnection(id);
+   if(closed||epoch!==current)break;
+   state.metadataBatch.completed++;render();
+  }
+  if(!closed&&epoch===current){state.metadataBatch=null;render();}
+ }
  async function revokeConnection(){if(!state.client)return;await operate(async()=>{await state.client.grants.revoke({});await stopClient();catalog=null;all=[];state.snapshot=null;state.selection=null;state.notice='Connection revoked. Restart the native host and reload to pair again.';render();});}
  async function refreshDiagnostics(){if(state.client)await operate(async()=>{state.diagnostics={report:await state.client.diagnostics.report(),adapters:await state.client.adapters.list(),grants:await state.client.grants.list()};render();});}
  function render(){

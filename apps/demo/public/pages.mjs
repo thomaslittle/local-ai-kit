@@ -1,6 +1,11 @@
 import {el,button,badge,code,known,checkbox,empty,section,titleCase} from './ui.mjs';
 import {configuration} from './configuration.mjs';
+import {connectionAuthLabel} from './profile_auth.mjs';
+import {isLocalRuntimeProvider} from './catalog_visibility.mjs';
 import {variants,renderSelector} from './selectors.mjs';
+const compactIdentity=value=>{const text=String(value);return text.length>28?`${text.slice(0,25)}…`:text;};
+const authenticated=c=>known(c.auth)==='authenticated'&&c.auth.freshness==='fresh';
+const previouslyAuthenticated=c=>known(c.auth)==='authenticated'&&c.auth.freshness==='stale';
 
 export function selectorsPage(ctx){
  const {state}=ctx;
@@ -11,16 +16,43 @@ export function selectorsPage(ctx){
 }
 export function overviewPage(ctx){
  const {snapshot,mode}=ctx.state;
- return el('div',{class:'stack'},el('div',{class:'metrics'},[[snapshot?.connections.length??0,'Connections'],[snapshot?.models.length??0,'Route-scoped models'],[snapshot?.quotaPools.length??0,'Quota pools'],[ctx.all.filter(c=>c.eligible).length,'Eligible selections']].map(([value,label])=>el('div',{class:'metric'},el('span',{class:'metric-value'},value),el('span',{},label),el('small',{},mode==='synthetic'?'Example data':'Runtime-reported')))),
+ const connections=snapshot?.connections??[],verified=connections.filter(authenticated),previous=connections.filter(previouslyAuthenticated);
+ const metrics=el('div',{class:'metrics'},[[connections.length,'Detected profiles'],[verified.length,'Verified profiles'],[snapshot?.models.length??0,'Route-scoped models'],[ctx.all.filter(c=>c.eligible).length,'Eligible selections']].map(([value,label])=>el('div',{class:'metric'},el('span',{class:'metric-value'},value),el('span',{},label),el('small',{},mode==='synthetic'?'Example data':'Runtime-reported'))));
+ const verifiedSection=verified.length?section('Verified profiles','Only fresh authenticated profiles appear here.',el('div',{class:'example-grid'},verified.slice(0,4).map(c=>el('div',{class:'mini-card'},el('h3',{},c.displayName),badge('Authenticated','supported'),el('p',{},known(c.plan)?.label??'Plan not reported'))))):previous.length?null:section('Verified profiles','Only fresh authenticated profiles appear here.',empty('No authenticated profiles yet','Detected clients remain unverified until an explicit account and model check succeeds.'));
+ const previousSection=previous.length?section('Previously authenticated','These profiles passed an earlier check, but that authentication evidence is stale.',el('div',{class:'example-grid','data-testid':'previously-authenticated-overview'},previous.slice(0,4).map(c=>el('div',{class:'mini-card'},el('h3',{},c.displayName),badge('Previously authenticated','warning'),el('p',{},`${ctx.providers.find(p=>p.id===c.providerId)?.name??c.providerId} · Check is stale`),el('p',{},known(c.plan)?.label??'Plan not reported'))))):null;
+ return el('div',{class:'stack'},metrics,
   section('One catalog. Every application.','Inspect first, select explicitly, execute only with permission.',el('div',{class:'steps'},['Discover connections','Inspect the evidence','Select a route','Run with permission'].map((s,i)=>el('div',{},badge(String(i+1),'accent'),el('h3',{},s))))),
-  section('Implementation preview','This showcase demonstrates the SDK and selection layer—using the same public interface for native and synthetic sources.',el('p',{},'Native mode uses the Rust discovery, account metadata, and permissioned session service. Synthetic mode remains a separate, clearly labeled demonstration and never replaces failed live data.'),button('Explore model selectors',()=>{ctx.state.page='Selector lab';ctx.render();},{class:'primary'})),
-  section('Evidence, not assumptions','A present credential file does not prove access.',el('div',{class:'example-grid'},ctx.state.snapshot?.connections.slice(0,4).map(c=>el('div',{class:'mini-card'},el('h3',{},c.displayName),badge(known(c.auth)??'Unknown',known(c.auth)==='expired'?'warning':'muted'),el('p',{},known(c.plan)?.label??'Plan not reported'))))));
+  section('Live showroom','This page uses the public SDK against the native local service.',el('p',{},'Passive discovery reports installed clients. Account access, model catalogs, and usage remain tied to evidence from authorized probes. Empty results stay empty; no example records are inserted.'),button('Explore model selectors',()=>{ctx.state.page='Selector lab';ctx.render();},{class:'primary'})),verifiedSection,previousSection);
 }
 export function connectionsPage(ctx){
- return el('div',{class:'connections-grid'},ctx.connections.map(c=>section(c.displayName,ctx.providers.find(p=>p.id===c.providerId)?.name??c.providerId,
-  el('div',{class:'config-badges'},badge(known(c.auth)??'Unknown',known(c.auth)==='authenticated'?'supported':'warning'),badge(c.auth.freshness??'unavailable')),
-  el('dl',{class:'facts'},el('dt',{},'Plan'),el('dd',{},known(c.plan)?.label??'Not reported'),el('dt',{},'Profile'),el('dd',{class:'mono'},c.profileId),el('dt',{},'Account'),el('dd',{class:'mono'},c.accountId??'Unverified'),el('dt',{},'Installation'),el('dd',{class:'mono'},c.installationId)),
-  el('details',{},el('summary',{},'Evidence and freshness'),code({auth:c.auth,plan:c.plan})),ctx.state.mode==='live'?button(ctx.state.probing===c.id?'Checkingâ€¦':'Check account and models',()=>ctx.probeConnection(c.id),{disabled:!!ctx.state.probing}):null,button('Inspect models',()=>{ctx.state.page='Selector lab';ctx.state.variant='rail';ctx.state.provider=c.providerId;ctx.state.query=c.displayName;ctx.render();}))));
+ const localCatalogAvailable=c=>isLocalRuntimeProvider(c)&&(ctx.state.snapshot?.routes??[]).some(route=>
+  route.connectionId===c.id&&known(route.billing)==='local'&&route.billing.freshness==='fresh'
+   &&ctx.state.snapshot.models.some(model=>model.routeId===route.id));
+ const locallyUnauthenticated=c=>known(c.auth)==='unauthenticated'&&c.auth.freshness==='fresh';
+ const connectionCard=c=>{
+  const provider=ctx.providers.find(p=>p.id===c.providerId)?.name??c.providerId;
+  const status=connectionAuthLabel(c);
+  const local=isLocalRuntimeProvider(c),catalogReady=localCatalogAvailable(c);
+  const card=section(c.displayName,provider,
+   el('div',{class:'config-badges'},badge(status,authenticated(c)?'supported':local?catalogReady?'supported':'muted':'warning'),badge(local?catalogReady?'Local catalog ready':'Catalog not reported':c.auth.freshness??'unavailable',catalogReady?'supported':'muted')),
+   el('dl',{class:'facts'},el('dt',{},'Plan'),el('dd',{},known(c.plan)?.label??'Not reported'),el('dt',{},'Profile'),el('dd',{class:'mono identity-value',title:c.profileId,'aria-label':`Profile identifier ${c.profileId}`},compactIdentity(c.profileId)),el('dt',{},'Account'),el('dd',{class:'mono identity-value',title:c.accountId??'Unverified','aria-label':`Account identifier ${c.accountId??'Unverified'}`},compactIdentity(c.accountId??'Unverified')),el('dt',{},'Installation'),el('dd',{class:'mono identity-value',title:c.installationId,'aria-label':`Installation identifier ${c.installationId}`},compactIdentity(c.installationId))),
+   ctx.state.probeResults?.[c.id]?el('p',{class:`metadata-result ${ctx.state.probeResults[c.id].ok?'success':'warning'}`,role:'status','aria-live':'polite'},ctx.state.probeResults[c.id].message):null,
+   el('details',{},el('summary',{},'Evidence and freshness'),code({auth:c.auth,plan:c.plan})),ctx.state.mode==='live'?button(ctx.state.probing===c.id?'Checking…':local?'Refresh local catalog':'Check account and models',()=>ctx.probeConnection(c.id),{disabled:!!ctx.state.probing||!!ctx.state.metadataBatch}):null,button('Inspect models',()=>{ctx.state.page='Selector lab';ctx.state.variant='rail';ctx.state.provider=c.providerId;ctx.state.query=c.displayName;ctx.render();}));
+  card.classList.add('profile-card');card.dataset.connectionId=c.id;return card;
+ };
+ const cards=connections=>el('div',{class:'connections-grid'},connections.map(connectionCard));
+ const verified=ctx.connections.filter(authenticated),previous=ctx.connections.filter(previouslyAuthenticated),local=ctx.connections.filter(isLocalRuntimeProvider),unauthenticated=ctx.connections.filter(locallyUnauthenticated),detected=ctx.connections.filter(c=>!authenticated(c)&&!previouslyAuthenticated(c)&&!isLocalRuntimeProvider(c)&&!locallyUnauthenticated(c));
+ const uncheckedDetected=detected.filter(c=>!ctx.state.probeResults?.[c.id]);
+ const verifiedSection=verified.length?section('Authenticated profiles','Only fresh provider-confirmed authentication appears as a connected profile.',el('div',{class:'connections-grid','data-testid':'verified-profiles'},verified.map(connectionCard))):previous.length?null:section('Authenticated profiles','Only fresh provider-confirmed authentication appears as a connected profile.',empty('No authenticated profiles yet','Run the metadata-only check below. No model prompts are sent.'));
+ const batch=ctx.state.metadataBatch;
+ const metadataControls=ctx.state.mode==='live'?section('Profile metadata','Metadata-only: check every detected account and local catalog in sequence. No model prompts are sent.',batch?el('p',{role:'status','aria-live':'polite'},`${batch.completed} of ${batch.total} profiles checked`):null,button(batch?`Checking profile ${Math.min(batch.completed+1,batch.total)} of ${batch.total}…`:Object.keys(ctx.state.probeResults??{}).length?'Recheck all profiles':'Check all detected profiles',()=>ctx.probeAllConnections?.(),{class:'primary','data-testid':'check-all-profiles',disabled:!!ctx.state.probing||!!batch})):null;
+ return el('div',{class:'stack'},
+  metadataControls,
+  verifiedSection,
+  previous.length?section('Previously authenticated','These profiles passed an earlier check, but that evidence is stale. Check account and models again to confirm their current status.',el('div',{class:'connections-grid','data-testid':'previously-authenticated-profiles'},previous.map(connectionCard))):null,
+  local.length?section('Local runtimes','Local model servers do not have account authentication. Their routes appear when the server reports a real model catalog.',el('div',{class:'connections-grid','data-testid':'local-runtimes'},local.map(connectionCard))):null,
+  unauthenticated.length?section('Not authenticated','These explicit checks did not confirm a signed-in account. Their models are excluded; check again after signing in.',el('div',{class:'connections-grid','data-testid':'unauthenticated-profiles'},unauthenticated.map(connectionCard))):null,
+  el('details',{class:'detected-profiles','data-testid':'detected-profiles',...(ctx.state.detectedExpanded??true?{open:true}:{}),onToggle:event=>{ctx.state.detectedExpanded=event.currentTarget.open;}},el('summary',{},uncheckedDetected.length?`Other detected clients · ${uncheckedDetected.length} need a metadata check`:`Other detected clients · ${detected.length} checked, not confirmed`),el('p',{class:'muted'},uncheckedDetected.length?'Installation alone does not prove an account is signed in. Check profiles to request supported metadata; unsupported sources remain unverified.':'These profiles have a metadata result but are not confirmed as authenticated. Each result explains whether authentication was absent or the provider could not be checked.'),detected.length?cards(detected):el('p',{class:'muted'},'Every remaining profile has a current result above.')));
 }
 export function usagePage(ctx){
  return el('div',{class:'stack'},el('p',{class:'intro'},'Windows belong to quota pools, not model rows. Shared pools appear once; unknown totals stay unknown.'),
@@ -33,9 +65,10 @@ export function playgroundPage(ctx){
  const live=state.mode!=='synthetic';
  const executable=state.client?.handshake.methods.includes('turns.start');
  const busy=['Running','Awaiting approval','Starting'].includes(state.sessionStatus);
- const controls=section('Session playground','Exercise the public SDK, option validation, event stream, approvals, and cancellation.',
+ const controls=section('Session playground','Review the live session controls. Nothing runs until you select a route and authorize a turn.',
   el('div',{class:'notice'},live?'A live turn uses your selected account allowance. The host controls allowed workspaces and permissions; this demo requests read-only execution.':'Simulation only. The fixture service returns predetermined text; it does not call an AI provider.'),
-  el('label',{class:'field'},el('span',{},'Example request'),el('textarea',{rows:4,'aria-label':'Example request',value:state.prompt,disabled:busy||!executable,onInput:e=>{state.prompt=e.target.value;}})),
+  live&&!executable?el('p',{class:'notice'},'This runtime allows metadata checks only. Enable execution and approve a workspace in the host application before sending a prompt.'):null,
+  el('label',{class:'field'},el('span',{},'Prompt'),el('textarea',{rows:4,'aria-label':'Prompt',value:state.prompt,disabled:busy||!executable,onInput:e=>{state.prompt=e.target.value;}})),
   checkbox(live?'Allow this live request to use the selected account':'Allow this simulated session',state.grantConsent,on=>{state.grantConsent=on;ctx.render();}),
   live?el('label',{class:'field'},'Host workspace name',el('input',{'aria-label':'Host workspace name',value:state.workspaceId,onInput:e=>{state.workspaceId=e.target.value;}})):checkbox('Simulate a tool approval',state.simulateApproval,on=>{state.simulateApproval=on;ctx.render();}),
   el('div',{class:'actions'},
@@ -64,7 +97,7 @@ export function diagnosticsPage(ctx){
   section('Known preview boundaries','These are implementation limitations, not hidden successful fallbacks.',el('p',{},'This showcase consumes the public SDK. Native discovery, model/account metadata and execution are reported per adapter. Inspect the negotiated methods and repository support matrix; unavailable features are not silently substituted.')));
 }
 export function renderPage(ctx){
- if(!ctx.state.snapshot)return empty('No connected catalog',ctx.state.connectionError??'Connect an authorized local runtime or explicitly open the synthetic showcase.');
+ if(!ctx.state.snapshot)return empty('No connected catalog',ctx.state.connectionError??'Pair this browser with the running local helper to load its discovery snapshot.');
  switch(ctx.state.page){
   case 'Overview':return overviewPage(ctx);
   case 'Connections':return connectionsPage(ctx);

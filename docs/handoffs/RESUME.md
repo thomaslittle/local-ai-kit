@@ -4,6 +4,14 @@ Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect
 
 ## Current implementation
 
+September 27 readiness review: preserved the existing worktree and completed the real-data demo changes. Fixed OpenCode loopback authentication, local-runtime selection/execution, completed-turn suspend, revoke/regrant publication races, resumed demo continuation, concurrent SDK probes, and distinct-installation discovery. The live browser confirmed Codex (7), Claude Code (11), Grok (1), and OpenCode (111) model entries without inference. Ollama/LM Studio were detected but offline during this run. See [application integration](../integration/prompt-app.md). New qualification is recorded separately from the historical counts below.
+
+The live launcher runs a temporary helper copy so Windows builds can proceed while the demo stays open. `npm run demo` grants metadata only. The OpenCode subprocess now receives its actual server-password setting, and readiness requires anonymous HTTP 401 as well as an authenticated response.
+
+September 27 pre-package gate: `verify.py --profile all` passed on Windows with 347 Rust tests, 63 TypeScript SDK tests, 28 selector-core tests, 25 Python SDK tests, 13 React tests, 14 showroom browser tests, and 32 accessibility checks. Strict Clippy passed during review. Clean-source release/package qualification follows this checkpoint; do not reuse an older artifact as its evidence.
+
+External CI blocker confirmed September 27: GitHub check-run annotations for run `36141317640` explicitly report failed recent account payments or an insufficient spending limit. No jobs executed; macOS remains unqualified. Billing settings were not changed. WSL starts again; do not carry the September 25 EIO diagnosis forward without rerunning the affected checks.
+
 The native service is connected end to end to the TypeScript/Python SDKs, embedded Rust facade, native-served paired demo, shared broker, and Native Messaging bridge. Supported Codex/Claude/OpenCode/local/API text routes use the real session engine. Generated domain types/OpenAPI, scoped artifacts, owner cleanup, bundle resolution, four npm packages, Python wheel, and the eight reusable React selectors are implemented.
 
 The former palette failure is fixed in `af96d05`: exact account phrases rank before incidental substrings. All 13 showroom browser interaction tests pass. An additional 22 automated accessibility checks cover the showroom and reusable React components. The C# HTTP example has now been compiled and exercised against an actual isolated native host, not just inspected as source.
@@ -43,12 +51,12 @@ Explicit native profiles now wire Gemini CLI, Antigravity ACP, and Grok into the
 
 Capability-gated ACP native resumption is implemented: `sessions.suspend` returns an opaque runtime-scoped token and `sessions.resume` revalidates the same account/route/workspace before using provider `loadSession`. Incremental metadata tailing and refresh backoff are also implemented and tested. Final remaining high-value scope is release/macOS qualification and any provider-specific usage fields that can be obtained from documented/verified interfaces without inventing data. No registry publication/main merge has been performed.
 
-## Current continuation status — September 25, 2026
+## Historical continuation status — September 25, 2026
 
 The worktree resumed from local/remote `d1705fd92a2d19b38bf8bf1134ee2c543c7ce82b` on `feature/initial-implementation`; the earlier metadata qualification source was `471c072a8ffde52436427d5a33b44e55ed31e3c1`. Session resumption is capability-gated and tested for account, route, billing, model revision, workspace path, owner, one-time consumption, revocation, runtime restart, active/closed sessions, ACP capability/native-ID mismatch, and no fallback after failed load. The provider-agnostic log tail has bounded identity-aware rotation, truncation, partial records, and cancellation tests; no adapter currently consumes it. See the release-candidate report for current platform evidence.
 
 
-## Latest checkpoint — September 25, 2026
+## Historical checkpoint — September 25, 2026
 
 Implementation source `702d98d7cb77ba788f09ce5e890149fef8908ac2` passed Windows `verify.py --profile all`, strict format/Clippy, and `verify.py --profile release`. The clean Windows distribution, package smoke, and performance evidence are recorded in `docs/qualification/RELEASE-CANDIDATE.md`. It was pushed to `origin/feature/initial-implementation`; `main` was not changed.
 

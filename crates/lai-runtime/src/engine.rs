@@ -94,6 +94,17 @@ impl Cell {
             .state
             .lock()
             .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
+        self.emit_locked(&state, turn, payload)
+    }
+    fn emit_locked(
+        &self,
+        state: &State,
+        turn: Option<String>,
+        payload: EventPayload,
+    ) -> Result<()> {
+        if !self.active.load(Ordering::Acquire) {
+            return Err(err(ErrorCode::LocalAccessDenied));
+        }
         self.journal
             .lock()
             .map_err(|_| err(ErrorCode::ProviderUnavailable))?
@@ -225,10 +236,12 @@ impl Runtime {
             .state
             .lock()
             .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
-        if !matches!(
-            state.view.state,
-            SessionState::Ready | SessionState::Completed
-        ) {
+        if !state.usable
+            || !matches!(
+                state.view.state,
+                SessionState::Ready | SessionState::Completed
+            )
+        {
             return Err(err(ErrorCode::Conflict));
         }
         state.view.selection.options = options;
@@ -315,12 +328,13 @@ impl Runtime {
     pub async fn suspend(&self, owner: &str, session: &str) -> Result<String> {
         let cell = self.cell(owner, session)?;
         (cell.guard)()?;
-        let previous = {
+        {
             let mut state = cell
                 .state
                 .lock()
                 .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
-            if !state.view.native_resumption
+            if !state.usable
+                || !state.view.native_resumption
                 || !matches!(
                     state.view.state,
                     SessionState::Ready | SessionState::Completed
@@ -329,23 +343,35 @@ impl Runtime {
             {
                 return Err(err(ErrorCode::Conflict));
             }
-            let previous = state.view.state.clone();
             state.usable = false;
-            state.view.state = SessionState::Closed;
-            previous
-        };
-        let mut agent = tokio::time::timeout(Duration::from_secs(5), cell.agent.lock())
-            .await
-            .map_err(|_| err(ErrorCode::Timeout))?;
-        let result = match agent.as_mut() {
-            Some(driver) => tokio::time::timeout(Duration::from_secs(5), driver.suspend())
-                .await
-                .map_err(|_| err(ErrorCode::Timeout))?,
-            None => Err(err(ErrorCode::ProviderUnavailable)),
-        };
+        }
+        let result = tokio::time::timeout(Duration::from_secs(5), async {
+            let mut agent = cell.agent.lock().await;
+            let result = match agent.as_mut() {
+                Some(driver) => driver.suspend().await,
+                None => Err(err(ErrorCode::ProviderUnavailable)),
+            };
+            if result.is_ok() {
+                agent.take();
+            }
+            result
+        })
+        .await
+        .unwrap_or_else(|_| Err(err(ErrorCode::Timeout)));
         match result {
             Ok(native_session_id) => {
-                agent.take();
+                {
+                    let mut state = cell
+                        .state
+                        .lock()
+                        .map_err(|_| err(ErrorCode::ProviderUnavailable))?;
+                    if !cell.active.load(Ordering::Acquire)
+                        || state.view.state == SessionState::Closed
+                    {
+                        return Err(err(ErrorCode::LocalAccessDenied));
+                    }
+                    state.view.state = SessionState::Closed;
+                }
                 if let Ok(mut sessions) = self.sessions.lock() {
                     sessions.remove(session);
                 }
@@ -358,9 +384,12 @@ impl Runtime {
                 Ok(native_session_id)
             }
             Err(error) => {
+                // The provider may already have suspended before failing. Keep this
+                // session unusable; never continue an uncertain native conversation.
                 if let Ok(mut state) = cell.state.lock() {
-                    state.usable = true;
-                    state.view.state = previous;
+                    if state.view.state != SessionState::Closed {
+                        state.view.state = SessionState::Error;
+                    }
                 }
                 Err(error)
             }
@@ -533,15 +562,14 @@ async fn run(
         Err(e) if e.code == ErrorCode::Cancelled => SessionState::Cancelled,
         _ => SessionState::Error,
     };
-    if let Ok(mut record) = cell.state.lock() {
-        record.usable = result.is_ok();
-        record.cancel = None;
-        if record.view.state != SessionState::Closed {
-            record.view.state = state.clone();
-        }
-    }
+    // Publish terminal events and state under the same lock. A subsequent turn or
+    // suspend must never race the previous turn's final event publication.
+    let Ok(mut record) = cell.state.lock() else {
+        return;
+    };
     if let Err(error) = &result {
-        let _ = cell.emit(
+        let _ = cell.emit_locked(
+            &record,
             Some(turn.clone()),
             EventPayload::Error {
                 code: serde_json::to_value(&error.code)
@@ -552,8 +580,15 @@ async fn run(
             },
         );
     }
-    let _ = cell.emit(Some(turn.clone()), EventPayload::State { state });
-    let _ = cell.emit(
+    let _ = cell.emit_locked(
+        &record,
+        Some(turn.clone()),
+        EventPayload::State {
+            state: state.clone(),
+        },
+    );
+    let _ = cell.emit_locked(
+        &record,
         Some(turn),
         EventPayload::Final {
             status: if result.is_ok() {
@@ -566,4 +601,10 @@ async fn run(
             .into(),
         },
     );
+    record.usable = result.is_ok();
+    record.cancel = None;
+    record.turn = None;
+    if record.view.state != SessionState::Closed {
+        record.view.state = state;
+    }
 }

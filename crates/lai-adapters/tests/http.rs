@@ -84,6 +84,21 @@ async fn auth_rate_limits_and_large_bodies_return_safe_errors() {
     t.abort();
 }
 #[tokio::test]
+async fn explicitly_bounded_provider_metadata_reads_allow_large_compressed_catalogs() {
+    let (url, t) = server().await;
+    let endpoint = Endpoint::new(&url, Authentication::None, true).unwrap();
+    let result = endpoint
+        .json_query_limited("large", &[], None, 3 * 1024 * 1024)
+        .await
+        .unwrap();
+    assert_eq!(result["body"].as_str().unwrap().len(), 2_200_000);
+    assert_eq!(
+        endpoint.json("large", None).await.unwrap_err().code,
+        ErrorCode::FrameTooLarge
+    );
+    t.abort();
+}
+#[tokio::test]
 async fn line_stream_preserves_frames_and_rejects_truncated_output() {
     let (url, t) = server().await;
     let endpoint = Endpoint::new(&url, Authentication::None, true).unwrap();

@@ -66,10 +66,7 @@ pub(super) fn parse_usage(
                 .and_then(|secs| u32::try_from(secs).ok());
             windows.push(UsageWindow {
                 id: stable_id("window", &[&pool_id, key]),
-                label: format!(
-                    "{} Ã‚Â· {key}",
-                    text(&bucket["limitName"]).unwrap_or(native_id)
-                ),
+                label: format!("{} · {key}", text(&bucket["limitName"]).unwrap_or("Codex")),
                 reading: Observation::reported(reading, source.clone()),
                 resets_at,
                 duration_seconds,

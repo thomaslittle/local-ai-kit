@@ -48,17 +48,29 @@ pub fn catalog(
 ) -> Result<ConnectionMetadata> {
     let connected = raw["connected"]
         .as_array()
-        .filter(|v| v.len() <= 128)
+        .filter(|v| v.len() <= 512)
         .ok_or_else(invalid)?;
     let all = raw["all"]
         .as_array()
-        .filter(|v| v.len() <= 128)
+        .filter(|v| v.len() <= 512)
         .ok_or_else(invalid)?;
+    let gateway_auth = if connected.is_empty() {
+        Observation::unknown("OPENCODE_NO_CONNECTED_PROVIDERS")
+    } else {
+        Observation::reported(
+            AuthState::Authenticated,
+            EvidenceSource::new(
+                EvidenceKind::OfficialProtocol,
+                "opencode",
+                "OpenCode /provider connected list",
+            ),
+        )
+    };
     let mut result = ConnectionMetadata {
         connection_id: connection.into(),
         route_id: root_route.into(),
         version: Observation::unknown("NOT_REPORTED"),
-        auth: Observation::reported(AuthState::Authenticated, evidence()),
+        auth: gateway_auth,
         plan: Observation::unknown("PLAN_NOT_REPORTED"),
         billing: Observation::unknown("GATEWAY_BILLING_IS_ROUTE_SPECIFIC"),
         account: None,
@@ -67,7 +79,10 @@ pub fn catalog(
         providers: vec![],
         quota_pools: vec![],
         included_usage_allowed: Observation::unknown("GATEWAY_QUOTA_NOT_REPORTED"),
-        diagnostics: vec!["GATEWAY_PLAN_AND_USAGE_UNAVAILABLE".into()],
+        diagnostics: vec![
+            "GATEWAY_PLAN_AND_USAGE_UNAVAILABLE".into(),
+            "UPSTREAM_ACCESS_NOT_INDEPENDENTLY_VALIDATED".into(),
+        ],
     };
     let mut seen = BTreeSet::new();
     for provider in all {
@@ -84,7 +99,7 @@ pub fn catalog(
             name: name.clone(),
             kind: "gateway_upstream".into(),
         });
-        let route_id = stable_id("route", &[connection, "opencode", &id]);
+        let route_id = stable_id("route", &[root_route, &id]);
         let entries = provider["models"]
             .as_object()
             .filter(|m| m.len() <= 4096)

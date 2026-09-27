@@ -51,6 +51,7 @@ fn credential_presence_is_unchecked_not_authentication_and_is_never_read() {
         .iter()
         .find(|c| c.provider_id == "codex")
         .unwrap();
+    assert_eq!(c.display_name, "Codex · Default profile");
     assert_ne!(c.auth.fresh_value(), Some(&AuthState::Authenticated));
     assert!(c.plan.value().is_none());
     assert!(s.snapshot.models.is_empty());
@@ -124,6 +125,63 @@ fn windows_shims_are_detected_as_candidates_without_execution() {
             .as_ref()
             .is_some_and(|p| p.ends_with("codex.cmd"))
     }));
+}
+
+#[test]
+fn multiple_windows_shims_for_one_profile_do_not_duplicate_the_profile() {
+    let tmp = tempfile::tempdir().unwrap();
+    fs::create_dir(tmp.path().join(".codex")).unwrap();
+    let bin = tmp.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    for name in ["codex", "codex.cmd", "codex.exe"] {
+        fs::write(bin.join(name), b"DO_NOT_EXECUTE").unwrap();
+    }
+    let mut env = environment(tmp.path(), HostPlatform::Windows);
+    env.search_path = vec![bin.clone()];
+
+    let result = scan(&env);
+    let profiles: Vec<_> = result
+        .snapshot
+        .connections
+        .iter()
+        .filter(|connection| connection.provider_id == "codex")
+        .collect();
+
+    assert_eq!(profiles.len(), 1);
+    assert_eq!(profiles[0].display_name, "Codex · Default profile");
+    assert_eq!(result.snapshot.profiles.len(), 1);
+    assert_eq!(
+        result.locations[&profiles[0].id].executable.as_deref(),
+        Some(bin.join("codex.exe").as_path())
+    );
+}
+#[test]
+fn separate_installation_directories_remain_selectable_connections() {
+    let tmp = tempfile::tempdir().unwrap();
+    fs::create_dir(tmp.path().join(".codex")).unwrap();
+    let paths = [tmp.path().join("first"), tmp.path().join("second")];
+    for path in &paths {
+        fs::create_dir(path).unwrap();
+        fs::write(path.join("codex.exe"), b"DO_NOT_EXECUTE").unwrap();
+        fs::write(path.join("codex.cmd"), b"DO_NOT_EXECUTE").unwrap();
+    }
+    let mut env = environment(tmp.path(), HostPlatform::Windows);
+    env.search_path = paths.to_vec();
+    let result = scan(&env);
+    assert_eq!(result.snapshot.installations.len(), 2);
+    assert_eq!(result.snapshot.connections.len(), 2);
+    for path in &paths {
+        assert!(
+            result
+                .locations
+                .values()
+                .any(|location| location.executable.as_ref() == Some(&path.join("codex.exe")))
+        );
+    }
+    assert_ne!(
+        result.snapshot.connections[0].installation_id,
+        result.snapshot.connections[1].installation_id
+    );
 }
 #[test]
 fn same_client_has_distinct_work_and_personal_profiles() {
@@ -236,5 +294,43 @@ fn cursor_named_binary_remains_a_passive_candidate() {
             .locations
             .values()
             .any(|l| l.provider_id == "cursor" && l.executable.is_some())
+    );
+}
+
+#[test]
+fn opencode_xdg_config_and_data_directories_are_one_profile() {
+    let tmp = tempfile::tempdir().unwrap();
+    let mut env = environment(tmp.path(), HostPlatform::Linux);
+    fs::create_dir_all(env.config_home.join("opencode")).unwrap();
+    fs::create_dir_all(env.data_home.join("opencode")).unwrap();
+    let bin = tmp.path().join("bin");
+    fs::create_dir_all(&bin).unwrap();
+    fs::write(bin.join("opencode"), b"DO_NOT_EXECUTE").unwrap();
+    env.search_path = vec![bin];
+
+    let result = scan(&env);
+    let profiles: Vec<_> = result
+        .snapshot
+        .connections
+        .iter()
+        .filter(|connection| connection.provider_id == "opencode")
+        .collect();
+
+    assert_eq!(profiles.len(), 1);
+    assert_eq!(profiles[0].display_name, "OpenCode · Default profile");
+}
+
+#[test]
+fn opencode_configuration_only_keeps_identity_when_data_directory_appears() {
+    let tmp = tempfile::tempdir().unwrap();
+    let env = environment(tmp.path(), HostPlatform::Linux);
+    fs::create_dir_all(env.config_home.join("opencode")).unwrap();
+    let before = scan(&env);
+    assert_eq!(before.snapshot.connections.len(), 1);
+    fs::create_dir_all(env.data_home.join("opencode")).unwrap();
+    let after = scan(&env);
+    assert_eq!(
+        before.snapshot.connections[0].id,
+        after.snapshot.connections[0].id
     );
 }

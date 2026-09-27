@@ -226,7 +226,7 @@ pub(crate) fn merge_report(snapshot: &mut Snapshot, report: &ConnectionMetadata,
             id: "generation.text".into(),
             support: Support::Unsupported,
             origin: CapabilityOrigin::Runtime,
-            evidence: runtime_evidence(&report.auth),
+            evidence: runtime_evidence(&report.auth, &report.billing),
             conditions: Vec::new(),
         }];
         let support = match report.included_usage_allowed.fresh_value() {
@@ -268,7 +268,7 @@ pub(crate) fn merge_report(snapshot: &mut Snapshot, report: &ConnectionMetadata,
             id: "generation.text".into(),
             support: Support::Unsupported,
             origin: CapabilityOrigin::Runtime,
-            evidence: runtime_evidence(&report.auth),
+            evidence: runtime_evidence(&report.auth, &report.billing),
             conditions: vec![],
         });
         if stale {
@@ -344,9 +344,23 @@ fn usage_evidence(value: &Observation<bool>) -> Observation<String> {
     }
 }
 
-fn runtime_evidence(auth: &Observation<AuthState>) -> Observation<String> {
-    match auth {
-        Observation::Known { observed_at, .. } => Observation::Known {
+fn runtime_evidence(
+    auth: &Observation<AuthState>,
+    billing: &Observation<BillingMode>,
+) -> Observation<String> {
+    let timestamp = match auth {
+        Observation::Known { observed_at, .. } => Some(observed_at),
+        _ => match billing {
+            Observation::Known {
+                value: BillingMode::Local,
+                observed_at,
+                ..
+            } => Some(observed_at),
+            _ => None,
+        },
+    };
+    match timestamp {
+        Some(observed_at) => Observation::Known {
             value: "Metadata-only adapter; native execution not implemented".into(),
             source: EvidenceSource::new(
                 EvidenceKind::Derived,

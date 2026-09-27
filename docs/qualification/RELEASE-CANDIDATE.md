@@ -1,5 +1,7 @@
 # Historical verified developer-alpha build
 
+September 27 review is recorded in [the current handoff](../handoffs/RESUME.md) and [implementation ledger](../implementation/LEDGER.md). The measurements below remain evidence for their named historical commits. GitHub run `36141317640` has no executed steps: its check annotations state that recent account payments failed or the spending limit needs increasing. This is an external CI blocker, not a macOS test result.
+
 **Verified source:** `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91` on `feature/initial-implementation`.
 
 **Status at that source revision:** the supported developer-alpha implementation had passing Windows release-profile verification and Linux native/package qualification. **The full original 18-task scope was not complete.** These results apply only to source `991ec2b`; later changes are not covered by the historical counts or artifacts below. Registry publishing, signing, notarization, and merging to main were not performed.

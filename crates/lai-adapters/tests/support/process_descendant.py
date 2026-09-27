@@ -1,7 +1,7 @@
-"""Synthetic process-tree fixture; all descendants exit themselves within two seconds."""
+"""Synthetic process-tree fixture; a 30-second watchdog bounds leaked fixtures."""
 import sys,os,time,pathlib,subprocess,json
 if sys.argv[1]=='heartbeat':
- marker=pathlib.Path(sys.argv[2]);end=time.monotonic()+2
+ marker=pathlib.Path(sys.argv[2]);end=time.monotonic()+30
  while time.monotonic()<end:
   with marker.open('ab') as file:file.write(b'x')
   time.sleep(.03)

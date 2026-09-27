@@ -95,3 +95,17 @@ fn malformed_cached_values_do_not_become_plan_claims() {
     let m = read_cached(located(root.path()), "c", "r").unwrap();
     assert!(m.plan.value().is_none());
 }
+
+#[test]
+fn large_cursor_database_is_read_through_bounded_indexed_lookups() {
+    let root = fixture();
+    let path = root.path().join("User/globalStorage/state.vscdb");
+    let database = fs::OpenOptions::new().write(true).open(&path).unwrap();
+    database.set_len(64 * 1024 * 1024 + 1).unwrap();
+    drop(database);
+
+    let metadata = read_cached(located(root.path()), "c", "r").unwrap();
+    assert_eq!(metadata.plan.value().unwrap().native_id, "pro");
+    assert!(metadata.auth.value().is_none());
+    assert!(metadata.models.is_empty());
+}

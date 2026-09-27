@@ -13,6 +13,11 @@ use std::{
 use tokio::sync::watch;
 
 type RefreshResult = Option<Result<()>>;
+const METADATA_PROBE_CACHE_TTL: Duration = Duration::from_secs(60);
+const METADATA_FRESHNESS_TTL: Duration = Duration::from_secs(15 * 60);
+fn metadata_is_stale(age: Duration) -> bool {
+    age >= METADATA_FRESHNESS_TTL
+}
 #[derive(Clone)]
 struct MetadataFailure {
     until: Instant,
@@ -72,11 +77,7 @@ impl InventoryCache {
         let state = self.state.lock().map_err(|_| unavailable())?;
         let mut snapshot = state.snapshot.clone();
         for (at, report) in state.metadata.values() {
-            crate::metadata::merge_report(
-                &mut snapshot,
-                report,
-                at.elapsed() >= Duration::from_secs(60),
-            );
+            crate::metadata::merge_report(&mut snapshot, report, metadata_is_stale(at.elapsed()));
         }
         Ok(snapshot)
     }
@@ -98,7 +99,7 @@ impl InventoryCache {
         Ok(state
             .metadata
             .get(connection)
-            .is_some_and(|(at, _)| at.elapsed() < Duration::from_secs(60)))
+            .is_some_and(|(at, _)| at.elapsed() < METADATA_PROBE_CACHE_TTL))
     }
     pub(crate) fn publish_metadata(
         &self,
@@ -268,5 +269,18 @@ mod backoff_tests {
     fn retry_jitter_never_exceeds_the_thirty_second_cap() {
         let error = DomainError::new(ErrorCode::ProviderUnavailable, "safe").retryable();
         assert!(metadata_backoff("cap", 32, &error) <= Duration::from_secs(30));
+    }
+}
+
+#[cfg(test)]
+mod metadata_freshness_tests {
+    use super::metadata_is_stale;
+    use std::time::Duration;
+
+    #[test]
+    fn a_recent_authentication_check_stays_fresh_while_the_user_checks_other_profiles() {
+        assert!(!metadata_is_stale(Duration::from_secs(61)));
+        assert!(!metadata_is_stale(Duration::from_secs(15 * 60 - 1)));
+        assert!(metadata_is_stale(Duration::from_secs(15 * 60)));
     }
 }

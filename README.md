@@ -33,22 +33,13 @@ The executable is `target/debug/local-ai-kit` (`.exe` on Windows). `scan --json`
 
 ## Run the showroom
 
-For a no-account demonstration of every selector:
+The default demo runs the native local service and loads detected local installations after browser pairing. It does not insert sample accounts or models. Build tools and the native helper must be available:
 
-```sh
+```powershell
 npm run demo
 ```
 
-Open `http://127.0.0.1:4499`. This mode is explicitly **synthetic** and cannot inspect credentials or call a provider.
-
-For the native, paired demo on Windows:
-
-```powershell
-npm run build:demo
-.\target\debug\local-ai-kit.exe serve --http --assets "$PWD\apps\demo\dist" --allow-passive-discovery --allow-metadata codex
-```
-
-On Unix, use `./target/debug/local-ai-kit` and an absolute path to `apps/demo/dist`. Enter the printed one-use pairing code, then explicitly scan or check a connection. The metadata grant above allows Codex inspection, not inference. Actual turns additionally require a provider execution grant, a named workspace, and an explicit UI action. See the [live demo guide](docs/integration/live-demo.md).
+Open `http://127.0.0.1:4499` and enter the one-use pairing code printed by the helper. Pairing triggers passive local discovery, then the browser checks metadata for profiles allowed by the host. The checks do not send model prompts; no execution or inference grant is enabled. See the [live demo guide](docs/integration/live-demo.md).
 
 ## Register an existing native AI client
 
@@ -72,6 +63,8 @@ Native subscription-style integrations are explicit. A host-owned JSON file name
 Start the helper with `--native-profiles ABSOLUTE_JSON --allow-metadata grok` to inspect the registered native catalog. Text sessions additionally require `--allow-execution grok --workspace ABSOLUTE_DIRECTORY`. The installed client owns authentication; the toolkit sends no copied token/API key. Billing in this example is a host declaration and remains labeled user-supplied evidence.
 
 ## Use the packages
+
+Building a prompt-driven application? Start with the [desktop app integration flow](docs/integration/prompt-app.md) for provider/model selection, grants, streaming, follow-up turns, and scene-output validation.
 
 The [distribution guide](docs/integration/distribution.md) shows how to build a checksummed native bundle and install its four npm tarballs or Python wheel. Registry publication and signing are separate, unperformed operations. The standalone native executables need neither Node nor Python.
 

@@ -23,7 +23,7 @@
     "test:ui": "python scripts/verify.py --profile ui",
     "test:a11y": "npm run build && node --test scripts/test_accessibility.mjs scripts/test_component_accessibility.mjs",
     "build:demo": "npm run build && node scripts/build_demo.mjs",
-    "demo": "node apps/demo/server.mjs --fixture"
+    "demo": "npm run build:demo && node scripts/run_live_demo.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

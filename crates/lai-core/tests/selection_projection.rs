@@ -4,6 +4,32 @@ use lai_contracts::*;
 use lai_core::*;
 use std::collections::BTreeSet;
 #[test]
+fn accountless_local_runtime_requires_matching_provider_and_fresh_local_evidence() {
+    for provider in ["ollama", "lmstudio"] {
+        let mut s = fixture();
+        s.connections[0].provider_id = provider.into();
+        s.routes[0].provider_id = provider.into();
+        s.connections[0].auth = Observation::unknown("LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH");
+        s.routes[0].billing = Observation::reported(
+            BillingMode::Local,
+            EvidenceSource::new(EvidenceKind::Synthetic, provider, "fixture"),
+        );
+        assert!(validate_selection(&s, &selection(), false).is_ok());
+        s.routes[0].billing.mark_stale();
+        assert!(validate_selection(&s, &selection(), false).is_err());
+    }
+    for provider in ["test", "ollama"] {
+        let mut s = fixture();
+        s.connections[0].provider_id = provider.into();
+        s.connections[0].auth = Observation::unknown("LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH");
+        s.routes[0].billing = Observation::reported(
+            BillingMode::Local,
+            EvidenceSource::new(EvidenceKind::Synthetic, provider, "fixture"),
+        );
+        assert!(validate_selection(&s, &selection(), false).is_err());
+    }
+}
+#[test]
 fn denied_client_sees_no_account_model_pool_or_profile() {
     let s = project_snapshot(&fixture(), &ClientPolicy::denied());
     assert!(s.connections.is_empty());

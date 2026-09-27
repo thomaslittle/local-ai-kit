@@ -1,5 +1,7 @@
 # Native session resumption
 
+Completed turns remain suspendable. The demo continues the resumed session when the route, options, workspace, and billing consent are unchanged. A failed or timed-out suspend leaves that session unusable because the provider's conversation state is uncertain. Revocation and publication are synchronized across grant lifetimes; restoring the same grant cannot revive an older in-flight session or token.
+
 Local AI Kit supports resumption only when the selected native adapter explicitly reports that it can load an existing provider session. The current shared ACP path checks the provider's `loadSession` capability; API/local chat routes, Codex, Claude, and other integrations do not inherit resumption merely because they support multi-turn text.
 
 ## Public flow

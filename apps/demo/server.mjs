@@ -51,7 +51,7 @@ export async function createFixtureServer({port=0}={}){
     json(res,404,{error:'NOT_FOUND'});return;
    }
    if(req.method!=='GET'){json(res,405,{error:'METHOD_NOT_ALLOWED'});return;}
-   const names={'/':'index.html','/app.mjs':'app.mjs','/ui.mjs':'ui.mjs','/selectors.mjs':'selectors.mjs','/style.css':'style.css','/bootstrap.mjs':'bootstrap.mjs','/pages.mjs':'pages.mjs','/dialogs.mjs':'dialogs.mjs','/configuration.mjs':'configuration.mjs'};
+   const names={'/':'index.html','/app.mjs':'app.mjs','/ui.mjs':'ui.mjs','/selectors.mjs':'selectors.mjs','/style.css':'style.css','/bootstrap.mjs':'bootstrap.mjs','/pages.mjs':'pages.mjs','/profile_auth.mjs':'profile_auth.mjs','/errors.mjs':'errors.mjs','/catalog_visibility.mjs':'catalog_visibility.mjs','/dialogs.mjs':'dialogs.mjs','/configuration.mjs':'configuration.mjs'};
    let path,type;
    if(Object.hasOwn(names,current.pathname)){
     path=join(HERE,'public',names[current.pathname]);type=current.pathname==='/'?'text/html':current.pathname.endsWith('.css')?'text/css':'text/javascript';

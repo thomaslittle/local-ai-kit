@@ -233,7 +233,11 @@ pub fn parse_catalog(
         connection_id: connection.into(),
         route_id: route.into(),
         version: Observation::unknown("VERSION_NOT_REPORTED"),
-        auth: Observation::reported(AuthState::Authenticated, evidence(kind)),
+        auth: if kind.local() {
+            Observation::unknown("LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH")
+        } else {
+            Observation::reported(AuthState::Authenticated, evidence(kind))
+        },
         plan: Observation::unknown("PLAN_NOT_REPORTED"),
         billing: Observation::reported(
             if kind.local() {

@@ -1,4 +1,4 @@
-# Codex kickoff â€” Local AI Kit
+# Codex kickoff — Local AI Kit
 
 Copy the following prompt into Codex with `https://github.com/thomaslittle/local-ai-kit` selected as the project repository.
 

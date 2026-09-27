@@ -17,8 +17,19 @@ fn route<'a>(snapshot: &'a Snapshot, model: &Model) -> Result<(&'a AccessRoute, 
         .ok_or_else(|| error(ErrorCode::NotFound, "Connection is unavailable"))?;
     Ok((route, connection))
 }
+/// Accountless access is specific to supported local runtimes, not a billing bypass.
+/// Callers must separately validate freshness, grants, and route capabilities.
+pub fn is_accountless_local_route(route: &AccessRoute, connection: &Connection) -> bool {
+    matches!(connection.provider_id.as_str(), "ollama" | "lmstudio")
+        && route.provider_id == connection.provider_id
+        && route.connection_id == connection.id
+        && route.billing.value() == Some(&BillingMode::Local)
+        && matches!(&connection.auth, Observation::Unknown { reason, .. } if reason == "LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH")
+}
 fn access(route: &AccessRoute, connection: &Connection, paid: bool) -> Result<()> {
-    if connection.auth.fresh_value() != Some(&AuthState::Authenticated) {
+    if connection.auth.fresh_value() != Some(&AuthState::Authenticated)
+        && !is_accountless_local_route(route, connection)
+    {
         return Err(error(
             ErrorCode::AuthRequired,
             "Current authentication is not verified",

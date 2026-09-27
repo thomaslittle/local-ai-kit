@@ -16,10 +16,15 @@ export function resolveCandidates(catalog: Catalog, requirements: Requirements =
     if (!terms.every(term => entry.search.includes(term))) continue;
     const reasons: string[] = [];
     const auth = entry.connection.auth;
-    if (auth.state !== 'known' || auth.freshness !== 'fresh' || auth.value === 'unchecked') reasons.push('AUTH_UNVERIFIED');
-    else if (auth.value !== 'authenticated') reasons.push('AUTH_REQUIRED');
     const billing = entry.route.billing;
     const billingValue = billing.state === 'known' && billing.freshness === 'fresh' ? billing.value : 'unknown';
+    const accountlessLocal = ['ollama', 'lmstudio'].includes(entry.connection.providerId)
+      && entry.route.providerId === entry.connection.providerId && billingValue === 'local'
+      && auth.state === 'unknown' && auth.reason === 'LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH';
+    if (!accountlessLocal) {
+      if (auth.state !== 'known' || auth.freshness !== 'fresh' || auth.value === 'unchecked') reasons.push('AUTH_UNVERIFIED');
+      else if (auth.value !== 'authenticated') reasons.push('AUTH_REQUIRED');
+    }
     if (billingValue === 'subscription' && entry.route.capabilities.some(c => c.id === 'usage.included_allowed' && c.support === 'unsupported')) reasons.push('RATE_LIMITED');
     if (billingValue === 'unknown') reasons.push('BILLING_UNKNOWN');
     else if (!['subscription', 'local'].includes(billingValue) && !requirements.allowPaidFallback) reasons.push('BILLING_CONSENT_REQUIRED');

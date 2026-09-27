@@ -25,7 +25,7 @@ export function createSnapshotStore(client: LocalAIClient, initial?: Snapshot): 
  let state: SnapshotState = Object.freeze({snapshot: initial ? copy(initial) : null, loading:false, error:null});
  const serverState = state;
  const listeners = new Set<() => void>(), actions = new Map<string, Promise<Snapshot>>();
- let closed=false, epoch=0, loading:Promise<Snapshot>|undefined, controller:AbortController|undefined;
+ let closed=false, epoch=0, loadedEpoch=-1, loading:Promise<Snapshot>|undefined, controller:AbortController|undefined;
  const ensure=()=>{if(closed)throw new LocalAIError('CLOSED');};
  const publish=(next:SnapshotState)=>{
   state=Object.freeze(next);
@@ -39,7 +39,7 @@ export function createSnapshotStore(client: LocalAIClient, initial?: Snapshot): 
   const work=readCatalogSnapshot(client,{signal:abort.signal}).then(value=>{
    if(closed)throw new LocalAIError('CLOSED');
    if(version!==epoch)throw new LocalAIError('CANCELLED');
-   const snapshot=copy(value);publish({snapshot,loading:false,error:null});return snapshot;
+   const snapshot=copy(value);loadedEpoch=version;publish({snapshot,loading:false,error:null});return snapshot;
   }).catch(error=>{
    const safe=error instanceof LocalAIError?error:new LocalAIError('PROVIDER_UNAVAILABLE');
    if(!closed&&version===epoch)publish({snapshot:null,loading:false,error:safe});
@@ -53,7 +53,14 @@ export function createSnapshotStore(client: LocalAIClient, initial?: Snapshot): 
   const work=(async()=>{
    await run();ensure();
    epoch++;controller?.abort();loading=undefined;
-   return load();
+   // Another completed probe may supersede this read. Join its newer catalog
+   // without replaying either metadata operation or hiding genuine read errors.
+   for (;;) {
+    if(loadedEpoch===epoch && state.snapshot)return state.snapshot;
+    const version=epoch;
+    try { return await load(); }
+    catch(error) { if(closed || version===epoch)throw error; }
+   }
   })().finally(()=>actions.delete(key));
   actions.set(key,work);return work;
  }

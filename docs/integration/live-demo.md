@@ -1,14 +1,16 @@
 # Native browser demo and HTTP API
 
-Build with `cargo build -p lai-cli`, `npm run build`, and `node scripts/build_demo.mjs`.
+Run `npm run demo` to build the public SDK-backed assets and start the native paired HTTP helper on port 4499. The default command is live only and never uses the synthetic fixture service.
 
 On Windows:
 
 ```powershell
-.\target\debug\local-ai-kit.exe serve --http --port 4499 --assets "$PWD\apps\demo\dist" --allow-passive-discovery --allow-codex-metadata
+npm run demo
 ```
 
-On macOS/Linux use `./target/debug/local-ai-kit` and an absolute `--assets` path. Open the printed local URL, enter the single-use pairing code from the terminal, then explicitly choose **Scan local clients**. Select a connection and **Check account and models** to authorize its supported metadata probe under the host's existing grant. Unsupported providers report an explicit error; there is no synthetic fallback.
+On macOS/Linux use the same `npm run demo` command. Open the printed local URL and enter the single-use pairing code from the terminal. After pairing, the browser performs passive discovery and sequential metadata-only checks for providers the host allows: Codex, Claude Code, Grok, Gemini CLI, Antigravity, OpenCode, Ollama, LM Studio, and Cursor's cached metadata. The page shows progress and an outcome for every detected profile. Checks may launch a native metadata client or contact a configured local endpoint, but they do not request model generation. Gemini CLI and Antigravity still need explicit native profile registration with `--native-profiles`; Cursor's cached identity and plan remain stale and cannot verify authentication. No execution or inference grant is enabled. A profile appears as authenticated only after a fresh provider result confirms it. Unsupported providers report an explicit error; there is no synthetic fallback.
+
+When the OpenCode CLI is available, the demo starts a temporary loopback-only OpenCode server protected by a random Basic Auth password. The password is passed only through child-process environments; a temporary endpoint file contains the environment variable name, never its value. The server is stopped and its temporary config is removed when the helper exits. OpenCode's `/provider` response supplies models for its connected providers. A nonempty connected-provider list marks the OpenCode profile authenticated as reported by OpenCode; it does not independently validate each upstream credential or prove plan, billing, or quota. No inference request is sent.
 
 The pair code expires after five minutes and allows ten failed attempts. Bearer sessions expire after an hour. The embedding Rust host may call `HttpServer::issue_pairing_code()` to authorize another app; otherwise restart the CLI to issue another code. Tokens stay in the browser client closure, not URLs, local storage, provider credentials, or logs.
 
@@ -24,4 +26,4 @@ The HTTP API binds 127.0.0.1 only. Host and Origin are checked, pairing is singl
 
 `node --test scripts/test_live_demo.mjs` exercises real native HTTP and Chromium against an isolated home. `node scripts/check_live_metadata_ui.mjs --allow-metadata` is an explicitly opt-in real Codex metadata browser test; it submits no generation request. Native transport and stream tests are in `crates/lai-transports/tests`.
 
-The existing `node apps/demo/server.mjs --fixture` remains a separate, visibly synthetic demonstration. It is not the native service.
+The in-memory fixture service remains available to automated tests only. The public browser bootstrap has no fixture fallback.

@@ -8,7 +8,7 @@ export function fixtureSnapshot(){
  const providers=[['codex','Codex'],['antigravity','Antigravity'],['grok','Grok'],['opencode','OpenCode'],['claude','Claude Code'],['local','Local runtime']].map(([id,name])=>({id,name,kind:'synthetic_client'}));
  const rows=[
   ['codex-personal','codex','Personal workspace','subscription','authenticated'],
-  ['codex-work','codex','Work workspace','subscription','authenticated'],
+  ['codex-work','codex','Work workspace','subscription','authenticated-stale'],
   ['antigravity-personal','antigravity','Google workspace','subscription','authenticated'],
   ['grok-personal','grok','Grok workspace','subscription','authenticated'],
   ['opencode-linked','opencode','Linked account','subscription','authenticated'],
@@ -21,7 +21,7 @@ export function fixtureSnapshot(){
  const accounts=rows.map(([id,providerId])=>({id:'account-'+id,providerId,displayLabel:known('Example account'),identitySource:known('synthetic/'+id)}));
  const connections=rows.map(([id,providerId,displayName,billing,auth])=>({
   id,providerId,displayName,installationId:'install-'+id,profileId:'profile-'+id,accountId:'account-'+id,
-  auth:known(auth),plan:billing==='unknown'?unknown('PLAN_NOT_REPORTED'):known({nativeId:'fixture-'+billing,label:billing==='subscription'?'Example included plan':billing==='local'?'Local compute':'Example metered access'}),
+  auth:auth==='authenticated-stale'?{...known('authenticated'),freshness:'stale'}:known(auth),plan:billing==='unknown'?unknown('PLAN_NOT_REPORTED'):known({nativeId:'fixture-'+billing,label:billing==='subscription'?'Example included plan':billing==='local'?'Local compute':'Example metered access'}),
   status:auth==='expired'?'needs_auth':'ok',diagnostics:auth==='expired'?['SYNTHETIC_EXPIRED_LOGIN']:[],
  }));
  const routes=rows.map(([id,providerId,displayName,billing])=>({id:'route-'+id,connectionId:id,providerId,displayName,billing:billing==='unknown'?unknown('BILLING_NOT_REPORTED'):known(billing),capabilities:[],catalogRevision:'fixture-1'}));

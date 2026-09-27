@@ -94,6 +94,83 @@ fn create() -> Value {
     json!({"selection":common::selection(),"workspaceId":"scratch"})
 }
 #[tokio::test]
+async fn revocation_during_open_then_regrant_closes_the_unpublished_agent() {
+    struct CloseCounter(Arc<AtomicUsize>);
+    impl Agent for CloseCounter {
+        fn turn<'a>(
+            &'a mut self,
+            _: String,
+            _: BTreeMap<String, Value>,
+            _: TurnContext,
+        ) -> BoxFuture<'a, ()> {
+            Box::pin(async { panic!("revoked startup cannot infer") })
+        }
+        fn close(&mut self) -> BoxFuture<'_, ()> {
+            self.0.fetch_add(1, Ordering::SeqCst);
+            Box::pin(async { Ok(()) })
+        }
+    }
+    let entered = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let closed = Arc::new(AtomicUsize::new(0));
+    let (started, finish, count) = (entered.clone(), release.clone(), closed.clone());
+    let service = Arc::new(
+        NativeService::new(
+            Arc::new(|_| {
+                Ok(ScanResult {
+                    snapshot: common::fixture(),
+                    locations: BTreeMap::from([(
+                        "personal".into(),
+                        LocatedClient {
+                            provider_id: "test".into(),
+                            profile_home: std::env::temp_dir(),
+                            executable: None,
+                        },
+                    )]),
+                    metadata_probes: 0,
+                })
+            }),
+            Duration::ZERO,
+        )
+        .with_execution(
+            BTreeSet::from(["test".into()]),
+            Arc::new(move |_| {
+                let (started, finish, count) = (started.clone(), finish.clone(), count.clone());
+                Box::pin(async move {
+                    started.notify_one();
+                    finish.notified().await;
+                    Ok(Box::new(CloseCounter(count)) as Box<dyn Agent>)
+                })
+            }),
+        ),
+    );
+    service
+        .register_client("a", ClientPolicy::passive())
+        .unwrap();
+    let grant = ExecutionGrant {
+        connection_ids: BTreeSet::from(["personal".into()]),
+        workspaces: BTreeMap::from([("scratch".into(), std::env::temp_dir())]),
+        ..Default::default()
+    };
+    service.register_execution("a", grant.clone()).unwrap();
+    service
+        .handle("a", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let operation = service.clone();
+    let pending =
+        tokio::spawn(async move { operation.handle("a", "sessions.create", create()).await });
+    entered.notified().await;
+    service.revoke_execution("a");
+    service.register_execution("a", grant).unwrap();
+    release.notify_one();
+    assert_eq!(
+        pending.await.unwrap().unwrap_err().code,
+        ErrorCode::LocalAccessDenied
+    );
+    assert_eq!(closed.load(Ordering::SeqCst), 1);
+}
+#[tokio::test]
 async fn discovery_permission_does_not_authorize_execution() {
     let (s, c) = setup(false);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();

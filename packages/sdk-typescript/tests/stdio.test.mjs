@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { openStdioTransport } from '../node/index.mjs';
 import { createLocalAI } from '../dist/index.js';
 const peer=fileURLToPath(new URL('./fixtures/peer.mjs',import.meta.url));
-const options={executable:process.execPath,args:[peer],timeoutMs:1000};
+// Cold Node startup competes with the other workspace suites. Deadline behavior
+// is tested separately with an explicit short per-request timeout.
+const options={executable:process.execPath,args:[peer],timeoutMs:5000};
 const open=extra=>openStdioTransport({...options,...extra});
 test('explicit local process round trips through the same public client',async()=>{
  const t=await open();try{const ai=await createLocalAI({transport:t});assert.deepEqual(await ai.snapshot.get({fields:['models']}),{fields:['models']});}finally{await t.close();}
@@ -23,7 +25,7 @@ test('inherited NODE_OPTIONS is not injected into the helper',async()=>{
  try{t=await open({env:{EXPLICIT_VALUE:'allowed'}});assert.deepEqual(await t.request('test.env'),{nodeOptions:null,custom:'allowed'});}finally{if(previous===undefined)delete process.env.NODE_OPTIONS;else process.env.NODE_OPTIONS=previous;await t?.close();}
 });
 test('request timeout does not retry and transport can still answer another request',async()=>{
- const t=await open({timeoutMs:30});try{await assert.rejects(t.request('test.hang'),/TIMEOUT/);assert.deepEqual(await t.request('test.echo',{ok:true}),{ok:true});}finally{await t.close();}
+ const t=await open();try{await t.request('test.echo',{ready:true});await assert.rejects(t.request('test.hang',{}, {timeoutMs:30}),/TIMEOUT/);assert.deepEqual(await t.request('test.echo',{ok:true}),{ok:true});}finally{await t.close();}
 });
 test('request AbortSignal rejects without replay or fallback',async()=>{
  const t=await open();try{const c=new AbortController();const pending=t.request('test.hang',{}, {signal:c.signal});c.abort();await assert.rejects(pending,/CANCELLED/);}finally{await t.close();}

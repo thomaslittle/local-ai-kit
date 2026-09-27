@@ -15,10 +15,13 @@ use std::{
     time::Duration,
 };
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+static ENDPOINT_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 fn endpoint() -> String {
+    // SystemTime may return the same tick to concurrently starting Windows tests.
+    let sequence = ENDPOINT_SEQUENCE.fetch_add(1, Ordering::Relaxed);
     if cfg!(windows) {
         format!(
-            "lai-test-{}-{}",
+            "lai-test-{}-{}-{sequence}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -28,7 +31,7 @@ fn endpoint() -> String {
     } else {
         std::env::temp_dir()
             .join(format!(
-                "lai-{}-{}.sock",
+                "lai-{}-{}-{sequence}.sock",
                 std::process::id(),
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)

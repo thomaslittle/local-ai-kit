@@ -45,6 +45,7 @@ pub type ExecutionSource =
 #[derive(Clone)]
 struct SessionContext {
     owner: String,
+    lifetime: Arc<()>,
     workspace_id: String,
     workspace_path: PathBuf,
     permission_mode: Option<String>,
@@ -70,12 +71,33 @@ pub(crate) struct ExecutionState {
     pub source: Option<ExecutionSource>,
     pub runtime: Arc<Runtime>,
     pub grants: Arc<RwLock<BTreeMap<String, ExecutionGrant>>>,
+    // A fresh identity for each grant lifetime. Publication holds a read lease;
+    // revocation holds the write lease until sessions and tokens are removed.
+    lifecycle: Arc<RwLock<BTreeMap<String, Arc<()>>>>,
     session_billing: RwLock<BTreeMap<String, (String, bool)>>,
     session_context: RwLock<BTreeMap<String, SessionContext>>,
     resumptions: RwLock<BTreeMap<String, ResumeRecord>>,
 }
 impl ExecutionState {
+    fn publish_resumption(&self, token: String, record: ResumeRecord) -> Result<()> {
+        let lifetimes = self.lifecycle.read().map_err(|_| denied())?;
+        if !lifetimes
+            .get(&record.owner)
+            .is_some_and(|current| Arc::ptr_eq(current, &record.context.lifetime))
+        {
+            return Err(denied());
+        }
+        self.resumptions
+            .write()
+            .map_err(|_| denied())?
+            .insert(token, record);
+        Ok(())
+    }
     pub fn revoke(&self, client: &str) {
+        let Ok(mut lifecycle) = self.lifecycle.write() else {
+            return;
+        };
+        lifecycle.remove(client);
         if let Ok(mut grants) = self.grants.write() {
             grants.remove(client);
         }
@@ -166,6 +188,11 @@ impl NativeService {
                 return Err(denied());
             }
         }
+        let mut lifecycle = self
+            .execution_state
+            .lifecycle
+            .write()
+            .map_err(|_| denied())?;
         let mut grants = self.execution_state.grants.write().map_err(|_| denied())?;
         if grants.contains_key(client) {
             return Err(DomainError::new(
@@ -174,6 +201,7 @@ impl NativeService {
             ));
         }
         grants.insert(client.into(), grant);
+        lifecycle.insert(client.into(), Arc::new(()));
         Ok(())
     }
     pub(crate) fn execution_methods(&self) -> Vec<&'static str> {
@@ -234,7 +262,22 @@ impl NativeService {
         client: &str,
         request: Create,
         native_resume: Option<String>,
+        expected_lifetime: Option<Arc<()>>,
     ) -> Result<Session> {
+        let lifetime = self
+            .execution_state
+            .lifecycle
+            .read()
+            .map_err(|_| denied())?
+            .get(client)
+            .cloned()
+            .ok_or_else(denied)?;
+        if expected_lifetime
+            .as_ref()
+            .is_some_and(|expected| !Arc::ptr_eq(expected, &lifetime))
+        {
+            return Err(denied());
+        }
         let grant = self.execution_grant(client)?;
         let snapshot = self.projected(client)?;
         let model = validate_selection(
@@ -308,7 +351,16 @@ impl NativeService {
         let expected_account = connection.account_id.clone();
         let expected_billing = route.billing.value().cloned();
         let guard_workspace = workspace.clone();
+        let lifecycle = self.execution_state.lifecycle.clone();
+        let guard_lifetime = lifetime.clone();
         let guard = Arc::new(move || {
+            let lifetimes = lifecycle.read().map_err(|_| denied())?;
+            if !lifetimes
+                .get(&owner)
+                .is_some_and(|current| Arc::ptr_eq(current, &guard_lifetime))
+            {
+                return Err(denied());
+            }
             let policy = clients
                 .read()
                 .map_err(|_| denied())?
@@ -335,7 +387,6 @@ impl NativeService {
                 return Err(denied());
             }
             if current_connection.account_id != expected_account
-                || current_connection.auth.value() != Some(&AuthState::Authenticated)
                 || (paid && !grant.allow_paid)
                 || (native_policy && !grant.allow_native_policy)
             {
@@ -351,6 +402,11 @@ impl NativeService {
                 .iter()
                 .find(|current| current.id == selected.route_id)
                 .ok_or_else(denied)?;
+            if current_connection.auth.value() != Some(&AuthState::Authenticated)
+                && !lai_core::is_accountless_local_route(current_route, current_connection)
+            {
+                return Err(denied());
+            }
             if current.revision != selected.revision
                 || current_route.billing.value() != expected_billing.as_ref()
             {
@@ -369,39 +425,60 @@ impl NativeService {
         .await
         .map_err(|_| DomainError::new(ErrorCode::Timeout, "Native session startup timed out"))??;
         if let Err(error) = guard() {
-            let _ = agent.close().await;
+            let _ = tokio::time::timeout(Duration::from_secs(2), agent.close()).await;
             return Err(error);
         }
-        let context = SessionContext {
-            owner: client.into(),
-            workspace_id: request.workspace_id.clone(),
-            workspace_path: workspace,
-            permission_mode: request.permission_mode.clone(),
-            review_requests: request.review_requests,
-            allow_paid: request.allow_paid,
-            connection_id: connection.id.clone(),
-            account_id: connection.account_id.clone(),
-            route_id: route.id.clone(),
-            billing: route.billing.value().cloned(),
-        };
-        let session = self.execution_state.runtime.insert(
-            client,
-            connection.id.clone(),
-            request.selection.clone(),
-            agent,
-            guard,
-        )?;
-        self.execution_state
-            .session_billing
-            .write()
-            .map_err(|_| denied())?
-            .insert(session.id.clone(), (client.into(), request.allow_paid));
-        self.execution_state
-            .session_context
-            .write()
-            .map_err(|_| denied())?
-            .insert(session.id.clone(), context);
-        Ok(session)
+        let mut unpublished = Some(agent);
+        let result = (|| {
+            let lifetimes = self
+                .execution_state
+                .lifecycle
+                .read()
+                .map_err(|_| denied())?;
+            if !lifetimes
+                .get(client)
+                .is_some_and(|current| Arc::ptr_eq(current, &lifetime))
+            {
+                return Err(denied());
+            }
+            let context = SessionContext {
+                owner: client.into(),
+                lifetime: lifetime.clone(),
+                workspace_id: request.workspace_id.clone(),
+                workspace_path: workspace,
+                permission_mode: request.permission_mode.clone(),
+                review_requests: request.review_requests,
+                allow_paid: request.allow_paid,
+                connection_id: connection.id.clone(),
+                account_id: connection.account_id.clone(),
+                route_id: route.id.clone(),
+                billing: route.billing.value().cloned(),
+            };
+            let session = self.execution_state.runtime.insert(
+                client,
+                connection.id.clone(),
+                request.selection.clone(),
+                unpublished.take().ok_or_else(denied)?,
+                guard,
+            )?;
+            self.execution_state
+                .session_billing
+                .write()
+                .map_err(|_| denied())?
+                .insert(session.id.clone(), (client.into(), request.allow_paid));
+            self.execution_state
+                .session_context
+                .write()
+                .map_err(|_| denied())?
+                .insert(session.id.clone(), context);
+            Ok(session)
+        })();
+        // The lease has been released before asynchronous provider cleanup. Some
+        // remote session adapters require close(), not merely dropping a process.
+        if let Some(mut agent) = unpublished {
+            let _ = tokio::time::timeout(Duration::from_secs(2), agent.close()).await;
+        }
+        result
     }
     pub(crate) async fn execute_method(
         &self,
@@ -436,7 +513,7 @@ impl NativeService {
             }
             "sessions.create" => {
                 let request: Create = decode(p)?;
-                serde_json::to_value(self.open_session(client, request, None).await?)
+                serde_json::to_value(self.open_session(client, request, None, None).await?)
                     .map_err(|_| params::invalid())
             }
             "sessions.get" => {
@@ -487,20 +564,16 @@ impl NativeService {
                     }
                 }
                 let native_session_id = runtime.suspend(client, &request.session_id).await?;
-                self.execution_state
-                    .resumptions
-                    .write()
-                    .map_err(|_| denied())?
-                    .insert(
-                        token.clone(),
-                        ResumeRecord {
-                            owner: client.into(),
-                            native_session_id,
-                            connection_id: session.connection_id,
-                            selection: session.selection,
-                            context,
-                        },
-                    );
+                self.execution_state.publish_resumption(
+                    token.clone(),
+                    ResumeRecord {
+                        owner: client.into(),
+                        native_session_id,
+                        connection_id: session.connection_id,
+                        selection: session.selection,
+                        context,
+                    },
+                )?;
                 self.execution_state
                     .session_billing
                     .write()
@@ -597,7 +670,12 @@ impl NativeService {
                     return Err(denied());
                 }
                 let session = self
-                    .open_session(client, create, Some(record.native_session_id))
+                    .open_session(
+                        client,
+                        create,
+                        Some(record.native_session_id),
+                        Some(record.context.lifetime),
+                    )
                     .await?;
                 if session.connection_id != record.connection_id || !session.native_resumption {
                     let _ = runtime.close(client, &session.id).await;
@@ -688,5 +766,68 @@ impl NativeService {
     }
     pub fn revoke_execution(&self, client: &str) {
         self.execution_state.revoke(client);
+    }
+}
+
+#[cfg(test)]
+mod lifecycle_tests {
+    use super::*;
+    fn record(lifetime: Arc<()>) -> ResumeRecord {
+        ResumeRecord {
+            owner: "app".into(),
+            native_session_id: "private".into(),
+            connection_id: "c".into(),
+            selection: Selection {
+                route_id: "r".into(),
+                model_id: "m".into(),
+                revision: "1".into(),
+                options: Default::default(),
+            },
+            context: SessionContext {
+                owner: "app".into(),
+                lifetime,
+                workspace_id: "w".into(),
+                workspace_path: std::env::temp_dir(),
+                permission_mode: None,
+                review_requests: false,
+                allow_paid: false,
+                connection_id: "c".into(),
+                account_id: None,
+                route_id: "r".into(),
+                billing: Some(BillingMode::Local),
+            },
+        }
+    }
+    #[test]
+    fn revoke_between_native_suspend_and_token_publication_cannot_revive_old_access() {
+        let state = ExecutionState::default();
+        let original = Arc::new(());
+        state
+            .lifecycle
+            .write()
+            .unwrap()
+            .insert("app".into(), original.clone());
+        // Model a completed native suspend whose service publication is still pending.
+        let pending = record(original);
+        state.revoke("app");
+        state
+            .lifecycle
+            .write()
+            .unwrap()
+            .insert("app".into(), Arc::new(()));
+        assert_eq!(
+            state
+                .publish_resumption("old-token".into(), pending)
+                .unwrap_err()
+                .code,
+            ErrorCode::LocalAccessDenied
+        );
+        assert!(state.resumptions.read().unwrap().is_empty());
+        let current = state.lifecycle.read().unwrap()["app"].clone();
+        state
+            .publish_resumption("new-token".into(), record(current))
+            .unwrap();
+        state.revoke("app");
+        assert!(state.resumptions.read().unwrap().is_empty());
     }
 }
