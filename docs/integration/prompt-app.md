@@ -23,7 +23,18 @@ Use the [embedded Ollama integration test](../../crates/lai-kit/tests/local_exec
 
 ## Scene output and continuation
 
-Require your own versioned scene JSON schema and validate the completed text before previewing or saving it. The current common turn input is text; do not infer toolkit image input or structured-output support merely because a provider advertises those model capabilities. Display unsupported options honestly. Provider output must not become executable HTML or host commands automatically.
+Require your own versioned scene JSON schema and validate the completed text before previewing or saving it. Do not infer structured-output support merely because a provider advertises it. Display unsupported options honestly. Provider output must not become executable HTML or host commands automatically.
+
+## Image input
+
+A turn may carry up to four JPEG or PNG images, for example a rendered scene preview for a review pass. Check `handshake.capabilities` for `turn.input.image` and `handshake.methods` for `inputs.put` first; older helpers have neither.
+
+1. Stage each image in an open session: `inputs.put { sessionId, mediaType: "image/jpeg" | "image/png", dataBase64, displayName? }` returns `{ inputId, byteLength, width, height }`. The helper decodes the base64 and reads dimensions from the PNG `IHDR` or JPEG `SOF` header; a payload that does not match its media type is `INVALID_REQUEST`. Limits: 4 MiB decoded (`FRAME_TOO_LARGE` above that), 2048 px on the longer edge, 8 unconsumed inputs per session and a per-application byte budget (`RATE_LIMITED`). `displayName` is validated and never sent to a provider. Payload bytes are never logged or echoed back.
+2. Start the turn with `turns.start { sessionId, prompt, requestId, inputs: [{ inputId }] }`. Omitting `inputs` keeps the text-only behavior unchanged.
+3. The helper fails the start with `CAPABILITY_UNSUPPORTED`, before any provider call, when the selected model does not report `input.image` as `supported` (unknown is not supported) or when the session's adapter cannot carry images. Images are never silently dropped. A rejected start does not consume the inputs or the request ID, so the host can retry text-only.
+4. A started turn consumes its inputs. Inputs are scoped to the owning application connection and session; another application or session sees `NOT_FOUND`. They expire when the session is closed or suspended, when grants are revoked, and when the helper restarts.
+
+Images belong to the turn that attached them. HTTP routes keep text-only conversation history, so follow-up turns do not resend or accumulate earlier images; attach the image again if a later turn needs it. Frame limits: native stdio and HTTP `/v1/rpc` accept 8 MiB request frames (the TypeScript and Python stdio SDK defaults match); the browser Native Messaging bridge stays at 1 MiB, which bounds images sent through it to roughly 750 KiB. The [support matrix](../adapters/SUPPORT-MATRIX.md) lists which adapters carry images.
 
 Keep an open session for follow-up edits. Native suspend/resume is available only when the session reports `nativeResumption: true`; currently this is the shared ACP path when its peer advertises `loadSession`. Keep the opaque token in app memory and never render/log it. Tokens are owner-scoped, single-use, and invalid after revocation or helper restart. Failed resumption never becomes a fresh conversation. Other providers require a fresh session after restart; transcript import is a separate application feature.
 
