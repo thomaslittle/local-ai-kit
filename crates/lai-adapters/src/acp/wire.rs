@@ -256,6 +256,12 @@ impl Wire {
 pub(super) fn response_result(value: &Value) -> Result<Value> {
     match (value.get("result"), value.get("error")) {
         (Some(result), None) if result.is_object() => Ok(result.clone()),
+        // Authentication failures often carry login URLs or device codes that
+        // generic redaction cannot recognize; never forward their text.
+        (None, Some(error)) if error["code"].as_i64() == Some(-32000) => Err(DomainError::new(
+            ErrorCode::AuthRequired,
+            "ACP provider requires sign-in in the installed client",
+        )),
         (None, Some(error)) => {
             let detail = error["message"]
                 .as_str()
@@ -266,8 +272,6 @@ pub(super) fn response_result(value: &Value) -> Result<Value> {
             Err(DomainError::new(
                 if error["code"].as_i64() == Some(-32601) {
                     ErrorCode::CapabilityUnsupported
-                } else if error["code"].as_i64() == Some(-32000) {
-                    ErrorCode::AuthRequired
                 } else {
                     ErrorCode::ProviderUnavailable
                 },
