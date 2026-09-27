@@ -6,6 +6,6 @@ export interface Transport {
   subscribe?<T = unknown>(query?: EventQuery, options?: CallOptions): AsyncIterable<T>;
   close(): Promise<void>;
 }
-export interface Handshake { protocolVersion: string; methods: string[]; runtimeVersion?: string }
+export interface Handshake { protocolVersion: string; methods: string[]; runtimeVersion?: string; capabilities?: string[] }
 export interface RpcFailure { code: number; message: string; data?: { code?: string; retryable?: boolean } }
 export interface SSEFrame { id?: string; event: string; data: string }

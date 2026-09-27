@@ -27,7 +27,7 @@ export async function openStdioTransport(options){
  const args=options.args??[];
  if(!Array.isArray(args)||args.length>128||args.some(a=>typeof a!=='string'||a.includes('\0')||a.length>32768))throw failCode('INVALID_REQUEST');
  if(options.cwd!==undefined&&(!isAbsolute(options.cwd)||options.cwd.includes('\0')))throw failCode('INVALID_WORKSPACE');
- const max=bounded(options.maxFrameBytes??1048576,1024,16777216);
+ const max=bounded(options.maxFrameBytes??8388608,1024,16777216);
  const maxPending=bounded(options.maxPendingRequests??64,1,1024);
  const maxEvents=bounded(options.maxQueuedEvents??256,1,4096);
  const timeoutMs=bounded(options.timeoutMs??30000,1,3600000);

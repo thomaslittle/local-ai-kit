@@ -8,12 +8,44 @@ use std::{
     time::Duration,
 };
 use tokio::sync::{oneshot, watch};
+/// A validated image staged by the host service. Payload bytes are never logged.
+#[derive(Clone)]
+pub struct ImageInput {
+    pub media_type: InputMediaType,
+    pub bytes: Arc<[u8]>,
+    pub width: u32,
+    pub height: u32,
+}
+impl std::fmt::Debug for ImageInput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ImageInput")
+            .field("media_type", &self.media_type)
+            .field("byte_length", &self.bytes.len())
+            .field("width", &self.width)
+            .field("height", &self.height)
+            .finish()
+    }
+}
+impl ImageInput {
+    pub fn base64(&self) -> String {
+        use base64::Engine;
+        base64::engine::general_purpose::STANDARD.encode(&self.bytes)
+    }
+    pub fn data_url(&self) -> String {
+        format!("data:{};base64,{}", self.media_type.as_str(), self.base64())
+    }
+}
 pub struct TurnContext {
     pub(crate) cell: Arc<Cell>,
     pub(crate) turn: String,
     pub(crate) cancel: watch::Receiver<bool>,
+    pub(crate) images: Vec<ImageInput>,
 }
 impl TurnContext {
+    /// Images attached to this turn, in request order. Empty for text-only turns.
+    pub fn images(&self) -> &[ImageInput] {
+        &self.images
+    }
     pub fn artifact(&self, name: &str, media: &str, bytes: Vec<u8>) -> Result<String> {
         if self.is_cancelled() {
             return Err(err(ErrorCode::Cancelled));

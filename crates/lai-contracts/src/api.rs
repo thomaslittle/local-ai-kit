@@ -21,6 +21,9 @@ pub struct HandshakeResult {
     pub protocol_version: String,
     pub runtime_version: String,
     pub methods: Vec<String>,
+    /// Runtime-level features such as `turn.input.image`. Model and adapter support is still per selection.
+    #[serde(default)]
+    pub capabilities: Vec<String>,
 }
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -133,6 +136,57 @@ pub struct TurnStartParams {
     pub session_id: String,
     pub prompt: String,
     pub request_id: String,
+    /// Staged `inputs.put` references. Each input is consumed by the turn that starts with it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inputs: Vec<TurnInputRef>,
+}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TurnInputRef {
+    pub input_id: String,
+}
+/// Largest decoded image accepted by `inputs.put`.
+pub const MAX_INPUT_IMAGE_BYTES: usize = 4 * 1024 * 1024;
+/// Largest accepted image width or height, in pixels.
+pub const MAX_INPUT_IMAGE_EDGE: u32 = 2048;
+/// Inputs a single turn may reference.
+pub const MAX_INPUTS_PER_TURN: usize = 4;
+/// Staged, unconsumed inputs a single session may hold.
+pub const MAX_INPUTS_PER_SESSION: usize = 8;
+/// Request frame size that native stdio and HTTP accept, sized for one base64 image plus envelope.
+pub const MAX_REQUEST_FRAME_BYTES: usize = 8 * 1024 * 1024;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub enum InputMediaType {
+    #[serde(rename = "image/jpeg")]
+    Jpeg,
+    #[serde(rename = "image/png")]
+    Png,
+}
+impl InputMediaType {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Jpeg => "image/jpeg",
+            Self::Png => "image/png",
+        }
+    }
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InputPutParams {
+    pub session_id: String,
+    pub media_type: InputMediaType,
+    pub data_base64: String,
+    /// Host-side label only; validated and never forwarded to a provider.
+    #[serde(default)]
+    pub display_name: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct InputPutResult {
+    pub input_id: String,
+    pub byte_length: u64,
+    pub width: u32,
+    pub height: u32,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -235,6 +289,8 @@ pub struct MethodInputs {
     close: SessionParams,
     #[serde(rename = "sessions.updateOptions")]
     options: SessionOptionsParams,
+    #[serde(rename = "inputs.put")]
+    put_input: InputPutParams,
     #[serde(rename = "turns.start")]
     start: TurnStartParams,
     #[serde(rename = "turns.cancel")]
@@ -304,6 +360,8 @@ pub struct MethodOutputs {
     close: Value,
     #[serde(rename = "sessions.updateOptions")]
     options: Session,
+    #[serde(rename = "inputs.put")]
+    put_input: InputPutResult,
     #[serde(rename = "turns.start")]
     start: TurnStarted,
     #[serde(rename = "turns.cancel")]

@@ -996,6 +996,14 @@
     },
     "HandshakeResult": {
       "properties": {
+        "capabilities": {
+          "default": [],
+          "description": "Runtime-level features such as `turn.input.image`. Model and adapter support is still per selection.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "methods": {
           "items": {
             "type": "string"
@@ -1013,6 +1021,70 @@
         "protocolVersion",
         "runtimeVersion",
         "methods"
+      ],
+      "type": "object"
+    },
+    "InputMediaType": {
+      "enum": [
+        "image/jpeg",
+        "image/png"
+      ],
+      "type": "string"
+    },
+    "InputPutParams": {
+      "additionalProperties": false,
+      "properties": {
+        "dataBase64": {
+          "type": "string"
+        },
+        "displayName": {
+          "default": null,
+          "description": "Host-side label only; validated and never forwarded to a provider.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mediaType": {
+          "$ref": "#/$defs/InputMediaType"
+        },
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sessionId",
+        "mediaType",
+        "dataBase64"
+      ],
+      "type": "object"
+    },
+    "InputPutResult": {
+      "properties": {
+        "byteLength": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "height": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "inputId": {
+          "type": "string"
+        },
+        "width": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "inputId",
+        "byteLength",
+        "width",
+        "height"
       ],
       "type": "object"
     },
@@ -1093,6 +1165,9 @@
         "grants.revoke": {
           "$ref": "#/$defs/EmptyParams"
         },
+        "inputs.put": {
+          "$ref": "#/$defs/InputPutParams"
+        },
         "models.list": {
           "$ref": "#/$defs/ModelsParams"
         },
@@ -1170,6 +1245,7 @@
         "sessions.resume",
         "sessions.close",
         "sessions.updateOptions",
+        "inputs.put",
         "turns.start",
         "turns.cancel",
         "approvals.respond",
@@ -1220,6 +1296,9 @@
         "grants.list": true,
         "grants.request": true,
         "grants.revoke": true,
+        "inputs.put": {
+          "$ref": "#/$defs/InputPutResult"
+        },
         "models.list": {
           "items": {
             "$ref": "#/$defs/Model"
@@ -1300,6 +1379,7 @@
         "sessions.resume",
         "sessions.close",
         "sessions.updateOptions",
+        "inputs.put",
         "turns.start",
         "turns.cancel",
         "approvals.respond",
@@ -2669,6 +2749,18 @@
       "description": "Validated RFC 3339 timestamp, kept as text on the wire.",
       "type": "string"
     },
+    "TurnInputRef": {
+      "additionalProperties": false,
+      "properties": {
+        "inputId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "inputId"
+      ],
+      "type": "object"
+    },
     "TurnParams": {
       "additionalProperties": false,
       "properties": {
@@ -2684,6 +2776,13 @@
     "TurnStartParams": {
       "additionalProperties": false,
       "properties": {
+        "inputs": {
+          "description": "Staged `inputs.put` references. Each input is consumed by the turn that starts with it.",
+          "items": {
+            "$ref": "#/$defs/TurnInputRef"
+          },
+          "type": "array"
+        },
         "prompt": {
           "type": "string"
         },
@@ -2958,6 +3057,16 @@
         "$ref": "#/$defs/EmptyParams"
       },
       "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "inputs.put",
+      "paramsSchema": {
+        "$ref": "#/$defs/InputPutParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/InputPutResult"
+      }
     },
     {
       "availability": "Negotiate runtime.handshake; per-client grants apply.",

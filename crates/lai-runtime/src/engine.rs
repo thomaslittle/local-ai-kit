@@ -1,4 +1,4 @@
-use crate::{Agent, Guard, TurnContext, err, journal::Journal};
+use crate::{Agent, Guard, ImageInput, TurnContext, err, journal::Journal};
 use lai_contracts::*;
 use serde_json::{Value, json};
 use std::{
@@ -35,6 +35,7 @@ pub(crate) struct Cell {
     pub journal: Arc<Mutex<Journal>>,
     pub artifacts: Arc<Mutex<crate::artifact::ArtifactStore>>,
     pub output: Mutex<Vec<u8>>,
+    pub image_input: bool,
 }
 impl Cell {
     pub fn publish_artifact(
@@ -169,6 +170,7 @@ impl Runtime {
             return Err(err(ErrorCode::RateLimited));
         }
         let native_resumption = agent.native_resumption();
+        let image_input = agent.image_input();
         let view = Session {
             id: id("session"),
             connection_id: connection,
@@ -202,6 +204,7 @@ impl Runtime {
                 journal,
                 artifacts: self.artifacts.clone(),
                 output: Mutex::new(Vec::new()),
+                image_input,
             }),
         );
         Ok(view)
@@ -254,6 +257,22 @@ impl Runtime {
         prompt: String,
         request: String,
     ) -> Result<Value> {
+        self.start_with_inputs(owner, session, prompt, request, Vec::new())
+            .await
+    }
+    /// Start a turn carrying validated images. Drivers that cannot forward images are
+    /// rejected before any provider call instead of silently dropping the attachments.
+    pub async fn start_with_inputs(
+        &self,
+        owner: &str,
+        session: &str,
+        prompt: String,
+        request: String,
+        images: Vec<ImageInput>,
+    ) -> Result<Value> {
+        if images.len() > MAX_INPUTS_PER_TURN {
+            return Err(err(ErrorCode::InvalidRequest));
+        }
         if prompt.is_empty()
             || prompt.len() > 65_536
             || prompt.contains('\0')
@@ -264,6 +283,12 @@ impl Runtime {
         }
         let cell = self.cell(owner, session)?;
         (cell.guard)()?;
+        if !images.is_empty() && !cell.image_input {
+            return Err(DomainError::new(
+                ErrorCode::CapabilityUnsupported,
+                "This session's adapter cannot carry image input",
+            ));
+        }
         let (turn, options, cancel) = {
             let mut state = cell
                 .state
@@ -298,7 +323,7 @@ impl Runtime {
             .clear();
         let run_id = turn.clone();
         tokio::spawn(async move {
-            run(cell, run_id, prompt, options, cancel).await;
+            run(cell, run_id, prompt, options, cancel, images).await;
         });
         Ok(json!({"turnId":turn}))
     }
@@ -512,6 +537,7 @@ async fn run(
     prompt: String,
     options: BTreeMap<String, Value>,
     mut cancel: watch::Receiver<bool>,
+    images: Vec<ImageInput>,
 ) {
     let mut agent = cell.agent.lock().await;
     let result = if let Some(driver) = agent.as_mut() {
@@ -519,6 +545,7 @@ async fn run(
             cell: cell.clone(),
             turn: turn.clone(),
             cancel: cancel.clone(),
+            images,
         };
         let operation = driver.turn(prompt, options, cx);
         tokio::pin!(operation);

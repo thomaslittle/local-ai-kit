@@ -26,7 +26,8 @@ pub struct StdioOptions {
 impl Default for StdioOptions {
     fn default() -> Self {
         Self {
-            max_frame_bytes: 1_048_576,
+            // Sized for one staged base64 image (inputs.put); responses remain service-bounded.
+            max_frame_bytes: lai_contracts::MAX_REQUEST_FRAME_BYTES,
             max_pending_requests: 64,
             write_timeout: Duration::from_secs(5),
         }

@@ -111,6 +111,12 @@ class AsyncTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(LocalAIError, 'CAPABILITY_UNSUPPORTED'):
             await ai.turns.start({'prompt':'must not execute'})
 
+    async def test_inputs_put_is_gated_by_handshake(self):
+        t = await self.open()
+        ai = await AsyncClient.connect(t)
+        with self.assertRaisesRegex(LocalAIError, 'CAPABILITY_UNSUPPORTED'):
+            await ai.inputs.put({'sessionId':'s','mediaType':'image/png','dataBase64':'AAAA'})
+
     async def test_close_idempotent(self):
         t = await self.open()
         pending = asyncio.create_task(t.request('test.hang'))

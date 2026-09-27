@@ -1,5 +1,6 @@
 //! One native service shared by every transport. Only the trusted host sets policies.
 mod execution;
+mod inputs;
 pub use execution::{ExecutionGrant, ExecutionInput, ExecutionSource};
 mod cache;
 mod catalog;
@@ -136,7 +137,13 @@ impl NativeService {
     }
     pub async fn handle(&self, client: &str, method: &str, params: Value) -> Result<Value> {
         self.policy(client)?;
-        params::object(&params)?;
+        // Staged images are the only params allowed beyond the general 64 KiB bound;
+        // inputs.put decodes into a closed typed struct and enforces its own byte ceiling.
+        if method == "inputs.put" {
+            params.as_object().ok_or_else(params::invalid)?;
+        } else {
+            params::object(&params)?;
+        }
         if method.len() > 128 || params.get("clientId").is_some() {
             return Err(params::invalid());
         }
@@ -177,6 +184,7 @@ impl NativeService {
         }
         if method.starts_with("sessions.")
             || method.starts_with("turns.")
+            || method.starts_with("inputs.")
             || method == "approvals.respond"
             || method == "events.read"
             || method == "artifacts.read"

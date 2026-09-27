@@ -10,7 +10,7 @@ FAMILIES = {
     'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list','page'),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
     'grants': ('request','list','revoke'), 'sessions': ('create','get','suspend','resume','updateOptions','close'),
-    'turns': ('start','cancel'), 'approvals': ('respond',), 'artifacts': ('read',),
+    'inputs': ('put',), 'turns': ('start','cancel'), 'approvals': ('respond',), 'artifacts': ('read',),
     'diagnostics': ('report',), 'adapters': ('list',), 'events': ('subscribe',),
 }
 

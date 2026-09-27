@@ -91,6 +91,13 @@ test('client methods call exact RPC names, without auto discovery or execution',
  const ai=await createLocalAI({transport:t});assert.deepEqual(calls.map(c=>c.method),['runtime.handshake']);assert.deepEqual(await ai.snapshot.get(),{revision:'9'});
  await ai.turns.cancel({turnId:'t'});assert.equal(calls[2].method,'turns.cancel');await assert.rejects(ai.turns.start({prompt:'x'}),/CAPABILITY_UNSUPPORTED/);assert.equal(calls.length,3);
 });
+test('image inputs stage through inputs.put and advertise their runtime capability',async()=>{
+ const calls=[];const t={request:async(method,params)=>{calls.push({method,params});return method==='runtime.handshake'?{protocolVersion:'1.0',methods:['inputs.put','turns.start'],capabilities:['turn.input.image']}:method==='inputs.put'?{inputId:'input-1',byteLength:4,width:1,height:1}:{turnId:'t'};},close:async()=>{}};
+ const ai=await createLocalAI({transport:t});assert.deepEqual(ai.handshake.capabilities,['turn.input.image']);
+ const staged=await ai.inputs.put({sessionId:'s',mediaType:'image/png',dataBase64:'AAAA'});assert.equal(staged.inputId,'input-1');
+ await ai.turns.start({sessionId:'s',prompt:'p',requestId:'r',inputs:[{inputId:staged.inputId}]});
+ assert.deepEqual(calls.slice(1).map(c=>c.method),['inputs.put','turns.start']);assert.deepEqual(calls[2].params.inputs,[{inputId:'input-1'}]);
+});
 test('SSE handles split UTF8, comments, CRLF and multiline data',async()=>{
  const b=bytes(': heartbeat\r\nid: 4\r\nevent: update\r\ndata: {"text":"🌎",\r\ndata: "x":1}\r\n\r\n');
  const frames=await collect(parseSSE(stream([...b].map(v=>new Uint8Array([v])))));

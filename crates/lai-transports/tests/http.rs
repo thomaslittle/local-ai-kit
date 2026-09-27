@@ -256,11 +256,20 @@ async fn malformed_requests_and_body_limits_are_enforced() {
         .post(format!("{}/v1/rpc", s.url))
         .bearer_auth(&token)
         .header("Content-Type", "application/json")
-        .body("x".repeat(1_048_577))
+        .body("x".repeat(lai_contracts::MAX_REQUEST_FRAME_BYTES + 1))
         .send()
         .await
         .unwrap();
     assert_eq!(bad.status(), 413);
+    // Only /v1/rpc is sized for staged image inputs; other request bodies keep the 1 MiB bound.
+    let pairing = client()
+        .post(format!("{}/v1/pair", s.url))
+        .header("Content-Type", "application/json")
+        .body("x".repeat(1_048_577))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(pairing.status(), 413);
     let malformed = rpc(&s, &token, "runtime.handshake", json!([])).await;
     assert!(malformed.get("error").is_some());
     s.close().await;

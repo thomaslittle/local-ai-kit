@@ -47,7 +47,7 @@ impl NativeService {
                 }
                 params::text(p, "clientName")?;
                 Ok(
-                    json!({"protocolVersion":"1.0","runtimeVersion":env!("CARGO_PKG_VERSION"),"methods":self.advertised_methods()}),
+                    json!({"protocolVersion":"1.0","runtimeVersion":env!("CARGO_PKG_VERSION"),"methods":self.advertised_methods(),"capabilities":self.execution_capabilities()}),
                 )
             }
             "runtime.health" => {

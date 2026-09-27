@@ -58,7 +58,7 @@ class AsyncStdioTransport:
     @classmethod
     async def open(cls, *, executable: str, args: list[str] | None = None, cwd: str | None = None,
                    env: dict[str, str] | None = None, timeout: float = 30,
-                   max_frame_bytes: int = 1048576, max_pending_requests: int = 64,
+                   max_frame_bytes: int = 8388608, max_pending_requests: int = 64,
                    max_queued_events: int = 256):
         if not isinstance(executable, str) or not pathlib.Path(executable).is_absolute() or executable.lower().endswith(('.cmd', '.bat', '.ps1')):
             raise LocalAIError('INVALID_EXECUTABLE')

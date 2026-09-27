@@ -77,6 +77,7 @@ pub(crate) struct ExecutionState {
     session_billing: RwLock<BTreeMap<String, (String, bool)>>,
     session_context: RwLock<BTreeMap<String, SessionContext>>,
     resumptions: RwLock<BTreeMap<String, ResumeRecord>>,
+    inputs: std::sync::Mutex<crate::inputs::InputStore>,
 }
 impl ExecutionState {
     fn publish_resumption(&self, token: String, record: ResumeRecord) -> Result<()> {
@@ -110,6 +111,14 @@ impl ExecutionState {
         }
         if let Ok(mut resumptions) = self.resumptions.write() {
             resumptions.retain(|_, record| record.owner != client);
+        }
+        if let Ok(mut inputs) = self.inputs.lock() {
+            inputs.clear_owner(client);
+        }
+    }
+    fn clear_session_inputs(&self, client: &str, session: &str) {
+        if let Ok(mut inputs) = self.inputs.lock() {
+            inputs.clear_session(client, session);
         }
     }
 }
@@ -216,6 +225,7 @@ impl NativeService {
                 "sessions.resume",
                 "sessions.updateOptions",
                 "sessions.close",
+                "inputs.put",
                 "turns.start",
                 "turns.cancel",
                 "approvals.respond",
@@ -223,6 +233,14 @@ impl NativeService {
                 "events.subscribe",
                 "events.unsubscribe",
             ]
+        }
+    }
+    /// Runtime features that exist only when an execution driver is registered.
+    pub(crate) fn execution_capabilities(&self) -> Vec<&'static str> {
+        if self.execution_state.source.is_none() {
+            vec![]
+        } else {
+            vec!["turn.input.image"]
         }
     }
     fn accepted_paid(&self, client: &str, session: &str) -> Result<bool> {
@@ -584,6 +602,8 @@ impl NativeService {
                     .write()
                     .map_err(|_| denied())?
                     .remove(&request.session_id);
+                self.execution_state
+                    .clear_session_inputs(client, &request.session_id);
                 serde_json::to_value(SessionSuspendResult {
                     resume_token: token,
                 })
@@ -697,6 +717,8 @@ impl NativeService {
                     if let Ok(mut contexts) = self.execution_state.session_context.write() {
                         contexts.remove(session_id);
                     }
+                    self.execution_state
+                        .clear_session_inputs(client, session_id);
                 }
                 result
             }
@@ -718,23 +740,65 @@ impl NativeService {
                 )?)
                 .map_err(|_| params::invalid())
             }
+            "inputs.put" => {
+                let request: InputPutParams = decode(p)?;
+                self.check_session(client, &request.session_id)?;
+                let image = crate::inputs::decode_image(&request)?;
+                let result = self
+                    .execution_state
+                    .inputs
+                    .lock()
+                    .map_err(|_| denied())?
+                    .put(client, &request.session_id, image)?;
+                serde_json::to_value(result).map_err(|_| params::invalid())
+            }
             "turns.start" => {
                 let request: Start = decode(p)?;
                 let session = self.check_session(client, &request.session_id)?;
-                validate_selection(
-                    &self.projected(client)?,
+                let snapshot = self.projected(client)?;
+                let model = validate_selection(
+                    &snapshot,
                     &session.selection,
                     self.execution_grant(client)?.allow_paid
                         && self.accepted_paid(client, &request.session_id)?,
                 )?;
-                runtime
-                    .start(
+                let images = if request.inputs.is_empty() {
+                    Vec::new()
+                } else {
+                    let images = self
+                        .execution_state
+                        .inputs
+                        .lock()
+                        .map_err(|_| denied())?
+                        .resolve(client, &request.session_id, &request.inputs)?;
+                    // Only provider-reported model support counts; unknown is not supported.
+                    if !model
+                        .capabilities
+                        .iter()
+                        .any(|cap| cap.id == "input.image" && cap.support == Support::Supported)
+                    {
+                        return Err(DomainError::new(
+                            ErrorCode::CapabilityUnsupported,
+                            "Selected model does not report image input support",
+                        ));
+                    }
+                    images
+                };
+                let started = runtime
+                    .start_with_inputs(
                         client,
                         &request.session_id,
                         request.prompt,
                         request.request_id,
+                        images,
                     )
-                    .await
+                    .await?;
+                if !request.inputs.is_empty() {
+                    if let Ok(mut inputs) = self.execution_state.inputs.lock() {
+                        inputs.consume(&request.inputs);
+                    }
+                }
+                Ok(started)
             }
             "turns.cancel" => {
                 params::allow(&p, &["turnId"])?;

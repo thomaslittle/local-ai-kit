@@ -150,7 +150,12 @@ pub async fn start(service: Arc<NativeService>, options: HttpOptions) -> Result<
             get(auth::pairing_code).post(auth::issue_pairing_code),
         )
         .route("/v1/pair", post(auth::pair))
-        .route("/v1/rpc", post(routes::rpc))
+        .route(
+            "/v1/rpc",
+            post(routes::rpc).layer(DefaultBodyLimit::max(
+                lai_contracts::MAX_REQUEST_FRAME_BYTES,
+            )),
+        )
         .route("/v1/events", get(routes::events))
         .route("/v1/snapshot", get(routes::snapshot))
         .route("/v1/connections", get(routes::connections))

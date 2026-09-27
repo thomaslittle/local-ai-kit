@@ -64,13 +64,19 @@ export type GrantParams = { "allowPaid"?: boolean; "connectionIds"?: Array<strin
 
 export type HandshakeParams = { "clientName"?: string | null; "protocolVersion"?: string | null; };
 
-export type HandshakeResult = { "methods": Array<string>; "protocolVersion": string; "runtimeVersion": string; [key: string]: unknown; };
+export type HandshakeResult = { "capabilities"?: Array<string>; "methods": Array<string>; "protocolVersion": string; "runtimeVersion": string; [key: string]: unknown; };
+
+export type InputMediaType = "image/jpeg" | "image/png";
+
+export type InputPutParams = { "dataBase64": string; "displayName"?: string | null; "mediaType": InputMediaType; "sessionId": string; };
+
+export type InputPutResult = { "byteLength": number; "height": number; "inputId": string; "width": number; [key: string]: unknown; };
 
 export type Installation = { "environmentId": string; "id": string; "locationHint": string; "providerId": string; "version": Observation; };
 
-export type MethodInputs = { "adapters.list": EmptyParams; "approvals.respond": ApprovalParams; "artifacts.read": ArtifactReadParams; "capabilities.read": ModelParams; "connections.list": EmptyParams; "connections.probe": ConnectionParams; "diagnostics.report": EmptyParams; "discovery.refresh": DiscoveryParams; "discovery.watch": DiscoveryWatchParams; "events.read": EventsParams; "events.subscribe": EventsParams; "events.unsubscribe": SubscriptionParams; "grants.list": EmptyParams; "grants.request": GrantParams; "grants.revoke": EmptyParams; "models.list": ModelsParams; "models.page": ModelPageParams; "runtime.closeClient": EmptyParams; "runtime.handshake": HandshakeParams; "runtime.health": EmptyParams; "selection.resolve": Requirements; "selection.validate": SelectionParams; "sessions.close": SessionParams; "sessions.create": SessionCreateParams; "sessions.get": SessionParams; "sessions.resume": SessionResumeParams; "sessions.suspend": SessionParams; "sessions.updateOptions": SessionOptionsParams; "snapshot.get": SnapshotParams; "turns.cancel": TurnParams; "turns.start": TurnStartParams; "usage.read": EmptyParams; };
+export type MethodInputs = { "adapters.list": EmptyParams; "approvals.respond": ApprovalParams; "artifacts.read": ArtifactReadParams; "capabilities.read": ModelParams; "connections.list": EmptyParams; "connections.probe": ConnectionParams; "diagnostics.report": EmptyParams; "discovery.refresh": DiscoveryParams; "discovery.watch": DiscoveryWatchParams; "events.read": EventsParams; "events.subscribe": EventsParams; "events.unsubscribe": SubscriptionParams; "grants.list": EmptyParams; "grants.request": GrantParams; "grants.revoke": EmptyParams; "inputs.put": InputPutParams; "models.list": ModelsParams; "models.page": ModelPageParams; "runtime.closeClient": EmptyParams; "runtime.handshake": HandshakeParams; "runtime.health": EmptyParams; "selection.resolve": Requirements; "selection.validate": SelectionParams; "sessions.close": SessionParams; "sessions.create": SessionCreateParams; "sessions.get": SessionParams; "sessions.resume": SessionResumeParams; "sessions.suspend": SessionParams; "sessions.updateOptions": SessionOptionsParams; "snapshot.get": SnapshotParams; "turns.cancel": TurnParams; "turns.start": TurnStartParams; "usage.read": EmptyParams; };
 
-export type MethodOutputs = { "adapters.list": Array<AdapterDescriptor>; "approvals.respond": unknown; "artifacts.read": ArtifactChunk; "capabilities.read": Array<Capability>; "connections.list": Array<Connection>; "connections.probe": unknown; "diagnostics.report": unknown; "discovery.refresh": DiscoveryResult; "discovery.watch": unknown; "events.read": EventPage; "events.subscribe": unknown; "events.unsubscribe": unknown; "grants.list": unknown; "grants.request": unknown; "grants.revoke": unknown; "models.list": Array<Model>; "models.page": ModelPage; "runtime.closeClient": unknown; "runtime.handshake": HandshakeResult; "runtime.health": RuntimeHealth; "selection.resolve": Array<Candidate>; "selection.validate": ValidationResult; "sessions.close": unknown; "sessions.create": Session; "sessions.get": Session; "sessions.resume": Session; "sessions.suspend": SessionSuspendResult; "sessions.updateOptions": Session; "snapshot.get": Snapshot; "turns.cancel": unknown; "turns.start": TurnStarted; "usage.read": Array<QuotaPool>; };
+export type MethodOutputs = { "adapters.list": Array<AdapterDescriptor>; "approvals.respond": unknown; "artifacts.read": ArtifactChunk; "capabilities.read": Array<Capability>; "connections.list": Array<Connection>; "connections.probe": unknown; "diagnostics.report": unknown; "discovery.refresh": DiscoveryResult; "discovery.watch": unknown; "events.read": EventPage; "events.subscribe": unknown; "events.unsubscribe": unknown; "grants.list": unknown; "grants.request": unknown; "grants.revoke": unknown; "inputs.put": InputPutResult; "models.list": Array<Model>; "models.page": ModelPage; "runtime.closeClient": unknown; "runtime.handshake": HandshakeResult; "runtime.health": RuntimeHealth; "selection.resolve": Array<Candidate>; "selection.validate": ValidationResult; "sessions.close": unknown; "sessions.create": Session; "sessions.get": Session; "sessions.resume": Session; "sessions.suspend": SessionSuspendResult; "sessions.updateOptions": Session; "snapshot.get": Snapshot; "turns.cancel": unknown; "turns.start": TurnStarted; "usage.read": Array<QuotaPool>; };
 
 export type Model = { "capabilities": Array<Capability>; "contextWindow": Observation; "id": string; "isDefault": boolean; "name": string; "nativeId": string; "options": Array<OptionDescriptor>; "revision": string; "routeId": string; };
 
@@ -140,9 +146,11 @@ export type Support = "supported" | "unsupported" | "conditional" | "unknown";
 
 export type Timestamp = string;
 
+export type TurnInputRef = { "inputId": string; };
+
 export type TurnParams = { "turnId": string; };
 
-export type TurnStartParams = { "prompt": string; "requestId": string; "sessionId": string; };
+export type TurnStartParams = { "inputs"?: Array<TurnInputRef>; "prompt": string; "requestId": string; "sessionId": string; };
 
 export type TurnStarted = { "turnId": string; [key: string]: unknown; };
 

@@ -7,7 +7,7 @@ pub use engine::Runtime;
 use lai_contracts::*;
 use serde_json::Value;
 use std::{collections::BTreeMap, future::Future, pin::Pin, sync::Arc};
-pub use turn::TurnContext;
+pub use turn::{ImageInput, TurnContext};
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T>> + Send + 'a>>;
 pub type Guard = Arc<dyn Fn() -> Result<()> + Send + Sync>;
 /// Drivers own only the native resources they launch. close must release them.
@@ -20,6 +20,11 @@ pub trait Agent: Send {
     ) -> BoxFuture<'a, ()>;
     fn close(&mut self) -> BoxFuture<'_, ()>;
     fn native_resumption(&self) -> bool {
+        false
+    }
+    /// True only when this driver forwards `TurnContext::images` to its provider.
+    /// The runtime rejects image turns for drivers that would otherwise drop them.
+    fn image_input(&self) -> bool {
         false
     }
     fn suspend(&mut self) -> BoxFuture<'_, String> {
