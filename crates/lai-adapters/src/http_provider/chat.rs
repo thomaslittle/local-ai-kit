@@ -1,7 +1,7 @@
 use super::{HttpKind, frames};
 use crate::http::Endpoint;
 use lai_contracts::*;
-use lai_runtime::{Agent, BoxFuture, TurnContext};
+use lai_runtime::{Agent, BoxFuture, ImageInput, TurnContext};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 struct Chat {
@@ -23,6 +23,55 @@ pub fn executor(kind: HttpKind, endpoint: Endpoint, model: Model) -> Box<dyn Age
         history: vec![],
         closed: false,
     })
+}
+/// The current user message in each provider's documented multimodal shape.
+/// Text-only turns keep the plain string form every route already used.
+fn user_message(kind: HttpKind, prompt: &str, images: &[ImageInput]) -> Value {
+    if images.is_empty() {
+        return json!({"role":"user","content":prompt});
+    }
+    match kind {
+        // Ollama /api/chat carries raw base64 images beside the text content.
+        HttpKind::Ollama => {
+            json!({"role":"user","content":prompt,"images":images.iter().map(ImageInput::base64).collect::<Vec<_>>()})
+        }
+        // OpenAI Responses API input content parts.
+        HttpKind::Openai | HttpKind::Xai => {
+            let mut content = vec![json!({"type":"input_text","text":prompt})];
+            content.extend(
+                images
+                    .iter()
+                    .map(|image| json!({"type":"input_image","image_url":image.data_url()})),
+            );
+            json!({"role":"user","content":content})
+        }
+        HttpKind::Anthropic => {
+            let mut content = images
+                .iter()
+                .map(|image| json!({"type":"image","source":{"type":"base64","media_type":image.media_type.as_str(),"data":image.base64()}}))
+                .collect::<Vec<_>>();
+            content.push(json!({"type":"text","text":prompt}));
+            json!({"role":"user","content":content})
+        }
+        // Gemini parts are assembled in the request body from this neutral form.
+        HttpKind::Gemini => {
+            let mut parts = vec![json!({"text":prompt})];
+            parts.extend(images.iter().map(
+                |image| json!({"inline_data":{"mime_type":image.media_type.as_str(),"data":image.base64()}}),
+            ));
+            json!({"role":"user","parts":parts})
+        }
+        // LM Studio and compatible endpoints use Chat Completions image_url parts.
+        _ => {
+            let mut content = vec![json!({"type":"text","text":prompt})];
+            content.extend(
+                images
+                    .iter()
+                    .map(|image| json!({"type":"image_url","image_url":{"url":image.data_url()}})),
+            );
+            json!({"role":"user","content":content})
+        }
+    }
 }
 fn invalid() -> DomainError {
     DomainError::new(
@@ -66,18 +115,26 @@ impl Chat {
                 "Conversation byte limit reached",
             ));
         }
+        // Images belong to the turn that attached them. Retained history stays text-only so
+        // follow-up turns neither resend nor accumulate image payloads.
+        let mut request = history.clone();
+        if !cx.images().is_empty() {
+            if let Some(last) = request.last_mut() {
+                *last = user_message(self.kind, &prompt, cx.images());
+            }
+        }
         let (path, body) = match self.kind {
             HttpKind::Opencode => return Err(invalid()),
             HttpKind::Ollama => (
                 "api/chat".into(),
-                json!({"model":self.model.native_id,"messages":history,"stream":true}),
+                json!({"model":self.model.native_id,"messages":request,"stream":true}),
             ),
             HttpKind::Openai | HttpKind::Xai => (
                 "responses".into(),
-                json!({"model":self.model.native_id,"input":history,"stream":true,"store":false,"max_output_tokens":1024}),
+                json!({"model":self.model.native_id,"input":request,"stream":true,"store":false,"max_output_tokens":1024}),
             ),
             HttpKind::Anthropic => {
-                let mut body = json!({"model":self.model.native_id,"messages":history,"stream":true,"max_tokens":1024});
+                let mut body = json!({"model":self.model.native_id,"messages":request,"stream":true,"max_tokens":1024});
                 if let Some(effort) = options.get("effort") {
                     body["output_config"] = json!({"effort":effort});
                 }
@@ -96,7 +153,7 @@ impl Chat {
                 {
                     return Err(invalid());
                 }
-                let contents=history.iter().map(|v|json!({"role":if v["role"]=="assistant"{"model"}else{"user"},"parts":[{"text":v["content"]}]})).collect::<Vec<_>>();
+                let contents=request.iter().map(|v|match v.get("parts"){Some(parts)=>json!({"role":"user","parts":parts}),None=>json!({"role":if v["role"]=="assistant"{"model"}else{"user"},"parts":[{"text":v["content"]}]})}).collect::<Vec<_>>();
                 (
                     format!("models/{name}:streamGenerateContent"),
                     json!({"contents":contents,"generationConfig":{"maxOutputTokens":1024}}),
@@ -104,7 +161,7 @@ impl Chat {
             }
             _ => (
                 "v1/chat/completions".into(),
-                json!({"model":self.model.native_id,"messages":history,"stream":true}),
+                json!({"model":self.model.native_id,"messages":request,"stream":true}),
             ),
         };
         // Compatible endpoints use a base ending in /v1/, LM Studio uses its root for native catalogs.
@@ -216,6 +273,9 @@ impl Agent for Chat {
             }
             result
         })
+    }
+    fn image_input(&self) -> bool {
+        self.kind != HttpKind::Opencode
     }
     fn close(&mut self) -> BoxFuture<'_, ()> {
         Box::pin(async move {

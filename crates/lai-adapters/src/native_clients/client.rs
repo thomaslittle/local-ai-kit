@@ -184,6 +184,9 @@ impl Agent for OwnedNativeAgent {
     fn native_resumption(&self) -> bool {
         self.inner.native_resumption()
     }
+    fn image_input(&self) -> bool {
+        self.inner.image_input()
+    }
     fn suspend(&mut self) -> BoxFuture<'_, String> {
         self.inner.suspend()
     }

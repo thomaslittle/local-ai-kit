@@ -225,3 +225,61 @@ async fn approval_is_scoped_and_rejection_reaches_native_agent() {
             .contains("denied")
     );
 }
+fn fixture_image() -> lai_runtime::ImageInput {
+    lai_runtime::ImageInput {
+        media_type: InputMediaType::Jpeg,
+        bytes: b"\xff\xd8fixture".as_slice().into(),
+        width: 1,
+        height: 1,
+    }
+}
+#[tokio::test]
+async fn image_blocks_reach_peers_that_advertise_prompt_image_support() {
+    let (r, s) = setup("image").await;
+    r.start_with_inputs(
+        "owner",
+        &s.id,
+        "describe".into(),
+        "1".into(),
+        vec![fixture_image()],
+    )
+    .await
+    .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(
+        r.get("owner", &s.id).unwrap().state,
+        SessionState::Completed
+    );
+    let text = r.events("owner", None, None).unwrap().to_string();
+    assert!(
+        text.contains("text=describe images=image/jpeg:/9hmaXh0dXJl"),
+        "{text}"
+    );
+    r.close("owner", &s.id).await.unwrap();
+}
+#[tokio::test]
+async fn peers_without_prompt_image_support_reject_image_turns_before_prompting() {
+    let (r, s) = setup("normal").await;
+    let error = r
+        .start_with_inputs(
+            "owner",
+            &s.id,
+            "describe".into(),
+            "1".into(),
+            vec![fixture_image()],
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(error.code, ErrorCode::CapabilityUnsupported);
+    assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Ready);
+    // The session remains usable for text turns.
+    r.start("owner", &s.id, "hello".into(), "2".into())
+        .await
+        .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(
+        r.get("owner", &s.id).unwrap().state,
+        SessionState::Completed
+    );
+    r.close("owner", &s.id).await.unwrap();
+}

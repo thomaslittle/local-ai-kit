@@ -125,5 +125,8 @@ pub fn parse_catalog(
         models,
         config_options,
         load_session: capabilities["loadSession"].as_bool().unwrap_or(false),
+        image_prompt: capabilities["promptCapabilities"]["image"]
+            .as_bool()
+            .unwrap_or(false),
     })
 }

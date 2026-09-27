@@ -171,12 +171,20 @@ impl AcpAgent {
          _=cx.cancelled()=>return Err(DomainError::new(ErrorCode::Cancelled,"ACP turn cancelled"))
         }
         let sid = self.wire.session["sessionId"].clone();
+        // ACP image content blocks are only sent to peers that advertised promptCapabilities.image.
+        if !cx.images().is_empty() && !self.image_input() {
+            return Err(DomainError::new(
+                ErrorCode::CapabilityUnsupported,
+                "Native ACP client does not accept image prompts",
+            ));
+        }
+        let mut blocks = vec![json!({"type":"text","text":prompt})];
+        blocks.extend(cx.images().iter().map(|image| {
+            json!({"type":"image","mimeType":image.media_type.as_str(),"data":image.base64()})
+        }));
         let id = self
             .wire
-            .send_request(
-                "session/prompt",
-                json!({"sessionId":sid,"prompt":[{"type":"text","text":prompt}]}),
-            )
+            .send_request("session/prompt", json!({"sessionId":sid,"prompt":blocks}))
             .await?;
         loop {
             let response = tokio::select! {value=self.wire.read()=>value?,_=cx.cancelled()=>{
@@ -236,6 +244,11 @@ impl Agent for AcpAgent {
         self.wire
             .catalog()
             .is_ok_and(|catalog| catalog.load_session)
+    }
+    fn image_input(&self) -> bool {
+        self.wire
+            .catalog()
+            .is_ok_and(|catalog| catalog.image_prompt)
     }
     fn suspend(&mut self) -> BoxFuture<'_, String> {
         Box::pin(async move {

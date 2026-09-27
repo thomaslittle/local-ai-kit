@@ -9,6 +9,8 @@ pub struct AcpCatalog {
     pub models: Vec<Model>,
     pub config_options: Vec<OptionDescriptor>,
     pub load_session: bool,
+    /// `agentCapabilities.promptCapabilities.image` from the ACP initialize response.
+    pub image_prompt: bool,
 }
 fn invalid() -> DomainError {
     DomainError::new(

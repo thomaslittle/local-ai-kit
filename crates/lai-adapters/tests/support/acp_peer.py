@@ -15,7 +15,7 @@ for line in sys.stdin:
  if r.get('jsonrpc')!='2.0':sys.exit(7)
  if m=='initialize':
   if p.get('clientCapabilities',{}).get('terminal') or p.get('clientCapabilities',{}).get('fs',{}).get('writeTextFile'):sys.exit(8)
-  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':mode!='no_resume'},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
+  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':mode!='no_resume','promptCapabilities':{'image':mode=='image'}},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
  elif m=='authenticate':
   if mode=='auth_fail':out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_URL'}})
   else:authenticated=True;answer(i,None)
@@ -37,6 +37,11 @@ for line in sys.stdin:
   answer(i,{'configOptions':options})
  elif m=='session/prompt':
   turns+=1;pending=i
+  images=[b for b in p.get('prompt',[]) if b.get('type')=='image']
+  if images and mode!='image':sys.exit(13)
+  if mode=='image':
+   summary=','.join(b['mimeType']+':'+b['data'] for b in images)
+   update('agent_message_chunk',content={'type':'text','text':'text='+p['prompt'][0]['text']+' images='+summary});answer(i,{'stopReason':'end_turn'});continue
   if mode=='hang':continue
   if mode=='prompt_error':out({'id':i,'error':{'code':-32001,'message':'HTTP 401: invalid account; Authorization: Bearer private-peer-token'}});continue
   if mode=='permission':out({'id':'permission-id','method':'session/request_permission','params':{'sessionId':session,'toolCall':{'toolCallId':'tool-1','title':'Read fixture'},'options':[{'optionId':'yes','name':'Allow once','kind':'allow_once'},{'optionId':'no','name':'Reject once','kind':'reject_once'}]}})
