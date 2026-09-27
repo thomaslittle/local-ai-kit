@@ -1,0 +1,310 @@
+{
+  "exitCode": 0,
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--workspace",
+        "--all-targets",
+        "--locked"
+      ],
+      "exitCode": 0,
+      "seconds": 27.99
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "packages/selector-core/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 1.237
+    },
+    {
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "--test",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/selector-core/tests/selection.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.253
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "packages/sdk-typescript/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 1.199
+    },
+    {
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "--test",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/artifacts.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/bundle.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/catalog.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/client-close.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/http.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/native.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/stdio.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/store.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.742
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "packages/sdk-python/tests",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 0.595
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/generation",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 0.072
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/check_generated.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.235
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "tests/generation/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 0.733
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 4.313
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:react"
+      ],
+      "exitCode": 0,
+      "seconds": 5.14
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/test_native_bridge.py"
+      ],
+      "exitCode": 0,
+      "seconds": 5.303
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "lai-kit",
+        "--example",
+        "synthetic_adapter"
+      ],
+      "exitCode": 0,
+      "seconds": 0.262
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/packaging",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 0.171
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/check_project.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 4.826
+    },
+    {
+      "command": [
+        "node",
+        "scripts/build_demo.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.097
+    },
+    {
+      "command": [
+        "node",
+        "scripts/build_extension.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.096
+    },
+    {
+      "command": [
+        "cargo",
+        "build",
+        "--locked",
+        "-p",
+        "lai-cli"
+      ],
+      "exitCode": 0,
+      "seconds": 0.304
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/apps/demo/tests/http.test.mjs",
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/apps/demo/tests/service.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.602
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/test_demo.py"
+      ],
+      "exitCode": 0,
+      "seconds": 8.126
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_live_demo.mjs",
+        "scripts/test_live_demo_opencode.mjs",
+        "scripts/test_demo_profile_auth.mjs",
+        "scripts/test_demo_errors.mjs",
+        "scripts/test_demo_catalog_visibility.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 3.55
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_accessibility.mjs",
+        "scripts/test_component_accessibility.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 27.91
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/test_dotnet.py"
+      ],
+      "exitCode": 0,
+      "seconds": 5.828
+    },
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.858
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--all-features",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exitCode": 0,
+      "seconds": 80.143
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/adapter_conformance.py",
+        "--all"
+      ],
+      "exitCode": 0,
+      "seconds": 49.904
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/build_release.py",
+        "--profile",
+        "release"
+      ],
+      "exitCode": 0,
+      "seconds": 258.817
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/package_smoke.py"
+      ],
+      "exitCode": 0,
+      "seconds": 4.709
+    },
+    {
+      "command": [
+        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "scripts/benchmark.py",
+        "--idle-seconds",
+        "60"
+      ],
+      "exitCode": 0,
+      "seconds": 62.399
+    }
+  ]
+}

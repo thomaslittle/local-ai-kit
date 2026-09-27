@@ -1,0 +1,310 @@
+{
+  "exitCode": 0,
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--workspace",
+        "--all-targets",
+        "--locked"
+      ],
+      "exitCode": 0,
+      "seconds": 58.724
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "packages/selector-core/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 0.888
+    },
+    {
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "--test",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\selector-core\\tests\\selection.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.365
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "packages/sdk-typescript/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 0.996
+    },
+    {
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "--test",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\artifacts.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\bundle.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\catalog.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\client-close.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\http.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\native.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\stdio.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\packages\\sdk-typescript\\tests\\store.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 2.593
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "packages/sdk-python/tests",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 4.203
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/generation",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 0.205
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/check_generated.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.809
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "tests/generation/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 0.976
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 4.91
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:react"
+      ],
+      "exitCode": 0,
+      "seconds": 5.832
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/test_native_bridge.py"
+      ],
+      "exitCode": 0,
+      "seconds": 13.829
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "lai-kit",
+        "--example",
+        "synthetic_adapter"
+      ],
+      "exitCode": 0,
+      "seconds": 0.586
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/packaging",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 0.383
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/check_project.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.383
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 4.555
+    },
+    {
+      "command": [
+        "node",
+        "scripts/build_demo.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.204
+    },
+    {
+      "command": [
+        "node",
+        "scripts/build_extension.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.268
+    },
+    {
+      "command": [
+        "cargo",
+        "build",
+        "--locked",
+        "-p",
+        "lai-cli"
+      ],
+      "exitCode": 0,
+      "seconds": 0.649
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\apps\\demo\\tests\\http.test.mjs",
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\apps\\demo\\tests\\service.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.777
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/test_demo.py"
+      ],
+      "exitCode": 0,
+      "seconds": 7.718
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_live_demo.mjs",
+        "scripts/test_live_demo_opencode.mjs",
+        "scripts/test_demo_profile_auth.mjs",
+        "scripts/test_demo_errors.mjs",
+        "scripts/test_demo_catalog_visibility.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 5.013
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_accessibility.mjs",
+        "scripts/test_component_accessibility.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 19.876
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/test_dotnet.py"
+      ],
+      "exitCode": 0,
+      "seconds": 4.032
+    },
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.967
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--all-features",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exitCode": 0,
+      "seconds": 14.115
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/adapter_conformance.py",
+        "--all"
+      ],
+      "exitCode": 0,
+      "seconds": 94.812
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/build_release.py",
+        "--profile",
+        "release"
+      ],
+      "exitCode": 0,
+      "seconds": 139.398
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/package_smoke.py"
+      ],
+      "exitCode": 0,
+      "seconds": 13.734
+    },
+    {
+      "command": [
+        "C:\\Users\\User\\Sites\\local-ai-kit\\.worktrees\\initial-implementation\\.verification\\build-tools\\Scripts\\python.exe",
+        "scripts/benchmark.py",
+        "--idle-seconds",
+        "60"
+      ],
+      "exitCode": 0,
+      "seconds": 63.14
+    }
+  ]
+}

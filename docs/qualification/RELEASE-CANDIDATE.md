@@ -1,4 +1,8 @@
-# Historical verified developer-alpha build
+# Release qualification
+
+Current implementation source: `0c8213842be5b72ea7614b51028a24912b1bdabd`. Windows and Ubuntu/WSL2 full/release verification, clean consumers, bundle checksums, and fresh benchmarks passed. macOS remains externally blocked before job execution. Read the [September 27 readiness report](2026-09-27-readiness.md) for current counts, artifacts, fixes, and limits.
+
+## Historical verified developer-alpha build
 
 September 27 review is recorded in [the current handoff](../handoffs/RESUME.md) and [implementation ledger](../implementation/LEDGER.md). The measurements below remain evidence for their named historical commits. GitHub run `36141317640` has no executed steps: its check annotations state that recent account payments failed or the spending limit needs increasing. This is an external CI blocker, not a macOS test result.
 

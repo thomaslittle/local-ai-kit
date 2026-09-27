@@ -15,7 +15,7 @@ A Rust implementation with an embedded library, standalone native helper, authen
 | TypeScript and Python | Thin clients for the actual native service, generated domain types, bounded streaming, cancellation, and verified bundle resolution. |
 | Local transports | Stdio JSON-RPC, paired HTTP/SSE, per-application Unix socket/Windows named-pipe broker, and opt-in browser Native Messaging. |
 | Optional UI | Framework-neutral selection plus React hooks and eight reusable selector layouts, with native model options. |
-| Developer tools | Live/synthetic showroom, generated OpenAPI/JSON Schema, contribution guidance, package smoke tests, and measured benchmarks. |
+| Developer tools | Real-data showroom, isolated test fixtures, generated OpenAPI/JSON Schema, contribution guidance, package smoke tests, and measured benchmarks. |
 
 Finding an installation does **not** establish an active subscription. Unknown plans, usage, capabilities, and billing remain unknown. The installed client owns its credentials; subscription tokens are never turned into generic API keys. Imports never scan, launch clients, contact providers, or generate output.
 
@@ -52,8 +52,8 @@ Native subscription-style integrations are explicit. A host-owned JSON file name
       "id": "grok-personal",
       "label": "Grok personal",
       "provider": "grok",
-      "executable": "C:\\\\Users\\\\you\\\\.grok\\\\bin\\\\grok.exe",
-      "profileHome": "C:\\\\Users\\\\you\\\\.grok",
+      "executable": "C:\\Users\\you\\.grok\\bin\\grok.exe",
+      "profileHome": "C:\\Users\\you\\.grok",
       "billing": "subscription"
     }
   ]
@@ -98,6 +98,8 @@ python scripts/verify.py --profile release
 The release profile additionally requires a .NET 8 SDK for the plain HTTP example. It runs lint, adapter conformance, checksummed packaging, isolated tarball/wheel consumers, and a 60-second idle benchmark. Nothing publishes packages or spends an AI allowance. Results are saved in `.verification/` and bundles in `dist/release/`; manifests identify the exact source commit and any dirty working tree.
 
 Automated browser checks cover interaction, live pairing, and common WCAG A/AA violations. They are not a complete manual accessibility certification. Platform and live-account qualification remain distinct from unit/fixture test results.
+
+Current verified source, platform results, packages, and benchmarks are in the [September 27 readiness report](docs/qualification/2026-09-27-readiness.md).
 
 ## Documentation and limitations
 

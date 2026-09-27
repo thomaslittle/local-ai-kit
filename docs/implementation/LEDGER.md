@@ -6,11 +6,11 @@ Preserved and reviewed the dirty real-data demo/provider work on `74138c5`. Adde
 
 Ruling: retain distinct executable directories as separate installation routes, while grouping Windows command shims within one directory. Do not collapse different installed versions merely to simplify the account list. Configuration-only OpenCode retains stable identity when its data directory appears.
 
-The manual paired browser run returned 130 model entries from Codex, Claude Code, Grok, and OpenCode; no model turn was sent. UI regression coverage includes continuing a resumed session without calling sessions.create, token non-disclosure, all eight selectors, and real-data-only failure states. Added `docs/integration/prompt-app.md` for application integration boundaries.
+The first manual paired browser run returned 130 model entries; after preserving distinct installations, the final clean-source run returned 137 from Codex, Claude Code, Grok, and OpenCode; no model turn was sent. UI regression coverage includes continuing a resumed session without calling sessions.create, token non-disclosure, all eight selectors, and real-data-only failure states. Added `docs/integration/prompt-app.md` for application integration boundaries.
 
 GitHub's exact pre-job blocker is now known from check annotations: recent account payments failed or the spending limit needs increasing. No billing changes made. WSL starts again; new qualification must be reported independently of September 25 evidence.
 
-Windows pre-package gate passed: full `verify.py --profile all`, including 347 Rust tests, TypeScript SDK 63, selector-core 28, Python SDK 25, React 13, browser interactions 14, and accessibility 32. Fresh-context review found and drove the revoke/publication and installation-identity fixes; all review findings were resolved. Clean-source bundle qualification is the next gate.
+Final clean implementation source `0c8213842be5b72ea7614b51028a24912b1bdabd` passed full and release profiles on Windows and Ubuntu/WSL2. Rust: 349 Windows / 351 Linux, zero failed/ignored; each platform: TypeScript SDK 63, Python SDK 26, selectors 28, React 13, browser 14, accessibility 32. Clean packages, actual helper consumers, C#, strict lint/conformance, checksums, and benchmarks passed. Linux found an inode-reuse rotation defect during qualification; bounded leading fingerprints and birth-time identity corrected it before these final runs. Separate review found no blocking issues in that fix. See [current readiness evidence](../qualification/2026-09-27-readiness.md).
 
 ## Historical checkpoint — September 25, 2026
 
@@ -20,7 +20,11 @@ The worktree base at continuation was `d1705fd92a2d19b38bf8bf1134ee2c543c7ce82b`
 
 Base: `1a49571b2ea5759b383966f1eae80162f4f7f4b1`. Branch: `feature/initial-implementation`. No external coding agent or paid inference used.
 
-## Implemented/tested slices
+## Historical implementation timeline
+
+The entries below preserve earlier results, limitations, and next steps at their original checkpoints. They are not the current support or qualification status; use the September 27 report above.
+
+## Implemented/tested slices (historical)
 
 - Canonical Rust contracts: 13 Windows tests pass on Rust 1.97.1.
 - Native filesystem primitives: 7 Windows tests pass, including requested-byte reads of a sparse 1 GiB file. Unix-only behavior still requires a Unix Rust runner.

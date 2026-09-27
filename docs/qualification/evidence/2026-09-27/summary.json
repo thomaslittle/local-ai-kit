@@ -1,0 +1,49 @@
+{
+  "windows": {
+    "sourceCommit": "0c8213842be5b72ea7614b51028a24912b1bdabd",
+    "compiled": true,
+    "fixtureTested": true,
+    "platformExecuted": true,
+    "allProfile": true,
+    "releaseProfile": true,
+    "rustTestsPassed": 349,
+    "typeScriptSdkTests": 63,
+    "pythonSdkTests": 26,
+    "selectorTests": 28,
+    "reactTests": 13,
+    "browserTests": 14,
+    "accessibilityTests": 32,
+    "archive": "dist/release/local-ai-kit-0.1.0-alpha.1-x86_64-pc-windows-msvc-0c8213842be5.zip",
+    "archiveBytes": 9777973,
+    "archiveSha256": "fdb6ed3b08a77482a0111f19c6465ab8b7661b67a383cfebf645c345ccf14fb6",
+    "archiveContentsVerified": true
+  },
+  "linux": {
+    "sourceCommit": "0c8213842be5b72ea7614b51028a24912b1bdabd",
+    "compiled": true,
+    "fixtureTested": true,
+    "platformExecuted": true,
+    "allProfile": true,
+    "releaseProfile": true,
+    "rustTestsPassed": 351,
+    "typeScriptSdkTests": 63,
+    "pythonSdkTests": 26,
+    "selectorTests": 28,
+    "reactTests": 13,
+    "browserTests": 14,
+    "accessibilityTests": 32,
+    "archive": "dist/linux-release/local-ai-kit-0.1.0-alpha.1-x86_64-unknown-linux-gnu-0c8213842be5.zip",
+    "archiveBytes": 11387890,
+    "archiveSha256": "7dddcd19a981f4944b00ba6264ca88df5a5f03043f45531bc20e4c174d1ba16d",
+    "archiveContentsVerified": true
+  },
+  "macos": {
+    "compiled": false,
+    "fixtureTested": false,
+    "platformExecuted": false,
+    "liveAccountQualified": false,
+    "run": 36302338910,
+    "checkRun": 108572198918,
+    "blocker": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings"
+  }
+}

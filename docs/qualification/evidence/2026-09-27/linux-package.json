@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "0c8213842be5b72ea7614b51028a24912b1bdabd",
+  "workingTreeDirty": false,
+  "platform": "x86_64-unknown-linux-gnu",
+  "checks": {
+    "manifest": true,
+    "standaloneNative": true,
+    "npmTarballs": true,
+    "pythonWheel": true,
+    "reactSSR": true
+  },
+  "inferenceRequests": 0,
+  "limitations": [
+    "No remote provider inference or OS signing verification",
+    "Registry publication was not attempted"
+  ]
+}
