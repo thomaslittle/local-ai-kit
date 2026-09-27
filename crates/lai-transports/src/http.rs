@@ -30,6 +30,7 @@ pub(super) struct Token {
     pub ready: bool,
 }
 pub(super) struct Pair {
+    code: String,
     hash: [u8; 32],
     created: Instant,
     used: bool,
@@ -90,6 +91,7 @@ impl HttpServer {
         let code = random(6)?;
         let mut pair = self.shared.pair.lock().map_err(|_| error())?;
         *pair = Pair {
+            code: code.clone(),
             hash: hash(&code),
             created: Instant::now(),
             used: false,
@@ -131,6 +133,7 @@ pub async fn start(service: Arc<NativeService>, options: HttpOptions) -> Result<
         url: url.clone(),
         authority,
         pair: Mutex::new(Pair {
+            code: pairing_code.clone(),
             hash: hash(&pairing_code),
             created: Instant::now(),
             used: false,
@@ -142,6 +145,10 @@ pub async fn start(service: Arc<NativeService>, options: HttpOptions) -> Result<
     });
     let app = Router::new()
         .route("/runtime/info", get(routes::info))
+        .route(
+            "/runtime/pairing-code",
+            get(auth::pairing_code).post(auth::issue_pairing_code),
+        )
         .route("/v1/pair", post(auth::pair))
         .route("/v1/rpc", post(routes::rpc))
         .route("/v1/events", get(routes::events))

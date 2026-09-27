@@ -39,7 +39,7 @@ The default demo runs the native local service and loads detected local installa
 npm run demo
 ```
 
-Open `http://127.0.0.1:4499` and enter the one-use pairing code printed by the helper. Pairing triggers passive local discovery, then the browser checks metadata for profiles allowed by the host. The checks do not send model prompts; no execution or inference grant is enabled. See the [live demo guide](docs/integration/live-demo.md).
+Open `http://127.0.0.1:4499` and choose **Show current pairing code**. The browser reads the active one-use code from the same-origin local helper, fills it in, and leaves pairing as an explicit action. After refresh or expiry, the same button issues a replacement code. Hosts and SDK consumers can call `GET /runtime/pairing-code` / `getPairingCode({ baseUrl })`, or explicitly rotate with `POST /runtime/pairing-code` / `issuePairingCode({ baseUrl })`. Pairing triggers passive local discovery, then the browser checks metadata for profiles allowed by the host without sending model prompts. The demo grants supported text execution in an isolated temporary workspace, but a turn still requires account consent and an explicit **Run live turn** click. See the [live demo guide](docs/integration/live-demo.md) and [pairing API](docs/integration/pairing.md).
 
 ## Register an existing native AI client
 

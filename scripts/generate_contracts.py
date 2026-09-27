@@ -177,6 +177,17 @@ def protocol_documents(schema):
     paths = {
         '/runtime/info': {'get': {'operationId': 'runtimeInfo', 'security': [],
             'responses': {'200': response({'type': 'object'}, 'Public protocol and pairing requirement only; no account data')}}},
+        '/runtime/pairing-code': {
+            'get': {'operationId': 'getPairingCode', 'security': [],
+                'description': 'Read the active loopback pairing code without consuming it. Same-origin only; no-store. Expires after five minutes and becomes unavailable after redemption or ten failed attempts.',
+                'responses': {'200': response({'type': 'object', 'required': ['code', 'expiresInSeconds'], 'additionalProperties': False,
+                    'properties': {'code': {'type': 'string', 'pattern': '^[a-f0-9]{12}$'}, 'expiresInSeconds': {'type': 'integer', 'minimum': 1, 'maximum': 300}}}),
+                    '403': response({'type': 'object'}, 'Pairing code unavailable or request origin denied')}},
+            'post': {'operationId': 'issuePairingCode', 'security': [],
+                'description': 'Explicitly issue a fresh single-use loopback pairing code. Replaces the current unused code without revoking already paired clients. Same-origin only; no-store.',
+                'responses': {'200': response({'type': 'object', 'required': ['code', 'expiresInSeconds'], 'additionalProperties': False,
+                    'properties': {'code': {'type': 'string', 'pattern': '^[a-f0-9]{12}$'}, 'expiresInSeconds': {'const': 300}}}),
+                    '403': response({'type': 'object'}, 'Request origin denied')}}},
         '/v1/pair': {'post': {'operationId': 'pair', 'security': [],
             'description': 'Redeem a host-issued single-use code. Does not widen host grants. Codes expire after five minutes.',
             'requestBody': {'required': True, 'content': {'application/json': {'schema': {

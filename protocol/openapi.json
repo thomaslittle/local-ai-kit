@@ -2850,6 +2850,92 @@
         "security": []
       }
     },
+    "/runtime/pairing-code": {
+      "get": {
+        "description": "Read the active loopback pairing code without consuming it. Same-origin only; no-store. Expires after five minutes and becomes unavailable after redemption or ten failed attempts.",
+        "operationId": "getPairingCode",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "pattern": "^[a-f0-9]{12}$",
+                      "type": "string"
+                    },
+                    "expiresInSeconds": {
+                      "maximum": 300,
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "expiresInSeconds"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Pairing code unavailable or request origin denied"
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "description": "Explicitly issue a fresh single-use loopback pairing code. Replaces the current unused code without revoking already paired clients. Same-origin only; no-store.",
+        "operationId": "issuePairingCode",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "pattern": "^[a-f0-9]{12}$",
+                      "type": "string"
+                    },
+                    "expiresInSeconds": {
+                      "const": 300
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "expiresInSeconds"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request origin denied"
+          }
+        },
+        "security": []
+      }
+    },
     "/v1/connections": {
       "get": {
         "description": "Same permission-scoped data as connections.list; no implicit enrichment.",

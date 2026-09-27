@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHttpTransport, createLocalAI, parseSSE } from '../src/index.ts';
+import { createHttpTransport, createLocalAI, getPairingCode, issuePairingCode, parseSSE } from '../src/index.ts';
 const bytes=text=>new TextEncoder().encode(text);
 const stream=(parts)=>new ReadableStream({start(c){for(const p of parts)c.enqueue(typeof p==='string'?bytes(p):p);c.close();}});
 const response=(id,result)=>new Response(JSON.stringify({jsonrpc:'2.0',id,result}),{headers:{'content-type':'application/json'}});
@@ -8,6 +8,29 @@ const collect=async iterable=>{const out=[];for await(const item of iterable)out
 const config=(fetch)=>({baseUrl:'http://127.0.0.1:4499',token:'synthetic-token',fetch});
 test('constructing a transport has no I/O',()=>{
  let calls=0;const t=createHttpTransport(config(()=>{calls++;throw Error('unexpected');}));assert.equal(calls,0);assert.equal(JSON.stringify(t).includes('synthetic-token'),false);
+});
+test('pairing code helper reads the current code without credentials or caching',async()=>{
+ let calls=0;const result=await getPairingCode({baseUrl:'http://127.0.0.1:4499',fetch:async(url,init)=>{
+  calls++;assert.equal(url,'http://127.0.0.1:4499/runtime/pairing-code');assert.equal(init.method,'GET');
+  assert.equal(init.credentials,'omit');assert.equal(init.cache,'no-store');assert.equal(init.redirect,'error');
+  assert.equal(new Headers(init.headers).has('authorization'),false);
+  return new Response(JSON.stringify({code:'012345abcdef',expiresInSeconds:287}),{headers:{'content-type':'application/json'}});
+ }});
+ assert.deepEqual(result,{code:'012345abcdef',expiresInSeconds:287});assert.equal(calls,1);
+});
+test('pairing code helper rejects malformed responses and remote hosts',async()=>{
+ for(const payload of [{code:'bad',expiresInSeconds:20},{code:'012345abcdef',expiresInSeconds:301}])
+  await assert.rejects(getPairingCode({baseUrl:'http://localhost',fetch:async()=>new Response(JSON.stringify(payload),{headers:{'content-type':'application/json'}})}),/PROTOCOL_INVALID/);
+ await assert.rejects(getPairingCode({baseUrl:'https://example.com',fetch:async()=>{throw Error('must not send');}}),/LOCAL_ENDPOINT_REQUIRED/);
+});
+test('pairing code issue helper explicitly rotates by POST without auth',async()=>{
+ const result=await issuePairingCode({baseUrl:'http://localhost:4499',fetch:async(url,init)=>{
+  assert.equal(url,'http://localhost:4499/runtime/pairing-code');assert.equal(init.method,'POST');
+  assert.equal(init.credentials,'omit');assert.equal(init.cache,'no-store');assert.equal(init.redirect,'error');
+  assert.equal(new Headers(init.headers).has('authorization'),false);
+  return new Response(JSON.stringify({code:'fedcba654321',expiresInSeconds:300}),{headers:{'content-type':'application/json'}});
+ }});
+ assert.deepEqual(result,{code:'fedcba654321',expiresInSeconds:300});
 });
 test('request uses header auth, exact method/params and no cookies or redirects',async()=>{
  const t=createHttpTransport(config(async(url,init)=>{

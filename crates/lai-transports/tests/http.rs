@@ -96,6 +96,85 @@ async fn no_bootstrap_token_or_automatic_scan() {
     s.close().await;
 }
 #[tokio::test]
+async fn same_origin_pairing_code_endpoint_returns_current_code_without_consuming_it() {
+    let (s, _) = setup().await;
+    let response = client()
+        .get(format!("{}/runtime/pairing-code", s.url))
+        .header("Origin", &s.url)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    assert_eq!(response.headers()["cache-control"], "no-store");
+    let body: Value = response.json().await.unwrap();
+    assert_eq!(body["code"], s.pairing_code);
+    assert!(
+        body["expiresInSeconds"]
+            .as_u64()
+            .is_some_and(|n| (1..=300).contains(&n))
+    );
+
+    let denied = client()
+        .get(format!("{}/runtime/pairing-code", s.url))
+        .header("Origin", "https://evil.example")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(denied.status(), 403);
+
+    let rotated = s.issue_pairing_code().unwrap();
+    let refreshed: Value = client()
+        .get(format!("{}/runtime/pairing-code", s.url))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(refreshed["code"], rotated);
+    let redeemed = client()
+        .post(format!("{}/v1/pair", s.url))
+        .json(&json!({"code":rotated}))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(redeemed.status(), 200);
+    let consumed = client()
+        .get(format!("{}/runtime/pairing-code", s.url))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(consumed.status(), 403);
+    let denied_issue = client()
+        .post(format!("{}/runtime/pairing-code", s.url))
+        .header("Origin", "https://evil.example")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(denied_issue.status(), 403);
+    let issued: Value = client()
+        .post(format!("{}/runtime/pairing-code", s.url))
+        .header("Origin", &s.url)
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_ne!(issued["code"], rotated);
+    assert_eq!(issued["expiresInSeconds"], 300);
+    let newly_active: Value = client()
+        .get(format!("{}/runtime/pairing-code", s.url))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(newly_active["code"], issued["code"]);
+    s.close().await;
+}
+#[tokio::test]
 async fn single_use_pairing_and_native_rpc() {
     let (s, count) = setup().await;
     let token = pair(&s).await;

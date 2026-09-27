@@ -6,6 +6,13 @@ export interface HttpOptions {
   /** Dependency injection for hosts/tests; the default is the platform fetch. */
   fetch?: typeof globalThis.fetch;
 }
+export interface PairingCodeOptions {
+  /** Loopback origin returned by the host's HTTP runtime. */
+  baseUrl: string;
+  /** Dependency injection for hosts/tests; the default is the platform fetch. */
+  fetch?: typeof globalThis.fetch;
+}
+export interface PairingCode { code: string; expiresInSeconds: number }
 function endpoint(value: string): string {
   let url: URL; try { url = new URL(value); } catch { throw new LocalAIError('LOCAL_ENDPOINT_REQUIRED'); }
   if (!['http:', 'https:'].includes(url.protocol) || !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
@@ -27,6 +34,35 @@ async function readJSON(response: Response, max: number): Promise<unknown> {
     return JSON.parse(text + decoder.decode());
   } catch (e) { if (e instanceof LocalAIError) throw e; throw new LocalAIError('PROTOCOL_INVALID'); }
   finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
+}
+async function pairingCodeRequest(options: PairingCodeOptions, method: 'GET' | 'POST'): Promise<PairingCode> {
+  const origin = endpoint(options.baseUrl);
+  const fetcher = options.fetch ?? globalThis.fetch;
+  let response: Response;
+  try {
+    response = await fetcher(`${origin}/runtime/pairing-code`, {
+      method, headers: { Accept: 'application/json' }, credentials: 'omit', cache: 'no-store', redirect: 'error',
+    });
+  } catch { throw new LocalAIError('TRANSPORT_FAILED'); }
+  if (!response.ok) {
+    await response.body?.cancel().catch(() => {});
+    throw new LocalAIError(`HTTP_${response.status}`);
+  }
+  const value = await readJSON(response, 4096) as Record<string, unknown>;
+  if (!value || typeof value !== 'object' || typeof value.code !== 'string'
+    || !/^[a-f0-9]{12}$/.test(value.code) || !Number.isSafeInteger(value.expiresInSeconds)
+    || (value.expiresInSeconds as number) < 1 || (value.expiresInSeconds as number) > 300) {
+    throw new LocalAIError('PROTOCOL_INVALID');
+  }
+  return { code: value.code, expiresInSeconds: value.expiresInSeconds as number };
+}
+/** Read the active host-issued pairing code from a loopback runtime. This does not consume or rotate it. */
+export function getPairingCode(options: PairingCodeOptions): Promise<PairingCode> {
+  return pairingCodeRequest(options, 'GET');
+}
+/** Explicitly rotate the loopback runtime's one-use code so a browser can pair again after refresh. */
+export function issuePairingCode(options: PairingCodeOptions): Promise<PairingCode> {
+  return pairingCodeRequest(options, 'POST');
 }
 export function createHttpTransport(options: HttpOptions): Transport {
   const origin = endpoint(options.baseUrl);

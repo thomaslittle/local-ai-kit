@@ -138,6 +138,36 @@ pub(super) async fn pair(
     pairing.used = true;
     Json(json!({"token":token,"protocolVersion":"1.0","expiresInSeconds":3600})).into_response()
 }
+pub(super) async fn pairing_code(State(state): State<Arc<Shared>>) -> Response {
+    let pairing = match state.pair.lock() {
+        Ok(p) => p,
+        Err(_) => return reject(StatusCode::SERVICE_UNAVAILABLE, "UNAVAILABLE"),
+    };
+    let lifetime = Duration::from_secs(300).saturating_sub(pairing.created.elapsed());
+    if pairing.used || lifetime.is_zero() || pairing.attempts >= 10 {
+        return reject(StatusCode::FORBIDDEN, "PAIRING_DENIED");
+    }
+    let expires_in = lifetime.as_secs_f64().ceil() as u64;
+    Json(json!({"code":pairing.code,"expiresInSeconds":expires_in})).into_response()
+}
+pub(super) async fn issue_pairing_code(State(state): State<Arc<Shared>>) -> Response {
+    let code = match random(6) {
+        Ok(code) => code,
+        Err(_) => return reject(StatusCode::SERVICE_UNAVAILABLE, "UNAVAILABLE"),
+    };
+    let mut pairing = match state.pair.lock() {
+        Ok(p) => p,
+        Err(_) => return reject(StatusCode::SERVICE_UNAVAILABLE, "UNAVAILABLE"),
+    };
+    *pairing = super::Pair {
+        code: code.clone(),
+        hash: hash(&code),
+        created: Instant::now(),
+        used: false,
+        attempts: 0,
+    };
+    Json(json!({"code":code,"expiresInSeconds":300})).into_response()
+}
 pub(super) fn authorize(
     state: &Shared,
     headers: &HeaderMap,

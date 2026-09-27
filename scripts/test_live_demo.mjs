@@ -30,8 +30,11 @@ async function setup(){
 test('real native host requires explicit pairing, then discovers real empty-home metadata',async()=>{
  const app=await setup();try{
   await app.page.goto(app.url);await app.page.getByRole('heading',{name:'Connect your local runtime'}).waitFor({timeout:5000});
-  await app.page.getByText(/checks metadata allowed by the host/i).waitFor();
+  await app.page.getByText(/pairing checks metadata only/i).waitFor();
   assert.equal(await app.page.locator('#mode-banner').count(),0);
+  await app.page.getByRole('button',{name:'Show current pairing code'}).click();
+  await app.page.waitForFunction(()=>document.querySelector('#pairing-code')?.value.length===12,null,{timeout:5000});
+  assert.equal(await app.page.getByLabel('Pairing code').inputValue(),app.code,await app.page.locator('.pairing-card [aria-live="polite"]').innerText());
   await app.page.getByLabel('Pairing code').fill(app.code);
   await app.page.getByRole('button',{name:'Pair with this runtime'}).click();
   await app.page.locator('#mode-banner.live').waitFor();
@@ -93,4 +96,19 @@ test('live selector empty states are useful and stay inside the viewport',async(
 });
 test('pairing rejects an incorrect code without revealing accounts',async()=>{
  const app=await setup();try{await app.page.goto(app.url);await app.page.getByLabel('Pairing code').fill('000000000000');await app.page.getByRole('button',{name:'Pair with this runtime'}).click();await app.page.getByRole('alert').waitFor();assert.equal(await app.page.locator('#mode-banner').count(),0);}finally{await app.close();}
+});
+test('pairing can recover after reload by explicitly issuing a replacement code',async()=>{
+ const app=await setup();try{
+  await app.page.goto(app.url);await app.page.getByRole('button',{name:'Show current pairing code'}).click();
+  await app.page.waitForFunction(()=>document.querySelector('#pairing-code')?.value.length===12,null,{timeout:5000});
+  const first=await app.page.getByLabel('Pairing code').inputValue();assert.equal(first,app.code);
+  await app.page.getByRole('button',{name:'Pair with this runtime'}).click();await app.page.locator('#mode-banner.live').waitFor();
+  await app.page.reload();await app.page.getByRole('heading',{name:'Connect your local runtime'}).waitFor();
+  await app.page.getByRole('button',{name:'Show current pairing code'}).click();
+  await app.page.waitForFunction(()=>document.querySelector('#pairing-code')?.value.length===12,null,{timeout:5000});
+  const replacement=await app.page.getByLabel('Pairing code').inputValue();assert.notEqual(replacement,first);
+  await app.page.getByText(/New code issued/i).waitFor();
+  await app.page.getByRole('button',{name:'Pair with this runtime'}).click();await app.page.locator('#mode-banner.live').waitFor();
+  assert.equal(app.errors.length,0,app.errors.join('\n'));
+ }finally{await app.close();}
 });
