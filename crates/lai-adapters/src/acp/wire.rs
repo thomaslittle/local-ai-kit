@@ -256,16 +256,24 @@ impl Wire {
 pub(super) fn response_result(value: &Value) -> Result<Value> {
     match (value.get("result"), value.get("error")) {
         (Some(result), None) if result.is_object() => Ok(result.clone()),
-        (None, Some(error)) => Err(DomainError::new(
-            if error["code"].as_i64() == Some(-32601) {
-                ErrorCode::CapabilityUnsupported
-            } else if error["code"].as_i64() == Some(-32000) {
-                ErrorCode::AuthRequired
-            } else {
-                ErrorCode::ProviderUnavailable
-            },
-            "ACP request was rejected",
-        )),
+        (None, Some(error)) => {
+            let detail = error["message"]
+                .as_str()
+                .filter(|message| !message.trim().is_empty())
+                .map(lai_contracts::redact_diagnostic_detail)
+                .filter(|message| !message.is_empty())
+                .unwrap_or_else(|| "ACP request was rejected".into());
+            Err(DomainError::new(
+                if error["code"].as_i64() == Some(-32601) {
+                    ErrorCode::CapabilityUnsupported
+                } else if error["code"].as_i64() == Some(-32000) {
+                    ErrorCode::AuthRequired
+                } else {
+                    ErrorCode::ProviderUnavailable
+                },
+                format!("ACP provider: {detail}"),
+            ))
+        }
         _ => Err(invalid()),
     }
 }

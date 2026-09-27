@@ -1,7 +1,7 @@
 /** Test/demo harness only, not a substitute for the Rust service or provider adapters. */
 import {fixtureSnapshot} from './snapshot.mjs';
 import {createCatalog,resolveCandidates,reconcileSelection} from '../../../packages/selector-core/dist/index.js';
-export function createFixtureService({snapshot:provided}={}){
+export function createFixtureService({snapshot:provided,turnError=null}={}){
  const snapshot=provided?structuredClone(provided):fixtureSnapshot();
  if(snapshot.mode!=='synthetic')throw Error('SYNTHETIC_MODE_REQUIRED');
  const catalog=createCatalog(snapshot),sessions=new Map(),turns=new Map(),grants=new Map(),approvals=new Map(),listeners=new Set(),history=[];
@@ -66,6 +66,7 @@ export function createFixtureService({snapshot:provided}={}){
    if(turns.size>=128)error('RESOURCE_LIMIT');if(typeof p.prompt!=='string'||p.prompt.length>8192)error('INVALID_REQUEST');validate(session.selection,session.allowPaid);
    const turn={id:id('turn'),sessionId:session.id,done:false,timer:null};turns.set(turn.id,turn);session.turnId=turn.id;
    if(p.simulateApproval){session.state='awaiting_approval';const approvalId=id('approval');approvals.set(approvalId,turn);emit(session,{type:'approval_request',approvalId,action:'Read a synthetic resource',detail:'Simulation only: no filesystem access occurs.'});}
+   else if(turnError){turn.done=true;session.state='error';emit(session,{type:'error',code:turnError.code??'PROVIDER_UNAVAILABLE',message:turnError.message??'fixture provider error'});emit(session,{type:'state',state:'error'});emit(session,{type:'final',status:'error'});}
    else stream(turn);return {turnId:turn.id,mode:'synthetic'};
   },
   'turns.cancel':p=>{const turn=turns.get(p.turnId);if(!turn)error('NOT_FOUND');if(!turn.done)complete(turn,'cancelled');return {cancelled:true};},

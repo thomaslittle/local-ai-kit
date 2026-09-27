@@ -107,6 +107,32 @@ class DemoTests(unittest.TestCase):
         expect(self.page.locator('#response-text')).to_contain_text('No AI provider was called',timeout=5000)
         expect(self.page.locator('#session-status')).to_contain_text('Completed')
 
+    def test_failed_turn_explains_safe_error_code_without_showing_provider_text(self):
+        self.load({'turnError': {'code': 'PROVIDER_UNAVAILABLE', 'message': 'PRIVATE_PROVIDER_DETAIL'}})
+        self.page.get_by_role('button',name='Playground',exact=True).click()
+        self.page.get_by_label('Allow this simulated session',exact=True).check()
+        self.page.get_by_role('button',name='Simulate turn',exact=True).click()
+        expect(self.page.get_by_role('alert')).to_contain_text('provider client stopped or returned an unavailable response',timeout=5000)
+        expect(self.page.get_by_role('alert')).to_contain_text('PROVIDER_UNAVAILABLE')
+        expect(self.page.get_by_test_id('turn-debug')).to_contain_text('PRIVATE_PROVIDER_DETAIL')
+
+    def test_playground_selects_provider_and_route_model_without_selector_lab(self):
+        self.load()
+        self.page.get_by_role('button',name='Playground',exact=True).click()
+        provider=self.page.get_by_label('Provider',exact=True)
+        model=self.page.get_by_label('Model',exact=True)
+        provider.select_option('opencode')
+        options=model.locator('option').all_text_contents()
+        self.assertEqual(len(options)-1,4)
+        self.assertTrue(any('Linked account' in option for option in options[1:]))
+        self.assertTrue(any('API-key route' in option for option in options[1:]))
+        selected=model.locator('option').filter(has_text='Example Balanced · Linked account').first
+        value=selected.get_attribute('value')
+        model.select_option(value)
+        self.assertEqual(model.input_value(),value)
+        expect(self.page.locator('#configuration-panel')).to_contain_text('Example Balanced')
+        expect(self.page.locator('#configuration-panel')).to_contain_text('Linked account')
+
     def test_tool_approval_can_be_denied(self):
         self.load()
         self.page.get_by_role('button',name='Playground',exact=True).click()

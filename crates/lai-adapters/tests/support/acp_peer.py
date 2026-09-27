@@ -38,6 +38,7 @@ for line in sys.stdin:
  elif m=='session/prompt':
   turns+=1;pending=i
   if mode=='hang':continue
+  if mode=='prompt_error':out({'id':i,'error':{'code':-32001,'message':'HTTP 401: invalid account; Authorization: Bearer private-peer-token'}});continue
   if mode=='permission':out({'id':'permission-id','method':'session/request_permission','params':{'sessionId':session,'toolCall':{'toolCallId':'tool-1','title':'Read fixture'},'options':[{'optionId':'yes','name':'Allow once','kind':'allow_once'},{'optionId':'no','name':'Reject once','kind':'reject_once'}]}})
   elif mode=='fs':out({'id':'fs-id','method':'fs/read_text_file','params':{'sessionId':session,'path':'private-sentinel'}})
   elif mode=='changed':

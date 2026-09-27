@@ -576,7 +576,14 @@ async fn run(
                     .ok()
                     .and_then(|v| v.as_str().map(str::to_owned))
                     .unwrap_or_default(),
-                message: "Native turn did not complete".into(),
+                message: {
+                    let detail = lai_contracts::redact_diagnostic_detail(&error.message);
+                    if detail.is_empty() {
+                        "Native turn failed without diagnostic text".into()
+                    } else {
+                        detail
+                    }
+                },
             },
         );
     }

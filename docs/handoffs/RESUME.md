@@ -2,7 +2,7 @@
 
 Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 
-The live playground keeps prompt drafting available even when the helper grants metadata only. The default `npm run demo` remains metadata-only; `npm run demo -- --allow-codex-execution` opts into Codex turns in an empty temporary workspace with read-only execution. A turn still requires explicit account-use consent and a user click. The September 27 UI profile passed after this change. No inference was sent during this follow-up.
+The live playground grants text execution for every provider with a registered execution adapter, including explicit API routes, in an isolated temporary workspace. Native ACP profile adapters join when `LAI_NATIVE_PROFILES` is set. Each turn requires the browser consent checkbox and Run click; the helper leaves paid billing options and file writes disabled. The Playground selects provider and route/model directly from the live catalog. No inference was sent during this follow-up.
 
 ## Current implementation
 

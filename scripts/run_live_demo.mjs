@@ -4,20 +4,22 @@ import {randomBytes} from 'node:crypto';
 import {access,copyFile,mkdir,mkdtemp,rm,writeFile} from 'node:fs/promises';
 import {createServer} from 'node:net';
 import {tmpdir} from 'node:os';
-import {join,resolve} from 'node:path';
+import {isAbsolute,join,resolve} from 'node:path';
 import {buildOpenCodeRegistration,verifyOpenCodeAuthentication} from './live_demo_opencode.mjs';
+import {liveDemoExecutionArgs} from './live_demo_policy.mjs';
 
 const assets=resolve('apps/demo/dist');
-const metadataProviders=['codex','claude_code','grok','gemini_cli','antigravity','opencode','ollama','lmstudio','cursor'];
+const metadataProviders=['codex','claude_code','grok','gemini_cli','antigravity','opencode','ollama','lmstudio','cursor','openai_api','anthropic_api','gemini_api','xai_api','compatible_api'];
 const demoFlags=process.argv.slice(2);
-const allowCodexExecution=demoFlags.length===1&&demoFlags[0]==='--allow-codex-execution';
-if(demoFlags.length&&!allowCodexExecution){
- console.error('Usage: npm run demo [-- --allow-codex-execution]');
+if(demoFlags.length){
+ console.error('Usage: npm run demo');
  process.exit(2);
 }
+const nativeProfiles=process.env.LAI_NATIVE_PROFILES;
+if(nativeProfiles&&!isAbsolute(nativeProfiles))throw Error('LAI_NATIVE_PROFILES must be an absolute JSON file path');
 const temp=await mkdtemp(join(tmpdir(),'local-ai-kit-live-'));
-const workspace=allowCodexExecution?join(temp,'workspace'):undefined;
-if(workspace)await mkdir(workspace);
+const workspace=join(temp,'workspace');
+await mkdir(workspace);
 const endpointFile=join(temp,'endpoints.json');
 let opencode,helper,closing=false;
 
@@ -77,10 +79,12 @@ const env=registration?{...process.env,...registration.environment}:{...process.
 const args=[
  'serve','--http','--port','4499','--assets',assets,'--allow-passive-discovery',
  ...metadataProviders.flatMap(provider=>['--allow-metadata',provider]),
- ...(allowCodexExecution?['--allow-codex-execution','--workspace',workspace]:[]),
+ ...(nativeProfiles?['--native-profiles',nativeProfiles]:[]),
+ ...liveDemoExecutionArgs(workspace,{nativeProfiles:Boolean(nativeProfiles)}),
  ...(registration?['--endpoints',endpointFile]:[]),
 ];
-if(allowCodexExecution)console.log('Codex live turns are enabled in an isolated temporary workspace. No turn starts until you authorize and explicitly run one in the browser.');
+console.log('Text execution is enabled for supported providers in an isolated temporary workspace. The browser still requires account consent and an explicit Run click; metered routes remain subject to host billing policy.');
+if(nativeProfiles)console.log('Registered Gemini CLI, Antigravity, and Grok profiles are included in the provider execution grant.');
 helper=spawn(helperPath,args,{stdio:'inherit',windowsHide:true,env});
 helper.once('error',error=>{console.error(`Unable to start the native helper: ${error.message}`);process.exitCode=1;void close();});
 helper.once('exit',async(code,signal)=>{await close();process.exitCode=signal?1:code??1;});

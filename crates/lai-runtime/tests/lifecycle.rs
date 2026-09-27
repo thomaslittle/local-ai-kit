@@ -10,6 +10,7 @@ use std::{
     time::Duration,
 };
 struct TestAgent(Arc<AtomicUsize>);
+struct DiagnosticFailureAgent;
 struct FailingSuspend(bool);
 impl Agent for FailingSuspend {
     fn turn<'a>(
@@ -108,6 +109,24 @@ impl Agent for TestAgent {
         Box::pin(async { Ok(()) })
     }
 }
+impl Agent for DiagnosticFailureAgent {
+    fn turn<'a>(
+        &'a mut self,
+        _: String,
+        _: BTreeMap<String, Value>,
+        _: TurnContext,
+    ) -> BoxFuture<'a, ()> {
+        Box::pin(async {
+            Err(DomainError::new(
+                ErrorCode::ProviderUnavailable,
+                "HTTP 401: Authorization: Bearer private-token-value",
+            ))
+        })
+    }
+    fn close(&mut self) -> BoxFuture<'_, ()> {
+        Box::pin(async { Ok(()) })
+    }
+}
 fn setup() -> (Arc<Runtime>, Session, Arc<AtomicUsize>) {
     let r = Arc::new(Runtime::new());
     let calls = Arc::new(AtomicUsize::new(0));
@@ -164,6 +183,51 @@ async fn creation_is_not_generation_and_turn_streams_once() {
     );
     assert!(t["turnId"].is_string());
     assert_eq!(c.load(Ordering::SeqCst), 1);
+}
+#[tokio::test]
+async fn error_events_keep_provider_diagnostics_and_redact_credentials() {
+    let runtime = Runtime::new();
+    let session = runtime
+        .insert(
+            "owner",
+            "connection".into(),
+            Selection {
+                route_id: "route".into(),
+                model_id: "model".into(),
+                revision: "1".into(),
+                options: Default::default(),
+            },
+            Box::new(DiagnosticFailureAgent),
+            Arc::new(|| Ok(())),
+        )
+        .unwrap();
+    runtime
+        .start("owner", &session.id, "hello".into(), "request".into())
+        .await
+        .unwrap();
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            if runtime.get("owner", &session.id).unwrap().state != SessionState::Running {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    let events = runtime.events("owner", Some(&session.id), None).unwrap();
+    let error = events["events"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|event| event["payload"]["type"] == "error")
+        .unwrap();
+    assert_eq!(error["payload"]["code"], "PROVIDER_UNAVAILABLE");
+    assert_eq!(
+        error["payload"]["message"],
+        "HTTP 401: Authorization: Bearer [REDACTED]"
+    );
+    assert!(!events.to_string().contains("private-token-value"));
 }
 #[tokio::test]
 async fn session_and_events_are_owner_scoped() {

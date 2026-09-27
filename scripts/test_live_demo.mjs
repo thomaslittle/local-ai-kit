@@ -5,8 +5,21 @@ import {mkdtemp,mkdir,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {chromium} from '@playwright/test';
+import {liveDemoExecutionArgs} from './live_demo_policy.mjs';
 const root=resolve(import.meta.dirname,'..');
 const binary=resolve(root,'target/debug',process.platform==='win32'?'local-ai-kit.exe':'local-ai-kit');
+test('live demo authorizes every supported provider in its isolated workspace without enabling paid use',()=>{
+ const args=liveDemoExecutionArgs('C:\demo\workspace');
+ for(const provider of ['codex','claude_code','opencode','ollama','lmstudio','openai_api','anthropic_api','gemini_api','xai_api','compatible_api'])assert.ok(args.includes(provider),provider);
+ assert.equal(args.includes('cursor'),false);
+ assert.equal(args.includes('--allow-paid-options'),false);
+ assert.equal(args.at(-1),'C:\demo\workspace');
+ assert.throws(()=>liveDemoExecutionArgs(''),/LIVE_DEMO_WORKSPACE_REQUIRED/);
+});
+test('registered ACP profiles join the live demo provider grant when configured',()=>{
+ const args=liveDemoExecutionArgs('/tmp/workspace',{nativeProfiles:true});
+ for(const provider of ['grok','gemini_cli','antigravity'])assert.ok(args.includes(provider));
+});
 async function setup(){
  const home=await mkdtemp(join(tmpdir(),'lai-browser-'));await mkdir(join(home,'.codex'));
  const child=spawn(binary,['serve','--http','--port','0','--home',home,'--assets',resolve(root,'apps/demo/dist'),'--allow-passive-discovery','--allow-metadata','codex'],{stdio:['ignore','pipe','pipe'],windowsHide:true});

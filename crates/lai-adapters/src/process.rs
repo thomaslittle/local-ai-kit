@@ -228,7 +228,18 @@ impl Peer {
             }
             match (message.get("result"), message.get("error")) {
                 (Some(result), None) => return Ok(result.clone()),
-                (None, Some(_)) => return Err(error(ErrorCode::ProviderUnavailable)),
+                (None, Some(response_error)) => {
+                    let detail = response_error["message"]
+                        .as_str()
+                        .filter(|message| !message.trim().is_empty())
+                        .map(lai_contracts::redact_diagnostic_detail)
+                        .filter(|message| !message.is_empty())
+                        .unwrap_or_else(|| "Codex app-server rejected the request".into());
+                    return Err(DomainError::new(
+                        ErrorCode::ProviderUnavailable,
+                        format!("Codex app-server: {detail}"),
+                    ));
+                }
                 _ => return Err(error(ErrorCode::ProtocolIncompatible)),
             }
         }

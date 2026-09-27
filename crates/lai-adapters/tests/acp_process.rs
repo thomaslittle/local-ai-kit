@@ -117,6 +117,42 @@ async fn foreign_session_cannot_inject_output() {
     );
 }
 #[tokio::test]
+async fn provider_error_message_reaches_diagnostics_with_secrets_redacted() {
+    let (runtime, session) = setup("prompt_error").await;
+    runtime
+        .start("owner", &session.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    finish(&runtime, &session).await;
+    let events = runtime.events("owner", Some(&session.id), None).unwrap();
+    let error = events["events"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|event| event["payload"]["type"] == "error")
+        .unwrap();
+    assert_eq!(error["payload"]["code"], "PROVIDER_UNAVAILABLE");
+    assert!(
+        error["payload"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("HTTP 401")
+    );
+    assert!(
+        error["payload"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("invalid account")
+    );
+    assert!(
+        error["payload"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("Bearer [REDACTED]")
+    );
+    assert!(!events.to_string().contains("private-peer-token"));
+}
+#[tokio::test]
 async fn native_cancel_completes_without_prompt_retry() {
     let (r, s) = setup("hang").await;
     let t = r

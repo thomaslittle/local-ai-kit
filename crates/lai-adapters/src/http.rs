@@ -48,18 +48,54 @@ fn retry_after(response: &Response) -> Option<u64> {
     let milliseconds = (at - chrono::Utc::now()).num_milliseconds();
     (milliseconds > 0).then_some((milliseconds as u64).min(86_400_000))
 }
-fn response_error(response: &Response) -> DomainError {
+async fn response_error(mut response: Response) -> DomainError {
+    const ERROR_BODY_LIMIT: usize = 8192;
+    let status = response.status();
     let code = match response.status().as_u16() {
         401 | 403 => ErrorCode::AuthRequired,
         404 => ErrorCode::NotFound,
         429 => ErrorCode::RateLimited,
         _ => ErrorCode::ProviderUnavailable,
     };
-    let mut error = error(code);
+    let retry = retry_after(&response);
+    let mut bytes = Vec::new();
+    while bytes.len() < ERROR_BODY_LIMIT {
+        match response.chunk().await {
+            Ok(Some(chunk)) => {
+                let remaining = ERROR_BODY_LIMIT - bytes.len();
+                bytes.extend_from_slice(&chunk[..chunk.len().min(remaining)]);
+            }
+            Ok(None) | Err(_) => break,
+        }
+    }
+    let body = serde_json::from_slice::<Value>(&bytes).ok();
+    let detail = body
+        .as_ref()
+        .and_then(|body| {
+            body["error"]["message"]
+                .as_str()
+                .or_else(|| body["message"].as_str())
+                .or_else(|| body["detail"].as_str())
+                .or_else(|| body["error_description"].as_str())
+                .or_else(|| body["error"].as_str())
+        })
+        .map(str::trim)
+        .filter(|detail| !detail.is_empty())
+        .map(redact_diagnostic_detail);
+    let message = detail.filter(|detail| !detail.is_empty()).map_or_else(
+        || {
+            format!(
+                "Provider HTTP request failed with status {}",
+                status.as_u16()
+            )
+        },
+        |detail| format!("HTTP {}: {detail}", status.as_u16()),
+    );
+    let mut error = DomainError::new(code, message);
     if matches!(error.code, ErrorCode::RateLimited) {
         error = error.retryable();
     }
-    if let Some(milliseconds) = retry_after(response) {
+    if let Some(milliseconds) = retry {
         error = error.with_retry_after_ms(milliseconds);
     }
     error
@@ -265,7 +301,7 @@ impl Endpoint {
             return Err(error(ErrorCode::IntegrationRestricted));
         }
         if !status.is_success() {
-            return Err(response_error(&response));
+            return Err(response_error(response).await);
         }
         Ok(response)
     }

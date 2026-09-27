@@ -2,7 +2,7 @@ import {el,button,badge,code,known,checkbox,empty,section,titleCase} from './ui.
 import {configuration} from './configuration.mjs';
 import {connectionAuthLabel} from './profile_auth.mjs';
 import {isLocalRuntimeProvider} from './catalog_visibility.mjs';
-import {variants,renderSelector} from './selectors.mjs';
+import {variants,renderSelector,reasonLabel} from './selectors.mjs';
 const compactIdentity=value=>{const text=String(value);return text.length>28?`${text.slice(0,25)}…`:text;};
 const authenticated=c=>known(c.auth)==='authenticated'&&c.auth.freshness==='fresh';
 const previouslyAuthenticated=c=>known(c.auth)==='authenticated'&&c.auth.freshness==='stale';
@@ -65,9 +65,17 @@ export function playgroundPage(ctx){
  const live=state.mode!=='synthetic';
  const executable=state.client?.handshake.methods.includes('turns.start');
  const busy=['Running','Awaiting approval','Starting'].includes(state.sessionStatus);
+ const providers=ctx.providers.filter(provider=>ctx.all.some(candidate=>candidate.route.providerId===provider.id));
+ const selectedCandidate=ctx.all.find(candidate=>candidate.route.id===state.selection?.routeId&&candidate.model.id===state.selection?.modelId);
+ const providerId=state.playgroundProviderId??selectedCandidate?.route.providerId??providers[0]?.id??'';
+ const providerCandidates=ctx.all.filter(candidate=>candidate.route.providerId===providerId);
+ const providerPicker=el('label',{class:'field'},el('span',{},'Provider'),el('select',{ 'aria-label':'Provider','data-focus':'playground-provider',value:providerId,onChange:event=>{state.playgroundProviderId=event.target.value;state.selection=null;state.sensitiveConsent=false;state.debugError=null;state.notice='';ctx.render();}},providers.map(provider=>el('option',{value:provider.id},provider.name))));
+ const modelPicker=el('label',{class:'field'},el('span',{},'Model'),el('select',{ 'aria-label':'Model','data-focus':'playground-model',value:selectedCandidate?.route.providerId===providerId?selectedCandidate.key:'',disabled:!providerCandidates.length,onChange:event=>{const candidate=providerCandidates.find(item=>item.key===event.target.value);if(candidate)ctx.select(candidate);}},el('option',{value:'',disabled:true},providerCandidates.length?'Choose a model and account':'No models reported for this provider'),providerCandidates.map(candidate=>el('option',{value:candidate.key},`${candidate.model.name} · ${candidate.connection.displayName}${candidate.eligible?'':` · needs attention: ${candidate.reasons.map(reasonLabel).join(', ')}`}`))));
  const controls=section('Session playground','Review the live session controls. Nothing runs until you select a route and authorize a turn.',
   el('div',{class:'notice'},live?'A live turn uses your selected account allowance. The host controls allowed workspaces and permissions; this demo requests read-only execution.':'Simulation only. The fixture service returns predetermined text; it does not call an AI provider.'),
   live&&!executable?el('p',{class:'notice'},'This runtime allows metadata checks only. Enable execution and approve a workspace in the host application before sending a prompt.'):null,
+  providerPicker,modelPicker,
+  selectedCandidate&&!selectedCandidate.eligible?el('p',{class:'notice warning','data-testid':'model-eligibility'},`This model is reported but needs attention before execution: ${selectedCandidate.reasons.map(reasonLabel).join(' · ')}`):null,
   el('label',{class:'field'},el('span',{},'Prompt'),el('textarea',{rows:4,'aria-label':'Prompt',value:state.prompt,disabled:busy,onInput:e=>{state.prompt=e.target.value;}})),
   checkbox(live?'Allow this live request to use the selected account':'Allow this simulated session',state.grantConsent,on=>{state.grantConsent=on;ctx.render();}),
   live?el('label',{class:'field'},'Host workspace name',el('input',{'aria-label':'Host workspace name',value:state.workspaceId,onInput:e=>{state.workspaceId=e.target.value;}})):checkbox('Simulate a tool approval',state.simulateApproval,on=>{state.simulateApproval=on;ctx.render();}),
@@ -82,6 +90,7 @@ export function playgroundPage(ctx){
  const output=section('Stream output',null,
   el('div',{id:'session-status',class:'session-status',role:'status','aria-live':'polite'},state.sessionStatus),
   el('pre',{id:'response-text',class:'response'},state.output||'Output appears only after you explicitly start a turn.'),approval,
+  state.debugError?el('section',{class:'debug-box','data-testid':'turn-debug','aria-label':'Provider error debug details'},el('div',{class:'debug-heading'},el('h3',{},'Provider error details'),badge(state.debugError.code,'warning')),el('pre',{class:'debug-detail'},state.debugError.message),el('p',{class:'fine-print'},'Credential and session-token fields are redacted.')):null,
   el('div',{class:'actions'},state.events.filter(e=>e.sessionId===state.sessionId&&e.payload.type==='artifact').map(e=>button('Download result ('+e.payload.size+' bytes)',()=>ctx.downloadArtifact(e),{disabled:!state.client?.handshake.methods.includes('artifacts.read')}))));
  const timeline=section('Event timeline',`${state.events.length} recent events; bounded to 100.`,
   el('div',{class:'timeline'},state.events.slice(-12).reverse().map(e=>el('div',{class:'event-row'},

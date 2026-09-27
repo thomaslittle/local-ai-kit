@@ -212,10 +212,34 @@ impl CodexAgent {
                     return match p["turn"]["status"].as_str() {
                         Some("completed") => Ok(()),
                         Some("interrupted") => Err(failure(ErrorCode::Cancelled)),
-                        _ => Err(failure(ErrorCode::ProviderUnavailable)),
+                        _ => {
+                            let detail = p["turn"]["error"]["message"]
+                                .as_str()
+                                .or_else(|| p["turn"]["error"].as_str())
+                                .filter(|message| !message.trim().is_empty())
+                                .map(redact_diagnostic_detail)
+                                .filter(|message| !message.is_empty())
+                                .unwrap_or_else(|| "Codex app-server turn did not complete".into());
+                            Err(DomainError::new(
+                                ErrorCode::ProviderUnavailable,
+                                format!("Codex app-server turn: {detail}"),
+                            ))
+                        }
                     };
                 }
-                "error" => return Err(failure(ErrorCode::ProviderUnavailable)),
+                "error" => {
+                    let detail = p["error"]["message"]
+                        .as_str()
+                        .or_else(|| p["message"].as_str())
+                        .filter(|message| !message.trim().is_empty())
+                        .map(redact_diagnostic_detail)
+                        .filter(|message| !message.is_empty())
+                        .unwrap_or_else(|| "Codex app-server reported a turn error".into());
+                    return Err(DomainError::new(
+                        ErrorCode::ProviderUnavailable,
+                        format!("Codex app-server turn: {detail}"),
+                    ));
+                }
                 _ => {}
             }
         }

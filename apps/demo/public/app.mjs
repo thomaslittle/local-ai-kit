@@ -2,7 +2,7 @@ import {createCatalog,resolveCandidates,reconcileSelection} from '/modules/selec
 import {readArtifactBytes,readCatalogSnapshot} from '/modules/sdk/index.js';
 import {el,button,badge} from './ui.mjs';
 import {renderPage} from './pages.mjs';
-import {userFacingError} from './errors.mjs';
+import {debugSessionError,userFacingError,userFacingSessionError} from './errors.mjs';
 import {filterLiveCatalog} from './catalog_visibility.mjs';
 import {openPalette,openConnectionDialog} from './dialogs.mjs';
 const pages=[['Overview','◎'],['Connections','⌘'],['Models','◈'],['Usage','◴'],['Selector lab','▥'],['Playground','▷'],['Diagnostics','⌁']];
@@ -20,7 +20,7 @@ const descriptions={
 export async function mountDemo({connectFixture,connectLive,initialClient=null,initialMode='synthetic'}){
  const root=document.querySelector('#app')??document.body;
  const state={page:'Selector lab',variant:'rail',mode:initialMode,snapshot:null,selection:null,provider:'codex',query:'',required:new Set(),onlyEligible:false,allowPaid:false,favorites:new Set(),sensitiveConsent:false,
-  mobileStep:0,mobileProvider:'codex',mobileConnection:null,client:null,events:[],sessionId:null,nativeResumption:false,resumeToken:null,turnId:null,sessionStatus:'Ready',output:'',approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,probeResults:{},metadataBatch:null,prompt:'',notice:'',connectionError:null,diagnostics:null,detectedExpanded:true};
+  mobileStep:0,mobileProvider:'codex',mobileConnection:null,playgroundProviderId:null,client:null,events:[],sessionId:null,nativeResumption:false,resumeToken:null,turnId:null,sessionStatus:'Ready',output:'',debugError:null,approval:null,grantConsent:false,simulateApproval:false,workspaceId:'default',probing:null,probeResults:{},metadataBatch:null,prompt:'',notice:'',connectionError:null,diagnostics:null,detectedExpanded:true};
  let catalog=null,all=[],epoch=0,eventController=null,closed=false;
  let sessionContext=null;
  const ctx={state,get catalog(){return catalog;},get all(){return all;},get candidates(){return catalog?resolveCandidates(catalog,{query:state.query,requiredCapabilities:[...state.required],eligibleOnly:state.onlyEligible,allowPaidFallback:state.allowPaid}):[];},get providers(){return state.snapshot?.providers??[];},get connections(){return state.snapshot?.connections??[];},render,select,startTurn,cancelTurn,suspendSession,resumeSession,answerApproval,refreshDiagnostics,scan,probeConnection,probeAllConnections,revokeConnection,downloadArtifact,connectLive:attachLive,openPalette:()=>openPalette(ctx)};
@@ -32,14 +32,16 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
   catalog=createCatalog(visible);state.snapshot=visible;
   all=resolveCandidates(catalog,{allowPaidFallback:state.allowPaid});
   if(state.selection){const reconciled=reconcileSelection(catalog,state.selection);state.selection=reconciled.selection;if(reconciled.needsReview)state.notice='The catalog changed. Review the updated selection before use.';}
-  if(!state.selection){const first=all.find(c=>c.eligible);if(first)state.selection={routeId:first.route.id,modelId:first.model.id,revision:first.model.revision,options:{}};}
+  const selected=all.find(c=>c.route.id===state.selection?.routeId&&c.model.id===state.selection?.modelId);
+  if(selected)state.playgroundProviderId=selected.route.providerId;
+  if(!state.selection){const first=all.find(c=>c.eligible)??all[0];if(first){state.selection={routeId:first.route.id,modelId:first.model.id,revision:first.model.revision,options:{}};state.playgroundProviderId=first.route.providerId;}}
  }
  function select(candidate){
   state.selection={routeId:candidate.route.id,modelId:candidate.model.id,revision:candidate.model.revision,options:{}};
-  state.sensitiveConsent=false;state.notice='';render();
+  state.playgroundProviderId=candidate.route.providerId;state.sensitiveConsent=false;state.debugError=null;state.notice='';render();
  }
  function safeError(error){return userFacingError(error);}
- async function operate(action){try{await action();}catch(error){state.notice=safeError(error);render();}}
+ async function operate(action,includeDebug=false){try{await action();}catch(error){state.notice=safeError(error);if(includeDebug)state.debugError=debugSessionError(error);render();}}
  async function stopClient(){eventController?.abort();eventController=null;const client=state.client;state.client=null;if(client)await client.close();}
  async function observe(client,currentEpoch){
   const controller=new AbortController();eventController=controller;
@@ -54,7 +56,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
      if(payload.type==='approval_request'){state.approval=payload;state.sessionStatus='Awaiting approval';}
      if(payload.type==='approval_resolved')state.approval=null;
      if(payload.type==='final'){state.sessionStatus=payload.status==='cancelled'?'Cancelled':payload.status==='denied'?'Denied':payload.status==='completed'?'Completed':'Error';state.approval=null;}
-     if(payload.type==='error'){state.sessionStatus='Error';state.notice='The session reported an error.';}
+     if(payload.type==='error'){state.sessionStatus='Error';state.notice=userFacingSessionError(payload);state.debugError=debugSessionError(payload);}
     }
     render();
    }
@@ -64,7 +66,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
   const current=++epoch;await stopClient();
   sessionContext=null;
   state.probing=null;state.probeResults={};state.metadataBatch=null;
-  state.mode=mode;state.snapshot=null;catalog=null;all=[];state.selection=null;state.connectionError=null;state.events=[];state.sessionId=null;state.nativeResumption=false;state.resumeToken=null;state.turnId=null;state.sessionStatus='Ready';state.output='';state.approval=null;state.diagnostics=null;state.notice='';state.favorites.clear();state.grantConsent=false;render();
+  state.mode=mode;state.snapshot=null;catalog=null;all=[];state.selection=null;state.playgroundProviderId=null;state.connectionError=null;state.events=[];state.sessionId=null;state.nativeResumption=false;state.resumeToken=null;state.turnId=null;state.sessionStatus='Ready';state.output='';state.debugError=null;state.approval=null;state.diagnostics=null;state.notice='';state.favorites.clear();state.grantConsent=false;render();
   let client;
   try{
    client=await factory();if(closed||epoch!==current){await client.close();return;}
@@ -84,9 +86,9 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
   if(!state.grantConsent||!state.selection||!state.client||['Starting','Running','Awaiting approval'].includes(state.sessionStatus))return;
   const client=state.client,current=epoch,selection=structuredClone(state.selection),previousStatus=state.sessionStatus;
   const context=JSON.stringify({selection,workspaceId:state.workspaceId,allowPaid:state.allowPaid,mode:state.mode});
-  state.sessionStatus='Starting';state.output='';state.approval=null;state.notice='';render();
+  state.sessionStatus='Starting';state.output='';state.debugError=null;state.approval=null;state.notice='';render();
   await operate(async()=>{
-   const model=all.find(c=>c.model.id===selection.modelId);if(!model)throw Error('SELECTION_STALE');
+   const model=all.find(c=>c.route.id===selection.routeId&&c.model.id===selection.modelId);if(!model)throw Error('SELECTION_STALE');
    const reuse=state.sessionId&&sessionContext===context&&['Ready','Completed'].includes(previousStatus);
    let session;
    if(reuse)session=await client.sessions.get({sessionId:state.sessionId});
@@ -99,7 +101,7 @@ export async function mountDemo({connectFixture,connectLive,initialClient=null,i
    if(epoch!==current)return;state.sessionId=session.id;state.nativeResumption=Boolean(session.nativeResumption);state.resumeToken=null;state.turnId=null;state.sessionStatus='Running';render();
    const turn=await client.turns.start({sessionId:session.id,prompt:state.prompt,...(state.mode==='synthetic'?{simulateApproval:state.simulateApproval}:{requestId:crypto.randomUUID()})});
    if(epoch!==current)return;state.turnId=turn.turnId;render();
-  });
+  },true);
   if(state.notice&&epoch===current){state.sessionStatus='Error';render();}
  }
  async function downloadArtifact(event){

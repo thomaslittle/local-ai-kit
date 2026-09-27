@@ -8,7 +8,7 @@ globalThis.mountTestApp=async(options={})=>{
  const snapshot=fixtureSnapshot();
  if(options.maliciousLabel)snapshot.models[0].name='<img src=x onerror="globalThis.__unsafeExecuted=true">';
  if(options.largeCatalog){const models=snapshot.models;snapshot.models=Array.from({length:5000},(_,i)=>({...models[i%models.length],id:'huge-'+i,name:'Catalog Model '+i,nativeId:'fixture/huge-'+i}));}
- const connectFixture=async()=>createLocalAI({transport:fixtureTransport(createFixtureService({snapshot}))});
+ const connectFixture=async()=>createLocalAI({transport:fixtureTransport(createFixtureService({snapshot,turnError:options.turnError??null}))});
  let initialClient=null;
  if(options.nativeResumption){
   globalThis.testNativeCalls=[];
