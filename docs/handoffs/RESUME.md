@@ -41,7 +41,9 @@ The opt-in local metadata watcher is wired through `discovery.watch`, the public
 
 Windows qualification and native Ubuntu execution are separate records. GitHub Actions has been failing before any job steps run; a workflow matrix is not macOS evidence. Tauri currently has an integration guide and compiled embedded-Rust pattern, not a separately qualified Tauri application.
 
-No registry publication, OS signing, main-branch merge, paid inference, additional coding agents, token export, account cycling, or unrelated client configuration changes are authorized by these implementation tests. Preserve those boundaries while completing any remaining work.
+**2026-09-27 — owner authorization:** the repository owner authorized merging this branch into `main` and publishing a GitHub prerelease (`v0.1.0-alpha.1`) with SHA-256-checksummed, unsigned bundle assets so Crntly can install a pinned helper. That release was built from a clean commit on this branch; see its release notes for exactly what was re-verified (no .NET SDK was available, so the C# integration step of `--profile release` did not run). Registry publication and signing remain unperformed.
+
+No registry publication, OS signing, paid inference, additional coding agents, token export, account cycling, or unrelated client configuration changes are authorized by these implementation tests. Preserve those boundaries while completing any remaining work.
 
 ## Historical clean-build qualification — source 991ec2b
 
