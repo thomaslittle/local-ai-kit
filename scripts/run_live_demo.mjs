@@ -1,7 +1,7 @@
 import {spawn,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {randomBytes} from 'node:crypto';
-import {access,copyFile,mkdtemp,rm,writeFile} from 'node:fs/promises';
+import {access,copyFile,mkdir,mkdtemp,rm,writeFile} from 'node:fs/promises';
 import {createServer} from 'node:net';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
@@ -9,7 +9,15 @@ import {buildOpenCodeRegistration,verifyOpenCodeAuthentication} from './live_dem
 
 const assets=resolve('apps/demo/dist');
 const metadataProviders=['codex','claude_code','grok','gemini_cli','antigravity','opencode','ollama','lmstudio','cursor'];
+const demoFlags=process.argv.slice(2);
+const allowCodexExecution=demoFlags.length===1&&demoFlags[0]==='--allow-codex-execution';
+if(demoFlags.length&&!allowCodexExecution){
+ console.error('Usage: npm run demo [-- --allow-codex-execution]');
+ process.exit(2);
+}
 const temp=await mkdtemp(join(tmpdir(),'local-ai-kit-live-'));
+const workspace=allowCodexExecution?join(temp,'workspace'):undefined;
+if(workspace)await mkdir(workspace);
 const endpointFile=join(temp,'endpoints.json');
 let opencode,helper,closing=false;
 
@@ -69,8 +77,10 @@ const env=registration?{...process.env,...registration.environment}:{...process.
 const args=[
  'serve','--http','--port','4499','--assets',assets,'--allow-passive-discovery',
  ...metadataProviders.flatMap(provider=>['--allow-metadata',provider]),
+ ...(allowCodexExecution?['--allow-codex-execution','--workspace',workspace]:[]),
  ...(registration?['--endpoints',endpointFile]:[]),
 ];
+if(allowCodexExecution)console.log('Codex live turns are enabled in an isolated temporary workspace. No turn starts until you authorize and explicitly run one in the browser.');
 helper=spawn(helperPath,args,{stdio:'inherit',windowsHide:true,env});
 helper.once('error',error=>{console.error(`Unable to start the native helper: ${error.message}`);process.exitCode=1;void close();});
 helper.once('exit',async(code,signal)=>{await close();process.exitCode=signal?1:code??1;});

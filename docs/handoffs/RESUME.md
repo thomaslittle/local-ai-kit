@@ -2,6 +2,8 @@
 
 Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 
+The live playground keeps prompt drafting available even when the helper grants metadata only. The default `npm run demo` remains metadata-only; `npm run demo -- --allow-codex-execution` opts into Codex turns in an empty temporary workspace with read-only execution. A turn still requires explicit account-use consent and a user click. The September 27 UI profile passed after this change. No inference was sent during this follow-up.
+
 ## Current implementation
 
 Clean implementation source: `0c8213842be5b72ea7614b51028a24912b1bdabd`. Windows and Ubuntu/WSL2 passed both `verify.py --profile all` and `--profile release`, including clean package consumers, C# native HTTP, strict lint, adapter conformance, and new distribution benchmarks. Rust totals: 349 Windows / 351 Linux, zero failed or ignored. Each platform passed TypeScript SDK 63, Python SDK 26, selectors 28, React 13, browser 14, and accessibility 32. See the [current readiness report](../qualification/2026-09-27-readiness.md) and its machine-readable evidence. A later report-only commit does not change the recorded binary source SHA.

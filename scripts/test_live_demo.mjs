@@ -69,7 +69,11 @@ test('live selector empty states are useful and stay inside the viewport',async(
    }
   }
   await app.page.getByRole('button',{name:'Playground',exact:true}).click();
-  assert.equal(await app.page.getByLabel('Prompt').inputValue(),'');
+  const prompt=app.page.getByLabel('Prompt');
+  assert.equal(await prompt.inputValue(),'');
+  assert.equal(await prompt.isDisabled(),false);
+  await prompt.fill('Draft a scene concept');
+  assert.equal(await prompt.inputValue(),'Draft a scene concept');
   assert.equal(await app.page.getByRole('button',{name:'Run live turn'}).isDisabled(),true);
   assert.equal(app.errors.length,0,app.errors.join('\n'));
  }finally{await app.close();}

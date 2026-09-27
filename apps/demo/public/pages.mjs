@@ -68,7 +68,7 @@ export function playgroundPage(ctx){
  const controls=section('Session playground','Review the live session controls. Nothing runs until you select a route and authorize a turn.',
   el('div',{class:'notice'},live?'A live turn uses your selected account allowance. The host controls allowed workspaces and permissions; this demo requests read-only execution.':'Simulation only. The fixture service returns predetermined text; it does not call an AI provider.'),
   live&&!executable?el('p',{class:'notice'},'This runtime allows metadata checks only. Enable execution and approve a workspace in the host application before sending a prompt.'):null,
-  el('label',{class:'field'},el('span',{},'Prompt'),el('textarea',{rows:4,'aria-label':'Prompt',value:state.prompt,disabled:busy||!executable,onInput:e=>{state.prompt=e.target.value;}})),
+  el('label',{class:'field'},el('span',{},'Prompt'),el('textarea',{rows:4,'aria-label':'Prompt',value:state.prompt,disabled:busy,onInput:e=>{state.prompt=e.target.value;}})),
   checkbox(live?'Allow this live request to use the selected account':'Allow this simulated session',state.grantConsent,on=>{state.grantConsent=on;ctx.render();}),
   live?el('label',{class:'field'},'Host workspace name',el('input',{'aria-label':'Host workspace name',value:state.workspaceId,onInput:e=>{state.workspaceId=e.target.value;}})):checkbox('Simulate a tool approval',state.simulateApproval,on=>{state.simulateApproval=on;ctx.render();}),
   el('div',{class:'actions'},
