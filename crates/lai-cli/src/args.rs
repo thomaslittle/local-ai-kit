@@ -13,6 +13,7 @@ pub struct Args {
     pub home: Option<PathBuf>,
     pub endpoints: Option<PathBuf>,
     pub native_profiles: Option<PathBuf>,
+    pub billing_declarations: Option<PathBuf>,
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
     pub http: bool,
@@ -66,6 +67,7 @@ impl Args {
             home: None,
             endpoints: None,
             native_profiles: None,
+            billing_declarations: None,
             allow_passive: false,
             allow_codex_metadata: false,
             http: false,
@@ -99,6 +101,9 @@ impl Args {
                 }
                 "--native-profiles" if matches!(args.action, Action::Serve | Action::Scan) => {
                     args.native_profiles = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--billing-declarations" if matches!(args.action, Action::Serve | Action::Scan) => {
+                    args.billing_declarations = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
                 "--stdio" if matches!(args.action, Action::Serve) => stdio = true,
                 "--http" if matches!(args.action, Action::Serve) => args.http = true,
@@ -193,7 +198,9 @@ impl Args {
             .iter()
             .any(|p| ["gemini_cli", "antigravity", "grok"].contains(&p.as_str()));
         if (!args.http && (args.assets.is_some() || seen.contains("--port")))
-            || (native_execution && args.native_profiles.is_none())
+            || (native_execution
+                && args.native_profiles.is_none()
+                && args.billing_declarations.is_none())
             || (args.allow_execution
                 && (args.workspace.is_none()
                     || !args.execution_providers.is_subset(&args.metadata_providers)))
@@ -325,6 +332,43 @@ mod additional_provider_tests {
         assert_eq!(
             args.native_profiles.as_deref(),
             Some(std::path::Path::new(config))
+        );
+    }
+    #[test]
+    fn billing_declarations_allow_declared_grok_execution_without_native_profiles() {
+        let workspace = std::env::temp_dir();
+        let value = workspace.to_str().unwrap();
+        let config = workspace.join("billing-declarations.json");
+        let parse = |declarations: bool| {
+            let mut list = vec!["serve", "--stdio"];
+            if declarations {
+                list.extend(["--billing-declarations", config.to_str().unwrap()]);
+            }
+            list.extend([
+                "--allow-metadata",
+                "grok",
+                "--allow-execution",
+                "grok",
+                "--workspace",
+                value,
+            ]);
+            Args::parse(list.into_iter().map(OsString::from))
+        };
+        assert!(parse(false).is_err());
+        let args = parse(true).unwrap();
+        assert_eq!(args.billing_declarations.as_deref(), Some(config.as_path()));
+        assert!(
+            Args::parse(
+                [
+                    "serve",
+                    "--stdio",
+                    "--billing-declarations",
+                    "relative.json"
+                ]
+                .into_iter()
+                .map(OsString::from)
+            )
+            .is_err()
         );
     }
 }

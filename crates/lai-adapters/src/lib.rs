@@ -1,4 +1,5 @@
 //! Provider integrations. Importing this crate performs no I/O.
+pub mod billing_declarations;
 pub mod claude;
 pub mod codex;
 pub mod execution;

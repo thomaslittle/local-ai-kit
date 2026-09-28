@@ -1,6 +1,6 @@
 use crate::args::{Action, Args};
 use lai_core::ClientPolicy;
-pub use lai_kit::build_service_with_registries;
+pub use lai_kit::build_service_with_declarations;
 use lai_service::ExecutionGrant;
 use std::collections::BTreeMap;
 pub fn policy(args: &Args) -> ClientPolicy {

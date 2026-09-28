@@ -62,6 +62,14 @@ Native subscription-style integrations are explicit. A host-owned JSON file name
 
 Start the helper with `--native-profiles ABSOLUTE_JSON --allow-metadata grok` to inspect the registered native catalog. Text sessions additionally require `--allow-execution grok --workspace ABSOLUTE_DIRECTORY`. The installed client owns authentication; the toolkit sends no copied token/API key. Billing in this example is a host declaration and remains labeled user-supplied evidence.
 
+For connections that were discovered rather than registered (for example a default Grok install or a managed OpenCode server), whose provider leaves billing unknown, a host may pass `--billing-declarations ABSOLUTE_JSON`:
+
+```json
+{ "declarations": [{ "connectionId": "connection_...", "providerId": "grok", "billing": "subscription" }] }
+```
+
+A declaration only fills billing that is still unknown after a probe (including OpenCode gateway sub-routes), never replaces reported billing, must name the provider actually discovered on that connection, and is recorded as `userSupplied` evidence. `unknown`/`mixed` are rejected, as is `local` for account clients (Gemini CLI, Antigravity, Grok). A declared, discovered default-profile Grok may run text-only sessions; undeclared unknown billing stays refused, and metered/credit billing still requires paid consent.
+
 ## Use the packages
 
 Building a prompt-driven application? Start with the [desktop app integration flow](docs/integration/prompt-app.md) for provider/model selection, grants, streaming, follow-up turns, and scene-output validation.

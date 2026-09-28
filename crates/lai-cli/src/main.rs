@@ -25,6 +25,7 @@ Usage:
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
   --native-profiles ABSOLUTE_JSON explicitly registers Gemini CLI, Antigravity ACP, or Grok native profiles; the file contains paths/labels, never tokens.
+  --billing-declarations ABSOLUTE_JSON declares billing for discovered connections whose provider leaves it unknown; recorded as user-supplied evidence, never verification.
   local-ai-kit --version
 
 Serving never scans on startup. --allow-passive-discovery explicitly authorizes
@@ -46,6 +47,9 @@ async fn execute(args: Args) -> Result<()> {
     let mut native = native_profiles::load(args.native_profiles.as_deref())?;
     native.browser_blocker = native_profiles::packaged_browser_blocker();
     let native = Arc::new(native);
+    let declarations = Arc::new(native_profiles::load_declarations(
+        args.billing_declarations.as_deref(),
+    )?);
     let original = source(args.home.clone());
     let scan_registry = registry.clone();
     let scan_native = native.clone();
@@ -55,8 +59,13 @@ async fn execute(args: Args) -> Result<()> {
         scan_native.inject(&mut result);
         Ok(result)
     });
-    let service =
-        host::build_service_with_registries(inventory, args.allow_execution, registry, native);
+    let service = host::build_service_with_declarations(
+        inventory,
+        args.allow_execution,
+        registry,
+        native,
+        declarations,
+    );
     let policy = host::policy(&args);
     let grant = host::execution_grant(&args);
     match args.action {

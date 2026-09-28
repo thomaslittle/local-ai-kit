@@ -2,6 +2,7 @@
 //! Construction is inert. Scanning, account probes, and execution are explicit and separately granted.
 mod adapter_info;
 mod service_builder;
+pub use lai_adapters::billing_declarations::BillingDeclarations;
 pub use lai_adapters::http_provider::config::Registry as EndpointRegistry;
 pub use lai_adapters::native_clients::config::NativeRegistry as NativeClientRegistry;
 pub use lai_contracts::*;
@@ -11,7 +12,9 @@ use lai_platform::NativeFilesystem;
 pub use lai_service::{ExecutionGrant, InventorySource, NativeService};
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
-pub use service_builder::{build_service_with_endpoints, build_service_with_registries};
+pub use service_builder::{
+    build_service_with_declarations, build_service_with_endpoints, build_service_with_registries,
+};
 use std::{
     path::PathBuf,
     sync::{

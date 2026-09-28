@@ -1,5 +1,7 @@
 //! Explicit host-owned native-client registration. The file contains paths and labels, never tokens.
-use lai_adapters::native_clients::config::NativeRegistry;
+use lai_adapters::{
+    billing_declarations::BillingDeclarations, native_clients::config::NativeRegistry,
+};
 use lai_contracts::*;
 use std::{
     io::Read,
@@ -9,6 +11,18 @@ pub fn load(path: Option<&Path>) -> Result<NativeRegistry> {
     let Some(path) = path else {
         return Ok(NativeRegistry::default());
     };
+    let text = read_bounded(path)?;
+    let scope = stable_id("native-profile-source", &[&path.to_string_lossy()]);
+    NativeRegistry::parse(&text, &scope)
+}
+/// Host billing declarations (`--billing-declarations`); user-supplied evidence only.
+pub fn load_declarations(path: Option<&Path>) -> Result<BillingDeclarations> {
+    let Some(path) = path else {
+        return Ok(BillingDeclarations::default());
+    };
+    BillingDeclarations::parse(&read_bounded(path)?)
+}
+fn read_bounded(path: &Path) -> Result<String> {
     let file = std::fs::File::open(path).map_err(|_| invalid())?;
     if !file.metadata().map_err(|_| invalid())?.is_file() {
         return Err(invalid());
@@ -20,9 +34,7 @@ pub fn load(path: Option<&Path>) -> Result<NativeRegistry> {
     if bytes.len() > 65536 {
         return Err(invalid());
     }
-    let text = std::str::from_utf8(&bytes).map_err(|_| invalid())?;
-    let scope = stable_id("native-profile-source", &[&path.to_string_lossy()]);
-    NativeRegistry::parse(text, &scope)
+    String::from_utf8(bytes).map_err(|_| invalid())
 }
 pub fn packaged_browser_blocker() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;

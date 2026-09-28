@@ -34,7 +34,8 @@ fn invalid() -> DomainError {
         "Grok requires its supported native executable and default local profile",
     )
 }
-fn native(located: &LocatedClient) -> Result<PathBuf> {
+/// The supported Grok executable for the default local profile, or an error.
+pub fn supported_executable(located: &LocatedClient) -> Result<PathBuf> {
     let home = std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
         .map(PathBuf::from)
         .ok_or_else(invalid)?;
@@ -56,7 +57,7 @@ pub async fn probe(
     connection: String,
     route: String,
 ) -> Result<ConnectionMetadata> {
-    let executable = native(&located)?;
+    let executable = supported_executable(&located)?;
     let temp = tempfile::tempdir().map_err(|_| invalid())?;
     let output = capture(
         LaunchSpec {

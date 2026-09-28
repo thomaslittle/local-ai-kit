@@ -61,10 +61,13 @@ fn run() -> Result<()> {
     let mut native = native_profiles::load(args.native_profiles.as_deref())?;
     native.browser_blocker = native_profiles::packaged_browser_blocker();
     let native = std::sync::Arc::new(native);
+    let declarations = std::sync::Arc::new(native_profiles::load_declarations(
+        args.billing_declarations.as_deref(),
+    )?);
     let base = inventory::source(args.home.clone());
     let entries = registry.clone();
     let native_entries = native.clone();
-    let service = host::build_service_with_registries(
+    let service = host::build_service_with_declarations(
         std::sync::Arc::new(move |cancel| {
             let mut scan = base(cancel)?;
             entries.inject(&mut scan);
@@ -74,6 +77,7 @@ fn run() -> Result<()> {
         args.allow_execution,
         registry,
         native,
+        declarations,
     );
     let client = stable_id("extension", &[&origin]);
     service.register_client(&client, host::policy(&args))?;
