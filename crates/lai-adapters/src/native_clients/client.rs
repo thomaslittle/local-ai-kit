@@ -1,5 +1,5 @@
 use super::{
-    config::NativeProfile,
+    config::{NativeProfile, NativeProvider},
     launch::{prepare, prepare_execution},
 };
 use crate::acp::{
@@ -78,6 +78,28 @@ pub async fn probe(
     result
 }
 
+/// Whether the kit can launch this client with every native tool removed.
+///
+/// Grok accepts `--tools=` (no built-in tools), `--disable-web-search`,
+/// `--no-subagents` and `--permission-mode=dontAsk`. Gemini CLI and the
+/// Antigravity ACP server have no launch flag that removes their built-in
+/// tools: read-only tools (file read, glob, grep, search) run inside the
+/// client without an ACP permission request, so a text-only session cannot be
+/// guaranteed. Those clients are refused for text-only execution rather than
+/// silently allowed to use tools; a host may still open a reviewed session
+/// where write/exec requests are mediated one at a time.
+pub fn text_only_capable(provider: NativeProvider) -> bool {
+    matches!(provider, NativeProvider::Grok)
+}
+fn text_only_refused(provider: NativeProvider) -> DomainError {
+    DomainError::new(
+        ErrorCode::IntegrationRestricted,
+        format!(
+            "{} cannot disable its built-in tools; text-only sessions are refused",
+            provider.id()
+        ),
+    )
+}
 pub struct NativeOpen {
     pub route: String,
     pub model: Model,
@@ -126,6 +148,9 @@ async fn open_internal(
             ErrorCode::InvalidRequest,
             "Native profile no longer matches discovered client",
         ));
+    }
+    if !request.review && !text_only_capable(profile.provider) {
+        return Err(text_only_refused(profile.provider));
     }
     let prepared = prepare_execution(profile, workspace, browser)?;
     let auth = prepared.auth_method.clone();

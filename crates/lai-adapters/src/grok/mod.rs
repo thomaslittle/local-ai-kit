@@ -88,15 +88,16 @@ pub async fn probe(
     }
     let spec = LaunchSpec {
         executable,
-        args: vec![
-            "--tools=".into(),
-            "--permission-mode=dontAsk".into(),
-            "--no-subagents".into(),
-            "--leader-socket".into(),
-            temp.path().join("leader.sock").into(),
-            "agent".into(),
-            "stdio".into(),
-        ],
+        args: crate::native_clients::launch::GROK_TEXT_ONLY_ARGS
+            .iter()
+            .map(std::ffi::OsString::from)
+            .chain([
+                "--leader-socket".into(),
+                temp.path().join("leader.sock").into(),
+                "agent".into(),
+                "stdio".into(),
+            ])
+            .collect(),
         cwd: temp.path().into(),
         env: BTreeMap::new(),
     };

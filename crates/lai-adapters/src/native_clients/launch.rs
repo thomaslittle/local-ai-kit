@@ -7,6 +7,13 @@ use std::{
     io::Read,
     path::{Path, PathBuf},
 };
+/// Grok flags that remove every native tool for text-only sessions.
+pub const GROK_TEXT_ONLY_ARGS: [&str; 4] = [
+    "--tools=",
+    "--disable-web-search",
+    "--permission-mode=dontAsk",
+    "--no-subagents",
+];
 pub struct PreparedLaunch {
     pub spec: LaunchSpec,
     pub scratch: tempfile::TempDir,
@@ -144,20 +151,19 @@ pub fn prepare(
     workspace: &Path,
     browser: Option<&Path>,
 ) -> Result<PreparedLaunch> {
-    prepare_for(profile, workspace, browser, false)
+    prepare_for(profile, workspace, browser)
 }
 pub fn prepare_execution(
     profile: &NativeProfile,
     workspace: &Path,
     browser: Option<&Path>,
 ) -> Result<PreparedLaunch> {
-    prepare_for(profile, workspace, browser, true)
+    prepare_for(profile, workspace, browser)
 }
 fn prepare_for(
     profile: &NativeProfile,
     workspace: &Path,
     browser: Option<&Path>,
-    execute: bool,
 ) -> Result<PreparedLaunch> {
     if !local_path(&profile.executable)
         || !local_path(&profile.profile_home)
@@ -258,13 +264,11 @@ fn prepare_for(
                 "--leader-socket".into(),
                 scratch.path().join("leader.sock").into_os_string(),
             ];
-            if !execute {
-                args.extend([
-                    "--tools=".into(),
-                    "--permission-mode=dontAsk".into(),
-                    "--no-subagents".into(),
-                ]);
-            }
+            // Metadata probes and text sessions alike run with no built-in tools,
+            // no web search/fetch, no subagents, and a deny-by-default
+            // permission mode. Host design tools are executed by the host from
+            // the model's text; Grok's own tools must never run.
+            args.extend(GROK_TEXT_ONLY_ARGS.iter().map(OsString::from));
             args.extend(["agent".into(), "stdio".into()]);
             (profile.executable.clone(), args)
         }

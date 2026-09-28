@@ -45,6 +45,9 @@ for line in sys.stdin:
   if mode=='hang':continue
   if mode=='prompt_error':out({'id':i,'error':{'code':-32001,'message':'HTTP 401: invalid account; Authorization: Bearer private-peer-token'}});continue
   if mode=='permission':out({'id':'permission-id','method':'session/request_permission','params':{'sessionId':session,'toolCall':{'toolCallId':'tool-1','title':'Read fixture'},'options':[{'optionId':'yes','name':'Allow once','kind':'allow_once'},{'optionId':'no','name':'Reject once','kind':'reject_once'}]}})
+  elif mode=='tool':
+   update('tool_call',toolCallId='tool-1',title='Read secret-file-sentinel',status='in_progress')
+   update('agent_message_chunk',content={'type':'text','text':'tool-output-sentinel'});answer(i,{'stopReason':'end_turn'})
   elif mode=='fs':out({'id':'fs-id','method':'fs/read_text_file','params':{'sessionId':session,'path':'private-sentinel'}})
   elif mode=='changed':
    options[0]['currentValue']='native-y';update('config_option_update',configOptions=options);answer(i,{'stopReason':'end_turn'})

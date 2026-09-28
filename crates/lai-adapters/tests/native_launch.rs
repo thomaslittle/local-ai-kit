@@ -128,3 +128,66 @@ fn grok_custom_profile_is_not_silently_replaced_with_another_account() {
         ErrorCode::IntegrationRestricted
     );
 }
+#[test]
+fn grok_sessions_launch_without_any_native_tool() {
+    use lai_adapters::native_clients::launch::GROK_TEXT_ONLY_ARGS;
+    for flag in [
+        "--tools=",
+        "--disable-web-search",
+        "--permission-mode=dontAsk",
+        "--no-subagents",
+    ] {
+        assert!(GROK_TEXT_ONLY_ARGS.contains(&flag), "{flag}");
+    }
+    assert!(
+        !GROK_TEXT_ONLY_ARGS
+            .iter()
+            .any(|a| a.contains("always-approve"))
+    );
+}
+#[tokio::test]
+async fn clients_that_cannot_remove_their_tools_refuse_text_only_sessions() {
+    use lai_adapters::native_clients::client::{NativeOpen, open, text_only_capable};
+    assert!(text_only_capable(NativeProvider::Grok));
+    for (provider, exe) in [
+        (NativeProvider::GeminiCli, "gemini.exe"),
+        (NativeProvider::Antigravity, "agy_acp_server.exe"),
+    ] {
+        assert!(!text_only_capable(provider));
+        let root = tempfile::tempdir().unwrap();
+        let p = profile(root.path(), provider, exe);
+        file(&p.executable);
+        let located = lai_discovery::LocatedClient {
+            provider_id: provider.id().into(),
+            profile_home: p.profile_home.clone(),
+            executable: Some(p.executable.clone()),
+        };
+        let model = Model {
+            id: "m".into(),
+            route_id: "r".into(),
+            native_id: "m".into(),
+            name: "M".into(),
+            revision: "rev".into(),
+            is_default: true,
+            capabilities: vec![],
+            options: vec![],
+            context_window: Observation::unknown("NOT_REPORTED"),
+        };
+        let error = open(
+            &p,
+            &located,
+            root.path(),
+            None,
+            NativeOpen {
+                route: "r".into(),
+                model,
+                review: false,
+            },
+        )
+        .await
+        .err()
+        .unwrap();
+        assert_eq!(error.code, ErrorCode::IntegrationRestricted);
+        assert!(error.message.contains("text-only"));
+    }
+}

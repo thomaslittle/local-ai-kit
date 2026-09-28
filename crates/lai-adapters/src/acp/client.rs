@@ -195,6 +195,26 @@ impl AcpAgent {
                 if response.get("id").is_some() {
                     self.wire.permission(&response, &cx, self.review).await?;
                 } else if response["method"] == "session/update" {
+                    // Text-only sessions launch clients with their tools removed.
+                    // A tool call anyway means the client ignored that contract:
+                    // stop the turn instead of silently letting it run.
+                    if !self.review
+                        && response["params"]["sessionId"] == sid
+                        && matches!(
+                            response["params"]["update"]["sessionUpdate"].as_str(),
+                            Some("tool_call" | "tool_call_update")
+                        )
+                    {
+                        let _ = tokio::time::timeout(
+                            Duration::from_millis(300),
+                            self.wire.peer.send(json!({"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":sid}})),
+                        )
+                        .await;
+                        return Err(DomainError::new(
+                            ErrorCode::IntegrationRestricted,
+                            "Native client attempted tool use in a text-only session",
+                        ));
+                    }
                     self.wire.update(&response, &cx, &self.model)?;
                 }
                 continue;

@@ -25,6 +25,9 @@ fn spec(mode: &str) -> LaunchSpec {
     }
 }
 async fn setup(mode: &str) -> (Runtime, Session) {
+    setup_with_review(mode, true).await
+}
+async fn setup_with_review(mode: &str, review: bool) -> (Runtime, Session) {
     let c = client::inspect(spec("normal"), "fixture", "r")
         .await
         .unwrap();
@@ -34,7 +37,7 @@ async fn setup(mode: &str) -> (Runtime, Session) {
         "fixture".into(),
         "r".into(),
         model.clone(),
-        true,
+        review,
     )
     .await
     .unwrap();
@@ -282,4 +285,16 @@ async fn peers_without_prompt_image_support_reject_image_turns_before_prompting(
         SessionState::Completed
     );
     r.close("owner", &s.id).await.unwrap();
+}
+#[tokio::test]
+async fn text_only_session_fails_the_turn_when_the_client_uses_a_native_tool() {
+    let (r, s) = setup_with_review("tool", false).await;
+    r.start("owner", &s.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Error);
+    let events = r.events("owner", None, None).unwrap().to_string();
+    assert!(events.contains("INTEGRATION_RESTRICTED"));
+    assert!(!events.contains("tool-output-sentinel"));
 }

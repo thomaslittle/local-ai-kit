@@ -20,3 +20,15 @@ Protocol sources reviewed 2026-09-24:
 - https://agentclientprotocol.com/protocol/v1/tool-calls
 
 `cargo test -p lai-adapters --test acp_catalog --test acp_process` exercises nine catalog and eight process/runtime cases with actual synthetic child processes. Both suites were observed failing before implementation. The full Windows workspace passed after implementation. A separate installed Grok initialization/session metadata probe confirmed protocol version 1 and native model/effort descriptors without generation; it is not an execution qualification.
+
+## Text-only sessions
+
+A session opened without `reviewRequests` is text-only: the host executes any tools itself from the model's text. The kit only opens such a session for clients whose native tools can be removed at launch, and fails the turn (`INTEGRATION_RESTRICTED`, with `session/cancel`) if the client emits any `tool_call`/`tool_call_update` anyway.
+
+| Client | Text-only | Mechanism |
+|---|---|---|
+| Grok | Yes | `--tools= --disable-web-search --permission-mode=dontAsk --no-subagents` on every launch (probe and session) |
+| Gemini CLI | Refused | No launch flag removes built-in tools; read tools (file read, glob, grep, search) run inside the client without an ACP permission request |
+| Antigravity | Refused | Same as Gemini CLI |
+
+Refusal is a typed `INTEGRATION_RESTRICTED` error from session open. Reviewed sessions (`reviewRequests: true`) keep the existing per-request mediation.
