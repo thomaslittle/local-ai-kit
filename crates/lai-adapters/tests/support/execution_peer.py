@@ -16,11 +16,12 @@ for line in sys.stdin:
  elif method=='model/list':reply(id,{"data":[model],"nextCursor":None})
  elif method=='account/rateLimits/read':reply(id,{"rateLimits":{}})
  elif method=='thread/start':
-  assert p['ephemeral'] is True and p['sandbox']=='readOnly' and p['serviceTier']=='default'
+  assert p['ephemeral'] is True and p['sandbox']=='read-only' and p['serviceTier']=='default'
+  assert p['config']['features.shell_tool'] is False and p['config']['features.unified_exec'] is False
   reply(id,{"thread":{"id":"native-thread"},"model":"test-native","sandbox":{"type":"dangerFullAccess" if mode=='unsafe' else 'readOnly'},"approvalPolicy":"onRequest","cwd":os.getcwd()})
  elif method=='turn/start':
   assert p['model']=='test-native' and p['effort']=='future'
-  assert p['sandboxPolicy']['type']=='readOnly'
+  assert p['sandboxPolicy']=={'type':'readOnly'}
   turn='turn-'+str(id)
   if mode=='early':emit('item/agentMessage/delta',{"threadId":"native-thread","turnId":turn,"delta":"early "})
   reply(id,{"turn":{"id":turn,"status":"inProgress"}})

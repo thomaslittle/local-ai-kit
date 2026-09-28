@@ -13,23 +13,48 @@ pub(super) struct CodexAgent {
     pub workspace: PathBuf,
     pub thread: Option<String>,
 }
+/// Thread config. Read-only sessions are text-only: besides the always-off
+/// integrations, Codex's command, exec and generation tools are disabled so
+/// the model cannot run anything on the host (the read-only sandbox alone
+/// still permits reading commands).
+fn thread_config(writable: bool) -> Value {
+    let mut config = json!({"features.apps":false,"features.plugins":false,"features.hooks":false,"features.multi_agent":false,"features.browser_use":false,"features.computer_use":false,"web_search":"disabled"});
+    if !writable {
+        for feature in [
+            "features.shell_tool",
+            "features.unified_exec",
+            "features.image_generation",
+            "features.tool_suggest",
+            "features.goals",
+            "features.sleep_tool",
+        ] {
+            config[feature] = Value::Bool(false);
+        }
+    }
+    config
+}
+
 impl CodexAgent {
     async fn ensure_thread(&mut self) -> Result<String> {
         if let Some(thread) = &self.thread {
             return Ok(thread.clone());
         }
-        let mode = if self.config.writable {
-            "workspaceWrite"
+        // Codex 0.157+ takes the thread sandbox mode in kebab case and reports
+        // it back in camel case.
+        let (mode, reported) = if self.config.writable {
+            ("workspace-write", "workspaceWrite")
         } else {
-            "readOnly"
+            ("read-only", "readOnly")
         };
         let response=tokio::time::timeout(Duration::from_secs(20),self.peer.request("thread/start",json!({
    "model":self.config.model.native_id,"cwd":self.workspace,"ephemeral":true,
    "sandbox":mode,"approvalPolicy":if self.config.review_requests{"onRequest"}else{"never"},
    "approvalsReviewer":"user","serviceTier":"default","serviceName":"local-ai-kit",
-   "config":{"features.apps":false,"features.plugins":false,"features.hooks":false,"features.multi_agent":false,"features.browser_use":false,"features.computer_use":false,"web_search":"disabled"}
+   "config":thread_config(self.config.writable)
   }))).await.map_err(|_|failure(ErrorCode::Timeout))??;
-        if response["model"] != self.config.model.native_id || response["sandbox"]["type"] != mode {
+        if response["model"] != self.config.model.native_id
+            || response["sandbox"]["type"] != reported
+        {
             return Err(failure(ErrorCode::IntegrationRestricted));
         }
         let thread = native_id(&response["thread"]["id"])?;
@@ -60,11 +85,12 @@ impl CodexAgent {
             .await
             .map_err(|_| failure(ErrorCode::Timeout))??;
         let thread = self.ensure_thread().await?;
-        let access = json!({"type":"restricted","includePlatformDefaults":true,"readableRoots":[self.workspace]});
+        // Codex 0.157+ rejects per-turn read access (`readOnly.access`,
+        // `readOnlyAccess`); read scope now comes from permission profiles.
         let sandbox = if self.config.writable {
-            json!({"type":"workspaceWrite","writableRoots":[self.workspace],"readOnlyAccess":access,"networkAccess":false})
+            json!({"type":"workspaceWrite","writableRoots":[self.workspace],"networkAccess":false})
         } else {
-            json!({"type":"readOnly","access":access})
+            json!({"type":"readOnly"})
         };
         let params = json!({"threadId":thread,"model":self.config.model.native_id,"input":[{"type":"text","text":prompt}],"effort":options.get("reasoningEffort"),"serviceTier":options.get("serviceTier").cloned().unwrap_or(json!("default")),"sandboxPolicy":sandbox,"approvalPolicy":if self.config.review_requests{"onRequest"}else{"never"}});
         self.peer.sequence += 1;
