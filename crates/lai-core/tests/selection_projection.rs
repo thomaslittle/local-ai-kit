@@ -79,9 +79,18 @@ fn native_model_names_do_not_erase_account_routes() {
     assert!(c.iter().all(|c| c.eligible));
 }
 #[test]
-fn stale_identity_blocks_runtime_selection() {
+fn stale_sign_in_stands_until_the_client_reports_otherwise() {
     let mut s = fixture();
     s.connections[0].auth.mark_stale();
+    assert!(validate_selection(&s, &selection(), false).is_ok());
+}
+#[test]
+fn signed_out_identity_blocks_runtime_selection() {
+    let mut s = fixture();
+    s.connections[0].auth = Observation::reported(
+        AuthState::Unauthenticated,
+        EvidenceSource::new(EvidenceKind::Synthetic, "synthetic", "core test"),
+    );
     assert_eq!(
         validate_selection(&s, &selection(), false)
             .unwrap_err()

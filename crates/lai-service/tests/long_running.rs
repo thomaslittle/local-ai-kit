@@ -139,6 +139,7 @@ async fn cached_metadata_age_does_not_cancel_an_already_authorized_turn() {
                 json!({"sessionId":s["id"],"prompt":"x","requestId":"two"})
             )
             .await
-            .is_err()
+            .is_ok(),
+        "a stale sign-in stands until the client reports it signed out"
     );
 }

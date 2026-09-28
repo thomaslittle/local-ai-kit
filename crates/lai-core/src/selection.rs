@@ -27,7 +27,11 @@ pub fn is_accountless_local_route(route: &AccessRoute, connection: &Connection) 
         && matches!(&connection.auth, Observation::Unknown { reason, .. } if reason == "LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH")
 }
 fn access(route: &AccessRoute, connection: &Connection, paid: bool) -> Result<()> {
-    if connection.auth.fresh_value() != Some(&AuthState::Authenticated)
+    // Like native hosts (T3 Code), the last observed sign-in stands until the
+    // client reports otherwise: stale "authenticated" evidence is accepted and
+    // the client itself refuses if the login lapsed. Signed-out, expired or
+    // never-checked connections still block.
+    if connection.auth.value() != Some(&AuthState::Authenticated)
         && !is_accountless_local_route(route, connection)
     {
         return Err(error(
