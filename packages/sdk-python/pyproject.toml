@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "local-ai-kit-preview"
-version = "0.1.0a7"
+version = "0.1.0a8"
 description = "Thin native-helper protocol client for Local AI Kit"
 requires-python = ">=3.11"
 license = {text = "MIT"}
