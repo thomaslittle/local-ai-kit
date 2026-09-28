@@ -26,6 +26,84 @@ impl NativeService {
         }
         Ok(())
     }
+    /// Re-read a connection's live account/auth status right before a session
+    /// opens, the way native clients judge login at session start. Metadata
+    /// newer than the short probe cache is already live evidence; anything
+    /// older (including evidence past the freshness TTL) is re-probed. Failures
+    /// are recorded like any probe failure, so a logged-out client stops
+    /// looking authenticated instead of riding a stale cache. The caller's
+    /// execution grant authorizes this read: opening the session launches the
+    /// same client anyway.
+    pub(crate) async fn refresh_for_session(&self, client: &str, route_id: &str) {
+        let Some(source) = self.metadata_source.as_ref() else {
+            return;
+        };
+        let Ok(snapshot) = self.cache.snapshot() else {
+            return;
+        };
+        let Some(id) = snapshot
+            .routes
+            .iter()
+            .find(|route| route.id == route_id)
+            .map(|route| route.connection_id.clone())
+        else {
+            return;
+        };
+        if !self.policy(client).is_ok_and(|policy| policy.allows(&id)) {
+            return;
+        }
+        let lock = {
+            let Ok(mut locks) = self.metadata_locks.lock() else {
+                return;
+            };
+            locks.retain(|_, lock| Arc::strong_count(lock) > 1);
+            if locks.len() >= 64 {
+                return;
+            }
+            locks
+                .entry(id.clone())
+                .or_insert_with(|| Arc::new(tokio::sync::Mutex::new(())))
+                .clone()
+        };
+        let _guard = lock.lock().await;
+        if self.cache.has_fresh_metadata(&id).unwrap_or(true)
+            || self.cache.metadata_failure(&id).ok().flatten().is_some()
+        {
+            return;
+        }
+        let Ok((located, route, base)) = self.cache.probe_input(&id) else {
+            return;
+        };
+        let result = tokio::time::timeout(
+            Duration::from_secs(25),
+            source(located, id.clone(), route.clone()),
+        )
+        .await
+        .unwrap_or_else(|_| {
+            Err(DomainError::new(
+                ErrorCode::Timeout,
+                "Metadata probe timed out",
+            ))
+        });
+        match result.and_then(|report| validate_report(&report, &id, &route).map(|()| report)) {
+            Ok(report) => {
+                let _ = self.cache.publish_metadata(&base, report);
+            }
+            Err(error) => {
+                let mut safe =
+                    DomainError::new(error.code.clone(), "Client metadata is unavailable");
+                safe.retryable = error.retryable
+                    || matches!(
+                        error.code,
+                        ErrorCode::RateLimited
+                            | ErrorCode::ProviderUnavailable
+                            | ErrorCode::Timeout
+                    );
+                safe.retry_after_ms = error.retry_after_ms;
+                let _ = self.cache.fail_metadata(&id, safe);
+            }
+        }
+    }
     pub(crate) async fn probe_connection(&self, client: &str, p: &Value) -> Result<Value> {
         params::allow(p, &["connectionId"])?;
         let id = params::text(p, "connectionId")?.ok_or_else(params::invalid)?;

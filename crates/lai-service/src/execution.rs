@@ -297,6 +297,8 @@ impl NativeService {
             return Err(denied());
         }
         let grant = self.execution_grant(client)?;
+        self.refresh_for_session(client, &request.selection.route_id)
+            .await;
         let snapshot = self.projected(client)?;
         let model = validate_selection(
             &snapshot,
