@@ -33,7 +33,7 @@ pub async fn probe_with_auth(
     access: AccountEvidence,
     auth: Option<&str>,
 ) -> Result<ConnectionMetadata> {
-    let mut wire = Wire::connect_with_auth(spec, provider.into(), route.into(), auth).await?;
+    let mut wire = Wire::connect_with_auth(spec, provider.into(), route.into(), auth, &[]).await?;
     let result = (|| {
         let catalog = wire.catalog()?;
         let version = wire.init["agentInfo"]["version"]

@@ -66,6 +66,8 @@ export type HandshakeParams = { "clientName"?: string | null; "protocolVersion"?
 
 export type HandshakeResult = { "capabilities"?: Array<string>; "methods": Array<string>; "protocolVersion": string; "runtimeVersion": string; [key: string]: unknown; };
 
+export type HostMcpServer = { "allowedTools": Array<string>; "bearerToken": string; "name": string; "url": string; };
+
 export type InputMediaType = "image/jpeg" | "image/png";
 
 export type InputPutParams = { "dataBase64": string; "displayName"?: string | null; "mediaType": InputMediaType; "sessionId": string; };
@@ -124,7 +126,7 @@ export type SelectionParams = { "allowPaid"?: boolean; "selection": Selection; }
 
 export type Session = { "connectionId": string; "createdAt": Timestamp; "id": string; "nativeResumption": boolean; "selection": Selection; "state": SessionState; };
 
-export type SessionCreateParams = { "allowPaid"?: boolean; "permissionMode"?: string | null; "reviewRequests"?: boolean; "selection": Selection; "workspaceId": string; };
+export type SessionCreateParams = { "allowPaid"?: boolean; "hostMcpServers"?: Array<HostMcpServer>; "permissionMode"?: string | null; "reviewRequests"?: boolean; "selection": Selection; "workspaceId": string; };
 
 export type SessionOptionsParams = { "options": { [key: string]: unknown; }; "sessionId": string; };
 

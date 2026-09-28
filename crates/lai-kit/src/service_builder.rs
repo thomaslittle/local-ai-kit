@@ -195,6 +195,7 @@ fn build_execution(
                             route: input.route_id,
                             model: input.model,
                             review: input.review_requests,
+                            host_mcp_servers: input.host_mcp_servers,
                         };
                         return match input.native_resume.as_deref() {
                             Some(native_session_id) => {
@@ -227,6 +228,9 @@ fn build_execution(
                         ));
                     }
                     if let Some(config) = endpoint {
+                        if !input.host_mcp_servers.is_empty() {
+                            return Err(lai_adapters::host_mcp::unsupported());
+                        }
                         if input.writable || input.review_requests {
                             return Err(DomainError::new(
                                 ErrorCode::IntegrationRestricted,
@@ -246,6 +250,9 @@ fn build_execution(
                         return Ok(http_provider::executor(config.kind, client, input.model));
                     }
                     if input.located.provider_id == "opencode" {
+                        if !input.host_mcp_servers.is_empty() {
+                            return Err(lai_adapters::host_mcp::unsupported());
+                        }
                         if input.writable || input.review_requests {
                             return Err(DomainError::new(
                                 ErrorCode::IntegrationRestricted,
@@ -273,9 +280,14 @@ fn build_execution(
                                 "This Claude adapter exposes text-only execution",
                             ));
                         }
-                        let spec = claude::launch::launch(&input.located, input.workspace)?;
-                        return Ok(claude::client::executor(
-                            spec,
+                        let launch = claude::launch::launch_with_host_mcp(
+                            &input.located,
+                            input.workspace,
+                            &input.host_mcp_servers,
+                        )?;
+                        return Ok(claude::client::host_executor(
+                            launch,
+                            lai_adapters::host_mcp::HostTools::new(&input.host_mcp_servers),
                             input.model,
                             input.connection_id,
                             input.route_id,
@@ -319,6 +331,7 @@ fn build_execution(
                             route: input.route_id,
                             writable: input.writable,
                             review_requests: input.review_requests,
+                            host_mcp_servers: input.host_mcp_servers,
                         },
                     )
                     .await

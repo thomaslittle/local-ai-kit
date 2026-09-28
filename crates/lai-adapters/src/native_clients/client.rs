@@ -104,6 +104,8 @@ pub struct NativeOpen {
     pub route: String,
     pub model: Model,
     pub review: bool,
+    /// Host MCP servers; attached only to peers advertising `mcpCapabilities.http`.
+    pub host_mcp_servers: Vec<HostMcpServer>,
 }
 pub async fn open(
     profile: &NativeProfile,
@@ -158,10 +160,11 @@ async fn open_internal(
         route,
         model,
         review,
+        host_mcp_servers,
     } = request;
     let inner = match resume {
         Some(native_session_id) => {
-            acp_client::open_resume(
+            acp_client::open_resume_with_host_mcp(
                 prepared.spec,
                 profile.provider.id().into(),
                 route,
@@ -169,17 +172,19 @@ async fn open_internal(
                 review,
                 auth.as_deref(),
                 native_session_id,
+                &host_mcp_servers,
             )
             .await?
         }
         None => {
-            acp_client::open_with_auth(
+            acp_client::open_with_host_mcp(
                 prepared.spec,
                 profile.provider.id().into(),
                 route,
                 model,
                 review,
                 auth.as_deref(),
+                &host_mcp_servers,
             )
             .await?
         }

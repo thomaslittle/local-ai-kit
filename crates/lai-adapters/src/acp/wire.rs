@@ -13,7 +13,18 @@ pub(super) struct Wire {
 }
 impl Wire {
     pub async fn connect(spec: LaunchSpec, provider: String, route: String) -> Result<Self> {
-        Self::connect_with_auth(spec, provider, route, None).await
+        Self::connect_with_auth(spec, provider, route, None, &[]).await
+    }
+    /// ACP `session/new`/`session/load` MCP server list. Host servers are sent
+    /// only to peers that advertise `mcpCapabilities.http`; others refuse typed.
+    fn mcp_servers(&self, servers: &[HostMcpServer]) -> Result<Value> {
+        if servers.is_empty() {
+            return Ok(json!([]));
+        }
+        if self.init["agentCapabilities"]["mcpCapabilities"]["http"].as_bool() != Some(true) {
+            return Err(crate::host_mcp::unsupported());
+        }
+        Ok(acp_mcp_servers(servers))
     }
     async fn initialized(
         spec: LaunchSpec,
@@ -72,12 +83,14 @@ impl Wire {
         provider: String,
         route: String,
         auth: Option<&str>,
+        host_mcp_servers: &[HostMcpServer],
     ) -> Result<Self> {
         let cwd = spec.cwd.clone();
         let mut this = Self::initialized(spec, provider, route, auth).await?;
         let outcome = tokio::time::timeout(Duration::from_secs(20), async {
+            let mcp_servers = this.mcp_servers(host_mcp_servers)?;
             this.session = this
-                .call("session/new", json!({"cwd":cwd,"mcpServers":[]}))
+                .call("session/new", json!({"cwd":cwd,"mcpServers":mcp_servers}))
                 .await?;
             this.catalog()?;
             this.apply_notices()?;
@@ -102,6 +115,7 @@ impl Wire {
         route: String,
         auth: Option<&str>,
         native_session_id: &str,
+        host_mcp_servers: &[HostMcpServer],
     ) -> Result<Self> {
         if native_session_id.is_empty()
             || native_session_id.len() > 512
@@ -119,10 +133,11 @@ impl Wire {
             ));
         }
         let outcome = tokio::time::timeout(Duration::from_secs(20), async {
+            let mcp_servers = this.mcp_servers(host_mcp_servers)?;
             let mut session = this
                 .call(
                     "session/load",
-                    json!({"sessionId":native_session_id,"cwd":cwd,"mcpServers":[]}),
+                    json!({"sessionId":native_session_id,"cwd":cwd,"mcpServers":mcp_servers}),
                 )
                 .await?;
             if let Some(id) = session.get("sessionId") {
@@ -252,6 +267,22 @@ impl Wire {
         }
         self.peer.shutdown().await;
     }
+}
+/// ACP `McpServer` entries for streamable-HTTP host servers.
+pub fn acp_mcp_servers(servers: &[HostMcpServer]) -> Value {
+    Value::Array(
+        servers
+            .iter()
+            .map(|server| {
+                json!({
+                    "type": "http",
+                    "name": server.name,
+                    "url": server.url,
+                    "headers": [{"name": "Authorization", "value": format!("Bearer {}", server.bearer_token)}],
+                })
+            })
+            .collect(),
+    )
 }
 pub(super) fn response_result(value: &Value) -> Result<Value> {
     match (value.get("result"), value.get("error")) {

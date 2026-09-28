@@ -12,6 +12,7 @@ fn config() -> CodexExecution {
         route: "r".into(),
         writable: false,
         review_requests: true,
+        host_mcp_servers: vec![],
     }
 }
 fn spec(mode: &str) -> LaunchSpec {

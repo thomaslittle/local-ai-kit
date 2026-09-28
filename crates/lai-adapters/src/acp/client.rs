@@ -2,7 +2,10 @@ use super::{
     AcpCatalog, invalid,
     wire::{Wire, response_result},
 };
-use crate::process::LaunchSpec;
+use crate::{
+    host_mcp::{HostTools, native_tool_refused},
+    process::LaunchSpec,
+};
 use lai_contracts::*;
 use lai_runtime::{Agent, BoxFuture, TurnContext};
 use serde_json::{Value, json};
@@ -32,8 +35,22 @@ pub async fn open_with_auth(
     review: bool,
     auth: Option<&str>,
 ) -> Result<Box<dyn Agent>> {
-    let wire = Wire::connect_with_auth(spec, provider, route, auth).await?;
-    finish_open(wire, model, review).await
+    open_with_host_mcp(spec, provider, route, model, review, auth, &[]).await
+}
+/// Like [`open_with_auth`], with host MCP servers attached to the ACP session.
+/// Refused with `CAPABILITY_UNSUPPORTED` unless the peer advertises
+/// `mcpCapabilities.http`.
+pub async fn open_with_host_mcp(
+    spec: LaunchSpec,
+    provider: String,
+    route: String,
+    model: Model,
+    review: bool,
+    auth: Option<&str>,
+    host_mcp_servers: &[HostMcpServer],
+) -> Result<Box<dyn Agent>> {
+    let wire = Wire::connect_with_auth(spec, provider, route, auth, host_mcp_servers).await?;
+    finish_open(wire, model, review, HostTools::new(host_mcp_servers)).await
 }
 pub async fn open_resume(
     spec: LaunchSpec,
@@ -44,11 +61,46 @@ pub async fn open_resume(
     auth: Option<&str>,
     native_session_id: &str,
 ) -> Result<Box<dyn Agent>> {
-    let wire =
-        Wire::connect_resume_with_auth(spec, provider, route, auth, native_session_id).await?;
-    finish_open(wire, model, review).await
+    open_resume_with_host_mcp(
+        spec,
+        provider,
+        route,
+        model,
+        review,
+        auth,
+        native_session_id,
+        &[],
+    )
+    .await
 }
-async fn finish_open(mut wire: Wire, model: Model, review: bool) -> Result<Box<dyn Agent>> {
+#[allow(clippy::too_many_arguments)]
+pub async fn open_resume_with_host_mcp(
+    spec: LaunchSpec,
+    provider: String,
+    route: String,
+    model: Model,
+    review: bool,
+    auth: Option<&str>,
+    native_session_id: &str,
+    host_mcp_servers: &[HostMcpServer],
+) -> Result<Box<dyn Agent>> {
+    let wire = Wire::connect_resume_with_auth(
+        spec,
+        provider,
+        route,
+        auth,
+        native_session_id,
+        host_mcp_servers,
+    )
+    .await?;
+    finish_open(wire, model, review, HostTools::new(host_mcp_servers)).await
+}
+async fn finish_open(
+    mut wire: Wire,
+    model: Model,
+    review: bool,
+    host: HostTools,
+) -> Result<Box<dyn Agent>> {
     if !wire
         .catalog()?
         .models
@@ -65,14 +117,89 @@ async fn finish_open(mut wire: Wire, model: Model, review: bool) -> Result<Box<d
         wire,
         model,
         review,
+        host,
+        host_calls: BTreeMap::new(),
     }))
 }
 struct AcpAgent {
     wire: Wire,
     model: Model,
     review: bool,
+    host: HostTools,
+    /// `toolCallId`s the peer opened for allowed host tools.
+    host_calls: BTreeMap<String, String>,
+}
+/// The qualified host tool an ACP tool call names, if it is one. ACP does not
+/// say which MCP server a call came from, so the call must carry no native
+/// tool kind and its title must resolve to exactly one allowed host tool.
+pub fn acp_host_tool(host: &HostTools, call: &Value) -> Option<String> {
+    if !matches!(call["kind"].as_str(), None | Some("other")) {
+        return None;
+    }
+    call["title"].as_str().and_then(|title| host.resolve(title))
 }
 impl AcpAgent {
+    /// Handles a tool update for an allowed host tool; `false` leaves every
+    /// other update (including non-host tools) to the normal path.
+    fn host_update(&mut self, update: &Value, cx: &TurnContext) -> Result<bool> {
+        let id = update["toolCallId"].as_str().unwrap_or("");
+        let name = match update["sessionUpdate"].as_str() {
+            Some("tool_call") => match acp_host_tool(&self.host, update) {
+                Some(name) if !id.is_empty() && id.len() <= 256 => {
+                    if self.host_calls.len() >= 1024 {
+                        return Err(invalid());
+                    }
+                    self.host_calls.insert(id.to_owned(), name.clone());
+                    name
+                }
+                _ => return Ok(false),
+            },
+            Some("tool_call_update") => match self.host_calls.get(id) {
+                Some(name) => name.clone(),
+                None => return Ok(false),
+            },
+            _ => return Ok(false),
+        };
+        cx.emit(EventPayload::Tool {
+            name,
+            status: update["status"]
+                .as_str()
+                .unwrap_or("pending")
+                .chars()
+                .take(40)
+                .collect(),
+        })?;
+        Ok(true)
+    }
+    /// Allows a permission request for an allowed host tool once; `false`
+    /// leaves every other request to the normal (deny or review) path.
+    async fn host_permission(&mut self, request: &Value, sid: &Value) -> Result<bool> {
+        let p = &request["params"];
+        if request["method"] != "session/request_permission" || &p["sessionId"] != sid {
+            return Ok(false);
+        }
+        let call = &p["toolCall"];
+        let known = call["toolCallId"]
+            .as_str()
+            .is_some_and(|id| self.host_calls.contains_key(id));
+        if !known && acp_host_tool(&self.host, call).is_none() {
+            return Ok(false);
+        }
+        let Some(option) = p["options"]
+            .as_array()
+            .filter(|a| a.len() <= 32)
+            .and_then(|a| a.iter().find(|c| c["kind"] == "allow_once"))
+            .and_then(|c| c["optionId"].as_str())
+            .map(str::to_owned)
+        else {
+            return Ok(false);
+        };
+        self.wire
+            .peer
+            .send(json!({"jsonrpc":"2.0","id":request["id"],"result":{"outcome":{"outcome":"selected","optionId":option}}}))
+            .await?;
+        Ok(true)
+    }
     async fn configure(&mut self, options: &BTreeMap<String, Value>) -> Result<()> {
         let catalog = self.wire.catalog()?;
         let sid = catalog.session_id;
@@ -193,8 +320,16 @@ impl AcpAgent {
             }};
             if response.get("method").is_some() {
                 if response.get("id").is_some() {
+                    if self.host_permission(&response, &sid).await? {
+                        continue;
+                    }
                     self.wire.permission(&response, &cx, self.review).await?;
                 } else if response["method"] == "session/update" {
+                    if response["params"]["sessionId"] == sid
+                        && self.host_update(&response["params"]["update"], &cx)?
+                    {
+                        continue;
+                    }
                     // Text-only sessions launch clients with their tools removed.
                     // A tool call anyway means the client ignored that contract:
                     // stop the turn instead of silently letting it run.
@@ -210,10 +345,14 @@ impl AcpAgent {
                             self.wire.peer.send(json!({"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":sid}})),
                         )
                         .await;
-                        return Err(DomainError::new(
-                            ErrorCode::IntegrationRestricted,
-                            "Native client attempted tool use in a text-only session",
-                        ));
+                        return Err(if self.host.is_empty() {
+                            DomainError::new(
+                                ErrorCode::IntegrationRestricted,
+                                "Native client attempted tool use in a text-only session",
+                            )
+                        } else {
+                            native_tool_refused()
+                        });
                     }
                     self.wire.update(&response, &cx, &self.model)?;
                 }
@@ -293,7 +432,7 @@ pub async fn inspect_authenticated(
     route: &str,
     auth: Option<&str>,
 ) -> Result<AcpCatalog> {
-    let mut wire = Wire::connect_with_auth(spec, provider.into(), route.into(), auth).await?;
+    let mut wire = Wire::connect_with_auth(spec, provider.into(), route.into(), auth, &[]).await?;
     let result = wire.catalog();
     wire.close().await;
     result

@@ -39,6 +39,8 @@ pub struct ExecutionInput {
     pub review_requests: bool,
     pub native_policy: bool,
     pub native_resume: Option<String>,
+    /// Validated host MCP servers; adapters that cannot attach them refuse typed.
+    pub host_mcp_servers: Vec<HostMcpServer>,
 }
 pub type ExecutionSource =
     Arc<dyn Fn(ExecutionInput) -> BoxFuture<'static, Box<dyn Agent>> + Send + Sync>;
@@ -54,6 +56,7 @@ struct SessionContext {
     connection_id: String,
     account_id: Option<String>,
     route_id: String,
+    host_mcp_servers: Vec<HostMcpServer>,
     billing: Option<BillingMode>,
 }
 #[derive(Clone)]
@@ -240,7 +243,7 @@ impl NativeService {
         if self.execution_state.source.is_none() {
             vec![]
         } else {
-            vec!["turn.input.image"]
+            vec!["turn.input.image", "session.host_mcp"]
         }
     }
     fn accepted_paid(&self, client: &str, session: &str) -> Result<bool> {
@@ -297,6 +300,9 @@ impl NativeService {
             return Err(denied());
         }
         let grant = self.execution_grant(client)?;
+        if !validate_host_mcp_servers(&request.host_mcp_servers) {
+            return Err(params::invalid());
+        }
         self.refresh_for_session(client, &request.selection.route_id)
             .await;
         let snapshot = self.projected(client)?;
@@ -339,6 +345,16 @@ impl NativeService {
             Some("native_policy") if grant.allow_native_policy => false,
             _ => return Err(denied()),
         };
+        // Host tools are the only tools such a session may use: the native
+        // client's own shell/file/web tools stay disabled.
+        if !request.host_mcp_servers.is_empty()
+            && (writable || request.permission_mode.as_deref() == Some("native_policy"))
+        {
+            return Err(DomainError::new(
+                ErrorCode::IntegrationRestricted,
+                "Host MCP servers require a read-only session",
+            ));
+        }
         if (request.allow_paid && !grant.allow_paid)
             || (request.review_requests && !grant.review_native)
         {
@@ -356,6 +372,7 @@ impl NativeService {
             review_requests: request.review_requests,
             native_policy: request.permission_mode.as_deref() == Some("native_policy"),
             native_resume,
+            host_mcp_servers: request.host_mcp_servers.clone(),
         };
         let clients = self.clients.clone();
         let grants = self.execution_state.grants.clone();
@@ -472,6 +489,7 @@ impl NativeService {
                 connection_id: connection.id.clone(),
                 account_id: connection.account_id.clone(),
                 route_id: route.id.clone(),
+                host_mcp_servers: request.host_mcp_servers.clone(),
                 billing: route.billing.value().cloned(),
             };
             let session = self.execution_state.runtime.insert(
@@ -646,6 +664,7 @@ impl NativeService {
                     permission_mode: record.context.permission_mode.clone(),
                     review_requests: record.context.review_requests,
                     allow_paid: record.context.allow_paid,
+                    host_mcp_servers: record.context.host_mcp_servers.clone(),
                 };
                 let snapshot = self.projected(client)?;
                 let grant = self.execution_grant(client)?;
@@ -860,6 +879,7 @@ mod lifecycle_tests {
                 connection_id: "c".into(),
                 account_id: None,
                 route_id: "r".into(),
+                host_mcp_servers: vec![],
                 billing: Some(BillingMode::Local),
             },
         }

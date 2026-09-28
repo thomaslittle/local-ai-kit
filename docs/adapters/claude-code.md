@@ -9,3 +9,7 @@ This adapter intentionally exposes **text-only execution**: safe/restricted nati
 Native startup flags were verified against the installed client on September 24, 2026. Unsupported versions fail rather than silently fall back to an unrestricted launch. Windows native execution paths are qualified; Unix path handling and protocol tests still need native-platform execution evidence. Account metadata was checked end-to-end through the public Python SDK; generation tests use synthetic peers and consume no account allowance.
 
 Sources: https://github.com/anthropics/claude-agent-sdk-python (native control protocol), https://code.claude.com/docs/en/cli-reference, and T3's audited ClaudeProvider.ts as a read-only integration reference. No T3 application runtime or credentials were copied. Experimental usage fields may change and are handled independently from authentication/model metadata.
+
+## Host MCP servers
+
+Sessions may attach host-provided loopback MCP servers; see [host MCP servers](../integration/host-mcp.md) for the wiring, enforcement and qualification status of this adapter.

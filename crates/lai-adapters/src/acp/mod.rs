@@ -4,6 +4,7 @@ mod config;
 pub use catalog::parse_catalog;
 use lai_contracts::*;
 use serde_json::Value;
+pub use wire::acp_mcp_servers;
 pub struct AcpCatalog {
     pub session_id: String,
     pub models: Vec<Model>,

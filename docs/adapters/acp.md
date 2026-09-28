@@ -32,3 +32,7 @@ A session opened without `reviewRequests` is text-only: the host executes any to
 | Antigravity | Refused | Same as Gemini CLI |
 
 Refusal is a typed `INTEGRATION_RESTRICTED` error from session open. Reviewed sessions (`reviewRequests: true`) keep the existing per-request mediation.
+
+## Host MCP servers
+
+Sessions may attach host-provided loopback MCP servers; see [host MCP servers](../integration/host-mcp.md) for the wiring, enforcement and qualification status of this adapter.

@@ -1,5 +1,8 @@
 use super::{CodexExecution, PathBuf, failure, native_id};
-use crate::process::Peer;
+use crate::{
+    host_mcp::{HostTools, native_tool_refused},
+    process::Peer,
+};
 use lai_contracts::*;
 use lai_runtime::{Agent, BoxFuture, TurnContext};
 use serde_json::{Value, json};
@@ -9,6 +12,7 @@ use std::{
 };
 pub(super) struct CodexAgent {
     pub peer: Peer,
+    pub host: HostTools,
     pub config: CodexExecution,
     pub workspace: PathBuf,
     pub thread: Option<String>,
@@ -17,8 +21,33 @@ pub(super) struct CodexAgent {
 /// integrations, Codex's command, exec and generation tools are disabled so
 /// the model cannot run anything on the host (the read-only sandbox alone
 /// still permits reading commands).
-fn thread_config(writable: bool) -> Value {
+///
+/// Host MCP servers are added as per-thread `mcp_servers.<name>` overrides: the
+/// bearer token travels as an HTTP header over the app-server's stdio pipe
+/// (never argv, env or a config file), only the allowed tools are enabled, and
+/// their calls are pre-approved because the host owns them.
+///
+/// `other_mcp_servers` are the MCP servers already configured for this Codex
+/// home; a host-MCP thread disables each of them so the host's tools are the
+/// only MCP tools the agent sees.
+pub(crate) fn thread_config(
+    writable: bool,
+    host_mcp_servers: &[HostMcpServer],
+    other_mcp_servers: &[String],
+) -> Value {
     let mut config = json!({"features.apps":false,"features.plugins":false,"features.hooks":false,"features.multi_agent":false,"features.browser_use":false,"features.computer_use":false,"web_search":"disabled"});
+    for server in host_mcp_servers {
+        config[format!("mcp_servers.{}", server.name)] = json!({
+            "url": server.url,
+            "http_headers": {"Authorization": format!("Bearer {}", server.bearer_token)},
+            "enabled_tools": server.allowed_tools,
+            "default_tools_approval_mode": "approve",
+            "required": true,
+        });
+    }
+    for name in other_mcp_servers {
+        config[format!("mcp_servers.{name}.enabled")] = Value::Bool(false);
+    }
     if !writable {
         for feature in [
             "features.shell_tool",
@@ -35,10 +64,60 @@ fn thread_config(writable: bool) -> Value {
 }
 
 impl CodexAgent {
+    /// Read-only, unreviewed sessions allow no client tool but the host's.
+    fn text_only(&self) -> bool {
+        !self.config.writable && !self.config.review_requests
+    }
+    /// Names of MCP servers configured for this Codex home (none started).
+    /// Only read for host-MCP sessions; a configured server with a host
+    /// server's name is refused rather than merged with the host's settings.
+    async fn configured_mcp_servers(&mut self) -> Result<Vec<String>> {
+        if self.host.is_empty() {
+            return Ok(vec![]);
+        }
+        let response = tokio::time::timeout(
+            Duration::from_secs(10),
+            self.peer.request(
+                "mcpServerStatus/list",
+                json!({"detail":"toolsAndAuthOnly","limit":100}),
+            ),
+        )
+        .await
+        .map_err(|_| failure(ErrorCode::Timeout))??;
+        let data = response["data"]
+            .as_array()
+            .filter(|data| data.len() <= 100)
+            .ok_or_else(|| failure(ErrorCode::ProtocolIncompatible))?;
+        if response["nextCursor"].as_str().is_some() {
+            return Err(failure(ErrorCode::IntegrationRestricted));
+        }
+        let mut names = Vec::new();
+        for server in data {
+            let name = server["name"]
+                .as_str()
+                .filter(|name| {
+                    !name.is_empty()
+                        && name.len() <= 128
+                        && name
+                            .bytes()
+                            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+                })
+                .ok_or_else(|| failure(ErrorCode::IntegrationRestricted))?;
+            if self.host.server_names().any(|host| host == name) {
+                return Err(DomainError::new(
+                    ErrorCode::IntegrationRestricted,
+                    "Host MCP server name is already configured in Codex",
+                ));
+            }
+            names.push(name.to_owned());
+        }
+        Ok(names)
+    }
     async fn ensure_thread(&mut self) -> Result<String> {
         if let Some(thread) = &self.thread {
             return Ok(thread.clone());
         }
+        let others = self.configured_mcp_servers().await?;
         // Codex 0.157+ takes the thread sandbox mode in kebab case and reports
         // it back in camel case.
         let (mode, reported) = if self.config.writable {
@@ -50,7 +129,7 @@ impl CodexAgent {
    "model":self.config.model.native_id,"cwd":self.workspace,"ephemeral":true,
    "sandbox":mode,"approvalPolicy":if self.config.review_requests{"onRequest"}else{"never"},
    "approvalsReviewer":"user","serviceTier":"default","serviceName":"local-ai-kit",
-   "config":thread_config(self.config.writable)
+   "config":thread_config(self.config.writable,&self.config.host_mcp_servers,&others)
   }))).await.map_err(|_|failure(ErrorCode::Timeout))??;
         if response["model"] != self.config.model.native_id
             || response["sandbox"]["type"] != reported
@@ -219,6 +298,28 @@ impl CodexAgent {
                                 emit_text(&cx, text, false)?;
                             }
                         }
+                        "mcpToolCall"
+                            if self.host.allows(
+                                item["server"].as_str().unwrap_or(""),
+                                item["tool"].as_str().unwrap_or(""),
+                            ) =>
+                        {
+                            cx.emit(EventPayload::Tool {
+                                name: format!(
+                                    "mcp__{}__{}",
+                                    item["server"].as_str().unwrap_or(""),
+                                    item["tool"].as_str().unwrap_or("")
+                                ),
+                                status: codex_tool_status(method, item).into(),
+                            })?;
+                        }
+                        kind if self.text_only() && native_tool_item(kind) => {
+                            if method == "item/started" {
+                                self.peer.sequence += 1;
+                                let _ = self.peer.send(json!({"id":self.peer.sequence,"method":"turn/interrupt","params":{"threadId":thread,"turnId":turn}})).await;
+                            }
+                            return Err(native_tool_refused());
+                        }
                         "commandExecution" | "fileChange" | "mcpToolCall" => {
                             cx.emit(EventPayload::Tool {
                                 name: item["type"].as_str().unwrap().into(),
@@ -279,6 +380,27 @@ impl CodexAgent {
                 _ => {}
             }
         }
+    }
+}
+/// Thread items that are the client's own tools, never allowed in a text-only
+/// session (an `mcpToolCall` reaches here only when it is not a host tool).
+pub(crate) fn native_tool_item(kind: &str) -> bool {
+    matches!(
+        kind,
+        "commandExecution"
+            | "fileChange"
+            | "mcpToolCall"
+            | "dynamicToolCall"
+            | "webSearch"
+            | "imageGeneration"
+            | "collabAgentToolCall"
+    )
+}
+fn codex_tool_status(method: &str, item: &Value) -> &'static str {
+    match (method, item["status"].as_str()) {
+        ("item/started", _) => "started",
+        (_, Some("failed")) => "failed",
+        _ => "completed",
     }
 }
 fn emit_text(cx: &TurnContext, text: &str, reasoning: bool) -> Result<()> {

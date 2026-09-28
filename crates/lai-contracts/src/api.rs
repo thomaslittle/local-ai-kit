@@ -21,7 +21,7 @@ pub struct HandshakeResult {
     pub protocol_version: String,
     pub runtime_version: String,
     pub methods: Vec<String>,
-    /// Runtime-level features such as `turn.input.image`. Model and adapter support is still per selection.
+    /// Runtime-level features such as `turn.input.image` or `session.host_mcp`. Model and adapter support is still per selection.
     #[serde(default)]
     pub capabilities: Vec<String>,
 }
@@ -108,6 +108,104 @@ pub struct SessionCreateParams {
     pub review_requests: bool,
     #[serde(default)]
     pub allow_paid: bool,
+    /// Host-owned loopback MCP servers attached to a native-client session.
+    /// The agent may call only the listed tools; its own tools stay disabled.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub host_mcp_servers: Vec<HostMcpServer>,
+}
+/// Most host MCP servers a single session may attach.
+pub const MAX_HOST_MCP_SERVERS: usize = 2;
+/// Most allowed tools across every host MCP server of a session.
+pub const MAX_HOST_MCP_TOOLS: usize = 128;
+/// A loopback streamable-HTTP MCP server run by the host application.
+///
+/// `url` must be `http://127.0.0.1:<port>/...` or `http://[::1]:<port>/...`.
+/// The bearer token is a host secret: it is never logged, echoed, or placed on
+/// a command line, and `Debug` redacts it.
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HostMcpServer {
+    /// `^[a-z][a-z0-9_]{0,31}$`
+    pub name: String,
+    pub url: String,
+    /// 32-512 printable ASCII characters.
+    pub bearer_token: String,
+    /// Tool names (`^[a-z][a-z0-9_]{0,63}$`) the agent may call on this server.
+    pub allowed_tools: Vec<String>,
+}
+impl std::fmt::Debug for HostMcpServer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HostMcpServer")
+            .field("name", &self.name)
+            .field("url", &self.url)
+            .field("bearer_token", &"[redacted]")
+            .field("allowed_tools", &self.allowed_tools)
+            .finish()
+    }
+}
+fn host_identifier(value: &str, max: usize) -> bool {
+    let bytes = value.as_bytes();
+    !bytes.is_empty()
+        && bytes.len() <= max
+        && bytes[0].is_ascii_lowercase()
+        && bytes
+            .iter()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || *b == b'_')
+}
+/// Loopback-only `http://127.0.0.1:<port>/...` or `http://[::1]:<port>/...`.
+fn host_mcp_url(url: &str) -> bool {
+    if url.len() > 2048 || url.chars().any(|c| c.is_control() || c.is_whitespace()) {
+        return false;
+    }
+    let Some(rest) = url
+        .strip_prefix("http://127.0.0.1:")
+        .or_else(|| url.strip_prefix("http://[::1]:"))
+    else {
+        return false;
+    };
+    let (port, path) = match rest.find('/') {
+        Some(index) => rest.split_at(index),
+        None => return false,
+    };
+    !port.is_empty()
+        && port.len() <= 5
+        && port.bytes().all(|b| b.is_ascii_digit())
+        && port.parse::<u16>().is_ok_and(|port| port != 0)
+        && !path.contains(['\\', '@', '#'])
+}
+impl HostMcpServer {
+    pub fn validate(&self) -> bool {
+        host_identifier(&self.name, 32)
+            && host_mcp_url(&self.url)
+            && (32..=512).contains(&self.bearer_token.len())
+            && self
+                .bearer_token
+                .bytes()
+                .all(|b| (0x21..=0x7e).contains(&b))
+            && !self.allowed_tools.is_empty()
+            && self
+                .allowed_tools
+                .iter()
+                .all(|tool| host_identifier(tool, 64))
+            && self
+                .allowed_tools
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len()
+                == self.allowed_tools.len()
+    }
+}
+/// Validates a whole `hostMcpServers` list: limits, unique names, every entry.
+pub fn validate_host_mcp_servers(servers: &[HostMcpServer]) -> bool {
+    servers.len() <= MAX_HOST_MCP_SERVERS
+        && servers.iter().map(|s| s.allowed_tools.len()).sum::<usize>() <= MAX_HOST_MCP_TOOLS
+        && servers
+            .iter()
+            .map(|s| &s.name)
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+            == servers.len()
+        && servers.iter().all(HostMcpServer::validate)
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

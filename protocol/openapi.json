@@ -999,7 +999,7 @@
         "properties": {
           "capabilities": {
             "default": [],
-            "description": "Runtime-level features such as `turn.input.image`. Model and adapter support is still per selection.",
+            "description": "Runtime-level features such as `turn.input.image` or `session.host_mcp`. Model and adapter support is still per selection.",
             "items": {
               "type": "string"
             },
@@ -1022,6 +1022,37 @@
           "protocolVersion",
           "runtimeVersion",
           "methods"
+        ],
+        "type": "object"
+      },
+      "HostMcpServer": {
+        "additionalProperties": false,
+        "description": "A loopback streamable-HTTP MCP server run by the host application.\n\n`url` must be `http://127.0.0.1:<port>/...` or `http://[::1]:<port>/...`.\nThe bearer token is a host secret: it is never logged, echoed, or placed on\na command line, and `Debug` redacts it.",
+        "properties": {
+          "allowedTools": {
+            "description": "Tool names (`^[a-z][a-z0-9_]{0,63}$`) the agent may call on this server.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "bearerToken": {
+            "description": "32-512 printable ASCII characters.",
+            "type": "string"
+          },
+          "name": {
+            "description": "`^[a-z][a-z0-9_]{0,31}$`",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "bearerToken",
+          "allowedTools"
         ],
         "type": "object"
       },
@@ -2532,6 +2563,13 @@
           "allowPaid": {
             "default": false,
             "type": "boolean"
+          },
+          "hostMcpServers": {
+            "description": "Host-owned loopback MCP servers attached to a native-client session.\nThe agent may call only the listed tools; its own tools stay disabled.",
+            "items": {
+              "$ref": "#/components/schemas/HostMcpServer"
+            },
+            "type": "array"
           },
           "permissionMode": {
             "default": null,

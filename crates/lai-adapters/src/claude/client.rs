@@ -1,5 +1,8 @@
 use super::{invalid, parse_metadata};
-use crate::process::{LaunchSpec, Peer};
+use crate::{
+    host_mcp::{HostTools, native_tool_refused},
+    process::{LaunchSpec, Peer},
+};
 use lai_contracts::*;
 use lai_runtime::{Agent, BoxFuture, TurnContext};
 use serde_json::{Value, json};
@@ -45,6 +48,58 @@ async fn initialize(peer: &mut Peer) -> Result<Value> {
     }
     Ok(value)
 }
+/// Waits until every host MCP server reports `connected` via the
+/// `mcp_status` control request (no user turn, no inference). A server that
+/// fails, needs auth, or stays pending fails the session typed.
+async fn wait_host_mcp(peer: &mut Peer, host: &HostTools) -> Result<()> {
+    if host.is_empty() {
+        return Ok(());
+    }
+    let unavailable =
+        |message: &'static str| DomainError::new(ErrorCode::ProviderUnavailable, message);
+    for _ in 0..40 {
+        let status = control(peer, json!({"subtype":"mcp_status"})).await?;
+        let servers = status["mcpServers"]
+            .as_array()
+            .filter(|servers| servers.len() <= 64)
+            .ok_or_else(invalid)?;
+        let mut pending = false;
+        for name in host.server_names() {
+            match servers
+                .iter()
+                .find(|server| server["name"] == name)
+                .and_then(|server| server["status"].as_str())
+            {
+                Some("connected") => {}
+                Some("pending") | None => pending = true,
+                Some(_) => return Err(unavailable("Host MCP server did not connect")),
+            }
+        }
+        if !pending {
+            return Ok(());
+        }
+        tokio::time::sleep(Duration::from_millis(250)).await;
+    }
+    Err(unavailable("Host MCP server did not connect in time"))
+}
+/// Starts the client with host MCP servers attached and confirms they connect,
+/// without sending a prompt. Lets a host verify wiring before any turn.
+pub async fn probe_host_mcp(spec: LaunchSpec, host: &HostTools) -> Result<()> {
+    let mut peer = Peer::spawn(spec).await?;
+    let outcome = tokio::time::timeout(Duration::from_secs(30), async {
+        initialize(&mut peer).await?;
+        wait_host_mcp(&mut peer, host).await
+    })
+    .await
+    .unwrap_or_else(|_| {
+        Err(DomainError::new(
+            ErrorCode::Timeout,
+            "Host MCP startup timed out",
+        ))
+    });
+    peer.shutdown().await;
+    outcome
+}
 pub async fn probe_spec(
     spec: LaunchSpec,
     connection: &str,
@@ -73,8 +128,30 @@ pub fn executor(
     connection: String,
     route: String,
 ) -> Box<dyn Agent> {
+    host_executor(
+        super::launch::HostMcpLaunch {
+            spec,
+            config_dir: None,
+        },
+        HostTools::default(),
+        model,
+        connection,
+        route,
+    )
+}
+/// A text-only session whose only tools are the host's MCP tools.
+pub fn host_executor(
+    launch: super::launch::HostMcpLaunch,
+    host: HostTools,
+    model: Model,
+    connection: String,
+    route: String,
+) -> Box<dyn Agent> {
     Box::new(ClaudeAgent {
-        spec: Some(spec),
+        spec: Some(launch.spec),
+        mcp_config: launch.config_dir,
+        host,
+        tool_uses: BTreeMap::new(),
         peer: None,
         model,
         connection,
@@ -85,6 +162,11 @@ pub fn executor(
 }
 struct ClaudeAgent {
     spec: Option<LaunchSpec>,
+    /// Private directory holding the per-session MCP config; deleted on close.
+    mcp_config: Option<tempfile::TempDir>,
+    host: HostTools,
+    /// Host tool_use ids of the current turn, for completion events.
+    tool_uses: BTreeMap<String, String>,
     peer: Option<Peer>,
     model: Model,
     connection: String,
@@ -129,6 +211,12 @@ impl ClaudeAgent {
                     DomainError::new(ErrorCode::Timeout, "Claude initialization timed out")
                 })??;
             let metadata = parse_metadata(&self.connection, &self.route, &init, None)?;
+            tokio::time::timeout(
+                Duration::from_secs(15),
+                wait_host_mcp(&mut peer, &self.host),
+            )
+            .await
+            .map_err(|_| DomainError::new(ErrorCode::Timeout, "Host MCP startup timed out"))??;
             if metadata.auth.fresh_value() != Some(&AuthState::Authenticated)
                 || !metadata
                     .models
@@ -177,7 +265,7 @@ impl ClaudeAgent {
                 }
                 Some("system") => {
                     if response["subtype"] == "init"
-                        && response["tools"].as_array().is_some_and(|t| !t.is_empty())
+                        && !advertised_tools_allowed(&self.host, &response["tools"])
                     {
                         return Err(DomainError::new(
                             ErrorCode::IntegrationRestricted,
@@ -187,6 +275,9 @@ impl ClaudeAgent {
                 }
                 Some("stream_event") => {
                     let event = &response["event"];
+                    if event["type"] == "content_block_start" {
+                        check_block_start(&self.host, &event["content_block"])?;
+                    }
                     if event["type"] == "content_block_delta" {
                         let delta = &event["delta"];
                         if let Some(text) = delta["text"].as_str() {
@@ -199,19 +290,47 @@ impl ClaudeAgent {
                         }
                     }
                 }
-                Some("assistant") if !streamed => {
+                Some("assistant") => {
                     if let Some(parts) = response["message"]["content"].as_array() {
                         for part in parts {
-                            if part["type"] == "text" {
-                                if let Some(text) = part["text"].as_str() {
-                                    emit_text(&cx, text)?;
+                            match part["type"].as_str() {
+                                Some("text") => {
+                                    if let Some(text) = part["text"].as_str().filter(|_| !streamed)
+                                    {
+                                        emit_text(&cx, text)?;
+                                    }
                                 }
-                            } else if part["type"] == "tool_use" {
-                                return Err(DomainError::new(
-                                    ErrorCode::IntegrationRestricted,
-                                    "Native tool use is not enabled",
-                                ));
+                                Some("thinking" | "redacted_thinking") => {}
+                                _ => {
+                                    let id = host_tool_use(&self.host, part)?;
+                                    if self.tool_uses.len() >= 1024 {
+                                        return Err(invalid());
+                                    }
+                                    let name = part["name"].as_str().unwrap_or("").to_owned();
+                                    self.tool_uses.insert(id, name.clone());
+                                    cx.emit(EventPayload::Tool {
+                                        name,
+                                        status: "started".into(),
+                                    })?;
+                                }
                             }
+                        }
+                    }
+                }
+                Some("user") => {
+                    if let Some(parts) = response["message"]["content"].as_array() {
+                        for part in parts.iter().filter(|part| part["type"] == "tool_result") {
+                            let id = part["tool_use_id"].as_str().unwrap_or("");
+                            let name = self.tool_uses.remove(id).ok_or_else(native_tool_refused)?;
+                            cx.emit(EventPayload::Tool {
+                                name,
+                                status: if part["is_error"] == true {
+                                    "failed"
+                                } else {
+                                    "completed"
+                                }
+                                .into(),
+                            })?;
                         }
                     }
                 }
@@ -235,11 +354,50 @@ impl ClaudeAgent {
                     }
                     return Ok(());
                 }
-                Some("rate_limit_event" | "user" | "assistant" | "control_cancel_request") => {}
+                Some("rate_limit_event" | "control_cancel_request") => {}
                 _ => return Err(invalid()),
             }
         }
     }
+}
+/// A text-only session advertises no tools, or only the host's MCP tools.
+pub fn advertised_tools_allowed(host: &HostTools, tools: &Value) -> bool {
+    match tools {
+        Value::Null => true,
+        Value::Array(tools) => tools.iter().all(|tool| {
+            tool.as_str()
+                .is_some_and(|name| host.allows_qualified(name))
+        }),
+        _ => false,
+    }
+}
+/// A streamed content block may be text or thinking, or an allowed host tool.
+pub fn check_block_start(host: &HostTools, block: &Value) -> Result<()> {
+    match block["type"].as_str() {
+        Some("text" | "thinking" | "redacted_thinking") => Ok(()),
+        _ if block["name"]
+            .as_str()
+            .is_some_and(|name| host.allows_qualified(name)) =>
+        {
+            Ok(())
+        }
+        _ => Err(native_tool_refused()),
+    }
+}
+/// The id of an allowed host `tool_use` block; any other block fails the turn.
+pub fn host_tool_use(host: &HostTools, part: &Value) -> Result<String> {
+    if !matches!(part["type"].as_str(), Some("tool_use" | "mcp_tool_use"))
+        || !part["name"]
+            .as_str()
+            .is_some_and(|name| host.allows_qualified(name))
+    {
+        return Err(native_tool_refused());
+    }
+    part["id"]
+        .as_str()
+        .filter(|id| !id.is_empty() && id.len() <= 256 && !id.chars().any(char::is_control))
+        .map(str::to_owned)
+        .ok_or_else(invalid)
 }
 fn emit_text(cx: &TurnContext, text: &str) -> Result<()> {
     let mut chunk = String::new();
@@ -270,6 +428,9 @@ impl Agent for ClaudeAgent {
             if let Some(mut peer) = self.peer.take() {
                 peer.shutdown().await;
             }
+            // Deletes the MCP config, and with it the host's bearer token.
+            self.mcp_config.take();
+            self.spec.take();
             Ok(())
         })
     }

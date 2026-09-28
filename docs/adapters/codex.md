@@ -52,3 +52,7 @@ The live end-to-end check used the Python SDK -> native Local AI Kit helper -> i
 ## Remaining limits
 
 Native execution, approvals, paired local HTTP, shared IPC, and release bundles now have separate qualification records. Persistent cross-process resumption, automatic service-level file watching, cross-client authoritative quota linking, full balance normalization, and cross-platform live-account qualification remain unfinished. A metadata probe alone certifies none of those features. See ../qualification/RELEASE-CANDIDATE.md for the exact verified code and artifact scope.
+
+## Host MCP servers
+
+Sessions may attach host-provided loopback MCP servers; see [host MCP servers](../integration/host-mcp.md) for the wiring, enforcement and qualification status of this adapter.

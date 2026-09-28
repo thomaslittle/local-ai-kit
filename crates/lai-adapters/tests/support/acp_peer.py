@@ -7,7 +7,7 @@ turns=0
 authenticated=False
 def out(value):print(json.dumps({'jsonrpc':'2.0',**value}),flush=True)
 def answer(i,result):out({'id':i,'result':result})
-def update(kind,**data):out({'method':'session/update','params':{'sessionId':'foreign' if mode=='foreign' else session,'update':{'sessionUpdate':kind,**data}}})
+def update(session_update,**data):out({'method':'session/update','params':{'sessionId':'foreign' if mode=='foreign' else session,'update':{'sessionUpdate':session_update,**data}}})
 for line in sys.stdin:
  r=json.loads(line);m=r.get('method');i=r.get('id');p=r.get('params',{})
  if os.environ.get('LAI_ACP_TRACE'):
@@ -15,7 +15,7 @@ for line in sys.stdin:
  if r.get('jsonrpc')!='2.0':sys.exit(7)
  if m=='initialize':
   if p.get('clientCapabilities',{}).get('terminal') or p.get('clientCapabilities',{}).get('fs',{}).get('writeTextFile'):sys.exit(8)
-  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':mode!='no_resume','promptCapabilities':{'image':mode=='image'}},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
+  answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':mode!='no_resume','promptCapabilities':{'image':mode=='image'},**({'mcpCapabilities':{'http':True,'sse':False}} if mode.startswith('host') else {})},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
  elif m=='authenticate':
   if mode=='auth_fail':out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_URL'}})
   else:authenticated=True;answer(i,None)
@@ -23,7 +23,8 @@ for line in sys.stdin:
   if mode=='resume':sys.exit(11)
   if mode in ('auth','auth_fail') and not authenticated:
    out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_REQUIRED'}});continue
-  if p.get('mcpServers')!=[]:sys.exit(9)
+  expected=[{'type':'http','name':'design','url':'http://127.0.0.1:48123/mcp','headers':[{'name':'Authorization','value':'Bearer '+'k'*40}]}] if mode.startswith('host') else []
+  if p.get('mcpServers')!=expected:sys.exit(9)
   answer(i,{'sessionId':session,'configOptions':options})
  elif m=='session/load':
   if p.get('mcpServers')!=[]:sys.exit(12)
@@ -44,6 +45,13 @@ for line in sys.stdin:
    update('agent_message_chunk',content={'type':'text','text':'text='+p['prompt'][0]['text']+' images='+summary});answer(i,{'stopReason':'end_turn'});continue
   if mode=='hang':continue
   if mode=='prompt_error':out({'id':i,'error':{'code':-32001,'message':'HTTP 401: invalid account; Authorization: Bearer private-peer-token'}});continue
+  if mode=='host':
+   update('tool_call',toolCallId='host-1',title='mcp__design__echo_color',kind='other',status='pending')
+   out({'id':'host-permission','method':'session/request_permission','params':{'sessionId':session,'toolCall':{'toolCallId':'host-1','title':'mcp__design__echo_color'},'options':[{'optionId':'yes','name':'Allow once','kind':'allow_once'},{'optionId':'no','name':'Reject once','kind':'reject_once'}]}})
+   continue
+  if mode=='host_native':
+   update('tool_call',toolCallId='native-1',title='Read secret-file-sentinel',kind='read',status='in_progress')
+   update('agent_message_chunk',content={'type':'text','text':'tool-output-sentinel'});answer(i,{'stopReason':'end_turn'});continue
   if mode=='permission':out({'id':'permission-id','method':'session/request_permission','params':{'sessionId':session,'toolCall':{'toolCallId':'tool-1','title':'Read fixture'},'options':[{'optionId':'yes','name':'Allow once','kind':'allow_once'},{'optionId':'no','name':'Reject once','kind':'reject_once'}]}})
   elif mode=='tool':
    update('tool_call',toolCallId='tool-1',title='Read secret-file-sentinel',status='in_progress')
@@ -58,6 +66,10 @@ for line in sys.stdin:
  elif m=='session/close':answer(i,{})
  elif i=='permission-id':
   result=r.get('result',{}).get('outcome',{});update('agent_message_chunk',content={'type':'text','text':'allowed' if result.get('optionId')=='yes' else 'denied'});answer(pending,{'stopReason':'end_turn'})
+ elif i=='host-permission':
+  if r.get('result',{}).get('outcome',{}).get('optionId')!='yes':sys.exit(14)
+  update('tool_call_update',toolCallId='host-1',status='completed')
+  update('agent_message_chunk',content={'type':'text','text':'color is red'});answer(pending,{'stopReason':'end_turn'})
  elif i=='fs-id':
   if 'error' not in r:sys.exit(10)
   answer(pending,{'stopReason':'refusal'})

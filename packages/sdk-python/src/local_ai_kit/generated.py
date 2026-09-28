@@ -93,6 +93,8 @@ HandshakeParams = TypedDict('HandshakeParams', {'clientName': NotRequired[Union[
 
 HandshakeResult = TypedDict('HandshakeResult', {'capabilities': NotRequired[List[str]], 'methods': Required[List[str]], 'protocolVersion': Required[str], 'runtimeVersion': Required[str]}, total=False)
 
+HostMcpServer = TypedDict('HostMcpServer', {'allowedTools': Required[List[str]], 'bearerToken': Required[str], 'name': Required[str], 'url': Required[str]}, total=False)
+
 InputMediaType: TypeAlias = Literal['image/jpeg', 'image/png']
 
 InputPutParams = TypedDict('InputPutParams', {'dataBase64': Required[str], 'displayName': NotRequired[Union[str, None]], 'mediaType': Required['InputMediaType'], 'sessionId': Required[str]}, total=False)
@@ -197,7 +199,7 @@ SelectionParams = TypedDict('SelectionParams', {'allowPaid': NotRequired[bool], 
 
 Session = TypedDict('Session', {'connectionId': Required[str], 'createdAt': Required['Timestamp'], 'id': Required[str], 'nativeResumption': Required[bool], 'selection': Required['Selection'], 'state': Required['SessionState']}, total=False)
 
-SessionCreateParams = TypedDict('SessionCreateParams', {'allowPaid': NotRequired[bool], 'permissionMode': NotRequired[Union[str, None]], 'reviewRequests': NotRequired[bool], 'selection': Required['Selection'], 'workspaceId': Required[str]}, total=False)
+SessionCreateParams = TypedDict('SessionCreateParams', {'allowPaid': NotRequired[bool], 'hostMcpServers': NotRequired[List['HostMcpServer']], 'permissionMode': NotRequired[Union[str, None]], 'reviewRequests': NotRequired[bool], 'selection': Required['Selection'], 'workspaceId': Required[str]}, total=False)
 
 SessionOptionsParams = TypedDict('SessionOptionsParams', {'options': Required[Dict[str, Any]], 'sessionId': Required[str]}, total=False)
 

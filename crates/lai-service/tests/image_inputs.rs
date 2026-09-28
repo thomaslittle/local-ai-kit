@@ -179,7 +179,10 @@ async fn handshake_advertises_image_input_and_put_method() {
             .unwrap()
             .contains(&json!("inputs.put"))
     );
-    assert_eq!(handshake["capabilities"], json!(["turn.input.image"]));
+    assert_eq!(
+        handshake["capabilities"],
+        json!(["turn.input.image", "session.host_mcp"])
+    );
 }
 #[tokio::test]
 async fn staged_image_reaches_a_capable_adapter_once() {

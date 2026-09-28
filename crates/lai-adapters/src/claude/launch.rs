@@ -1,7 +1,11 @@
 use crate::process::LaunchSpec;
 use lai_contracts::*;
 use lai_discovery::LocatedClient;
-use std::{collections::BTreeMap, path::PathBuf};
+use std::{
+    collections::BTreeMap,
+    io::Write,
+    path::{Path, PathBuf},
+};
 pub fn launch(located: &LocatedClient, cwd: PathBuf) -> Result<LaunchSpec> {
     if located.provider_id != "claude_code" {
         return Err(DomainError::new(
@@ -59,6 +63,95 @@ pub fn launch(located: &LocatedClient, cwd: PathBuf) -> Result<LaunchSpec> {
             ("ENABLE_CLAUDEAI_MCP_SERVERS".into(), "false".into()),
             ("CLAUDE_CODE_AUTO_CONNECT_IDE".into(), "0".into()),
         ]),
+    })
+}
+/// A per-session MCP config naming only the host's servers. The bearer token
+/// lives in this file (never argv); the returned directory owns it and is
+/// deleted when dropped.
+pub struct HostMcpLaunch {
+    pub spec: LaunchSpec,
+    pub config_dir: Option<tempfile::TempDir>,
+}
+/// The `--mcp-config` document for the host's servers.
+pub fn host_mcp_config(servers: &[HostMcpServer]) -> serde_json::Value {
+    let mut map = serde_json::Map::new();
+    for server in servers {
+        map.insert(
+            server.name.clone(),
+            serde_json::json!({
+                "type": "http",
+                "url": server.url,
+                "headers": {"Authorization": format!("Bearer {}", server.bearer_token)},
+            }),
+        );
+    }
+    serde_json::json!({ "mcpServers": map })
+}
+fn write_private(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()
+}
+/// [`launch`], plus the host's MCP servers: `--mcp-config` points at a private
+/// per-session file, `--strict-mcp-config` and `--tools ""` stay, and
+/// `--allowedTools` names exactly the allowed `mcp__<server>__<tool>` tools.
+///
+/// `--safe-mode` is dropped because Claude Code 2.1 ignores `--mcp-config`
+/// servers in safe mode. `--restricted` (settings files, hooks and plugins
+/// ignored), `--disable-slash-commands` and the empty tool list remain, and
+/// the client enforces that only the host tools are advertised or called.
+pub fn launch_with_host_mcp(
+    located: &LocatedClient,
+    cwd: PathBuf,
+    servers: &[HostMcpServer],
+) -> Result<HostMcpLaunch> {
+    let mut spec = launch(located, cwd)?;
+    if !servers.is_empty() {
+        spec.args.retain(|arg| arg != "--safe-mode");
+    }
+    if servers.is_empty() {
+        return Ok(HostMcpLaunch {
+            spec,
+            config_dir: None,
+        });
+    }
+    if !validate_host_mcp_servers(servers) {
+        return Err(DomainError::new(
+            ErrorCode::InvalidRequest,
+            "Invalid host MCP server",
+        ));
+    }
+    let unavailable = || {
+        DomainError::new(
+            ErrorCode::ProviderUnavailable,
+            "Private MCP configuration unavailable",
+        )
+    };
+    // tempfile creates the directory user-only (0700 on Unix; the per-user
+    // temp directory ACL on Windows).
+    let dir = tempfile::Builder::new()
+        .prefix("lai-claude-mcp-")
+        .tempdir()
+        .map_err(|_| unavailable())?;
+    let path = dir.path().join("mcp.json");
+    let bytes = serde_json::to_vec(&host_mcp_config(servers)).map_err(|_| unavailable())?;
+    write_private(&path, &bytes).map_err(|_| unavailable())?;
+    let allowed = crate::host_mcp::HostTools::new(servers)
+        .qualified_names()
+        .join(",");
+    spec.args.push("--mcp-config".into());
+    spec.args.push(path.into_os_string());
+    spec.args.push(format!("--allowedTools={allowed}").into());
+    Ok(HostMcpLaunch {
+        spec,
+        config_dir: Some(dir),
     })
 }
 pub async fn probe(

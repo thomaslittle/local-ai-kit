@@ -11,6 +11,8 @@ pub struct CodexExecution {
     pub route: String,
     pub writable: bool,
     pub review_requests: bool,
+    /// Validated host MCP servers attached to the thread.
+    pub host_mcp_servers: Vec<HostMcpServer>,
 }
 pub async fn open_codex(spec: LaunchSpec, config: CodexExecution) -> Result<Box<dyn Agent>> {
     let workspace = spec.cwd.clone();
@@ -36,6 +38,7 @@ pub async fn open_codex(spec: LaunchSpec, config: CodexExecution) -> Result<Box<
     }
     Ok(Box::new(codex::CodexAgent {
         peer,
+        host: crate::host_mcp::HostTools::new(&config.host_mcp_servers),
         config,
         workspace,
         thread: None,

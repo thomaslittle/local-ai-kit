@@ -182,6 +182,7 @@ async fn clients_that_cannot_remove_their_tools_refuse_text_only_sessions() {
                 route: "r".into(),
                 model,
                 review: false,
+                host_mcp_servers: vec![],
             },
         )
         .await
