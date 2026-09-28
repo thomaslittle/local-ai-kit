@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {debugSessionError,userFacingError,userFacingSessionError} from '../apps/demo/public/errors.mjs';
+import {debugSessionError,userFacingError,userFacingSessionError} from '../apps/demo/lib/errors.mjs';
 
 test('provider capability failures are readable and never expose raw codes',()=>{
  assert.equal(userFacingError({code:'CAPABILITY_UNSUPPORTED'}),'This provider cannot perform that operation in the current runtime.');

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {connectionAuthLabel} from '../apps/demo/public/profile_auth.mjs';
+import {connectionAuthLabel} from '../apps/demo/lib/profile_auth.mjs';
 
 test('connection labels distinguish verified, stale, unchecked and local non-account runtimes',()=>{
  assert.equal(connectionAuthLabel({auth:{state:'known',value:'authenticated',freshness:'fresh'}}),'Authenticated');

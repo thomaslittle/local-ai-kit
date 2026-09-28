@@ -1,12 +1,14 @@
 /** Local synthetic demo harness. It cannot inspect accounts or execute provider clients. */
 import {createServer} from 'node:http';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
-import {readFile} from 'node:fs/promises';
-import {resolve,dirname,join} from 'node:path';
+import {readFile,stat} from 'node:fs/promises';
+import {resolve,dirname,join,sep} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createFixtureService} from './fixture/service.mjs';
 const HERE=dirname(fileURLToPath(import.meta.url));
-const ROOT=resolve(HERE,'../..');
+const DIST=resolve(HERE,'dist');
+const MIME={html:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',svg:'image/svg+xml'};
+const SEGMENT=/^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 export async function createFixtureServer({port=0}={}){
  if(!Number.isInteger(port)||port<0||port>65535)throw Error('INVALID_PORT');
  const service=createFixtureService(),token=randomBytes(32).toString('base64url'),streams=new Set();let url,closing;
@@ -50,18 +52,22 @@ export async function createFixtureServer({port=0}={}){
     }
     json(res,404,{error:'NOT_FOUND'});return;
    }
-   if(req.method!=='GET'){json(res,405,{error:'METHOD_NOT_ALLOWED'});return;}
-   const names={'/':'index.html','/app.mjs':'app.mjs','/ui.mjs':'ui.mjs','/selectors.mjs':'selectors.mjs','/style.css':'style.css','/bootstrap.mjs':'bootstrap.mjs','/pages.mjs':'pages.mjs','/profile_auth.mjs':'profile_auth.mjs','/errors.mjs':'errors.mjs','/catalog_visibility.mjs':'catalog_visibility.mjs','/dialogs.mjs':'dialogs.mjs','/configuration.mjs':'configuration.mjs'};
-   let path,type;
-   if(Object.hasOwn(names,current.pathname)){
-    path=join(HERE,'public',names[current.pathname]);type=current.pathname==='/'?'text/html':current.pathname.endsWith('.css')?'text/css':'text/javascript';
-   }else{
-    const match=current.pathname.match(/^\/modules\/(sdk|selector)\/([a-z-]+\.js)$/);
-    if(match){path=join(ROOT,'packages',match[1]==='sdk'?'sdk-typescript':'selector-core','dist',match[2]);type='text/javascript';}
-   }
-   if(!path){json(res,404,{error:'NOT_FOUND'});return;}
-   let content;try{content=await readFile(path);}catch{json(res,404,{error:'BUILD_ASSET_MISSING'});return;}
-   res.writeHead(200,{...headers,'Content-Type':type+'; charset=utf-8'});res.end(content);
+   // Static showcase assets. Mirrors the native helper: only extension-allowlisted
+   // files without traversal segments are served, capped at 2 MiB.
+   if(req.method!=='GET'&&req.method!=='HEAD'){json(res,405,{error:'METHOD_NOT_ALLOWED'});return;}
+   const name=current.pathname==='/'?'index.html':current.pathname.replace(/^\/+/,'');
+   const parts=name.split('/');
+   const extension=name.includes('.')?name.split('.').pop():'';
+   const ok=name.length>0&&name.length<=256&&parts.every(part=>SEGMENT.test(part))&&Object.hasOwn(MIME,extension);
+   if(!ok){json(res,404,{error:'NOT_FOUND'});return;}
+   const path=resolve(DIST,...parts);
+   if(path!==DIST&&!path.startsWith(DIST+sep)){json(res,404,{error:'NOT_FOUND'});return;}
+   let content;try{
+    const info=await stat(path);
+    if(!info.isFile()||info.size>2097152){json(res,404,{error:'NOT_FOUND'});return;}
+    content=await readFile(path);
+   }catch{json(res,404,{error:'BUILD_ASSET_MISSING'});return;}
+   res.writeHead(200,{...headers,'Content-Type':MIME[extension]+'; charset=utf-8','Content-Length':content.length});if(req.method==='GET')res.end(content);else res.end();
   }catch{if(!res.headersSent)json(res,400,{error:'INVALID_REQUEST'});else res.end();}
  });
  server.maxConnections=64;server.headersTimeout=10000;server.requestTimeout=15000;server.keepAliveTimeout=5000;

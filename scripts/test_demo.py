@@ -7,7 +7,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import re
 import unittest
 from playwright.sync_api import sync_playwright, expect
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -22,6 +21,11 @@ class DemoTests(unittest.TestCase):
         if result.returncode:
             raise RuntimeError(result.stderr)
         cls.bundle = bundle.read_text(encoding="utf-8")
+        # Styles are the real Tailwind output from the Vite build (`node scripts/build_demo.mjs`).
+        sheets = sorted((ROOT / 'apps/demo/dist/assets').glob('*.css'))
+        if not sheets:
+            raise RuntimeError('Missing demo stylesheet; run `node scripts/build_demo.mjs` first')
+        cls.styles = sheets[0].read_text(encoding="utf-8")
         cls.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE')
         cls.browser = cls.playwright.chromium.launch(executable_path=executable, headless=True, args=['--no-sandbox'])
@@ -44,13 +48,8 @@ class DemoTests(unittest.TestCase):
     def load(self, fixture_options=None):
         # Offline browser rendering respects the container's navigation restriction.
         # Network/HTTP semantics are tested independently by the real HTTP SDK tests.
-        html = (ROOT / 'apps/demo/public/index.html').read_text(encoding="utf-8")
-        html = re.sub(r'<script\b[^>]*>.*?</script>', '', html, flags=re.S)
-        html = re.sub(r'<link\b[^>]*rel="stylesheet"[^>]*>', '', html)
-        self.page.set_content(html)
-        css = ROOT / 'apps/demo/public/style.css'
-        if css.exists():
-            self.page.add_style_tag(content=css.read_text(encoding="utf-8"))
+        self.page.set_content('<!doctype html><html lang="en"><head><meta charset="UTF-8"><title>Local AI Kit — Developer Showcase</title></head><body><div id="app"></div></body></html>')
+        self.page.add_style_tag(content=self.styles)
         self.page.add_script_tag(content=self.bundle)
         self.page.evaluate('(options) => window.mountTestApp(options)', fixture_options or {})
         expect(self.page.locator('#mode-banner')).to_contain_text('Synthetic')

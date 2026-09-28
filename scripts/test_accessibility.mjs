@@ -8,16 +8,11 @@ before(async()=>{server=await createFixtureServer();browser=await chromium.launc
 after(async()=>{await browser?.close();await server?.close();});
 const tags=['wcag2a','wcag2aa','wcag21a','wcag21aa'];
 const details=result=>result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));
-async function mountFixture(page){
- await page.route('**/bootstrap.mjs',route=>route.fulfill({status:200,contentType:'text/javascript',body:'// The accessibility fixture mounts the public demo explicitly.'}));
- await page.goto(server.url);
- await page.evaluate(async()=>{
-  const [{mountDemo},{createHttpTransport,createLocalAI}]=await Promise.all([import('/app.mjs'),import('/modules/sdk/index.js')]);
-  const response=await fetch('/fixture/bootstrap',{credentials:'omit',cache:'no-store'}),bootstrap=await response.json();
-  const client=await createLocalAI({clientName:'local-ai-kit-a11y-fixture',transport:createHttpTransport({baseUrl:location.origin,token:bootstrap.sessionToken})});
-  await mountDemo({connectFixture:async()=>client,initialMode:'synthetic'});
- });
- await page.locator('#mode-banner.synthetic').waitFor();
+async function mountFixture(page,query='#demo-fixture',banner='#mode-banner.synthetic'){
+ // The scripted HTTP fixture mounts the public demo explicitly; every record
+ // comes from the loopback fixture service, never fabricated in the browser.
+ await page.goto(server.url+query);
+ await page.locator(banner).waitFor();
 }
 for(const variant of ['rail','compact','palette','capability','compare','allowance','preset','mobile']){
  test(`showroom ${variant}: no automated WCAG A/AA violations`,async()=>{
@@ -38,8 +33,8 @@ for(const section of ['Overview','Connections','Models','Usage','Playground','Di
    await mountFixture(page);
    await page.getByRole('button',{name:section,exact:true}).click();
    assert.deepEqual(details(await new AxeBuilder({page}).withTags(tags).analyze()),[]);
- }finally{await context.close();}
-});
+  }finally{await context.close();}
+ });
 }
 test('showroom presents only authenticated profiles as connected',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
@@ -66,17 +61,8 @@ test('showroom presents only authenticated profiles as connected',async()=>{
 test('overview and connections distinguish stale evidence from never-verified profiles',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{
-  await page.route('**/bootstrap.mjs',route=>route.fulfill({status:200,contentType:'text/javascript',body:'// Render the public pages against the fixture SDK.'}));
-  await page.goto(server.url);
-  await page.evaluate(async()=>{
-   const [{overviewPage,connectionsPage},{createHttpTransport,createLocalAI}]=await Promise.all([import('/pages.mjs'),import('/modules/sdk/index.js')]);
-   const response=await fetch('/fixture/bootstrap',{credentials:'omit',cache:'no-store'}),bootstrap=await response.json();
-   const client=await createLocalAI({clientName:'local-ai-kit-stale-overview-fixture',transport:createHttpTransport({baseUrl:location.origin,token:bootstrap.sessionToken})});
-   const snapshot=await client.snapshot.get();await client.close();
-   snapshot.connections=snapshot.connections.map(connection=>connection.auth.value==='authenticated'?{...connection,auth:{...connection.auth,freshness:'stale'}}:connection);
-   const ctx={state:{snapshot,mode:'live'},connections:snapshot.connections,providers:snapshot.providers,all:[],probeConnection(){},render(){}};
-   document.querySelector('#app').replaceChildren(overviewPage(ctx),connectionsPage(ctx));
-  });
+  await mountFixture(page,'#demo-fixture&staleAuth=1&mode=live','#mode-banner.live');
+  await page.getByRole('button',{name:'Connections',exact:true}).click();
   const text=await page.locator('body').innerText();
   assert.match(text,/Previously authenticated/);
   assert.match(text,/Personal workspace/);
@@ -84,9 +70,11 @@ test('overview and connections distinguish stale evidence from never-verified pr
   assert.doesNotMatch(text,/No fresh authenticated profiles|No fresh authentication checks/);
   assert.equal(await page.getByRole('heading',{name:'Verified profiles',exact:true}).count(),0);
   assert.equal(await page.getByRole('heading',{name:'Authenticated profiles',exact:true}).count(),0);
+  await page.getByRole('button',{name:'Overview',exact:true}).click();
   const overviewStale=page.getByTestId('previously-authenticated-overview');
   assert.equal(await overviewStale.isVisible(),true);
   assert.match(await overviewStale.innerText(),/Personal workspace/);
+  await page.getByRole('button',{name:'Connections',exact:true}).click();
   assert.equal(await page.getByTestId('previously-authenticated-profiles').isVisible(),true);
  }finally{await context.close();}
 });
@@ -107,23 +95,8 @@ test('detected client disclosure remains open across page rerenders unless the u
 test('local runtimes and confirmed unauthenticated profiles have separate live states',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{
-  await page.route('**/bootstrap.mjs',route=>route.fulfill({status:200,contentType:'text/javascript',body:'// Render public connection cards against the fixture SDK.'}));
-  await page.goto(server.url);
-  await page.evaluate(async()=>{
-   const [{connectionsPage},{createHttpTransport,createLocalAI}]=await Promise.all([import('/pages.mjs'),import('/modules/sdk/index.js')]);
-   const response=await fetch('/fixture/bootstrap',{credentials:'omit',cache:'no-store'}),bootstrap=await response.json();
-   const client=await createLocalAI({clientName:'local-ai-kit-profile-states-fixture',transport:createHttpTransport({baseUrl:location.origin,token:bootstrap.sessionToken})});
-   const snapshot=await client.snapshot.get();await client.close();
-   const source={kind:'native',adapterId:'fixture',adapterVersion:'1',reference:'fixture'};
-   const localBilling={state:'known',value:'local',source,observedAt:new Date().toISOString(),freshness:'fresh',verification:'observed'};
-   snapshot.providers.push({id:'lmstudio',name:'LM Studio',kind:'local_runtime'});
-   snapshot.connections.push({id:'local-lm',providerId:'lmstudio',displayName:'LM Studio · Default profile',installationId:'install-lm',profileId:'profile-lm',accountId:null,auth:{state:'unknown',reason:'LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH'},plan:{state:'unknown',reason:'NOT_REPORTED'},status:'needs_auth',diagnostics:[]});
-   snapshot.connections.push({id:'signed-out',providerId:'codex',displayName:'Codex · Additional profile',installationId:'install-codex',profileId:'profile-codex',accountId:null,auth:{state:'known',value:'unauthenticated',source,observedAt:new Date().toISOString(),freshness:'fresh',verification:'observed'},plan:{state:'unknown',reason:'NOT_REPORTED'},status:'needs_auth',diagnostics:[]});
-   snapshot.routes.push({id:'route-lm',connectionId:'local-lm',providerId:'lmstudio',displayName:'LM Studio',billing:localBilling,capabilities:[],catalogRevision:'fixture-lm'});
-   snapshot.models.push({id:'model-lm',routeId:'route-lm',nativeId:'ornith-1.5',name:'Ornith 1.5',revision:'fixture-lm',isDefault:false,capabilities:[],options:[],contextWindow:{state:'unknown',reason:'NOT_REPORTED'}});
-   const ctx={state:{snapshot,mode:'live',detectedExpanded:true},connections:snapshot.connections,providers:snapshot.providers,all:[],probeConnection(){}};
-   document.querySelector('#app').replaceChildren(connectionsPage(ctx));
-  });
+  await mountFixture(page,'#demo-fixture&extraProfiles=1&mode=live','#mode-banner.live');
+  await page.getByRole('button',{name:'Connections',exact:true}).click();
   await page.getByRole('heading',{name:'Local runtimes',exact:true}).waitFor();
   assert.equal(await page.getByRole('heading',{name:'LM Studio · Default profile',exact:true}).isVisible(),true);
   assert.equal(await page.getByRole('button',{name:'Refresh local catalog',exact:true}).isVisible(),true);
@@ -136,16 +109,8 @@ test('local runtimes and confirmed unauthenticated profiles have separate live s
 test('live connections expose an explicit bulk metadata check',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{
-  await page.route('**/bootstrap.mjs',route=>route.fulfill({status:200,contentType:'text/javascript',body:'// Render public connection cards against the fixture SDK.'}));
-  await page.goto(server.url);
-  await page.evaluate(async()=>{
-   const [{connectionsPage},{createHttpTransport,createLocalAI}]=await Promise.all([import('/pages.mjs'),import('/modules/sdk/index.js')]);
-   const response=await fetch('/fixture/bootstrap',{credentials:'omit',cache:'no-store'}),bootstrap=await response.json();
-   const client=await createLocalAI({clientName:'local-ai-kit-bulk-check-fixture',transport:createHttpTransport({baseUrl:location.origin,token:bootstrap.sessionToken})});
-   const snapshot=await client.snapshot.get();await client.close();snapshot.mode='live';
-   const ctx={state:{snapshot,mode:'live',detectedExpanded:true},connections:snapshot.connections,providers:snapshot.providers,all:[],probeConnection(){},probeAllConnections(){document.body.dataset.bulkProbe='started';}};
-   document.querySelector('#app').replaceChildren(connectionsPage(ctx));
-  });
+  await mountFixture(page,'#demo-fixture&bulkProbeHook=1&mode=live','#mode-banner.live');
+  await page.getByRole('button',{name:'Connections',exact:true}).click();
   await page.getByRole('button',{name:'Check all detected profiles',exact:true}).click();
   assert.equal(await page.locator('body').getAttribute('data-bulk-probe'),'started');
   assert.match(await page.locator('#app').innerText(),/metadata-only/i);
@@ -154,17 +119,8 @@ test('live connections expose an explicit bulk metadata check',async()=>{
 test('detected profiles with completed checks are not labeled as still unchecked',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{
-  await page.route('**/bootstrap.mjs',route=>route.fulfill({status:200,contentType:'text/javascript',body:'// Render checked profile outcomes.'}));
-  await page.goto(server.url);
-  await page.evaluate(async()=>{
-   const [{connectionsPage},{createHttpTransport,createLocalAI}]=await Promise.all([import('/pages.mjs'),import('/modules/sdk/index.js')]);
-   const response=await fetch('/fixture/bootstrap',{credentials:'omit',cache:'no-store'}),bootstrap=await response.json();
-   const client=await createLocalAI({clientName:'local-ai-kit-checked-profile-label-fixture',transport:createHttpTransport({baseUrl:location.origin,token:bootstrap.sessionToken})});
-   const snapshot=await client.snapshot.get();await client.close();snapshot.mode='live';
-   const probeResults=Object.fromEntries(snapshot.connections.map(connection=>[connection.id,{ok:false,message:'Metadata check unavailable · provider runtime unavailable'}]));
-   const ctx={state:{snapshot,mode:'live',detectedExpanded:true,probeResults},connections:snapshot.connections,providers:snapshot.providers,all:[],probeConnection(){}};
-   document.querySelector('#app').replaceChildren(connectionsPage(ctx));
-  });
+  await mountFixture(page,'#demo-fixture&probeResults=1&mode=live','#mode-banner.live');
+  await page.getByRole('button',{name:'Connections',exact:true}).click();
   const detected=page.getByTestId('detected-profiles');
   assert.match(await detected.innerText(),/checked, not confirmed/);
   assert.doesNotMatch(await detected.innerText(),/need a metadata check/);
@@ -227,3 +183,4 @@ test('showroom rendered text has no common mojibake markers',async()=>{
   }
  }finally{await context.close();}
 });
+

@@ -44,3 +44,6 @@ Thumbs.db
 examples/**/bin/
 examples/**/obj/
 .venv-build/
+
+# Browser automation scratch output
+.playwright-mcp/
