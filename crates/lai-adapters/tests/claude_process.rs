@@ -125,3 +125,46 @@ async fn effort_change_requires_a_new_native_session() {
     done(&r, &s).await;
     assert_eq!(r.get("owner", &s.id).unwrap().state, SessionState::Error);
 }
+
+fn fixture_image() -> lai_runtime::ImageInput {
+    lai_runtime::ImageInput {
+        media_type: InputMediaType::Png,
+        bytes: vec![1u8, 2, 3].into(),
+        width: 1,
+        height: 1,
+    }
+}
+#[tokio::test]
+async fn images_are_sent_as_base64_content_blocks_before_the_text() {
+    let (r, s) = setup("image").await;
+    r.start_with_inputs(
+        "owner",
+        &s.id,
+        "describe".into(),
+        "1".into(),
+        vec![fixture_image(), fixture_image()],
+    )
+    .await
+    .unwrap();
+    done(&r, &s).await;
+    assert_eq!(
+        r.get("owner", &s.id).unwrap().state,
+        SessionState::Completed
+    );
+    let events = r.events("owner", None, None).unwrap().to_string();
+    assert!(
+        !events.contains("AQID"),
+        "image payload must not reach events"
+    );
+    r.close("owner", &s.id).await.unwrap();
+}
+#[tokio::test]
+async fn claude_catalog_reports_image_input() {
+    let report = probe_spec(spec("normal"), "c", "r").await.unwrap();
+    assert!(
+        report.models[0]
+            .capabilities
+            .iter()
+            .any(|c| c.id == "input.image" && c.support == Support::Supported)
+    );
+}

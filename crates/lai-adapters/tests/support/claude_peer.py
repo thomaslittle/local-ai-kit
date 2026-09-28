@@ -24,6 +24,13 @@ for line in sys.stdin:
  elif r.get('type')=='user':
   assert r['client_composed'] is True
   if mode=='hang':continue
+  if mode=='image':
+   c=r['message']['content']
+   assert isinstance(c,list) and len(c)==3, c
+   for b in c[:2]:
+    assert b['type']=='image' and b['source']['type']=='base64' and b['source']['media_type']=='image/png' and b['source']['data']=='AQID', b
+   assert c[2]=={'type':'text','text':'describe'}, c[2]
+  else:assert isinstance(r['message']['content'],str)
   if mode=='tool':send({'type':'control_request','request_id':'native-permission','request':{'subtype':'can_use_tool','tool_name':'Bash','input':{'command':'echo prohibited'}}});continue
   if mode=='host_tool':
    send({'type':'system','subtype':'init','session_id':SID,'tools':['mcp__design__echo_color']})

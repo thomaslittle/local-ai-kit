@@ -37,6 +37,8 @@ for line in sys.stdin:
  elif method=='turn/start':
   assert p['model']=='test-native' and p['effort']=='future'
   assert p['sandboxPolicy']=={'type':'readOnly'}
+  if mode=='image':assert p['input']==[{'type':'text','text':'describe'},{'type':'image','url':'data:image/png;base64,AQID'},{'type':'image','url':'data:image/png;base64,AQID'}], p['input']
+  else:assert p['input']==[{'type':'text','text':p['input'][0]['text']}], p['input']
   turn='turn-'+str(id)
   if mode=='early':emit('item/agentMessage/delta',{"threadId":"native-thread","turnId":turn,"delta":"early "})
   reply(id,{"turn":{"id":turn,"status":"inProgress"}})

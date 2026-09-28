@@ -200,3 +200,37 @@ async fn account_is_rechecked_before_submitting_each_turn() {
             .contains("native reply")
     );
 }
+
+fn fixture_image() -> lai_runtime::ImageInput {
+    lai_runtime::ImageInput {
+        media_type: InputMediaType::Png,
+        bytes: vec![1u8, 2, 3].into(),
+        width: 1,
+        height: 1,
+    }
+}
+#[tokio::test]
+async fn images_are_sent_as_app_server_image_items_after_the_text() {
+    let (r, s) = setup("image").await;
+    r.start_with_inputs(
+        "owner",
+        &s.id,
+        "describe".into(),
+        "1".into(),
+        vec![fixture_image(), fixture_image()],
+    )
+    .await
+    .unwrap();
+    finish(&r, &s).await;
+    assert_eq!(
+        r.get("owner", &s.id).unwrap().state,
+        SessionState::Completed
+    );
+    assert!(
+        !r.events("owner", None, None)
+            .unwrap()
+            .to_string()
+            .contains("AQID")
+    );
+    r.close("owner", &s.id).await.unwrap();
+}

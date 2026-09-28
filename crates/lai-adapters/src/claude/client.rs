@@ -4,7 +4,7 @@ use crate::{
     process::{LaunchSpec, Peer},
 };
 use lai_contracts::*;
-use lai_runtime::{Agent, BoxFuture, TurnContext};
+use lai_runtime::{Agent, BoxFuture, ImageInput, TurnContext};
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, time::Duration};
 async fn control(peer: &mut Peer, request: Value) -> Result<Value> {
@@ -265,7 +265,8 @@ impl ClaudeAgent {
             self.options = Some(options);
         }
         let peer = self.peer.as_mut().ok_or_else(invalid)?;
-        peer.send(json!({"type":"user","message":{"role":"user","content":prompt},"parent_tool_use_id":null,"session_id":self.session.as_deref().unwrap_or(""),"client_composed":true})).await?;
+        let content = user_content(&prompt, cx.images());
+        peer.send(json!({"type":"user","message":{"role":"user","content":content},"parent_tool_use_id":null,"session_id":self.session.as_deref().unwrap_or(""),"client_composed":true})).await?;
         let mut streamed = false;
         loop {
             let response = tokio::select! {value=peer.read()=>value?,_=cx.cancelled()=>{peer.sequence+=1;let _=peer.send(json!({"type":"control_request","request_id":format!("cancel-{}",peer.sequence),"request":{"subtype":"interrupt"}})).await;return Err(DomainError::new(ErrorCode::Cancelled,"Native turn cancelled"));}};
@@ -394,6 +395,22 @@ impl ClaudeAgent {
         }
     }
 }
+/// The stream-json user message content: the bare prompt string for a
+/// text-only turn, otherwise base64 image blocks followed by the text block
+/// (the Messages API content shape Claude Code forwards unchanged).
+pub fn user_content(prompt: &str, images: &[ImageInput]) -> Value {
+    if images.is_empty() {
+        return Value::String(prompt.into());
+    }
+    let mut blocks: Vec<Value> = images
+        .iter()
+        .map(|image| {
+            json!({"type":"image","source":{"type":"base64","media_type":image.media_type.as_str(),"data":image.base64()}})
+        })
+        .collect();
+    blocks.push(json!({"type":"text","text":prompt}));
+    Value::Array(blocks)
+}
 /// A text-only session advertises no tools, or only the host's MCP tools.
 pub fn advertised_tools_allowed(host: &HostTools, tools: &Value) -> bool {
     match tools {
@@ -470,6 +487,9 @@ impl Agent for ClaudeAgent {
     }
     fn native_resumption(&self) -> bool {
         self.persistent
+    }
+    fn image_input(&self) -> bool {
+        true
     }
     fn suspend(&mut self) -> BoxFuture<'_, String> {
         Box::pin(async move {

@@ -149,16 +149,34 @@ pub fn parse_metadata(
                 name: text(&entry["displayName"]).unwrap_or(id).into(),
                 revision,
                 is_default: id == "default",
-                capabilities: vec![Capability {
-                    id: "generation.text".into(),
-                    support: Support::Supported,
-                    origin: CapabilityOrigin::Model,
-                    evidence: Observation::reported(
-                        "Native client text model catalog".into(),
-                        source.clone(),
-                    ),
-                    conditions: vec![],
-                }],
+                capabilities: vec![
+                    Capability {
+                        id: "generation.text".into(),
+                        support: Support::Supported,
+                        origin: CapabilityOrigin::Model,
+                        evidence: Observation::reported(
+                            "Native client text model catalog".into(),
+                            source.clone(),
+                        ),
+                        conditions: vec![],
+                    },
+                    // Claude Code forwards base64 image content blocks in the
+                    // stream-json user message; every Claude model accepts them.
+                    Capability {
+                        id: "input.image".into(),
+                        support: Support::Supported,
+                        origin: CapabilityOrigin::Model,
+                        evidence: Observation::reported(
+                            "Claude models accept image content blocks".into(),
+                            EvidenceSource::new(
+                                EvidenceKind::OfficialApi,
+                                "anthropic",
+                                "https://docs.claude.com/en/docs/build-with-claude/vision",
+                            ),
+                        ),
+                        conditions: vec![],
+                    },
+                ],
                 options,
                 context_window: Observation::unknown("CONTEXT_NOT_REPORTED_AS_STRUCTURED_DATA"),
             });

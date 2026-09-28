@@ -4,7 +4,7 @@ use crate::{
     process::Peer,
 };
 use lai_contracts::*;
-use lai_runtime::{Agent, BoxFuture, TurnContext};
+use lai_runtime::{Agent, BoxFuture, ImageInput, TurnContext};
 use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, BTreeSet, VecDeque},
@@ -63,6 +63,18 @@ pub(crate) fn thread_config(
         }
     }
     config
+}
+
+/// `turn/start` input items: the text item, then one app-server `image`
+/// item per staged image carried inline as a data URL (never a file path).
+pub(crate) fn turn_input(prompt: &str, images: &[ImageInput]) -> Value {
+    let mut items = vec![json!({"type":"text","text":prompt})];
+    items.extend(
+        images
+            .iter()
+            .map(|image| json!({"type":"image","url":image.data_url()})),
+    );
+    Value::Array(items)
 }
 
 impl CodexAgent {
@@ -205,7 +217,7 @@ impl CodexAgent {
         } else {
             json!({"type":"readOnly"})
         };
-        let params = json!({"threadId":thread,"model":self.config.model.native_id,"input":[{"type":"text","text":prompt}],"effort":options.get("reasoningEffort"),"serviceTier":options.get("serviceTier").cloned().unwrap_or(json!("default")),"sandboxPolicy":sandbox,"approvalPolicy":if self.config.review_requests{"onRequest"}else{"never"}});
+        let params = json!({"threadId":thread,"model":self.config.model.native_id,"input":turn_input(&prompt, cx.images()),"effort":options.get("reasoningEffort"),"serviceTier":options.get("serviceTier").cloned().unwrap_or(json!("default")),"sandboxPolicy":sandbox,"approvalPolicy":if self.config.review_requests{"onRequest"}else{"never"}});
         self.peer.sequence += 1;
         let request = self.peer.sequence;
         self.peer
@@ -482,6 +494,9 @@ impl Agent for CodexAgent {
     }
     fn native_resumption(&self) -> bool {
         self.config.persistent
+    }
+    fn image_input(&self) -> bool {
+        true
     }
     fn suspend(&mut self) -> BoxFuture<'_, String> {
         Box::pin(async move {
