@@ -21,6 +21,7 @@ const messages={
  FRAME_TOO_LARGE:'The provider response exceeded the runtime size limit and was stopped.',
  NOT_FOUND:'The requested session or provider resource is no longer available. Refresh the catalog and retry.',
  NOT_IMPLEMENTED:'This runtime does not implement the requested operation.',
+ RESUME_UNAVAILABLE:'This conversation can no longer be continued in its native client. Start a new session.',
  INVALID_REQUEST:'The runtime rejected the request. Review the selected model options and prompt, then retry.',
 };
 

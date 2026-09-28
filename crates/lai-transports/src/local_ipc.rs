@@ -219,6 +219,7 @@ async fn serve_connection(stream: Stream, state: Arc<Shared>) -> Result<()> {
     }
     let client = format!("ipc-{}", &key()?[..32]);
     state.service.register_client(&client, grant.policy)?;
+    state.service.set_app_identity(&client, "ipc-host")?;
     let _owner = Owner {
         service: state.service.clone(),
         client: client.clone(),

@@ -45,7 +45,7 @@ DomainError = TypedDict('DomainError', {'code': Required['ErrorCode'], 'message'
 
 EmptyParams: TypeAlias = Dict[str, Never]
 
-ErrorCode: TypeAlias = Literal['INVALID_REQUEST', 'LOCAL_ACCESS_DENIED', 'AUTH_REQUIRED', 'KEYRING_LOCKED', 'RUNTIME_MISSING', 'INTEGRATION_RESTRICTED', 'PROTOCOL_INCOMPATIBLE', 'CAPABILITY_UNKNOWN', 'CAPABILITY_UNSUPPORTED', 'OPTION_UNSUPPORTED', 'SELECTION_STALE', 'RATE_LIMITED', 'BILLING_CONSENT_REQUIRED', 'APPROVAL_REQUIRED', 'SESSION_ROUTE_MISMATCH', 'EVENT_GAP', 'PROVIDER_UNAVAILABLE', 'TIMEOUT', 'CANCELLED', 'CONFLICT', 'FRAME_TOO_LARGE', 'NOT_FOUND', 'NOT_IMPLEMENTED']
+ErrorCode: TypeAlias = Union[Literal['INVALID_REQUEST', 'LOCAL_ACCESS_DENIED', 'AUTH_REQUIRED', 'KEYRING_LOCKED', 'RUNTIME_MISSING', 'INTEGRATION_RESTRICTED', 'PROTOCOL_INCOMPATIBLE', 'CAPABILITY_UNKNOWN', 'CAPABILITY_UNSUPPORTED', 'OPTION_UNSUPPORTED', 'SELECTION_STALE', 'RATE_LIMITED', 'BILLING_CONSENT_REQUIRED', 'APPROVAL_REQUIRED', 'SESSION_ROUTE_MISMATCH', 'EVENT_GAP', 'PROVIDER_UNAVAILABLE', 'TIMEOUT', 'CANCELLED', 'CONFLICT', 'FRAME_TOO_LARGE', 'NOT_FOUND', 'NOT_IMPLEMENTED'], Literal['RESUME_UNAVAILABLE']]
 
 Event = TypedDict('Event', {'adapterId': Required[str], 'payload': Required['EventPayload'], 'schemaVersion': Required[str], 'sequence': Required[str], 'sessionId': Required[str], 'timestamp': Required['Timestamp'], 'turnId': NotRequired[Union[str, None]]}, total=False)
 
@@ -199,13 +199,13 @@ SelectionParams = TypedDict('SelectionParams', {'allowPaid': NotRequired[bool], 
 
 Session = TypedDict('Session', {'connectionId': Required[str], 'createdAt': Required['Timestamp'], 'id': Required[str], 'nativeResumption': Required[bool], 'selection': Required['Selection'], 'state': Required['SessionState']}, total=False)
 
-SessionCreateParams = TypedDict('SessionCreateParams', {'allowPaid': NotRequired[bool], 'hostMcpServers': NotRequired[List['HostMcpServer']], 'permissionMode': NotRequired[Union[str, None]], 'reviewRequests': NotRequired[bool], 'selection': Required['Selection'], 'workspaceId': Required[str]}, total=False)
+SessionCreateParams = TypedDict('SessionCreateParams', {'allowPaid': NotRequired[bool], 'hostMcpServers': NotRequired[List['HostMcpServer']], 'permissionMode': NotRequired[Union[str, None]], 'persistent': NotRequired[bool], 'reviewRequests': NotRequired[bool], 'selection': Required['Selection'], 'workspaceId': Required[str]}, total=False)
 
 SessionOptionsParams = TypedDict('SessionOptionsParams', {'options': Required[Dict[str, Any]], 'sessionId': Required[str]}, total=False)
 
 SessionParams = TypedDict('SessionParams', {'sessionId': Required[str]}, total=False)
 
-SessionResumeParams = TypedDict('SessionResumeParams', {'resumeToken': Required[str]}, total=False)
+SessionResumeParams = TypedDict('SessionResumeParams', {'hostMcpServers': NotRequired[List['HostMcpServer']], 'resumeToken': Required[str]}, total=False)
 
 SessionState: TypeAlias = Literal['ready', 'running', 'awaiting_approval', 'completed', 'error', 'cancelled', 'closed']
 

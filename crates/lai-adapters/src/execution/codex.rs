@@ -16,6 +16,8 @@ pub(super) struct CodexAgent {
     pub config: CodexExecution,
     pub workspace: PathBuf,
     pub thread: Option<String>,
+    /// A turn completed (or the thread was reattached), so history exists.
+    pub resumable: bool,
 }
 /// Thread config. Read-only sessions are text-only: besides the always-off
 /// integrations, Codex's command, exec and generation tools are disabled so
@@ -113,7 +115,7 @@ impl CodexAgent {
         }
         Ok(names)
     }
-    async fn ensure_thread(&mut self) -> Result<String> {
+    pub(super) async fn ensure_thread(&mut self) -> Result<String> {
         if let Some(thread) = &self.thread {
             return Ok(thread.clone());
         }
@@ -125,18 +127,50 @@ impl CodexAgent {
         } else {
             ("read-only", "readOnly")
         };
-        let response=tokio::time::timeout(Duration::from_secs(20),self.peer.request("thread/start",json!({
-   "model":self.config.model.native_id,"cwd":self.workspace,"ephemeral":true,
-   "sandbox":mode,"approvalPolicy":if self.config.review_requests{"onRequest"}else{"never"},
-   "approvalsReviewer":"user","serviceTier":"default","serviceName":"local-ai-kit",
-   "config":thread_config(self.config.writable,&self.config.host_mcp_servers,&others)
-  }))).await.map_err(|_|failure(ErrorCode::Timeout))??;
+        let approval = if self.config.review_requests {
+            "onRequest"
+        } else {
+            "never"
+        };
+        let config = thread_config(self.config.writable, &self.config.host_mcp_servers, &others);
+        let (method, params) = match &self.config.resume_thread {
+            // Reattach a persisted thread with the same policy it was started with.
+            Some(thread) => (
+                "thread/resume",
+                json!({
+                    "threadId":thread,"model":self.config.model.native_id,"cwd":self.workspace,
+                    "sandbox":mode,"approvalPolicy":approval,"approvalsReviewer":"user",
+                    "serviceTier":"default","excludeTurns":true,"config":config
+                }),
+            ),
+            None => (
+                "thread/start",
+                json!({
+                    "model":self.config.model.native_id,"cwd":self.workspace,
+                    "ephemeral":!self.config.persistent,"sandbox":mode,"approvalPolicy":approval,
+                    "approvalsReviewer":"user","serviceTier":"default",
+                    "serviceName":"local-ai-kit","config":config
+                }),
+            ),
+        };
+        let response =
+            tokio::time::timeout(Duration::from_secs(20), self.peer.request(method, params))
+                .await
+                .map_err(|_| failure(ErrorCode::Timeout))??;
         if response["model"] != self.config.model.native_id
             || response["sandbox"]["type"] != reported
         {
             return Err(failure(ErrorCode::IntegrationRestricted));
         }
         let thread = native_id(&response["thread"]["id"])?;
+        if self
+            .config
+            .resume_thread
+            .as_ref()
+            .is_some_and(|expected| expected != &thread)
+        {
+            return Err(failure(ErrorCode::SessionRouteMismatch));
+        }
         self.thread = Some(thread.clone());
         Ok(thread)
     }
@@ -347,7 +381,10 @@ impl CodexAgent {
                         return Err(failure(ErrorCode::SessionRouteMismatch));
                     }
                     return match p["turn"]["status"].as_str() {
-                        Some("completed") => Ok(()),
+                        Some("completed") => {
+                            self.resumable = true;
+                            Ok(())
+                        }
                         Some("interrupted") => Err(failure(ErrorCode::Cancelled)),
                         _ => {
                             let detail = p["turn"]["error"]["message"]
@@ -441,6 +478,24 @@ impl Agent for CodexAgent {
         Box::pin(async move {
             self.peer.shutdown().await;
             Ok(())
+        })
+    }
+    fn native_resumption(&self) -> bool {
+        self.config.persistent
+    }
+    fn suspend(&mut self) -> BoxFuture<'_, String> {
+        Box::pin(async move {
+            let thread = match (&self.thread, self.config.persistent && self.resumable) {
+                (Some(thread), true) => thread.clone(),
+                _ => {
+                    return Err(DomainError::new(
+                        ErrorCode::Conflict,
+                        "Nothing to resume until a turn completes",
+                    ));
+                }
+            };
+            self.peer.shutdown().await;
+            Ok(thread)
         })
     }
 }

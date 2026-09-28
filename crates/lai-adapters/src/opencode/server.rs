@@ -183,8 +183,29 @@ pub async fn open(
     provider: String,
     workspace: PathBuf,
 ) -> Result<Box<dyn Agent>> {
+    open_session(located_executable, model, provider, workspace, false, None).await
+}
+/// Like [`open`]; `persistent` keeps the native session in OpenCode's storage
+/// on suspend, and `resume` reattaches such a session on a new server.
+pub async fn open_session(
+    located_executable: &Path,
+    model: Model,
+    provider: String,
+    workspace: PathBuf,
+    persistent: bool,
+    resume: Option<String>,
+) -> Result<Box<dyn Agent>> {
     let mut server = start(located_executable, &workspace).await?;
-    match super::client::open(server.endpoint.clone(), model, provider, workspace).await {
+    match super::client::open_session(
+        server.endpoint.clone(),
+        model,
+        provider,
+        workspace,
+        persistent,
+        resume,
+    )
+    .await
+    {
         Ok(inner) => Ok(Box::new(ServerAgent {
             inner,
             child: server.child,
@@ -217,9 +238,16 @@ impl Agent for ServerAgent {
         })
     }
     fn native_resumption(&self) -> bool {
-        false
+        self.inner.native_resumption()
     }
     fn image_input(&self) -> bool {
         self.inner.image_input()
+    }
+    fn suspend(&mut self) -> BoxFuture<'_, String> {
+        Box::pin(async move {
+            let id = self.inner.suspend().await?;
+            self.child.shutdown().await;
+            Ok(id)
+        })
     }
 }

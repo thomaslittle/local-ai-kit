@@ -14,6 +14,7 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 pub use service_builder::{
     build_service_with_declarations, build_service_with_endpoints, build_service_with_registries,
+    build_service_with_state, default_state_dir,
 };
 use std::{
     path::PathBuf,
@@ -28,6 +29,7 @@ pub struct Kit {
 }
 #[derive(Default)]
 pub struct KitBuilder {
+    state_dir: Option<PathBuf>,
     home: Option<PathBuf>,
     source: Option<InventorySource>,
     registry: EndpointRegistry,
@@ -62,6 +64,10 @@ impl Kit {
             ],
         );
         self.service.register_client(&id, policy)?;
+        // Durable resume tokens follow the application label, not this
+        // process-local connection id.
+        self.service
+            .set_app_identity(&id, &format!("embedded:{label}"))?;
         Ok(EmbeddedClient {
             service: self.service.clone(),
             id,
@@ -72,6 +78,12 @@ impl Kit {
 impl KitBuilder {
     pub fn home(mut self, home: PathBuf) -> Self {
         self.home = Some(home);
+        self
+    }
+    /// Directory for the per-install resume key. Enables durable
+    /// `sessions.suspend` tokens (`session.resume.persistent`).
+    pub fn state_dir(mut self, dir: PathBuf) -> Self {
+        self.state_dir = Some(dir);
         self
     }
     pub fn inventory(mut self, source: InventorySource) -> Self {
@@ -113,12 +125,24 @@ impl KitBuilder {
             native_configs.inject(&mut result);
             Ok(result)
         });
+        if self
+            .state_dir
+            .as_ref()
+            .is_some_and(|p| !p.is_absolute() || p.to_string_lossy().chars().any(char::is_control))
+        {
+            return Err(DomainError::new(
+                ErrorCode::InvalidRequest,
+                "State directory must be an absolute local directory",
+            ));
+        }
         Ok(Kit {
-            service: build_service_with_registries(
+            service: service_builder::build_service_with_state(
                 inventory,
                 self.execute,
                 registry,
                 native_registry,
+                Arc::new(BillingDeclarations::default()),
+                self.state_dir,
             ),
         })
     }

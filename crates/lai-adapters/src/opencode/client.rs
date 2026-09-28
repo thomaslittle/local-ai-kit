@@ -31,8 +31,72 @@ pub async fn open(
     provider: String,
     workspace: PathBuf,
 ) -> Result<Box<dyn Agent>> {
+    open_session(endpoint, model, provider, workspace, false, None).await
+}
+/// Opens a text session. `persistent` keeps the native session on suspend
+/// (instead of deleting it); `resume` reattaches such a session by id after
+/// checking it still exists in this directory with deny-all permissions.
+pub async fn open_session(
+    endpoint: Endpoint,
+    model: Model,
+    provider: String,
+    workspace: PathBuf,
+    persistent: bool,
+    resume: Option<String>,
+) -> Result<Box<dyn Agent>> {
     let directory = workspace.to_str().ok_or_else(invalid)?.to_owned();
     let permission = json!([{"permission":"*","pattern":"*","action":"deny"}]);
+    if let Some(id) = resume {
+        let gone = || {
+            DomainError::new(
+                ErrorCode::ResumeUnavailable,
+                "OpenCode no longer has this session",
+            )
+        };
+        let id = sid(&json!(id)).map_err(|_| gone())?;
+        let response = endpoint
+            .json_query(&format!("session/{id}"), &[("directory", &directory)], None)
+            .await
+            .map_err(|_| gone())?;
+        if response["id"] != id.as_str() {
+            return Err(gone());
+        }
+        if response["permission"] != permission {
+            return Err(DomainError::new(
+                ErrorCode::IntegrationRestricted,
+                "OpenCode did not confirm deny-all tool permissions",
+            ));
+        }
+        // The newest existing reply must never be mistaken for a new one.
+        let last_reply = endpoint
+            .json_query(
+                &format!("session/{id}/message"),
+                &[("directory", &directory), ("limit", "2")],
+                None,
+            )
+            .await
+            .ok()
+            .and_then(|messages| {
+                messages.as_array().and_then(|messages| {
+                    messages
+                        .iter()
+                        .rev()
+                        .find(|m| m["info"]["role"] == "assistant")
+                        .and_then(|m| sid(&m["info"]["id"]).ok())
+                })
+            });
+        return Ok(Box::new(Client {
+            endpoint,
+            model,
+            provider,
+            directory,
+            id: Some(id),
+            last_reply,
+            poisoned: false,
+            persistent: true,
+            resumable: true,
+        }));
+    }
     let response=endpoint.json_query("session",&[("directory",&directory)],Some(json!({"title":"Local AI Kit text session","model":{"id":model.native_id,"providerID":provider},"permission":permission}))).await?;
     let id = sid(&response["id"])?;
     if response["permission"] != permission {
@@ -52,6 +116,8 @@ pub async fn open(
         id: Some(id),
         last_reply: None,
         poisoned: false,
+        persistent,
+        resumable: false,
     }))
 }
 struct Client {
@@ -62,6 +128,10 @@ struct Client {
     id: Option<String>,
     last_reply: Option<String>,
     poisoned: bool,
+    /// Keep the native session on suspend instead of deleting it.
+    persistent: bool,
+    /// A turn completed (or the session was reattached), so history exists.
+    resumable: bool,
 }
 impl Client {
     async fn abort(&self, id: &str) {
@@ -241,6 +311,7 @@ impl Client {
             }
         }
         self.last_reply = Some(reply_id);
+        self.resumable = true;
         Ok(())
     }
 }
@@ -285,6 +356,21 @@ impl Agent for Client {
                     .await?;
             }
             Ok(())
+        })
+    }
+    fn native_resumption(&self) -> bool {
+        self.persistent
+    }
+    fn suspend(&mut self) -> BoxFuture<'_, String> {
+        Box::pin(async move {
+            if !(self.persistent && self.resumable) || self.poisoned {
+                return Err(DomainError::new(
+                    ErrorCode::Conflict,
+                    "Nothing to resume until a turn completes",
+                ));
+            }
+            // Taking the id keeps close() from deleting the native session.
+            self.id.take().ok_or_else(invalid)
         })
     }
 }

@@ -59,12 +59,13 @@ async fn execute(args: Args) -> Result<()> {
         scan_native.inject(&mut result);
         Ok(result)
     });
-    let service = host::build_service_with_declarations(
+    let service = host::build_service_with_state(
         inventory,
         args.allow_execution,
         registry,
         native,
         declarations,
+        host::default_state_dir(args.home.as_deref()),
     );
     let policy = host::policy(&args);
     let grant = host::execution_grant(&args);

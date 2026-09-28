@@ -322,6 +322,8 @@ fn codex_config(review: bool) -> CodexExecution {
         writable: false,
         review_requests: review,
         host_mcp_servers: servers(),
+        persistent: false,
+        resume_thread: None,
     }
 }
 async fn codex_turn(mode: &str) -> (SessionState, String) {

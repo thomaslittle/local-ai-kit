@@ -41,6 +41,19 @@ pub struct ExecutionInput {
     pub native_resume: Option<String>,
     /// Validated host MCP servers; adapters that cannot attach them refuse typed.
     pub host_mcp_servers: Vec<HostMcpServer>,
+    /// Keep the native conversation in the client's history (non-ephemeral)
+    /// so it can be resumed after a helper restart.
+    pub persistent: bool,
+}
+/// Which execution routes can resume a conversation after a helper restart.
+#[derive(Clone, Default)]
+pub struct PersistentResume {
+    /// Providers whose adapters persist and reattach native conversations.
+    pub providers: BTreeSet<String>,
+    /// Connections (native ACP profiles) that can when the client advertises
+    /// `loadSession`.
+    pub conditional_connections: BTreeSet<String>,
+    pub(crate) store: Option<Arc<crate::resume_token::ResumeStore>>,
 }
 pub type ExecutionSource =
     Arc<dyn Fn(ExecutionInput) -> BoxFuture<'static, Box<dyn Agent>> + Send + Sync>;
@@ -57,6 +70,7 @@ struct SessionContext {
     account_id: Option<String>,
     route_id: String,
     host_mcp_servers: Vec<HostMcpServer>,
+    persistent: bool,
     billing: Option<BillingMode>,
 }
 #[derive(Clone)]
@@ -81,6 +95,10 @@ pub(crate) struct ExecutionState {
     session_context: RwLock<BTreeMap<String, SessionContext>>,
     resumptions: RwLock<BTreeMap<String, ResumeRecord>>,
     inputs: std::sync::Mutex<crate::inputs::InputStore>,
+    pub persistent: PersistentResume,
+    /// Live sessions reattached from durable tokens: session id to
+    /// (owner, connection, native session id). One live reattachment each.
+    durable_active: std::sync::Mutex<BTreeMap<String, (String, String, String)>>,
 }
 impl ExecutionState {
     fn publish_resumption(&self, token: String, record: ResumeRecord) -> Result<()> {
@@ -118,10 +136,16 @@ impl ExecutionState {
         if let Ok(mut inputs) = self.inputs.lock() {
             inputs.clear_owner(client);
         }
+        if let Ok(mut active) = self.durable_active.lock() {
+            active.retain(|_, (owner, _, _)| owner != client);
+        }
     }
     fn clear_session_inputs(&self, client: &str, session: &str) {
         if let Ok(mut inputs) = self.inputs.lock() {
             inputs.clear_session(client, session);
+        }
+        if let Ok(mut active) = self.durable_active.lock() {
+            active.remove(session);
         }
     }
 }
@@ -145,12 +169,53 @@ pub(crate) fn decorate(
     snapshot: &mut Snapshot,
     providers: &BTreeSet<String>,
     connections: &BTreeSet<String>,
+    persistent: &PersistentResume,
 ) {
     for route in &mut snapshot.routes {
-        if snapshot.connections.iter().any(|c| {
+        let Some(connection) = snapshot.connections.iter().find(|c| {
             c.id == route.connection_id
                 && (providers.contains(&c.provider_id) || connections.contains(&c.id))
-        }) {
+        }) else {
+            continue;
+        };
+        if persistent.store.is_some()
+            && !route
+                .capabilities
+                .iter()
+                .any(|cap| cap.id == PERSISTENT_RESUME)
+        {
+            let (support, detail, conditions) =
+                if persistent.conditional_connections.contains(&connection.id) {
+                    (
+                        Support::Conditional,
+                        "Native client must advertise ACP loadSession",
+                        vec!["acp.loadSession".to_owned()],
+                    )
+                } else if persistent.providers.contains(&connection.provider_id) {
+                    (
+                        Support::Supported,
+                        "Adapter persists and reattaches native conversations",
+                        vec![],
+                    )
+                } else {
+                    (
+                        Support::Unsupported,
+                        "Integration has no resumable native conversation",
+                        vec![],
+                    )
+                };
+            route.capabilities.push(Capability {
+                id: PERSISTENT_RESUME.into(),
+                support,
+                origin: CapabilityOrigin::Runtime,
+                evidence: Observation::reported(
+                    detail.to_owned(),
+                    EvidenceSource::new(EvidenceKind::Derived, "local-ai-kit", detail),
+                ),
+                conditions,
+            });
+        }
+        {
             for cap in &mut route.capabilities {
                 if cap.id == "generation.text" && cap.origin == CapabilityOrigin::Runtime {
                     cap.support = Support::Supported;
@@ -163,7 +228,33 @@ pub(crate) fn decorate(
         }
     }
 }
+/// Route and handshake capability for resume tokens that survive restarts.
+pub const PERSISTENT_RESUME: &str = "session.resume.persistent";
+fn resume_gone(message: &'static str) -> DomainError {
+    DomainError::new(ErrorCode::ResumeUnavailable, message)
+}
+fn now_seconds() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
 impl NativeService {
+    /// Enables durable resume tokens. `state_dir` holds the per-install
+    /// `resume.key`; it is created only when a token is first issued.
+    pub fn with_persistent_resume(
+        mut self,
+        state_dir: impl Into<std::path::PathBuf>,
+        providers: BTreeSet<String>,
+        conditional_connections: BTreeSet<String>,
+    ) -> Self {
+        self.execution_state.persistent = PersistentResume {
+            providers,
+            conditional_connections,
+            store: Some(Arc::new(crate::resume_token::ResumeStore::new(state_dir))),
+        };
+        self
+    }
     pub fn with_execution(self, providers: BTreeSet<String>, source: ExecutionSource) -> Self {
         self.with_execution_scoped(providers, BTreeSet::new(), source)
     }
@@ -243,7 +334,11 @@ impl NativeService {
         if self.execution_state.source.is_none() {
             vec![]
         } else {
-            vec!["turn.input.image", "session.host_mcp"]
+            let mut capabilities = vec!["turn.input.image", "session.host_mcp"];
+            if self.execution_state.persistent.store.is_some() {
+                capabilities.push(PERSISTENT_RESUME);
+            }
+            capabilities
         }
     }
     fn accepted_paid(&self, client: &str, session: &str) -> Result<bool> {
@@ -360,6 +455,12 @@ impl NativeService {
         {
             return Err(denied());
         }
+        if request.persistent && self.execution_state.persistent.store.is_none() {
+            return Err(DomainError::new(
+                ErrorCode::CapabilityUnsupported,
+                "Persistent sessions need a kit state directory",
+            ));
+        }
         let located = self.cache.probe_input(&connection.id)?.0;
         let input = ExecutionInput {
             located,
@@ -373,6 +474,7 @@ impl NativeService {
             native_policy: request.permission_mode.as_deref() == Some("native_policy"),
             native_resume,
             host_mcp_servers: request.host_mcp_servers.clone(),
+            persistent: request.persistent,
         };
         let clients = self.clients.clone();
         let grants = self.execution_state.grants.clone();
@@ -411,7 +513,12 @@ impl NativeService {
                 .cloned()
                 .ok_or_else(denied)?;
             let mut snapshot = project_snapshot(&cache.snapshot()?, &policy);
-            decorate(&mut snapshot, &providers, &execution_connections);
+            decorate(
+                &mut snapshot,
+                &providers,
+                &execution_connections,
+                &PersistentResume::default(),
+            );
             let current_connection = snapshot
                 .connections
                 .iter()
@@ -465,6 +572,13 @@ impl NativeService {
             let _ = tokio::time::timeout(Duration::from_secs(2), agent.close()).await;
             return Err(error);
         }
+        if request.persistent && !agent.native_resumption() {
+            let _ = tokio::time::timeout(Duration::from_secs(2), agent.close()).await;
+            return Err(DomainError::new(
+                ErrorCode::CapabilityUnsupported,
+                "Selected route cannot persist this conversation",
+            ));
+        }
         let mut unpublished = Some(agent);
         let result = (|| {
             let lifetimes = self
@@ -490,6 +604,7 @@ impl NativeService {
                 account_id: connection.account_id.clone(),
                 route_id: route.id.clone(),
                 host_mcp_servers: request.host_mcp_servers.clone(),
+                persistent: request.persistent,
                 billing: route.billing.value().cloned(),
             };
             let session = self.execution_state.runtime.insert(
@@ -580,6 +695,34 @@ impl NativeService {
                     .filter(|context| context.owner == client)
                     .cloned()
                     .ok_or_else(denied)?;
+                if let Some(store) = self.execution_state.persistent.store.clone() {
+                    // Create the key before the native side suspends, so a
+                    // storage failure cannot strand a suspended conversation.
+                    store.ready()?;
+                    let native_session_id = runtime.suspend(client, &request.session_id).await?;
+                    let token = store.seal(&crate::resume_token::DurableResume {
+                        v: 1,
+                        owner: self.app_identity(client),
+                        connection_id: session.connection_id.clone(),
+                        account_id: context.account_id.clone(),
+                        route_id: context.route_id.clone(),
+                        model_id: session.selection.model_id.clone(),
+                        options: session.selection.options.clone(),
+                        workspace_id: context.workspace_id.clone(),
+                        workspace_path: context.workspace_path.clone(),
+                        permission_mode: context.permission_mode.clone(),
+                        review_requests: context.review_requests,
+                        allow_paid: context.allow_paid,
+                        billing: context.billing.clone(),
+                        native_session_id,
+                        issued_at: now_seconds(),
+                    })?;
+                    self.forget_session(client, &request.session_id);
+                    return serde_json::to_value(SessionSuspendResult {
+                        resume_token: token,
+                    })
+                    .map_err(|_| params::invalid());
+                }
                 let token = resume_token()?;
                 {
                     let resumptions = self
@@ -631,6 +774,13 @@ impl NativeService {
             }
             "sessions.resume" => {
                 let request: SessionResumeParams = decode(p)?;
+                if request
+                    .resume_token
+                    .starts_with(crate::resume_token::PREFIX)
+                {
+                    return serde_json::to_value(self.resume_durable(client, request).await?)
+                        .map_err(|_| params::invalid());
+                }
                 if request.resume_token.len() != 64
                     || !request
                         .resume_token
@@ -664,7 +814,12 @@ impl NativeService {
                     permission_mode: record.context.permission_mode.clone(),
                     review_requests: record.context.review_requests,
                     allow_paid: record.context.allow_paid,
-                    host_mcp_servers: record.context.host_mcp_servers.clone(),
+                    host_mcp_servers: if request.host_mcp_servers.is_empty() {
+                        record.context.host_mcp_servers.clone()
+                    } else {
+                        request.host_mcp_servers.clone()
+                    },
+                    persistent: record.context.persistent,
                 };
                 let snapshot = self.projected(client)?;
                 let grant = self.execution_grant(client)?;
@@ -849,6 +1004,127 @@ impl NativeService {
             _ => Err(unsupported()),
         }
     }
+    fn forget_session(&self, client: &str, session: &str) {
+        if let Ok(mut billing) = self.execution_state.session_billing.write() {
+            billing.remove(session);
+        }
+        if let Ok(mut contexts) = self.execution_state.session_context.write() {
+            contexts.remove(session);
+        }
+        self.execution_state.clear_session_inputs(client, session);
+    }
+    /// Reattaches a conversation from a durable token. Every identity the
+    /// token binds is revalidated against the current catalog and grant; a
+    /// conversation that cannot continue is `RESUME_UNAVAILABLE`, never a
+    /// fresh conversation.
+    async fn resume_durable(&self, client: &str, request: SessionResumeParams) -> Result<Session> {
+        let store = self
+            .execution_state
+            .persistent
+            .store
+            .clone()
+            .ok_or_else(|| resume_gone("Durable resume is not enabled in this runtime"))?;
+        let token = store.open(&request.resume_token)?;
+        if token.owner != self.app_identity(client) {
+            return Err(resume_gone("Resume token belongs to another application"));
+        }
+        let grant = self.execution_grant(client)?;
+        self.refresh_for_session(client, &token.route_id).await;
+        let snapshot = self.projected(client)?;
+        let connection = snapshot
+            .connections
+            .iter()
+            .find(|c| c.id == token.connection_id)
+            .ok_or_else(|| resume_gone("The account connection is no longer available"))?;
+        if connection.account_id != token.account_id {
+            return Err(resume_gone("The signed-in account changed"));
+        }
+        let route = snapshot
+            .routes
+            .iter()
+            .find(|r| r.id == token.route_id && r.connection_id == connection.id)
+            .ok_or_else(|| resume_gone("The access route changed"))?;
+        if route.billing.value() != token.billing.as_ref() {
+            return Err(resume_gone("The route billing changed"));
+        }
+        // Same model id is enough: catalog revisions change with client updates.
+        let model = snapshot
+            .models
+            .iter()
+            .find(|m| m.id == token.model_id && m.route_id == route.id)
+            .ok_or_else(|| resume_gone("The model is no longer offered"))?;
+        if grant.workspaces.get(&token.workspace_id) != Some(&token.workspace_path)
+            || token.workspace_path.canonicalize().ok().as_ref() != Some(&token.workspace_path)
+        {
+            return Err(resume_gone("The workspace changed"));
+        }
+        if self
+            .execution_state
+            .durable_active
+            .lock()
+            .map_err(|_| denied())?
+            .values()
+            .any(|(owner, connection_id, native)| {
+                owner == client
+                    && connection_id == &token.connection_id
+                    && native == &token.native_session_id
+            })
+        {
+            return Err(DomainError::new(
+                ErrorCode::Conflict,
+                "This conversation is already open",
+            ));
+        }
+        let create = SessionCreateParams {
+            selection: Selection {
+                route_id: route.id.clone(),
+                model_id: model.id.clone(),
+                revision: model.revision.clone(),
+                options: token.options.clone(),
+            },
+            workspace_id: token.workspace_id.clone(),
+            permission_mode: token.permission_mode.clone(),
+            review_requests: token.review_requests,
+            allow_paid: token.allow_paid,
+            host_mcp_servers: request.host_mcp_servers,
+            persistent: true,
+        };
+        let session = self
+            .open_session(client, create, Some(token.native_session_id.clone()), None)
+            .await
+            .map_err(|error| match error.code {
+                ErrorCode::NotFound
+                | ErrorCode::SessionRouteMismatch
+                | ErrorCode::SelectionStale
+                | ErrorCode::OptionUnsupported => DomainError {
+                    code: ErrorCode::ResumeUnavailable,
+                    ..error
+                },
+                _ => error,
+            })?;
+        if session.connection_id != token.connection_id || !session.native_resumption {
+            let _ = self
+                .execution_state
+                .runtime
+                .close(client, &session.id)
+                .await;
+            self.forget_session(client, &session.id);
+            return Err(resume_gone("Native session resumed on a different route"));
+        }
+        self.execution_state
+            .durable_active
+            .lock()
+            .map_err(|_| denied())?
+            .insert(
+                session.id.clone(),
+                (
+                    client.to_owned(),
+                    token.connection_id,
+                    token.native_session_id,
+                ),
+            );
+        Ok(session)
+    }
     pub fn revoke_execution(&self, client: &str) {
         self.execution_state.revoke(client);
     }
@@ -880,6 +1156,7 @@ mod lifecycle_tests {
                 account_id: None,
                 route_id: "r".into(),
                 host_mcp_servers: vec![],
+                persistent: false,
                 billing: Some(BillingMode::Local),
             },
         }

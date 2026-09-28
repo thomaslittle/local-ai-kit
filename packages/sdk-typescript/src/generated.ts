@@ -44,7 +44,7 @@ export type DomainError = { "code": ErrorCode; "message": string; "retryAfterMs"
 
 export type EmptyParams = {  };
 
-export type ErrorCode = "INVALID_REQUEST" | "LOCAL_ACCESS_DENIED" | "AUTH_REQUIRED" | "KEYRING_LOCKED" | "RUNTIME_MISSING" | "INTEGRATION_RESTRICTED" | "PROTOCOL_INCOMPATIBLE" | "CAPABILITY_UNKNOWN" | "CAPABILITY_UNSUPPORTED" | "OPTION_UNSUPPORTED" | "SELECTION_STALE" | "RATE_LIMITED" | "BILLING_CONSENT_REQUIRED" | "APPROVAL_REQUIRED" | "SESSION_ROUTE_MISMATCH" | "EVENT_GAP" | "PROVIDER_UNAVAILABLE" | "TIMEOUT" | "CANCELLED" | "CONFLICT" | "FRAME_TOO_LARGE" | "NOT_FOUND" | "NOT_IMPLEMENTED";
+export type ErrorCode = "INVALID_REQUEST" | "LOCAL_ACCESS_DENIED" | "AUTH_REQUIRED" | "KEYRING_LOCKED" | "RUNTIME_MISSING" | "INTEGRATION_RESTRICTED" | "PROTOCOL_INCOMPATIBLE" | "CAPABILITY_UNKNOWN" | "CAPABILITY_UNSUPPORTED" | "OPTION_UNSUPPORTED" | "SELECTION_STALE" | "RATE_LIMITED" | "BILLING_CONSENT_REQUIRED" | "APPROVAL_REQUIRED" | "SESSION_ROUTE_MISMATCH" | "EVENT_GAP" | "PROVIDER_UNAVAILABLE" | "TIMEOUT" | "CANCELLED" | "CONFLICT" | "FRAME_TOO_LARGE" | "NOT_FOUND" | "NOT_IMPLEMENTED" | "RESUME_UNAVAILABLE";
 
 export type Event = { "adapterId": string; "payload": EventPayload; "schemaVersion": string; "sequence": string; "sessionId": string; "timestamp": Timestamp; "turnId"?: string | null; };
 
@@ -126,13 +126,13 @@ export type SelectionParams = { "allowPaid"?: boolean; "selection": Selection; }
 
 export type Session = { "connectionId": string; "createdAt": Timestamp; "id": string; "nativeResumption": boolean; "selection": Selection; "state": SessionState; };
 
-export type SessionCreateParams = { "allowPaid"?: boolean; "hostMcpServers"?: Array<HostMcpServer>; "permissionMode"?: string | null; "reviewRequests"?: boolean; "selection": Selection; "workspaceId": string; };
+export type SessionCreateParams = { "allowPaid"?: boolean; "hostMcpServers"?: Array<HostMcpServer>; "permissionMode"?: string | null; "persistent"?: boolean; "reviewRequests"?: boolean; "selection": Selection; "workspaceId": string; };
 
 export type SessionOptionsParams = { "options": { [key: string]: unknown; }; "sessionId": string; };
 
 export type SessionParams = { "sessionId": string; };
 
-export type SessionResumeParams = { "resumeToken": string; };
+export type SessionResumeParams = { "hostMcpServers"?: Array<HostMcpServer>; "resumeToken": string; };
 
 export type SessionState = "ready" | "running" | "awaiting_approval" | "completed" | "error" | "cancelled" | "closed";
 

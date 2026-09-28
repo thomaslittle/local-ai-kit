@@ -26,6 +26,10 @@ pub enum ErrorCode {
     FrameTooLarge,
     NotFound,
     NotImplemented,
+    /// A suspended conversation cannot be continued (identity, route, model,
+    /// workspace or native history changed or is gone). Never replaced by a
+    /// fresh conversation; the host decides whether to start over.
+    ResumeUnavailable,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, thiserror::Error)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

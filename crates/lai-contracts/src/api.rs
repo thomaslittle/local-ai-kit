@@ -112,6 +112,11 @@ pub struct SessionCreateParams {
     /// The agent may call only the listed tools; its own tools stay disabled.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub host_mcp_servers: Vec<HostMcpServer>,
+    /// Keep the native conversation in the client's own history so a
+    /// `sessions.suspend` token can resume it after the helper restarts.
+    /// Requires the route capability `session.resume.persistent`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub persistent: bool,
 }
 /// Most host MCP servers a single session may attach.
 pub const MAX_HOST_MCP_SERVERS: usize = 2;
@@ -216,10 +221,17 @@ pub struct SessionParams {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SessionResumeParams {
     pub resume_token: String,
+    /// Host MCP servers for the resumed session. Tokens never carry the
+    /// servers' bearer tokens, so a host re-supplies them here.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub host_mcp_servers: Vec<HostMcpServer>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SessionSuspendResult {
+    /// Opaque, host-storable token. With `session.resume.persistent` it is
+    /// sealed with a per-install key, carries no credentials, and survives
+    /// helper restarts; otherwise it lives only as long as the helper.
     pub resume_token: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

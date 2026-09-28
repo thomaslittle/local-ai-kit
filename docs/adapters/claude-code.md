@@ -13,3 +13,7 @@ Sources: https://github.com/anthropics/claude-agent-sdk-python (native control p
 ## Host MCP servers
 
 Sessions may attach host-provided loopback MCP servers; see [host MCP servers](../integration/host-mcp.md) for the wiring, enforcement and qualification status of this adapter.
+
+## Persistent resumption
+
+Persistent sessions and durable resume tokens are described in [native session resumption](../integration/native-session-resumption.md).

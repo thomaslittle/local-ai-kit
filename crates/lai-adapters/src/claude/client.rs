@@ -147,7 +147,34 @@ pub fn host_executor(
     connection: String,
     route: String,
 ) -> Box<dyn Agent> {
-    Box::new(ClaudeAgent {
+    Box::new(agent(launch, host, model, connection, route))
+}
+/// A persisted conversation. `launch.spec` must already carry
+/// [`super::launch::persist`] for `session_id`; `resumed` marks a reattached
+/// conversation that already has history.
+pub fn persistent_executor(
+    launch: super::launch::HostMcpLaunch,
+    host: HostTools,
+    model: Model,
+    connection: String,
+    route: String,
+    session_id: String,
+    resumed: bool,
+) -> Box<dyn Agent> {
+    let mut agent = agent(launch, host, model, connection, route);
+    agent.session = Some(session_id);
+    agent.persistent = true;
+    agent.resumable = resumed;
+    Box::new(agent)
+}
+fn agent(
+    launch: super::launch::HostMcpLaunch,
+    host: HostTools,
+    model: Model,
+    connection: String,
+    route: String,
+) -> ClaudeAgent {
+    ClaudeAgent {
         spec: Some(launch.spec),
         mcp_config: launch.config_dir,
         host,
@@ -158,7 +185,9 @@ pub fn host_executor(
         route,
         options: None,
         session: None,
-    })
+        persistent: false,
+        resumable: false,
+    }
 }
 struct ClaudeAgent {
     spec: Option<LaunchSpec>,
@@ -173,6 +202,10 @@ struct ClaudeAgent {
     route: String,
     options: Option<BTreeMap<String, Value>>,
     session: Option<String>,
+    /// Launched with `--session-id`/`--resume` instead of `--no-session-persistence`.
+    persistent: bool,
+    /// History exists (a turn completed, or the session was resumed).
+    resumable: bool,
 }
 impl ClaudeAgent {
     async fn execute(
@@ -341,6 +374,7 @@ impl ClaudeAgent {
                             "Claude turn failed",
                         ));
                     }
+                    self.resumable = true;
                     for (key, unit) in [
                         ("input_tokens", "input_tokens"),
                         ("output_tokens", "output_tokens"),
@@ -432,6 +466,28 @@ impl Agent for ClaudeAgent {
             self.mcp_config.take();
             self.spec.take();
             Ok(())
+        })
+    }
+    fn native_resumption(&self) -> bool {
+        self.persistent
+    }
+    fn suspend(&mut self) -> BoxFuture<'_, String> {
+        Box::pin(async move {
+            let session = match (&self.session, self.persistent && self.resumable) {
+                (Some(session), true) => session.clone(),
+                _ => {
+                    return Err(DomainError::new(
+                        ErrorCode::Conflict,
+                        "Nothing to resume until a turn completes",
+                    ));
+                }
+            };
+            if let Some(mut peer) = self.peer.take() {
+                peer.shutdown().await;
+            }
+            self.mcp_config.take();
+            self.spec.take();
+            Ok(session)
         })
     }
 }

@@ -1,12 +1,15 @@
 //! One native service shared by every transport. Only the trusted host sets policies.
 mod execution;
 mod inputs;
-pub use execution::{ExecutionGrant, ExecutionInput, ExecutionSource};
+pub use execution::{
+    ExecutionGrant, ExecutionInput, ExecutionSource, PERSISTENT_RESUME, PersistentResume,
+};
 mod cache;
 mod catalog;
 mod metadata;
 mod methods;
 mod params;
+mod resume_token;
 use cache::InventoryCache;
 use lai_contracts::{DomainError, ErrorCode, Result, Snapshot};
 use lai_core::{ClientPolicy, project_snapshot};
@@ -29,6 +32,8 @@ pub struct NativeService {
     metadata_source: Option<MetadataSource>,
     metadata_locks: std::sync::Mutex<BTreeMap<String, Arc<tokio::sync::Mutex<()>>>>,
     watchers: std::sync::Mutex<BTreeMap<String, MetadataWatcher>>,
+    /// Stable application identity per connection, for durable resume tokens.
+    app_identities: RwLock<BTreeMap<String, String>>,
 }
 impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
@@ -39,6 +44,7 @@ impl NativeService {
             metadata_source: None,
             metadata_locks: std::sync::Mutex::new(BTreeMap::new()),
             watchers: std::sync::Mutex::new(BTreeMap::new()),
+            app_identities: RwLock::new(BTreeMap::new()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
         }
     }
@@ -67,8 +73,32 @@ impl NativeService {
         clients.insert(id.to_owned(), policy);
         Ok(())
     }
+    /// Host-only: names the application behind a connection. Connection ids
+    /// change on every pairing or restart; durable resume tokens are bound to
+    /// this identity instead (default: the connection id itself).
+    pub fn set_app_identity(&self, client: &str, app: &str) -> Result<()> {
+        if app.is_empty() || app.len() > 128 || app.chars().any(char::is_control) {
+            return Err(params::invalid());
+        }
+        self.policy(client)?;
+        self.app_identities
+            .write()
+            .map_err(|_| denied())?
+            .insert(client.to_owned(), app.to_owned());
+        Ok(())
+    }
+    pub(crate) fn app_identity(&self, client: &str) -> String {
+        self.app_identities
+            .read()
+            .ok()
+            .and_then(|ids| ids.get(client).cloned())
+            .unwrap_or_else(|| client.to_owned())
+    }
     /// Host-only cleanup for an application connection; other clients remain live.
     pub fn unregister_client(&self, id: &str) {
+        if let Ok(mut ids) = self.app_identities.write() {
+            ids.remove(id);
+        }
         self.execution_state.revoke(id);
         if let Ok(mut watchers) = self.watchers.lock() {
             watchers.remove(id);
@@ -103,6 +133,7 @@ impl NativeService {
             &mut snapshot,
             &self.execution_state.providers,
             &self.execution_state.connections,
+            &self.execution_state.persistent,
         );
         Ok(snapshot)
     }

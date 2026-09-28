@@ -154,6 +154,68 @@ pub fn launch_with_host_mcp(
         config_dir: Some(dir),
     })
 }
+/// A new random (v4) UUID for `--session-id`.
+pub fn new_session_id() -> Result<String> {
+    let mut b = [0u8; 16];
+    getrandom::fill(&mut b).map_err(|_| {
+        DomainError::new(
+            ErrorCode::ProviderUnavailable,
+            "Secure session id generation failed",
+        )
+    })?;
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    let hex: String = b.iter().map(|byte| format!("{byte:02x}")).collect();
+    Ok(format!(
+        "{}-{}-{}-{}-{}",
+        &hex[0..8],
+        &hex[8..12],
+        &hex[12..16],
+        &hex[16..20],
+        &hex[20..32]
+    ))
+}
+/// Lowercase canonical UUID text, the only form the kit passes to Claude Code.
+pub fn valid_session_id(id: &str) -> bool {
+    id.len() == 36
+        && id.bytes().enumerate().all(|(i, b)| match i {
+            8 | 13 | 18 | 23 => b == b'-',
+            _ => b.is_ascii_digit() || (b'a'..=b'f').contains(&b),
+        })
+}
+/// Persisted conversation: drop `--no-session-persistence` and either name the
+/// new session (`--session-id`) or reattach one (`--resume`, which keeps the id).
+pub fn persist(spec: &mut LaunchSpec, session_id: &str, resume: bool) -> Result<()> {
+    if !valid_session_id(session_id) {
+        return Err(DomainError::new(
+            ErrorCode::InvalidRequest,
+            "Invalid native session id",
+        ));
+    }
+    spec.args.retain(|arg| arg != "--no-session-persistence");
+    spec.args
+        .push(if resume { "--resume" } else { "--session-id" }.into());
+    spec.args.push(session_id.into());
+    Ok(())
+}
+/// Whether Claude Code stored this conversation under the profile
+/// (`<profile>/projects/<project>/<id>.jsonl`). Checked before a resume so a
+/// missing conversation is refused instead of silently starting a new one.
+pub fn persisted_session_exists(profile_home: &Path, session_id: &str) -> bool {
+    if !valid_session_id(session_id) {
+        return false;
+    }
+    let Ok(projects) = std::fs::read_dir(profile_home.join("projects")) else {
+        return false;
+    };
+    projects.take(10_000).flatten().any(|entry| {
+        entry
+            .path()
+            .join(format!("{session_id}.jsonl"))
+            .symlink_metadata()
+            .is_ok_and(|meta| meta.is_file())
+    })
+}
 pub async fn probe(
     located: LocatedClient,
     connection: String,

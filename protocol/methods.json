@@ -545,32 +545,41 @@
       "type": "object"
     },
     "ErrorCode": {
-      "enum": [
-        "INVALID_REQUEST",
-        "LOCAL_ACCESS_DENIED",
-        "AUTH_REQUIRED",
-        "KEYRING_LOCKED",
-        "RUNTIME_MISSING",
-        "INTEGRATION_RESTRICTED",
-        "PROTOCOL_INCOMPATIBLE",
-        "CAPABILITY_UNKNOWN",
-        "CAPABILITY_UNSUPPORTED",
-        "OPTION_UNSUPPORTED",
-        "SELECTION_STALE",
-        "RATE_LIMITED",
-        "BILLING_CONSENT_REQUIRED",
-        "APPROVAL_REQUIRED",
-        "SESSION_ROUTE_MISMATCH",
-        "EVENT_GAP",
-        "PROVIDER_UNAVAILABLE",
-        "TIMEOUT",
-        "CANCELLED",
-        "CONFLICT",
-        "FRAME_TOO_LARGE",
-        "NOT_FOUND",
-        "NOT_IMPLEMENTED"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "INVALID_REQUEST",
+            "LOCAL_ACCESS_DENIED",
+            "AUTH_REQUIRED",
+            "KEYRING_LOCKED",
+            "RUNTIME_MISSING",
+            "INTEGRATION_RESTRICTED",
+            "PROTOCOL_INCOMPATIBLE",
+            "CAPABILITY_UNKNOWN",
+            "CAPABILITY_UNSUPPORTED",
+            "OPTION_UNSUPPORTED",
+            "SELECTION_STALE",
+            "RATE_LIMITED",
+            "BILLING_CONSENT_REQUIRED",
+            "APPROVAL_REQUIRED",
+            "SESSION_ROUTE_MISMATCH",
+            "EVENT_GAP",
+            "PROVIDER_UNAVAILABLE",
+            "TIMEOUT",
+            "CANCELLED",
+            "CONFLICT",
+            "FRAME_TOO_LARGE",
+            "NOT_FOUND",
+            "NOT_IMPLEMENTED"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "RESUME_UNAVAILABLE",
+          "description": "A suspended conversation cannot be continued (identity, route, model,\nworkspace or native history changed or is gone). Never replaced by a\nfresh conversation; the host decides whether to start over.",
+          "type": "string"
+        }
+      ]
     },
     "Event": {
       "additionalProperties": false,
@@ -2577,6 +2586,10 @@
             "null"
           ]
         },
+        "persistent": {
+          "description": "Keep the native conversation in the client's own history so a\n`sessions.suspend` token can resume it after the helper restarts.\nRequires the route capability `session.resume.persistent`.",
+          "type": "boolean"
+        },
         "reviewRequests": {
           "default": false,
           "type": "boolean"
@@ -2626,6 +2639,13 @@
     "SessionResumeParams": {
       "additionalProperties": false,
       "properties": {
+        "hostMcpServers": {
+          "description": "Host MCP servers for the resumed session. Tokens never carry the\nservers' bearer tokens, so a host re-supplies them here.",
+          "items": {
+            "$ref": "#/$defs/HostMcpServer"
+          },
+          "type": "array"
+        },
         "resumeToken": {
           "type": "string"
         }
@@ -2651,6 +2671,7 @@
       "additionalProperties": false,
       "properties": {
         "resumeToken": {
+          "description": "Opaque, host-storable token. With `session.resume.persistent` it is\nsealed with a per-install key, carries no credentials, and survives\nhelper restarts; otherwise it lives only as long as the helper.",
           "type": "string"
         }
       },

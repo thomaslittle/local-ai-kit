@@ -33,3 +33,7 @@ Gateway authentication is not independently verified identity for every upstream
 September 28 (OpenCode 1.18.32, Windows): the managed server probe returned 111 connected-provider models live. One live text turn on a free Zen model (`longcat-2.5-preview-free`) ended in a `session.error` after ~75 s; the adapter then dropped OpenCode's reason, and now surfaces it (redacted). OpenCode is therefore not live-proven for text turns. `crates/lai-adapters/tests/opencode_live.rs` repeats the check when `LAI_LIVE_OPENCODE` and `LAI_LIVE_OPENCODE_MODEL` are set.
 
 Four gateway catalog tests and two actual mock-server/runtime session tests passed after observed red tests. These verify parsing, routing, permission rejection, streaming, and owned cleanup; they do not certify a live upstream subscription. No live inference was submitted.
+
+## Persistent resumption
+
+Persistent sessions and durable resume tokens are described in [native session resumption](../integration/native-session-resumption.md).

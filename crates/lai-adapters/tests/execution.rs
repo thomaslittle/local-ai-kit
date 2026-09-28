@@ -13,6 +13,8 @@ fn config() -> CodexExecution {
         writable: false,
         review_requests: true,
         host_mcp_servers: vec![],
+        persistent: false,
+        resume_thread: None,
     }
 }
 fn spec(mode: &str) -> LaunchSpec {

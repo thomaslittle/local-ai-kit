@@ -13,6 +13,10 @@ pub struct CodexExecution {
     pub review_requests: bool,
     /// Validated host MCP servers attached to the thread.
     pub host_mcp_servers: Vec<HostMcpServer>,
+    /// Non-ephemeral thread that `thread/resume` can reattach later.
+    pub persistent: bool,
+    /// Native thread id to reattach instead of starting a thread.
+    pub resume_thread: Option<String>,
 }
 pub async fn open_codex(spec: LaunchSpec, config: CodexExecution) -> Result<Box<dyn Agent>> {
     let workspace = spec.cwd.clone();
@@ -36,13 +40,36 @@ pub async fn open_codex(spec: LaunchSpec, config: CodexExecution) -> Result<Box<
     if report.included_usage_allowed.fresh_value() == Some(&false) {
         return Err(failure(ErrorCode::RateLimited));
     }
-    Ok(Box::new(codex::CodexAgent {
+    let mut agent = codex::CodexAgent {
         peer,
         host: crate::host_mcp::HostTools::new(&config.host_mcp_servers),
         config,
         workspace,
         thread: None,
-    }))
+        resumable: false,
+    };
+    if agent.config.resume_thread.is_some() {
+        // Reattach now so a missing thread fails the resume, not a later turn.
+        match tokio::time::timeout(Duration::from_secs(25), agent.ensure_thread()).await {
+            Ok(Ok(_)) => agent.resumable = true,
+            Ok(Err(error)) if error.code == ErrorCode::Timeout => {
+                agent.peer.shutdown().await;
+                return Err(error);
+            }
+            Ok(Err(_)) => {
+                agent.peer.shutdown().await;
+                return Err(DomainError::new(
+                    ErrorCode::ResumeUnavailable,
+                    "Codex could not reattach the native thread",
+                ));
+            }
+            Err(_) => {
+                agent.peer.shutdown().await;
+                return Err(failure(ErrorCode::Timeout));
+            }
+        }
+    }
+    Ok(Box::new(agent))
 }
 fn failure(code: ErrorCode) -> DomainError {
     DomainError::new(code, "Native execution failed")

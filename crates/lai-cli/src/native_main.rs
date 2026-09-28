@@ -67,7 +67,7 @@ fn run() -> Result<()> {
     let base = inventory::source(args.home.clone());
     let entries = registry.clone();
     let native_entries = native.clone();
-    let service = host::build_service_with_declarations(
+    let service = host::build_service_with_state(
         std::sync::Arc::new(move |cancel| {
             let mut scan = base(cancel)?;
             entries.inject(&mut scan);
@@ -78,6 +78,7 @@ fn run() -> Result<()> {
         registry,
         native,
         declarations,
+        host::default_state_dir(args.home.as_deref()),
     );
     let client = stable_id("extension", &[&origin]);
     service.register_client(&client, host::policy(&args))?;

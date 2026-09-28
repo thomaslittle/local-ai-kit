@@ -813,6 +813,7 @@ version = "0.1.0-alpha.6"
 dependencies = [
  "axum",
  "chrono",
+ "getrandom 0.3.4",
  "lai-contracts",
  "lai-discovery",
  "lai-runtime",
@@ -930,6 +931,7 @@ dependencies = [
  "lai-discovery",
  "lai-platform",
  "lai-runtime",
+ "ring",
  "serde",
  "serde_json",
  "tempfile",

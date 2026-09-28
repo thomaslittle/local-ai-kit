@@ -18,8 +18,15 @@ for line in sys.stdin:
  elif method=='mcpServerStatus/list':
   assert mode.startswith('host')
   reply(id,{"data":[{"name":"design" if mode=='host_collision' else "user_global"}],"nextCursor":None})
+ elif method=='thread/resume':
+  assert mode.startswith('resume'), mode
+  assert p['threadId']=='native-thread' and p['excludeTurns'] is True and p['sandbox']=='read-only'
+  assert p['config']['features.shell_tool'] is False and 'ephemeral' not in p
+  if mode=='resume_missing':send({"id":id,"error":{"code":-32600,"message":"thread not found: native-thread"}});continue
+  reply(id,{"thread":{"id":"other-thread" if mode=='resume_other' else "native-thread"},"model":"test-native","sandbox":{"type":"readOnly"},"approvalPolicy":"never","cwd":os.getcwd()})
  elif method=='thread/start':
-  assert p['ephemeral'] is True and p['sandbox']=='read-only' and p['serviceTier']=='default'
+  assert not mode.startswith('resume'), 'resume must not start a new thread'
+  assert p['ephemeral'] is (mode!='persist') and p['sandbox']=='read-only' and p['serviceTier']=='default'
   assert p['config']['features.shell_tool'] is False and p['config']['features.unified_exec'] is False
   if mode.startswith('host'):
    expected={'url':'http://127.0.0.1:48123/mcp','http_headers':{'Authorization':'Bearer '+'k'*40},'enabled_tools':['echo_color'],'default_tools_approval_mode':'approve','required':True}

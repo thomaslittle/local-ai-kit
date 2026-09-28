@@ -52,6 +52,51 @@ pub fn build_service_with_declarations(
     native_registry: Arc<NativeRegistry>,
     declarations: Arc<BillingDeclarations>,
 ) -> Arc<NativeService> {
+    build_service_with_state(
+        source,
+        execute,
+        registry,
+        native_registry,
+        declarations,
+        None,
+    )
+}
+/// Providers whose adapters persist and reattach native conversations.
+pub const PERSISTENT_PROVIDERS: [&str; 3] = ["codex", "claude_code", "opencode"];
+/// The kit's per-user state directory (holds `resume.key`). With a virtual
+/// `home` it stays inside that home. Nothing is created here.
+pub fn default_state_dir(home: Option<&std::path::Path>) -> Option<std::path::PathBuf> {
+    if let Some(home) = home {
+        return Some(home.join(".local-ai-kit"));
+    }
+    let var = |name: &str| {
+        std::env::var_os(name)
+            .map(std::path::PathBuf::from)
+            .filter(|p| p.is_absolute())
+    };
+    if let Some(dir) = var("LOCAL_AI_KIT_STATE_DIR") {
+        return Some(dir);
+    }
+    if cfg!(windows) {
+        var("LOCALAPPDATA").map(|p| p.join("local-ai-kit"))
+    } else if cfg!(target_os = "macos") {
+        var("HOME").map(|p| p.join("Library/Application Support/local-ai-kit"))
+    } else {
+        var("XDG_STATE_HOME")
+            .or_else(|| var("HOME").map(|p| p.join(".local/state")))
+            .map(|p| p.join("local-ai-kit"))
+    }
+}
+/// Like [`build_service_with_declarations`]; `state_dir` enables durable
+/// resume tokens that survive helper restarts.
+pub fn build_service_with_state(
+    source: InventorySource,
+    execute: bool,
+    registry: Arc<Registry>,
+    native_registry: Arc<NativeRegistry>,
+    declarations: Arc<BillingDeclarations>,
+    state_dir: Option<std::path::PathBuf>,
+) -> Arc<NativeService> {
     let metadata_registry = registry.clone();
     let metadata_native = native_registry.clone();
     let metadata_declarations = declarations.clone();
@@ -80,7 +125,7 @@ pub fn build_service_with_declarations(
     if !execute {
         return Arc::new(service);
     }
-    build_execution(service, registry, native_registry, declarations)
+    build_execution(service, registry, native_registry, declarations, state_dir)
 }
 async fn probe_metadata(
     located: lai_discovery::LocatedClient,
@@ -147,6 +192,7 @@ fn build_execution(
     registry: Arc<Registry>,
     native_registry: Arc<NativeRegistry>,
     declarations: Arc<BillingDeclarations>,
+    state_dir: Option<std::path::PathBuf>,
 ) -> Arc<NativeService> {
     let mut native_connections = native_registry
         .profiles
@@ -154,6 +200,17 @@ fn build_execution(
         .cloned()
         .collect::<BTreeSet<_>>();
     native_connections.extend(declarations.native_execution_connections());
+    let service = match state_dir {
+        Some(dir) => service.with_persistent_resume(
+            dir,
+            PERSISTENT_PROVIDERS
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            native_connections.clone(),
+        ),
+        None => service,
+    };
     let execution_native = native_registry.clone();
     Arc::new(
         service.with_execution_scoped(
@@ -221,7 +278,7 @@ fn build_execution(
                             }
                         };
                     }
-                    if input.native_resume.is_some() {
+                    if input.native_resume.is_some() && !input.persistent {
                         return Err(DomainError::new(
                             ErrorCode::CapabilityUnsupported,
                             "Selected integration does not support native session resumption",
@@ -239,13 +296,21 @@ fn build_execution(
                         }
                         let client = configured_endpoint(&config)?;
                         if config.kind == http_provider::HttpKind::Opencode {
-                            return lai_adapters::opencode::client::open(
+                            return lai_adapters::opencode::client::open_session(
                                 client,
                                 input.model,
                                 input.route_provider_id,
                                 input.workspace,
+                                input.persistent,
+                                input.native_resume,
                             )
                             .await;
+                        }
+                        if input.native_resume.is_some() {
+                            return Err(DomainError::new(
+                                ErrorCode::CapabilityUnsupported,
+                                "Selected integration does not support native session resumption",
+                            ));
                         }
                         return Ok(http_provider::executor(config.kind, client, input.model));
                     }
@@ -265,11 +330,13 @@ fn build_execution(
                                 "Native executable unavailable",
                             )
                         })?;
-                        return lai_adapters::opencode::server::open(
+                        return lai_adapters::opencode::server::open_session(
                             &executable,
                             input.model,
                             input.route_provider_id,
                             input.workspace,
+                            input.persistent,
+                            input.native_resume,
                         )
                         .await;
                     }
@@ -280,17 +347,47 @@ fn build_execution(
                                 "This Claude adapter exposes text-only execution",
                             ));
                         }
-                        let launch = claude::launch::launch_with_host_mcp(
+                        let mut launch = claude::launch::launch_with_host_mcp(
                             &input.located,
                             input.workspace,
                             &input.host_mcp_servers,
                         )?;
-                        return Ok(claude::client::host_executor(
+                        let host =
+                            lai_adapters::host_mcp::HostTools::new(&input.host_mcp_servers);
+                        if !input.persistent {
+                            return Ok(claude::client::host_executor(
+                                launch,
+                                host,
+                                input.model,
+                                input.connection_id,
+                                input.route_id,
+                            ));
+                        }
+                        let resumed = input.native_resume.is_some();
+                        let session_id = match input.native_resume {
+                            Some(id) => {
+                                if !claude::launch::persisted_session_exists(
+                                    &input.located.profile_home,
+                                    &id,
+                                ) {
+                                    return Err(DomainError::new(
+                                        ErrorCode::ResumeUnavailable,
+                                        "Claude Code no longer has this conversation",
+                                    ));
+                                }
+                                id
+                            }
+                            None => claude::launch::new_session_id()?,
+                        };
+                        claude::launch::persist(&mut launch.spec, &session_id, resumed)?;
+                        return Ok(claude::client::persistent_executor(
                             launch,
-                            lai_adapters::host_mcp::HostTools::new(&input.host_mcp_servers),
+                            host,
                             input.model,
                             input.connection_id,
                             input.route_id,
+                            session_id,
+                            resumed,
                         ));
                     }
                     if input.located.provider_id != "codex" {
@@ -332,6 +429,8 @@ fn build_execution(
                             writable: input.writable,
                             review_requests: input.review_requests,
                             host_mcp_servers: input.host_mcp_servers,
+                            persistent: input.persistent,
+                            resume_thread: input.native_resume,
                         },
                     )
                     .await
