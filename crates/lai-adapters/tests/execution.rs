@@ -168,6 +168,21 @@ async fn account_switch_aborts_without_retry() {
 }
 
 #[tokio::test]
+async fn token_refresh_mid_turn_keeps_the_session() {
+    let (r, s) = setup("token-refresh").await;
+    for i in ["1", "2"] {
+        r.start("owner", &s.id, "hi".into(), i.into())
+            .await
+            .unwrap();
+        finish(&r, &s).await;
+        assert_eq!(
+            r.get("owner", &s.id).unwrap().state,
+            SessionState::Completed
+        );
+    }
+    r.close("owner", &s.id).await.unwrap();
+}
+#[tokio::test]
 async fn account_is_rechecked_before_submitting_each_turn() {
     let (r, s) = setup("account-changed-before-turn").await;
     r.start("owner", &s.id, "hi".into(), "first".into())

@@ -15,7 +15,10 @@ for raw in sys.stdin:
         if mode=='slow':time.sleep(20)
         if mode=='malformed':print('{not json}',flush=True);continue
         if mode=='huge':print('x'*1100000,flush=True);continue
-        result={'account':None if mode=='signed-out' else {'type':'chatgpt','email':'synthetic@example.test','planType':'future-plan'},'requiresOpenaiAuth':True}
+        reads=globals().get('reads',0)+1;globals()['reads']=reads
+        email='other@example.test' if mode=='changed-account' and reads>1 else 'synthetic@example.test'
+        plan='refreshed-plan' if mode=='token-refresh' and reads>1 else 'future-plan'
+        result={'account':None if mode=='signed-out' else {'type':'chatgpt','email':email,'planType':plan},'requiresOpenaiAuth':True}
     elif method=='model/list':
         cursor=item['params'].get('cursor')
         number='2' if cursor else '1'
@@ -27,7 +30,7 @@ for raw in sys.stdin:
     else:raise RuntimeError('Forbidden method '+str(method))
     if mode=='server-request' and method=='account/read':
         print(json.dumps({'id':'approval-1','method':'item/commandExecution/requestApproval','params':{'command':'must never execute'}}),flush=True)
-    if (mode=='initial-account' and method=='account/read') or (mode=='changed-account' and method=='model/list'):
+    if (mode=='initial-account' and method=='account/read') or (mode in ('changed-account','token-refresh') and method=='model/list'):
         print(json.dumps({'method':'account/updated','params':{'authMode':'chatgpt','planType':'future-plan'}}),flush=True)
     print(json.dumps({'method':'synthetic/notice','params':{'secret':'DO-NOT-EXPORT'}}),flush=True)
     print(json.dumps({'id':item['id'],'result':result}),flush=True)

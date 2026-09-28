@@ -78,6 +78,16 @@ pub fn build_service_with_registries(
                     "codex" => codex::probe(located, connection, route).await,
                     "claude_code" => claude::probe(located, connection, route).await,
                     "grok" => lai_adapters::grok::probe(located, connection, route).await,
+                    "opencode" => {
+                        let executable = located.executable.clone().ok_or_else(|| {
+                            DomainError::new(
+                                ErrorCode::RuntimeMissing,
+                                "Native executable unavailable",
+                            )
+                        })?;
+                        lai_adapters::opencode::server::probe(&executable, &connection, &route)
+                            .await
+                    }
                     "cursor" => tokio::task::spawn_blocking(move || {
                         lai_adapters::cursor::read_cached(located, &connection, &route)
                     })
@@ -188,6 +198,27 @@ pub fn build_service_with_registries(
                             .await;
                         }
                         return Ok(http_provider::executor(config.kind, client, input.model));
+                    }
+                    if input.located.provider_id == "opencode" {
+                        if input.writable || input.review_requests {
+                            return Err(DomainError::new(
+                                ErrorCode::IntegrationRestricted,
+                                "OpenCode sessions are text-only with every tool denied",
+                            ));
+                        }
+                        let executable = input.located.executable.clone().ok_or_else(|| {
+                            DomainError::new(
+                                ErrorCode::RuntimeMissing,
+                                "Native executable unavailable",
+                            )
+                        })?;
+                        return lai_adapters::opencode::server::open(
+                            &executable,
+                            input.model,
+                            input.route_provider_id,
+                            input.workspace,
+                        )
+                        .await;
                     }
                     if input.located.provider_id == "claude_code" {
                         if input.writable || input.review_requests {

@@ -96,7 +96,22 @@ pub(super) fn parse_models(
                 }
             }
         }
-        let rev=stable_id("catalog",&[route,identity,id,&json!({"options":options,"capabilities":capabilities.iter().map(|c|&c.id).collect::<Vec<_>>()}).to_string()]);
+        let rev = stable_id(
+            "catalog",
+            &[
+                route,
+                identity,
+                id,
+                &json!({
+                    "options": crate::option_signature(&options),
+                    "capabilities": capabilities
+                        .iter()
+                        .map(|c| json!([c.id, c.support]))
+                        .collect::<Vec<_>>(),
+                })
+                .to_string(),
+            ],
+        );
         for option in &mut options {
             option.revision = rev.clone();
         }

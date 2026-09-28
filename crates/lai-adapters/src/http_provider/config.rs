@@ -95,7 +95,9 @@ impl Registry {
             let (kind, url) = match provider {
                 "ollama" => (HttpKind::Ollama, "http://127.0.0.1:11434/"),
                 "lmstudio" => (HttpKind::Lmstudio, "http://127.0.0.1:1234/"),
-                "opencode" => (HttpKind::Opencode, "http://127.0.0.1:4096/"),
+                // A discovered OpenCode install runs a kit-owned, password-protected
+                // `opencode serve` (see `opencode::server`); only an explicit
+                // endpoint entry points the kit at a user-run server.
                 _ => return None,
             };
             Some(EndpointConfig {

@@ -1,5 +1,6 @@
 //! OpenCode gateway integration; only allowlisted metadata crosses the adapter boundary.
 pub mod client;
+pub mod server;
 use lai_contracts::*;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -163,8 +164,12 @@ pub fn catalog(
                 &[
                     &route_id,
                     &native,
-                    &serde_json::to_string(&(&item["capabilities"], &item["limit"], &options))
-                        .map_err(|_| invalid())?,
+                    &serde_json::to_string(&(
+                        &item["capabilities"],
+                        &item["limit"],
+                        crate::option_signature(&options),
+                    ))
+                    .map_err(|_| invalid())?,
                 ],
             );
             for option in &mut options {

@@ -15,3 +15,24 @@ pub mod opencode;
 pub mod cursor;
 
 pub mod native_clients;
+
+/// Semantic revision input for option descriptors. Revisions pin a host's
+/// selection across probes and helper processes, so they hash only what
+/// changes behaviour (ids, controls/choices/defaults, category, scope,
+/// sensitivity) and never evidence sources, client versions, timestamps,
+/// display labels, current values or previously computed revisions.
+pub(crate) fn option_signature(options: &[lai_contracts::OptionDescriptor]) -> serde_json::Value {
+    options
+        .iter()
+        .map(|o| {
+            serde_json::json!({
+                "id": o.id,
+                "scope": o.scope,
+                "control": o.control,
+                "category": o.category,
+                "billing": o.billing_sensitive,
+                "permission": o.permission_sensitive,
+            })
+        })
+        .collect()
+}

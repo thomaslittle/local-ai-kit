@@ -30,6 +30,8 @@ pub(crate) struct Peer {
     pub(crate) sequence: u64,
     account_established: bool,
     account_stamp: Option<String>,
+    /// An `account/updated` arrived since the identity was last confirmed.
+    pub(crate) account_update_seen: bool,
 }
 fn error(code: ErrorCode) -> DomainError {
     DomainError::new(code, "Native client metadata request failed")
@@ -77,55 +79,103 @@ fn validate(spec: &LaunchSpec) -> Result<()> {
     }
     Ok(())
 }
-impl Peer {
-    pub(crate) async fn spawn(spec: LaunchSpec) -> Result<Self> {
-        validate(&spec)?;
-        let mut command = Command::new(&spec.executable);
+/// A validated, env-scrubbed, tree-killing command. `stdio` pipes all three
+/// streams for protocol peers; otherwise every stream is closed.
+fn wrapped_command(spec: LaunchSpec, stdio: bool) -> Result<process_wrap::tokio::CommandWrap> {
+    validate(&spec)?;
+    let mut command = Command::new(&spec.executable);
+    command.args(spec.args).current_dir(spec.cwd).env_clear();
+    if stdio {
         command
-            .args(spec.args)
-            .current_dir(spec.cwd)
-            .env_clear()
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
-        for key in [
-            "PATH",
-            "Path",
-            "SystemRoot",
-            "SYSTEMROOT",
-            "WINDIR",
-            "HOME",
-            "USERPROFILE",
-            "APPDATA",
-            "LOCALAPPDATA",
-            "TMP",
-            "TEMP",
-            "TMPDIR",
-            "LANG",
-            "XDG_CONFIG_HOME",
-            "XDG_DATA_HOME",
-            "XDG_RUNTIME_DIR",
-            "DBUS_SESSION_BUS_ADDRESS",
-        ] {
-            if let Some(value) = std::env::var_os(key) {
-                command.env(key, value);
-            }
+    } else {
+        command
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+    }
+    for key in [
+        "PATH",
+        "Path",
+        "SystemRoot",
+        "SYSTEMROOT",
+        "WINDIR",
+        "HOME",
+        "USERPROFILE",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "TMP",
+        "TEMP",
+        "TMPDIR",
+        "LANG",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_RUNTIME_DIR",
+        "DBUS_SESSION_BUS_ADDRESS",
+    ] {
+        if let Some(value) = std::env::var_os(key) {
+            command.env(key, value);
         }
-        command.envs(spec.env);
-        let mut command = process_wrap::tokio::CommandWrap::from(command);
-        command.wrap(process_wrap::tokio::KillOnDrop);
-        #[cfg(windows)]
-        {
-            command
-                .wrap(process_wrap::tokio::CreationFlags(
-                    windows::Win32::System::Threading::CREATE_NO_WINDOW,
-                ))
-                .wrap(process_wrap::tokio::JobObject);
-        }
-        #[cfg(unix)]
-        {
-            command.wrap(process_wrap::tokio::ProcessGroup::leader());
-        }
+    }
+    command.envs(spec.env);
+    let mut command = process_wrap::tokio::CommandWrap::from(command);
+    command.wrap(process_wrap::tokio::KillOnDrop);
+    #[cfg(windows)]
+    {
+        command
+            .wrap(process_wrap::tokio::CreationFlags(
+                windows::Win32::System::Threading::CREATE_NO_WINDOW,
+            ))
+            .wrap(process_wrap::tokio::JobObject);
+    }
+    #[cfg(unix)]
+    {
+        command.wrap(process_wrap::tokio::ProcessGroup::leader());
+    }
+    Ok(command)
+}
+/// Stable identity of a Codex `account/read` account: the auth kind and the
+/// account email, as T3 Code keys its Codex account. Volatile fields (plan
+/// type, routing, managed-credential flags, anything a token refresh can
+/// rewrite) are excluded so a long-running helper does not report a changed
+/// selection while the user is still on the same account. `None` for a
+/// signed-out (null) account.
+pub(crate) fn account_identity_stamp(account: &Value) -> Option<String> {
+    let kind = account["type"].as_str()?;
+    let email = account["email"].as_str().unwrap_or("");
+    Some(lai_contracts::stable_id(
+        "account",
+        &[kind, &email.to_ascii_lowercase()],
+    ))
+}
+/// `account/updated` carries only `authMode`/`planType`. A token refresh or
+/// plan-label change keeps the session; a null auth mode is a sign-out. Any
+/// real account switch is caught by the identity re-read before the next turn.
+pub(crate) fn account_update_signs_out(params: &Value) -> bool {
+    params.get("authMode").is_some_and(Value::is_null)
+}
+/// A background native server whose whole process tree dies with this value.
+pub(crate) struct ManagedChild(Box<dyn process_wrap::tokio::ChildWrapper>);
+impl ManagedChild {
+    pub(crate) fn spawn(spec: LaunchSpec) -> Result<Self> {
+        wrapped_command(spec, false)?
+            .spawn()
+            .map(Self)
+            .map_err(|_| error(ErrorCode::RuntimeMissing))
+    }
+    pub(crate) fn exited(&mut self) -> bool {
+        !matches!(self.0.try_wait(), Ok(None))
+    }
+    pub(crate) async fn shutdown(&mut self) {
+        let _ = self.0.start_kill();
+        let _ = tokio::time::timeout(Duration::from_secs(2), self.0.wait()).await;
+    }
+}
+impl Peer {
+    pub(crate) async fn spawn(spec: LaunchSpec) -> Result<Self> {
+        let mut command = wrapped_command(spec, true)?;
         let mut child = command
             .spawn()
             .map_err(|_| error(ErrorCode::RuntimeMissing))?;
@@ -154,6 +204,7 @@ impl Peer {
             sequence: 0,
             account_established: false,
             account_stamp: None,
+            account_update_seen: false,
         })
     }
     pub(crate) async fn verify_account(&mut self) -> Result<()> {
@@ -161,14 +212,12 @@ impl Peer {
             .request("account/read", json!({"refreshToken":false}))
             .await?;
         if current["account"].is_null()
-            || self.account_stamp.as_deref()
-                != Some(
-                    lai_contracts::stable_id("account", &[&current["account"].to_string()])
-                        .as_str(),
-                )
+            || self.account_stamp.is_none()
+            || self.account_stamp != account_identity_stamp(&current["account"])
         {
             return Err(error(ErrorCode::SelectionStale));
         }
+        self.account_update_seen = false;
         Ok(())
     }
     pub(crate) async fn send(&mut self, value: Value) -> Result<()> {
@@ -219,7 +268,10 @@ impl Peer {
                     return Err(error(ErrorCode::IntegrationRestricted));
                 }
                 if message["method"] == "account/updated" && self.account_established {
-                    return Err(error(ErrorCode::SelectionStale));
+                    if account_update_signs_out(&message["params"]) {
+                        return Err(error(ErrorCode::SelectionStale));
+                    }
+                    self.account_update_seen = true;
                 }
                 continue;
             }
@@ -293,10 +345,7 @@ pub(crate) async fn exchange(
         .request("account/read", json!({"refreshToken":false}))
         .await?;
     peer.account_established = true;
-    peer.account_stamp = Some(lai_contracts::stable_id(
-        "account",
-        &[&account["account"].to_string()],
-    ));
+    peer.account_stamp = account_identity_stamp(&account["account"]);
     if account["account"].is_null() {
         return crate::codex::parse_metadata(connection, route, &initialize, &account, &[], None);
     }
@@ -335,6 +384,10 @@ pub(crate) async fn exchange(
         Err(e) if e.code == ErrorCode::ProviderUnavailable => None,
         Err(error) => return Err(error),
     };
+    // A token refresh during the probe is fine; a different account is not.
+    if peer.account_update_seen {
+        peer.verify_account().await?;
+    }
     crate::codex::parse_metadata(
         connection,
         route,
@@ -379,4 +432,41 @@ pub async fn capture(spec: LaunchSpec, deadline: Duration) -> Result<String> {
     .unwrap_or_else(|_| Err(error(ErrorCode::Timeout)));
     peer.shutdown().await;
     result
+}
+
+#[cfg(test)]
+mod account_identity_tests {
+    use super::{account_identity_stamp, account_update_signs_out};
+    use serde_json::json;
+
+    #[test]
+    fn volatile_account_fields_do_not_change_the_identity() {
+        let first = json!({"type":"chatgpt","email":"user@example.test","planType":"pro"});
+        let later = json!({"type":"chatgpt","email":"User@Example.test","planType":"unknown","workspaceRouting":{"chatgptAccountId":"x"}});
+        assert_eq!(
+            account_identity_stamp(&first),
+            account_identity_stamp(&later)
+        );
+        assert!(account_identity_stamp(&first).is_some());
+    }
+
+    #[test]
+    fn a_different_account_or_auth_kind_is_a_new_identity() {
+        let base = account_identity_stamp(&json!({"type":"chatgpt","email":"a@example.test"}));
+        assert_ne!(
+            base,
+            account_identity_stamp(&json!({"type":"chatgpt","email":"b@example.test"}))
+        );
+        assert_ne!(base, account_identity_stamp(&json!({"type":"apiKey"})));
+        assert_eq!(account_identity_stamp(&json!(null)), None);
+    }
+
+    #[test]
+    fn only_a_sign_out_update_ends_the_session() {
+        assert!(account_update_signs_out(&json!({"authMode":null})));
+        assert!(!account_update_signs_out(
+            &json!({"authMode":"chatgpt","planType":"pro"})
+        ));
+        assert!(!account_update_signs_out(&json!({"planType":"plus"})));
+    }
 }

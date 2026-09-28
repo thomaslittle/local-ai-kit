@@ -206,3 +206,28 @@ fn changed_identity_changes_catalog_revision() {
     assert_ne!(first.account.unwrap().id, second.account.unwrap().id);
     assert_ne!(first.models[0].revision, second.models[0].revision);
 }
+#[test]
+fn unchanged_catalog_keeps_model_revisions_across_probes() {
+    let first = parse_metadata("c", "r", &init(), &account(), &[model()], None).unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    // A later probe (and even a client upgrade that changes evidence sources)
+    // must not re-pin the host's selection when the catalog itself is unchanged.
+    let mut later = init();
+    later["userAgent"] = json!("codex_cli_rs/0.157.1");
+    let second = parse_metadata("c", "r", &later, &account(), &[model()], None).unwrap();
+    let revisions = |report: &ConnectionMetadata| {
+        report
+            .models
+            .iter()
+            .map(|m| (m.id.clone(), m.revision.clone()))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(revisions(&first), revisions(&second));
+    assert!(!first.models.is_empty());
+    let mut changed = model();
+    changed["supportedReasoningEfforts"] =
+        json!([{"reasoningEffort":"other-effort","description":"Provider option"}]);
+    changed["defaultReasoningEffort"] = json!("other-effort");
+    let third = parse_metadata("c", "r", &init(), &account(), &[changed], None).unwrap();
+    assert_ne!(first.models[0].revision, third.models[0].revision);
+}

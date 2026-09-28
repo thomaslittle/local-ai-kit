@@ -129,8 +129,18 @@ impl CodexAgent {
             let method = message["method"]
                 .as_str()
                 .ok_or_else(|| failure(ErrorCode::ProtocolIncompatible))?;
-            if method == "account/updated" || method == "model/rerouted" {
+            // A token refresh or plan-label update keeps the turn; a sign-out or
+            // model reroute does not. Account switches are caught by the
+            // identity re-read before every turn.
+            if method == "model/rerouted"
+                || (method == "account/updated"
+                    && crate::process::account_update_signs_out(&message["params"]))
+            {
                 return Err(failure(ErrorCode::SelectionStale));
+            }
+            if method == "account/updated" {
+                self.peer.account_update_seen = true;
+                continue;
             }
             if turn.is_none() {
                 if early.len() >= 64 {

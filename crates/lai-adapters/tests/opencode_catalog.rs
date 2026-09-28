@@ -115,3 +115,33 @@ fn large_official_provider_directory_can_still_filter_to_connected_accounts() {
     assert_eq!(metadata.providers.len(), 1);
     assert_eq!(metadata.providers[0].id, "provider_223");
 }
+#[test]
+fn unchanged_gateway_catalog_keeps_model_revisions_across_probes() {
+    let first = catalog("connection", "root", &fixture(), &BTreeMap::new()).unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let second = catalog("connection", "root", &fixture(), &BTreeMap::new()).unwrap();
+    let revisions = |m: &ConnectionMetadata| {
+        m.models
+            .iter()
+            .map(|model| (model.id.clone(), model.revision.clone()))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(revisions(&first), revisions(&second));
+}
+#[test]
+fn managed_server_runs_the_native_binary_never_the_npm_shell_shim() {
+    use lai_adapters::opencode::server::resolve_executable;
+    let root = tempfile::tempdir().unwrap();
+    let shim = root.path().join("opencode.cmd");
+    std::fs::write(&shim, b"@echo synthetic").unwrap();
+    assert!(resolve_executable(&shim).is_err());
+    let native = root
+        .path()
+        .join("node_modules/opencode-ai/bin/opencode.exe");
+    std::fs::create_dir_all(native.parent().unwrap()).unwrap();
+    std::fs::write(&native, b"synthetic").unwrap();
+    assert_eq!(resolve_executable(&shim).unwrap(), native);
+    let other = root.path().join("arbitrary.cmd");
+    std::fs::write(&other, b"@echo synthetic").unwrap();
+    assert!(resolve_executable(&other).is_err());
+}

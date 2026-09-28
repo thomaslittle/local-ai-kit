@@ -182,3 +182,16 @@ async fn account_change_after_initial_read_invalidates_catalog_probe() {
         ErrorCode::SelectionStale
     );
 }
+#[tokio::test]
+async fn token_refresh_during_probe_keeps_the_same_account() {
+    let tmp = tempfile::tempdir().unwrap();
+    let report = codex_metadata(
+        launch("token-refresh", tmp.path()),
+        "c",
+        "r",
+        Duration::from_secs(5),
+    )
+    .await
+    .unwrap();
+    assert_eq!(report.models.len(), 2);
+}

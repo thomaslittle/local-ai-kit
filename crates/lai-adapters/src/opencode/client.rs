@@ -163,9 +163,21 @@ impl Client {
                     emitted.push_str(text);
                 }
                 Some("session.error") => {
+                    // Surface OpenCode's own reason (redacted), e.g. an upstream
+                    // provider error or rate limit, instead of a bare failure.
+                    let error = &p["error"];
+                    let detail = error["data"]["message"]
+                        .as_str()
+                        .or_else(|| error["name"].as_str())
+                        .map(|m| m.chars().take(400).collect::<String>())
+                        .map(|m| lai_contracts::redact_diagnostic_detail(&m))
+                        .filter(|m| !m.trim().is_empty());
                     return Err(DomainError::new(
                         ErrorCode::ProviderUnavailable,
-                        "OpenCode reported a session error",
+                        match detail {
+                            Some(detail) => format!("OpenCode reported a session error: {detail}"),
+                            None => "OpenCode reported a session error".into(),
+                        },
                     ));
                 }
                 Some("permission.asked" | "permission.updated") => {

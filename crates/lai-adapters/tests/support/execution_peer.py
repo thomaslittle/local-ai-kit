@@ -27,7 +27,11 @@ for line in sys.stdin:
   reply(id,{"turn":{"id":turn,"status":"inProgress"}})
   if mode=='approval':send({"id":900,"method":"item/commandExecution/requestApproval","params":{"threadId":"native-thread","turnId":turn,"command":"echo fixture","cwd":os.getcwd()}})
   elif mode=='hang':pass
-  elif mode=='account-switch':emit('account/updated',{"authMode":"chatgpt"})
+  elif mode=='account-switch':emit('account/updated',{"authMode":None})
+  elif mode=='token-refresh':
+   emit('account/updated',{"authMode":"chatgpt","planType":"refreshed"})
+   emit('item/agentMessage/delta',{"threadId":"native-thread","turnId":turn,"delta":"native reply"})
+   emit('turn/completed',{"threadId":"native-thread","turn":{"id":turn,"status":"completed"}})
   else:
    emit('item/agentMessage/delta',{"threadId":"native-thread","turnId":turn,"delta":"native reply"})
    emit('turn/completed',{"threadId":"native-thread","turn":{"id":turn,"status":"completed"}})
