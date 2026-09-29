@@ -104,6 +104,19 @@ test('live selector empty states are useful and stay inside the viewport',async(
   assert.equal(app.errors.length,0,app.errors.join('\n'));
  }finally{await app.close();}
 });
+test('pairing is the preferred path; example data is an explicit, labeled choice that leads back to pairing',async()=>{
+ const app=await setup();try{
+  await app.page.goto(app.url);
+  await app.page.getByRole('heading',{name:'Connect your local runtime'}).waitFor();
+  assert.equal(await app.page.locator('#mode-banner').count(),0,'nothing is shown before pairing or an explicit choice');
+  await app.page.getByRole('button',{name:'Explore example data'}).click();
+  await app.page.locator('#mode-banner.synthetic').waitFor();
+  assert.match(await app.page.locator('#mode-banner').innerText(),/no native runtime is paired/i);
+  await app.page.getByRole('button',{name:'Pair a runtime'}).click();
+  await app.page.getByRole('heading',{name:'Connect your local runtime'}).waitFor();
+  assert.equal(app.errors.length,0,app.errors.join('\n'));
+ }finally{await app.close();}
+});
 test('pairing rejects an incorrect code without revealing accounts',async()=>{
  const app=await setup();try{await app.page.goto(app.url);await app.page.getByLabel('Pairing code').fill('000000000000');await app.page.getByRole('button',{name:'Pair with this runtime'}).click();await app.page.getByRole('alert').waitFor();assert.equal(await app.page.locator('#mode-banner').count(),0);}finally{await app.close();}
 });

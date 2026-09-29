@@ -56,6 +56,8 @@ export interface DemoFactory {
   initialMode?: Mode;
   /** Test observation point: called when a bulk metadata check starts (wired by the scripted fixture host only). */
   onBulkProbe?: () => void;
+  /** Offered while showing example data: leave it and pair a native runtime (real accounts). */
+  pair?: () => void;
   /** Route change requested by an action (for example after a live scan). */
   navigate?: (page: Page) => void;
   /** Scripted flags for automated checks (fixture bootstrap only). */
@@ -103,6 +105,8 @@ export interface DemoState {
   detectedExpanded: boolean;
   paletteOpen: boolean;
   connectOpen: boolean;
+  /** True while showing example data that the person can replace by pairing a runtime. */
+  canPair: boolean;
 }
 
 export type { Candidate };

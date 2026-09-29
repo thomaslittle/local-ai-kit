@@ -69,6 +69,7 @@ export const initialState: DemoState = {
   detectedExpanded: true,
   paletteOpen: false,
   connectOpen: false,
+  canPair: false,
 };
 
 export interface DemoActions {
@@ -88,6 +89,8 @@ export interface DemoActions {
   refreshDiagnostics: () => Promise<void>;
   downloadArtifact: (event: SessionEvent) => Promise<void>;
   connectLive: (endpoint: string, token: string) => Promise<void>;
+  /** Leave example data and pair a native runtime. */
+  pair: () => void;
 }
 
 export interface DemoStore {
@@ -134,6 +137,8 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     const { variant, detectedExpanded, paletteOpen, connectOpen } = get();
     return { variant, detectedExpanded, paletteOpen, connectOpen };
   };
+  // Connecting a live runtime replaces the example data, so the pair offer only applies to synthetic mode.
+  const canPair = (mode: Mode): boolean => mode === 'synthetic' && Boolean(factory.pair);
   const patch = (update: Partial<DemoState>): void => set(update);
   const notify = (notice: string): void => set({ notice });
   const stale = (current: number): boolean => closed || epoch !== current;
@@ -299,7 +304,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     await stopClient();
     sessionContext = null;
     pending = [];
-    set({ ...initialState, ...uiPreferences(), mode: flags?.forceMode ?? mode });
+    set({ ...initialState, ...uiPreferences(), mode: flags?.forceMode ?? mode, canPair: canPair(flags?.forceMode ?? mode) });
     let opened: LocalAIClient | undefined;
     try {
       opened = await create();
@@ -534,6 +539,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     refreshDiagnostics,
     downloadArtifact,
     connectLive: (endpoint, token) => attach(() => factory.connectLive(endpoint, token), 'live'),
+    pair: () => factory.pair?.(),
   };
 
   // Boot exactly once at creation: the store, not a component effect, owns the client.

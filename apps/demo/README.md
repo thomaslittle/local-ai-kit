@@ -8,19 +8,15 @@ From the repository root with Node 22.16+ (CI uses 22.20):
 
 ```sh
 npm install --ignore-scripts
-npm run dev          # Vite with hot reload + the synthetic fixture
+npm run demo         # real native helper + built UI  -> http://127.0.0.1:4499/
+npm run dev          # the same helper, with the UI on Vite hot reload -> http://127.0.0.1:5173/
 ```
 
-Open `http://127.0.0.1:5173/`. The synthetic fixture announces itself through `/runtime/info`, so no URL flag is needed. Imports never start a listener.
+Both start the **native helper**, so the demo shows what is actually detected on this machine (passive discovery, then metadata-only provider checks, no prompts). Choose **Show current pairing code**, then **Pair**; pairing is an explicit action. Imports never start a listener.
 
-To serve the production build the way the native helper does:
+**Real data first, labeled example data as the fallback.** With a paired runtime everything on screen is real. If no native runtime is reachable, or you choose **Explore example data** on the pairing screen, the demo shows clearly labeled synthetic data ("Synthetic showcase" banner) with a **Pair a runtime** button back to the real thing. Example data is never mixed with real results, and a failed explicit connection clears it.
 
-```sh
-npm run build:demo
-node apps/demo/server.mjs --fixture     # http://127.0.0.1:4499/
-```
-
-`npm run demo` starts the real native helper against the built assets (live mode, pairing required).
+For tests and scripted scenarios only, `node apps/demo/server.mjs --fixture` serves the built UI with a loopback fixture service (`/#demo-fixture&staleAuth=1&...`).
 
 ## Stack
 

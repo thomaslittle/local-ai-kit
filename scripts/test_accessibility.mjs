@@ -1,5 +1,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import {createServer as createHttpServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {extname,join,resolve} from 'node:path';
 import { chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createFixtureServer } from '../apps/demo/server.mjs';
@@ -182,6 +185,26 @@ test('showroom selectors with a populated catalog stay within responsive viewpor
    }
   }
  }finally{await context.close();}
+});
+test('without any native runtime the demo falls back to labeled example data and offers pairing',async()=>{
+ // A static host with no /runtime/info (and an SPA-style index fallback for unknown paths).
+ const dist=resolve(import.meta.dirname,'../apps/demo/dist');
+ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.woff2':'font/woff2'};
+ const host=createHttpServer(async(request,response)=>{
+  const {pathname}=new URL(request.url,'http://static.test');
+  const name=extname(pathname)?pathname.slice(1):'index.html';
+  try{const body=await readFile(join(dist,name));response.writeHead(200,{'Content-Type':types[extname(name)]??'application/octet-stream'});response.end(body);}
+  catch{response.writeHead(404);response.end();}
+ });
+ await new Promise(done=>host.listen(0,'127.0.0.1',done));
+ const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();
+ try{
+  await page.goto(`http://127.0.0.1:${host.address().port}/`);
+  await page.locator('#mode-banner.synthetic').waitFor();
+  assert.match(await page.locator('#mode-banner').innerText(),/no native runtime is paired/i);
+  assert.equal(await page.getByRole('button',{name:'Pair a runtime'}).isVisible(),true);
+  await page.locator('[data-model-row]').first().waitFor();
+ }finally{await context.close();await new Promise(done=>host.close(done));}
 });
 test('showroom raises no Content Security Policy violations on any page or popup',async()=>{
  // The served policy has no 'unsafe-inline': an injected <style> element or a style attribute would be blocked.

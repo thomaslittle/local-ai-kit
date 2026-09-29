@@ -8,7 +8,9 @@ import { applyStoredTheme } from '@/lib/theme';
 import { createAppRouter, warmRoutes } from '@/router';
 import { pathFor } from '@/lib/pages';
 import { createDemoStore } from '@/state/store';
-import type { FixtureFlags } from '@/state/types';
+import type { DemoFactory, FixtureFlags } from '@/state/types';
+
+type Root = ReturnType<typeof createRoot>;
 
 function fixtureFlagsFromParams(params: URLSearchParams): FixtureFlags {
   const mode = params.get('mode');
@@ -20,30 +22,37 @@ function fixtureFlagsFromParams(params: URLSearchParams): FixtureFlags {
   };
 }
 
+/** The host's self-description, or null when there is no reachable, well-formed runtime. */
 async function fetchJson(path: string): Promise<Record<string, unknown> | null> {
-  const response = await fetch(path, { credentials: 'omit', cache: 'no-store', redirect: 'error' });
-  return response.ok ? ((await response.json()) as Record<string, unknown>) : null;
+  try {
+    const response = await fetch(path, { credentials: 'omit', cache: 'no-store', redirect: 'error' });
+    return response.ok ? ((await response.json()) as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
 }
 
-function showUnavailable(): void {
-  const status = document.createElement('p');
-  status.textContent =
-    'The native runtime is unavailable. Start the Local AI Kit demo command and reload this page. No example data has been substituted.';
-  status.setAttribute('role', 'alert');
-  status.className = 'm-8 text-muted-foreground';
-  document.querySelector('#app')?.replaceChildren(status);
+function mount(root: Root, factory: Omit<DemoFactory, 'navigate'>): void {
+  const router = createAppRouter();
+  const demo = createDemoStore({ ...factory, navigate: (page) => void router.navigate({ to: pathFor(page) }) });
+  root.render(<App demo={demo} router={router} />);
+  warmRoutes(router);
 }
 
-type Root = ReturnType<typeof createRoot>;
+/** Real data: a client paired with the native helper. Nothing here is sample data. */
+function mountLive(root: Root, client: LocalAIClient): void {
+  mount(root, { connectFixture: async () => client, connectLive: connectRuntime, initialClient: client, initialMode: 'live' });
+}
 
-/** Loopback synthetic fixture: every record comes from the fixture service, never from the browser. */
-async function bootFixture(root: Root, params: URLSearchParams): Promise<void> {
+/**
+ * Loopback synthetic fixture served by the test/fixture server. Every record comes from the
+ * fixture service; scripted scenarios are opt-in through the hash fragment (`#demo-fixture&staleAuth=1`).
+ */
+async function mountFixtureServer(root: Root, params: URLSearchParams): Promise<void> {
   const bootstrap = await fetchJson('/fixture/bootstrap');
   if (!bootstrap) throw new Error('RUNTIME_UNAVAILABLE');
   const client = await connectRuntime(window.location.origin, String(bootstrap.sessionToken));
-  const router = createAppRouter();
-  const demo = createDemoStore({
-    navigate: (page) => void router.navigate({ to: pathFor(page) }),
+  mount(root, {
     onBulkProbe: params.has('bulkProbeHook') ? () => void (document.body.dataset.bulkProbe = 'started') : undefined,
     connectFixture: async () => client,
     connectLive: async () => {
@@ -51,30 +60,22 @@ async function bootFixture(root: Root, params: URLSearchParams): Promise<void> {
     },
     initialClient: client,
     initialMode: 'synthetic',
-    // Scripted scenarios are opt-in through the hash fragment (`#demo-fixture&staleAuth=1`).
     fixtureFlags: params.has('demo-fixture') ? fixtureFlagsFromParams(params) : undefined,
   });
-  root.render(<App demo={demo} router={router} />);
-  warmRoutes(router);
 }
 
-function bootPairing(root: Root): void {
-  root.render(
-    <Pairing
-      onPaired={(client: LocalAIClient) => {
-        const router = createAppRouter();
-        const demo = createDemoStore({
-          navigate: (page) => void router.navigate({ to: pathFor(page) }),
-          connectFixture: async () => client,
-          connectLive: connectRuntime,
-          initialClient: client,
-          initialMode: 'live',
-        });
-        root.render(<App demo={demo} router={router} />);
-        warmRoutes(router);
-      }}
-    />,
-  );
+/**
+ * The fallback: example data, used only when there is no paired native runtime. It is loaded on demand,
+ * labeled "Synthetic showcase" everywhere, and offers a way back to pairing.
+ */
+async function mountExampleData(root: Root): Promise<void> {
+  const { openExampleData } = await import('@/state/example-data');
+  mount(root, {
+    connectFixture: openExampleData,
+    connectLive: connectRuntime,
+    initialMode: 'synthetic',
+    pair: () => window.location.reload(),
+  });
 }
 
 async function boot(): Promise<void> {
@@ -83,14 +84,25 @@ async function boot(): Promise<void> {
   // Scripted flags live in the hash fragment so they never reach the server:
   // asset routes reject query strings on every path except /v1/events.
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-
-  // The host says what it is. The fixture server announces `synthetic`; the native helper announces `live`
-  // and requires pairing. `#demo-fixture` still forces the fixture for scripted checks and `npm run dev`.
   const info = await fetchJson('/runtime/info');
-  if (params.has('demo-fixture') || info?.mode === 'synthetic') return bootFixture(root, params);
-  if (!info) throw new Error('RUNTIME_UNAVAILABLE');
-  if (info.mode !== 'live' || info.pairingRequired !== true) throw new Error('INVALID_RUNTIME');
-  bootPairing(root);
+
+  // Scripted checks and the fixture server: the host announces `synthetic`, or the hash forces it.
+  if (params.has('demo-fixture') || info?.mode === 'synthetic') return mountFixtureServer(root, params);
+
+  // Preferred: a native runtime that requires pairing. Real, detected accounts and models, after an explicit pair.
+  if (info?.mode === 'live' && info.pairingRequired === true) {
+    root.render(<Pairing onPaired={(client) => mountLive(root, client)} onExampleData={() => void mountExampleData(root)} />);
+    return;
+  }
+
+  // No usable native runtime: fall back to clearly labeled example data instead of a dead end.
+  return mountExampleData(root);
 }
 
-boot().catch(showUnavailable);
+boot().catch(() => {
+  const status = document.createElement('p');
+  status.textContent = 'The demo could not start. Reload this page; if it persists, restart the Local AI Kit demo command.';
+  status.setAttribute('role', 'alert');
+  status.className = 'm-8 text-muted-foreground';
+  document.querySelector('#app')?.replaceChildren(status);
+});

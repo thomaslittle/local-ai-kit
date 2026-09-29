@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 export function ModeBanner() {
   const actions = useActions();
   const mode = useDemo((state) => state.mode);
+  const canPair = useDemo((state) => state.canPair);
   const live = mode === 'live';
   return (
     <div
@@ -28,11 +29,17 @@ export function ModeBanner() {
       <span className="text-muted-foreground">
         {live
           ? 'Only native data is shown. Execution requires your explicit action and a host-granted workspace.'
-          : 'Example accounts and models. No credentials inspected. No inference used.'}
+          : canPair
+            ? 'Example accounts and models: no native runtime is paired. Pair one to see your real accounts. No credentials inspected. No inference used.'
+            : 'Example accounts and models. No credentials inspected. No inference used.'}
       </span>
       {live ? (
         <Button variant="ghost" size="xs" onClick={() => void actions.revokeConnection()} className="ml-auto">
           Revoke connection
+        </Button>
+      ) : canPair ? (
+        <Button size="xs" onClick={() => actions.pair()} className="ml-auto">
+          Pair a runtime
         </Button>
       ) : (
         <Badge variant="info" className="ml-auto hidden sm:inline-flex">

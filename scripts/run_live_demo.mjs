@@ -8,7 +8,8 @@ import {isAbsolute,join,resolve} from 'node:path';
 import {buildOpenCodeRegistration,verifyOpenCodeAuthentication} from './live_demo_opencode.mjs';
 import {liveDemoExecutionArgs} from './live_demo_policy.mjs';
 
-const assets=resolve('apps/demo/dist');
+const assets=resolve(process.env.LAI_DEMO_ASSETS??'apps/demo/dist');
+const port=String(process.env.LAI_DEMO_PORT??4499);
 const metadataProviders=['codex','claude_code','grok','gemini_cli','antigravity','opencode','ollama','lmstudio','cursor','openai_api','anthropic_api','gemini_api','xai_api','compatible_api'];
 const demoFlags=process.argv.slice(2);
 if(demoFlags.length){
@@ -77,7 +78,7 @@ if(registration)console.log('OpenCode metadata server ready on loopback with tem
 else console.log('OpenCode metadata is unavailable; start a protected OpenCode server to inspect that connection.');
 const env=registration?{...process.env,...registration.environment}:{...process.env};
 const args=[
- 'serve','--http','--port','4499','--assets',assets,'--allow-passive-discovery',
+ 'serve','--http','--port',port,'--assets',assets,'--allow-passive-discovery',
  ...metadataProviders.flatMap(provider=>['--allow-metadata',provider]),
  ...(nativeProfiles?['--native-profiles',nativeProfiles]:[]),
  ...liveDemoExecutionArgs(workspace,{nativeProfiles:Boolean(nativeProfiles)}),

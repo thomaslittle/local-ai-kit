@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { fetchPairingCode, pairWithCode } from '@/lib/pairing';
 
-export function Pairing({ onPaired }: { onPaired: (client: LocalAIClient) => void }) {
+export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalAIClient) => void; onExampleData?: () => void }) {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState('');
   const [failed, setFailed] = useState(false);
@@ -100,6 +100,14 @@ export function Pairing({ onPaired }: { onPaired: (client: LocalAIClient) => voi
           <p className="text-xs leading-relaxed text-muted-foreground">
             Access is limited to the permissions granted when starting this runtime. Your provider credentials stay with the native client.
           </p>
+          {onExampleData ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs text-muted-foreground">
+              <span>Not ready to pair? Example data is labeled and never mixed with real results.</span>
+              <Button variant="ghost" size="sm" onClick={onExampleData}>
+                Explore example data
+              </Button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </main>
