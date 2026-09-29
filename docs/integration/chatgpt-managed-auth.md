@@ -38,11 +38,14 @@ Credentials live under `LOCAL_AI_KIT_STATE_DIR/chatgpt-auth`. Windows stores a
 random encryption key in Windows Credential Manager and atomically replaces an
 authenticated encrypted credential file. Unix uses owner-only state files and
 directories. Refresh uses a per-store OS file lock, rereads the latest tokens,
-and rotates the complete token record atomically. Disconnect closes managed
-sessions, clears local credentials and attempts refresh-token revocation; a
-network failure during revocation does not restore the local session. The
+and rotates the complete token record atomically. Disconnect first persists an
+inactive credential marker, then clears local credentials and closes managed
+sessions before attempting refresh-token revocation. Remote revocation has a
+ten-second budget; network failure does not restore the local session. The
 registration remains for returning sign-in. A persisted epoch prevents an older
-callback from undoing a disconnect in another helper process.
+callback from undoing a disconnect in another helper process. Status rereads the
+atomic records to reflect another process's rotation or disconnect. Preserve this
+state directory when upgrading the helper.
 
 An explicit `connections.probe` obtains the managed model catalog. Plan and
 quota fields remain unknown; a catalog is not an entitlement guarantee. Actual
