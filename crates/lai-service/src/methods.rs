@@ -40,6 +40,13 @@ impl NativeService {
         }
         methods
     }
+    fn advertised_capabilities(&self) -> Vec<&'static str> {
+        let mut capabilities = self.execution_capabilities();
+        if self.chatgpt_auth.is_some() {
+            capabilities.push("auth.chatgpt");
+        }
+        capabilities
+    }
     pub(crate) fn dispatch(&self, client: &str, method: &str, p: &Value) -> Result<Value> {
         match method {
             "runtime.handshake" => {
@@ -55,7 +62,7 @@ impl NativeService {
                 }
                 params::text(p, "clientName")?;
                 Ok(
-                    json!({"protocolVersion":"1.0","runtimeVersion":env!("CARGO_PKG_VERSION"),"methods":self.advertised_methods(),"capabilities":self.execution_capabilities()}),
+                    json!({"protocolVersion":"1.0","runtimeVersion":env!("CARGO_PKG_VERSION"),"methods":self.advertised_methods(),"capabilities":self.advertised_capabilities()}),
                 )
             }
             "runtime.health" => {

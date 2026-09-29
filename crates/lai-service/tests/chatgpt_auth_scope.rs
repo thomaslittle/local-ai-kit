@@ -37,7 +37,8 @@ async fn chatgpt_auth_methods_require_managed_metadata_scope() {
             metadata_probes: 0,
         })
     });
-    let service = NativeService::new(source, Duration::from_secs(1)).with_chatgpt_auth(auth);
+    let service =
+        NativeService::new(source.clone(), Duration::from_secs(1)).with_chatgpt_auth(auth);
     service
         .register_client("denied", ClientPolicy::passive())
         .unwrap();
@@ -68,6 +69,37 @@ async fn chatgpt_auth_methods_require_managed_metadata_scope() {
             .unwrap()
             .iter()
             .any(|m| m == "auth.chatgpt.status")
+    );
+    assert!(
+        methods["capabilities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|capability| capability == "auth.chatgpt")
+    );
+    let unopted = NativeService::new(source, Duration::from_secs(1));
+    unopted
+        .register_client("allowed", ClientPolicy::passive())
+        .unwrap();
+    let unopted_handshake = unopted
+        .handle("allowed", "runtime.handshake", json!({}))
+        .await
+        .unwrap();
+    assert!(
+        !unopted_handshake["methods"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|method| method
+                .as_str()
+                .is_some_and(|method| method.starts_with("auth.chatgpt.")))
+    );
+    assert!(
+        !unopted_handshake["capabilities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|capability| capability == "auth.chatgpt")
     );
 }
 
