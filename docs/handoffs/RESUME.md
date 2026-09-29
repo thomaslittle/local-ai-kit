@@ -1,5 +1,7 @@
 # Resume — Local AI Kit
 
+Work branch for the Tokscale discovery source: `grok-tokscale-upstream-discovery`, cut from `origin/main`. `main` is not updated by that branch. Tokscale commit `1d9a9395418efc6952944b794097935d7d6fa1e8` is a pinned knowledge source, not a runtime dependency. The daily watcher opens a review pull request and does not merge or change production discovery by itself. See [docs/upstream/tokscale.md](../upstream/tokscale.md).
+
 Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 
 The live playground grants text execution for every provider with a registered execution adapter, including explicit API routes, in an isolated temporary workspace. Native ACP profile adapters join when `LAI_NATIVE_PROFILES` is set. Each turn requires the browser consent checkbox and Run click; the helper leaves paid billing options and file writes disabled. The Playground selects provider and route/model directly from the live catalog. No inference was sent during this follow-up.
