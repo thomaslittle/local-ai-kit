@@ -51,3 +51,12 @@ test('self-hosted woff2 fonts are served with the font mime type',{skip:!BUILT&&
  const dir=DIST+'assets/',file=dir+'lai-test-font.woff2';await mkdir(dir,{recursive:true});await writeFile(file,Buffer.from('wOF2test'));t.after(()=>rm(file,{force:true}));
  const s=await server(t),r=await fetch(s.url+'/assets/lai-test-font.woff2');assert.equal(r.status,200);assert.equal(r.headers.get('content-type'),'font/woff2');assert.equal(Buffer.from(await r.arrayBuffer()).toString(),'wOF2test');
 });
+
+test('fixture server announces itself as the synthetic runtime so the plain URL boots the showcase',async()=>{
+ const server=await createFixtureServer();
+ try{
+  const response=await fetch(server.url+'/runtime/info');
+  assert.equal(response.status,200);
+  assert.deepEqual(await response.json(),{mode:'synthetic',pairingRequired:false});
+ }finally{await server.close();}
+});

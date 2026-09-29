@@ -143,7 +143,7 @@ function PromptForm() {
   const status = useDemo((state) => state.sessionStatus);
   const turnId = useDemo((state) => state.turnId);
   const busy = BUSY.includes(status);
-  const running = status === 'Running' || status === 'Starting';
+  const running = busy;
 
   function submit() {
     if (!prompt.trim() || busy) return;

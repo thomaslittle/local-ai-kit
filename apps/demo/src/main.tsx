@@ -17,7 +17,6 @@ function fixtureFlagsFromParams(params: URLSearchParams): FixtureFlags {
     extraProfiles: params.has('extraProfiles'),
     forceMode: mode === 'live' || mode === 'synthetic' ? mode : undefined,
     probeResults: params.has('probeResults'),
-    bulkProbeHook: params.has('bulkProbeHook'),
   };
 }
 
@@ -35,37 +34,31 @@ function showUnavailable(): void {
   document.querySelector('#app')?.replaceChildren(status);
 }
 
-async function boot(): Promise<void> {
-  applyStoredTheme();
-  const root = createRoot(document.querySelector('#app') ?? document.body);
-  // Scripted flags live in the hash fragment so they never reach the server:
-  // asset routes reject query strings on every path except /v1/events.
-  const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+type Root = ReturnType<typeof createRoot>;
 
-  if (params.has('demo-fixture')) {
-    // Scripted HTTP fixture for automated checks. Every record comes from the loopback fixture service.
-    const bootstrap = await fetchJson('/fixture/bootstrap');
-    if (!bootstrap) throw new Error('RUNTIME_UNAVAILABLE');
-    const client = await connectRuntime(window.location.origin, String(bootstrap.sessionToken));
-    const router = createAppRouter();
-    const demo = createDemoStore({
-      navigate: (page) => void router.navigate({ to: pathFor(page) }),
-      connectFixture: async () => client,
-      connectLive: async () => {
-        throw new LocalAIError('TRANSPORT_FAILED');
-      },
-      initialClient: client,
-      initialMode: 'synthetic',
-      fixtureFlags: fixtureFlagsFromParams(params),
-    });
-    root.render(<App demo={demo} router={router} />);
-    warmRoutes(router);
-    return;
-  }
+/** Loopback synthetic fixture: every record comes from the fixture service, never from the browser. */
+async function bootFixture(root: Root, params: URLSearchParams): Promise<void> {
+  const bootstrap = await fetchJson('/fixture/bootstrap');
+  if (!bootstrap) throw new Error('RUNTIME_UNAVAILABLE');
+  const client = await connectRuntime(window.location.origin, String(bootstrap.sessionToken));
+  const router = createAppRouter();
+  const demo = createDemoStore({
+    navigate: (page) => void router.navigate({ to: pathFor(page) }),
+    onBulkProbe: params.has('bulkProbeHook') ? () => void (document.body.dataset.bulkProbe = 'started') : undefined,
+    connectFixture: async () => client,
+    connectLive: async () => {
+      throw new LocalAIError('TRANSPORT_FAILED');
+    },
+    initialClient: client,
+    initialMode: 'synthetic',
+    // Scripted scenarios are opt-in through the hash fragment (`#demo-fixture&staleAuth=1`).
+    fixtureFlags: params.has('demo-fixture') ? fixtureFlagsFromParams(params) : undefined,
+  });
+  root.render(<App demo={demo} router={router} />);
+  warmRoutes(router);
+}
 
-  const info = await fetchJson('/runtime/info');
-  if (!info) throw new Error('RUNTIME_UNAVAILABLE');
-  if (info.mode !== 'live' || info.pairingRequired !== true) throw new Error('INVALID_RUNTIME');
+function bootPairing(root: Root): void {
   root.render(
     <Pairing
       onPaired={(client: LocalAIClient) => {
@@ -82,6 +75,22 @@ async function boot(): Promise<void> {
       }}
     />,
   );
+}
+
+async function boot(): Promise<void> {
+  applyStoredTheme();
+  const root = createRoot(document.querySelector('#app') ?? document.body);
+  // Scripted flags live in the hash fragment so they never reach the server:
+  // asset routes reject query strings on every path except /v1/events.
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+  // The host says what it is. The fixture server announces `synthetic`; the native helper announces `live`
+  // and requires pairing. `#demo-fixture` still forces the fixture for scripted checks and `npm run dev`.
+  const info = await fetchJson('/runtime/info');
+  if (params.has('demo-fixture') || info?.mode === 'synthetic') return bootFixture(root, params);
+  if (!info) throw new Error('RUNTIME_UNAVAILABLE');
+  if (info.mode !== 'live' || info.pairingRequired !== true) throw new Error('INVALID_RUNTIME');
+  bootPairing(root);
 }
 
 boot().catch(showUnavailable);

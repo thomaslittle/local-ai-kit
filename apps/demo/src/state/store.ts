@@ -129,6 +129,11 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
   let pending: SessionEvent[] = [];
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** View choices that belong to the person, not to a connection: they survive reconnects and revokes. */
+  const uiPreferences = (): Pick<DemoState, 'variant' | 'detectedExpanded' | 'paletteOpen' | 'connectOpen'> => {
+    const { variant, detectedExpanded, paletteOpen, connectOpen } = get();
+    return { variant, detectedExpanded, paletteOpen, connectOpen };
+  };
   const patch = (update: Partial<DemoState>): void => set(update);
   const notify = (notice: string): void => set({ notice });
   const stale = (current: number): boolean => closed || epoch !== current;
@@ -270,7 +275,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
   async function probeAllConnections(): Promise<void> {
     const active = client;
     if (!active || get().probing || get().metadataBatch) return;
-    if (flags?.bulkProbeHook) document.body.dataset.bulkProbe = 'started';
+    factory.onBulkProbe?.();
     const current = epoch;
     // Read identifiers from a fresh snapshot rather than rendered state.
     const fresh = await loadSnapshot(active).catch(() => null);
@@ -294,7 +299,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     await stopClient();
     sessionContext = null;
     pending = [];
-    set({ ...initialState, mode: flags?.forceMode ?? mode });
+    set({ ...initialState, ...uiPreferences(), mode: flags?.forceMode ?? mode });
     let opened: LocalAIClient | undefined;
     try {
       opened = await create();
@@ -325,11 +330,12 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
         if (!stale(current) && client) await probeAllConnections();
       }
     } catch {
-      client = null;
-      controller?.abort();
-      controller = null;
       await opened?.close().catch(() => undefined);
+      // A newer attach owns the shared client and stream now; only the current attach may tear them down.
       if (epoch === current) {
+        client = null;
+        controller?.abort();
+        controller = null;
         set({ hasClient: false, handshake: null, connectionError: 'Unable to connect. No account or model data has been substituted.' });
       }
     }
@@ -446,7 +452,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
       await active.grants.revoke({});
       await stopClient();
       const { mode } = get();
-      set({ ...initialState, mode, notice: 'Connection revoked. Restart the native host and reload to pair again.' });
+      set({ ...initialState, ...uiPreferences(), mode, notice: 'Connection revoked. Restart the native host and reload to pair again.' });
     });
   }
 

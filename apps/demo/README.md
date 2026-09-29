@@ -11,13 +11,13 @@ npm install --ignore-scripts
 npm run dev          # Vite with hot reload + the synthetic fixture
 ```
 
-Open `http://127.0.0.1:5173/#demo-fixture`. Imports never start a listener.
+Open `http://127.0.0.1:5173/`. The synthetic fixture announces itself through `/runtime/info`, so no URL flag is needed. Imports never start a listener.
 
 To serve the production build the way the native helper does:
 
 ```sh
 npm run build:demo
-node apps/demo/server.mjs --fixture     # http://127.0.0.1:4499/#demo-fixture
+node apps/demo/server.mjs --fixture     # http://127.0.0.1:4499/
 ```
 
 `npm run demo` starts the real native helper against the built assets (live mode, pairing required).

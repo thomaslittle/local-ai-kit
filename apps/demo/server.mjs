@@ -24,6 +24,7 @@ export async function createFixtureServer({port=0}={}){
    const current=new URL(req.url,url);
    if(req.headers.host!==new URL(url).host||(req.headers.origin&&req.headers.origin!==url)){json(res,403,{error:'ORIGIN_DENIED'});return;}
    if([...current.searchParams.keys()].some(k=>current.pathname!=='/v1/events'||!['sessionId','after'].includes(k))){json(res,400,{error:'INVALID_REQUEST'});return;}
+   if(current.pathname==='/runtime/info'&&req.method==='GET'){json(res,200,{mode:'synthetic',pairingRequired:false});return;}
    if(current.pathname==='/fixture/bootstrap'&&req.method==='GET'){
     if(req.headers['sec-fetch-site']==='cross-site'){json(res,403,{error:'ORIGIN_DENIED'});return;}
     json(res,200,{mode:'synthetic',sessionToken:token});return;

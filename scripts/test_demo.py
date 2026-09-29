@@ -26,7 +26,7 @@ class DemoTests(unittest.TestCase):
         sheets = sorted((ROOT / 'apps/demo/dist/assets').glob('*.css'))
         if not sheets:
             raise RuntimeError('Missing demo stylesheet; run `npm run build:demo` first')
-        cls.styles = sheets[0].read_text(encoding="utf-8")
+        cls.styles = '\n'.join(sheet.read_text(encoding="utf-8") for sheet in sheets)
         cls.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE')
         cls.browser = cls.playwright.chromium.launch(executable_path=executable, headless=True, args=['--no-sandbox'])

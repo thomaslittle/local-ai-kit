@@ -22,7 +22,7 @@ Implement tasks in dependency order and use their targeted test-first verificati
 - State lives in the framework-free store (`src/state/store.ts`). Components subscribe to slices; do not add `useEffect` for anything but subscriptions to external systems.
 - Pages are real routes. Every route in `src/lib/pages.ts` must also be listed in the fixture server (`apps/demo/server.mjs`) and the native helper (`crates/lai-transports/src/http/routes.rs`).
 - `npm run doctor` (React Doctor) must report no warnings or errors. It is a required pull-request check (`.github/workflows/react-doctor.yml`). Fix root causes; a suppression needs a written reason next to it.
-- Run the demo with `npm run dev` (Vite + synthetic fixture, `http://127.0.0.1:5173/#demo-fixture`).
+- Run the demo with `npm run dev` (Vite + synthetic fixture, `http://127.0.0.1:5173/`).
 
 ## Product invariants
 

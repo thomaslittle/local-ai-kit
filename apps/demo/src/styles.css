@@ -306,6 +306,15 @@
   }
 }
 
+/* Base UI would inject this as a <style> element; CSPProvider disableStyleElements turns that off
+   (the served CSP has no 'unsafe-inline'), so the same two rules ship in the stylesheet. */
+.base-ui-disable-scrollbar {
+  scrollbar-width: none;
+}
+.base-ui-disable-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Long lists paint only what is near the viewport. */
 [data-model-row] {
   content-visibility: auto;

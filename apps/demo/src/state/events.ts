@@ -54,6 +54,8 @@ export function reduceEvents(
         break;
       case 'approval_resolved':
         approval = null;
+        // The turn resumes after an answer; a final event follows when it ends.
+        if (sessionStatus === 'Awaiting approval') sessionStatus = 'Running';
         break;
       case 'final':
         sessionStatus = finalStatus(payload.status);

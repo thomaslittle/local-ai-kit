@@ -47,7 +47,6 @@ export interface FixtureFlags {
   extraProfiles?: boolean;
   forceMode?: Mode;
   probeResults?: boolean;
-  bulkProbeHook?: boolean;
 }
 
 export interface DemoFactory {
@@ -55,6 +54,8 @@ export interface DemoFactory {
   connectLive: (endpoint: string, token: string) => Promise<LocalAIClient>;
   initialClient?: LocalAIClient | null;
   initialMode?: Mode;
+  /** Test observation point: called when a bulk metadata check starts (wired by the scripted fixture host only). */
+  onBulkProbe?: () => void;
   /** Route change requested by an action (for example after a live scan). */
   navigate?: (page: Page) => void;
   /** Scripted flags for automated checks (fixture bootstrap only). */

@@ -62,7 +62,7 @@ function PickerBody({ onPicked }: { onPicked: () => void }) {
   const providerIds = useMemo(() => new Set(all.map((candidate) => candidate.route.providerId)), [all]);
   const favoriteKeys = useMemo(() => new Set(favorites), [favorites]);
   const railProviders = providers.filter((provider) => providerIds.has(provider.id));
-  const visible = useMemo(() => {
+  const { visible, total } = useMemo(() => {
     const pool = deferredQuery.trim()
       ? all.filter((candidate) => matches(candidate, deferredQuery))
       : rail === ALL
@@ -70,7 +70,7 @@ function PickerBody({ onPicked }: { onPicked: () => void }) {
         : rail === FAVORITES
           ? all.filter((candidate) => favoriteKeys.has(candidate.key))
           : all.filter((candidate) => candidate.route.providerId === rail);
-    return pool.slice(0, MAX_ROWS);
+    return { visible: pool.slice(0, MAX_ROWS), total: pool.length };
   }, [all, deferredQuery, rail, favoriteKeys]);
 
   const keys = visible.map((candidate) => candidate.key);
@@ -154,6 +154,7 @@ function PickerBody({ onPicked }: { onPicked: () => void }) {
               </div>
             );
           })}
+          {total > MAX_ROWS ? <p className="px-3 py-2 text-xs text-muted-foreground">{`Showing ${MAX_ROWS} of ${total.toLocaleString()} routes. Search to narrow the list.`}</p> : null}
         </CommandList>
       </Command>
     </div>

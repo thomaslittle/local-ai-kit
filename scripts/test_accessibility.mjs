@@ -183,6 +183,28 @@ test('showroom selectors with a populated catalog stay within responsive viewpor
   }
  }finally{await context.close();}
 });
+test('showroom raises no Content Security Policy violations on any page or popup',async()=>{
+ // The served policy has no 'unsafe-inline': an injected <style> element or a style attribute would be blocked.
+ const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();
+ const violations=[];
+ await page.exposeFunction('reportCsp',value=>violations.push(value));
+ await page.addInitScript(()=>document.addEventListener('securitypolicyviolation',event=>window.reportCsp(`${event.violatedDirective} ${event.sourceFile}:${event.lineNumber}`)));
+ try{
+  await mountFixture(page);
+  for(const section of ['Overview','Connections','Models','Usage','Selector lab','Playground','Diagnostics']){
+   await nav(page,section);
+   if(section==='Usage')await page.locator('[data-slot="chart"]').first().waitFor();
+   if(section==='Playground'){await page.getByRole('button',{name:/^Model:/}).click();await page.getByRole('option').first().waitFor();await page.keyboard.press('Escape');}
+  }
+  await nav(page,'Selector lab');
+  await page.getByRole('combobox',{name:'Reasoning effort',exact:true}).click();
+  await page.getByRole('option',{name:'Cosmic',exact:true}).waitFor();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox',{name:'Search every model'}).waitFor();
+  assert.deepEqual(violations,[]);
+ }finally{await context.close();}
+});
 test('showroom rendered text has no common mojibake markers',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{

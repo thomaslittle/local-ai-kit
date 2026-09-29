@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useEffectEvent } from 'react';
+import { CSPProvider } from '@base-ui/react/csp-provider';
 import { HeadContent, Outlet, useRouterState } from '@tanstack/react-router';
 import { PlugsIcon, WarningIcon } from '@phosphor-icons/react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -106,7 +107,8 @@ function Dialogs() {
 /** Root layout: chrome around whichever page route is active. */
 export function AppShell() {
   return (
-    <TooltipProvider delay={200}>
+    <CSPProvider disableStyleElements>
+      <TooltipProvider delay={200}>
       <HeadContent />
       <div aria-hidden="true" className="ambient" />
       <SidebarProvider>
@@ -127,6 +129,7 @@ export function AppShell() {
       </SidebarProvider>
       <GlobalShortcuts />
       <Dialogs />
-    </TooltipProvider>
+      </TooltipProvider>
+    </CSPProvider>
   );
 }
