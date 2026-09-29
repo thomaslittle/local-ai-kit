@@ -96,7 +96,8 @@ export interface DemoState {
   simulateApproval: boolean;
   workspaceId: string;
   prompt: string;
-  probing: string | null;
+  /** Connection ids whose metadata check is in flight (providers are checked concurrently). */
+  probing: string[];
   probeResults: Record<string, ProbeResult>;
   metadataBatch: { completed: number; total: number } | null;
   notice: string;

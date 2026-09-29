@@ -21,6 +21,7 @@ Usage:
       [--allow-passive-discovery] [--allow-codex-metadata]
       [--allow-codex-execution --workspace ABSOLUTE_DIRECTORY]
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
+      [--warm-metadata]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
@@ -28,8 +29,12 @@ Usage:
   --billing-declarations ABSOLUTE_JSON declares billing for discovered connections whose provider leaves it unknown; recorded as user-supplied evidence, never verification.
   local-ai-kit --version
 
-Serving never scans on startup. --allow-passive-discovery explicitly authorizes
-metadata-only scans requested by the owning SDK. No credentials or inference.
+Serving never scans on startup unless the host passes --warm-metadata (HTTP only,
+with --allow-passive-discovery and a metadata provider grant): the helper then runs
+one passive scan and the already-permitted metadata checks in the background, so
+results are ready when a browser pairs. Providers are checked concurrently; the
+profiles of one provider are checked in order. --allow-passive-discovery explicitly
+authorizes metadata-only scans requested by the owning SDK. No credentials or inference.
 --allow-codex-metadata separately permits explicit connections.probe requests
 through the installed Codex client. This may read its login and contact its
 account/catalog/usage services, but never starts threads or model generation.
@@ -38,6 +43,50 @@ at startup. A --workspace is required; its public name is default. Writes, nativ
 approval review, and paid options each require their own flag. HTTP is loopback-only
 and requires explicit single-use browser pairing. No tokens are printed.
 --home isolates all discovery roots and excludes the inherited PATH/overrides.";
+
+/// Host-initiated warm-up (opt-in). It uses only what the host already permitted for browsers:
+/// one passive scan, then metadata checks. Different providers run concurrently; the profiles of
+/// one provider run in order, because a status check can refresh that provider's own credentials
+/// and two checks must never race that refresh. Failures are ignored: the browser can still check.
+async fn warm_metadata(service: Arc<lai_service::NativeService>, policy: lai_core::ClientPolicy) {
+    const HOST: &str = "host-warmup";
+    if service.register_client(HOST, policy).is_err() {
+        return;
+    }
+    let listed = match service
+        .handle(HOST, "discovery.refresh", json!({"level": "passive"}))
+        .await
+    {
+        Ok(_) => service.handle(HOST, "connections.list", json!({})).await,
+        Err(error) => Err(error),
+    };
+    let mut by_provider: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+    if let Some(connections) = listed.ok().as_ref().and_then(|value| value.as_array()) {
+        for connection in connections {
+            if let (Some(provider), Some(id)) =
+                (connection["providerId"].as_str(), connection["id"].as_str())
+            {
+                by_provider
+                    .entry(provider.to_owned())
+                    .or_default()
+                    .push(id.to_owned());
+            }
+        }
+    }
+    let mut checks = tokio::task::JoinSet::new();
+    for ids in by_provider.into_values() {
+        let service = service.clone();
+        checks.spawn(async move {
+            for id in ids {
+                let _ = service
+                    .handle(HOST, "connections.probe", json!({"connectionId": id}))
+                    .await;
+            }
+        });
+    }
+    while checks.join_next().await.is_some() {}
+    service.close_client(HOST);
+}
 
 async fn execute(args: Args) -> Result<()> {
     if matches!(args.action, Action::Connect) {
@@ -91,6 +140,9 @@ async fn execute(args: Args) -> Result<()> {
             broker_cli::serve(service, args.ipc.as_deref().unwrap(), policy, grant).await
         }
         Action::Serve if args.http => {
+            if args.warm_metadata {
+                tokio::spawn(warm_metadata(service.clone(), policy.clone()));
+            }
             let server = lai_transports::http::start(
                 service,
                 lai_transports::http::HttpOptions {

@@ -22,7 +22,7 @@ import { filterLiveCatalog } from '../../lib/catalog_visibility.mjs';
 import { debugSessionError, userFacingError } from '../../lib/errors.mjs';
 import { applyFixtureFlags } from './fixture-flags';
 import { markAssistantStatus, newMessageId, reduceEvents } from './events';
-import type { ChatMessage, DemoFactory, DemoState, Mode } from './types';
+import type { ChatMessage, DemoFactory, DemoState, Mode, ProbeResult } from './types';
 
 const BUSY = new Set<DemoState['sessionStatus']>(['Starting', 'Running', 'Awaiting approval']);
 /** Text deltas are coalesced to roughly one commit per frame. */
@@ -60,7 +60,7 @@ export const initialState: DemoState = {
   simulateApproval: false,
   workspaceId: 'default',
   prompt: '',
-  probing: null,
+  probing: [],
   probeResults: {},
   metadataBatch: null,
   notice: '',
@@ -244,58 +244,105 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     });
   }
 
+  function describeCheck(snapshot: Snapshot, id: string, prefix: string): ProbeResult {
+    const connection = snapshot.connections.find((item) => item.id === id);
+    const routeIds = new Set(snapshot.routes.filter((route) => route.connectionId === id).map((route) => route.id));
+    const modelCount = snapshot.models.filter((model) => routeIds.has(model.routeId)).length;
+    const status = connection?.auth.state === 'known' ? connection.auth.value : 'authentication not reported';
+    return { ok: true, message: `${prefix} \u00b7 ${status} \u00b7 ${modelCount} model${modelCount === 1 ? '' : 's'} reported` };
+  }
+
+  /**
+   * Re-read the catalog after a probe. Single-flight: concurrent probe completions share one read, and a
+   * completion that lands mid-read schedules exactly one more, so the UI updates per probe without a
+   * full catalog read (about 150 ms for a few hundred models) for every probe.
+   */
+  let catalogRead: Promise<Snapshot> | null = null;
+  let catalogDirty = false;
+  function refreshCatalog(active: LocalAIClient, current: number): Promise<Snapshot> {
+    if (catalogRead) {
+      catalogDirty = true;
+      return catalogRead;
+    }
+    catalogRead = (async () => {
+      let snapshot: Snapshot;
+      do {
+        catalogDirty = false;
+        snapshot = rebuild(await loadSnapshot(active), get().mode, Boolean(flags?.forceMode));
+      } while (catalogDirty && !stale(current));
+      return snapshot;
+    })().finally(() => {
+      catalogRead = null;
+    });
+    return catalogRead;
+  }
+
   async function probeConnection(id: string): Promise<boolean> {
     const active = client;
-    if (!active || get().probing) return false;
+    if (!active || get().probing.includes(id)) return false;
     const current = epoch;
-    set({ notice: '', probing: id });
+    set((state) => ({ notice: '', probing: [...state.probing, id] }));
     try {
       await active.connections.probe({ connectionId: id });
       if (stale(current)) return false;
-      const snapshot = rebuild(await loadSnapshot(active), get().mode, Boolean(flags?.forceMode));
-      const connection = snapshot.connections.find((item) => item.id === id);
-      const routeIds = new Set(snapshot.routes.filter((route) => route.connectionId === id).map((route) => route.id));
-      const modelCount = snapshot.models.filter((model) => routeIds.has(model.routeId)).length;
-      const status = connection?.auth.state === 'known' ? connection.auth.value : 'authentication not reported';
-      set((state) => ({
-        probeResults: {
-          ...state.probeResults,
-          [id]: { ok: true, message: `Metadata check complete · ${status} · ${modelCount} model${modelCount === 1 ? '' : 's'} reported` },
-        },
-      }));
+      const snapshot = await refreshCatalog(active, current);
+      set((state) => ({ probeResults: { ...state.probeResults, [id]: describeCheck(snapshot, id, 'Metadata check complete') } }));
       return true;
     } catch (error) {
       if (!stale(current)) {
         const reason = userFacingError(error as { code?: unknown });
         set((state) => ({
-          probeResults: { ...state.probeResults, [id]: { ok: false, message: `Metadata check unavailable · ${reason}` } },
+          probeResults: { ...state.probeResults, [id]: { ok: false, message: `Metadata check unavailable \u00b7 ${reason}` } },
         }));
       }
       return false;
     } finally {
-      if (!stale(current)) set({ probing: null });
+      if (!stale(current)) set((state) => ({ probing: state.probing.filter((item) => item !== id) }));
     }
   }
 
+  /**
+   * Check every detected profile. Different providers run concurrently (they share nothing), but the
+   * profiles of ONE provider run in order: a provider's status check can refresh its own credentials,
+   * and two checks must never race that refresh. Results appear as each one finishes.
+   */
   async function probeAllConnections(): Promise<void> {
     const active = client;
-    if (!active || get().probing || get().metadataBatch) return;
+    if (!active || get().probing.length || get().metadataBatch) return;
     factory.onBulkProbe?.();
     const current = epoch;
-    // Read identifiers from a fresh snapshot rather than rendered state.
-    const fresh = await loadSnapshot(active).catch(() => null);
-    if (!fresh || stale(current) || !client) return;
-    const ids = fresh.connections.map((connection) => connection.id);
-    if (!ids.length) return;
-    set({ notice: '', metadataBatch: { completed: 0, total: ids.length } });
-    for (const id of ids) {
-      if (stale(current) || !client) break;
-      // Deliberately sequential: metadata probes must not fan out against a provider.
-      // react-doctor-disable-next-line react-doctor/async-await-in-loop
-      await probeConnection(id);
-      if (stale(current)) break;
-      set((state) => ({ metadataBatch: state.metadataBatch && { ...state.metadataBatch, completed: state.metadataBatch.completed + 1 } }));
+    const connections = get().snapshot?.connections ?? [];
+    if (!connections.length) return;
+    // The helper keeps the last observation of every profile and marks it fresh for 15 minutes (it may also
+    // have warmed them at startup). A fresh observation is shown as is; only the rest is probed.
+    const snapshotNow = get().snapshot;
+    const isFresh = (connection: Snapshot['connections'][number]) => connection.auth.state === 'known' && connection.auth.freshness === 'fresh';
+    const alreadyCurrent = connections.filter(isFresh);
+    const needCheck = connections.filter((connection) => !isFresh(connection));
+    if (snapshotNow && alreadyCurrent.length) {
+      set((state) => ({
+        probeResults: {
+          ...state.probeResults,
+          ...Object.fromEntries(alreadyCurrent.map((connection) => [connection.id, describeCheck(snapshotNow, connection.id, 'Already current')])),
+        },
+      }));
     }
+    if (!needCheck.length) return;
+    const byProvider = new Map<string, string[]>();
+    for (const connection of needCheck) byProvider.set(connection.providerId, [...(byProvider.get(connection.providerId) ?? []), connection.id]);
+    set({ notice: '', metadataBatch: { completed: 0, total: needCheck.length } });
+    await Promise.all(
+      [...byProvider.values()].map(async (ids) => {
+        for (const id of ids) {
+          if (stale(current) || !client) return;
+          // Sequential within one provider on purpose (see above).
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop
+          await probeConnection(id);
+          if (stale(current)) return;
+          set((state) => ({ metadataBatch: state.metadataBatch && { ...state.metadataBatch, completed: state.metadataBatch.completed + 1 } }));
+        }
+      }),
+    );
     if (!stale(current)) set({ metadataBatch: null });
   }
 
@@ -304,6 +351,8 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     await stopClient();
     sessionContext = null;
     pending = [];
+    catalogRead = null;
+    catalogDirty = false;
     set({ ...initialState, ...uiPreferences(), mode: flags?.forceMode ?? mode, canPair: canPair(flags?.forceMode ?? mode) });
     let opened: LocalAIClient | undefined;
     try {

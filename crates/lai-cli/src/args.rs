@@ -16,6 +16,7 @@ pub struct Args {
     pub billing_declarations: Option<PathBuf>,
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
+    pub warm_metadata: bool,
     pub http: bool,
     pub ipc: Option<String>,
     pub port: u16,
@@ -70,6 +71,7 @@ impl Args {
             billing_declarations: None,
             allow_passive: false,
             allow_codex_metadata: false,
+            warm_metadata: false,
             http: false,
             ipc: None,
             port: 4499,
@@ -157,6 +159,9 @@ impl Args {
                 "--allow-codex-execution" if matches!(args.action, Action::Serve) => {
                     args.allow_execution = true
                 }
+                "--warm-metadata" if matches!(args.action, Action::Serve) => {
+                    args.warm_metadata = true
+                }
                 "--workspace" if matches!(args.action, Action::Serve) => {
                     args.workspace = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
@@ -197,6 +202,12 @@ impl Args {
             .execution_providers
             .iter()
             .any(|p| ["gemini_cli", "antigravity", "grok"].contains(&p.as_str()));
+        // Warm-up only makes sense where the host has authorized passive discovery and some metadata provider.
+        if args.warm_metadata
+            && (!args.http || !args.allow_passive || args.metadata_providers.is_empty())
+        {
+            return Err(invalid());
+        }
         if (!args.http && (args.assets.is_some() || seen.contains("--port")))
             || (native_execution
                 && args.native_profiles.is_none()
@@ -243,6 +254,51 @@ mod tests {
             ])
             .is_ok()
         );
+    }
+    #[test]
+    fn warm_up_is_opt_in_and_needs_http_discovery_and_a_metadata_provider() {
+        assert!(
+            parse(&[
+                "serve",
+                "--http",
+                "--allow-passive-discovery",
+                "--allow-metadata",
+                "codex",
+                "--warm-metadata"
+            ])
+            .is_ok()
+        );
+        assert!(
+            parse(&[
+                "serve",
+                "--http",
+                "--allow-passive-discovery",
+                "--warm-metadata"
+            ])
+            .is_err()
+        );
+        assert!(
+            parse(&[
+                "serve",
+                "--http",
+                "--allow-metadata",
+                "codex",
+                "--warm-metadata"
+            ])
+            .is_err()
+        );
+        assert!(
+            parse(&[
+                "serve",
+                "--stdio",
+                "--allow-passive-discovery",
+                "--allow-metadata",
+                "codex",
+                "--warm-metadata"
+            ])
+            .is_err()
+        );
+        assert!(!parse(&["serve", "--http"]).unwrap().warm_metadata);
     }
     #[test]
     fn execution_needs_explicit_workspace_and_metadata_permission() {

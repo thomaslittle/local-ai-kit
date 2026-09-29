@@ -29,3 +29,7 @@ The HTTP API binds 127.0.0.1 only. Host and Origin are checked, pairing is singl
 `node --test scripts/test_live_demo.mjs` exercises real native HTTP and Chromium against an isolated home. `node scripts/check_live_metadata_ui.mjs --allow-metadata` is an explicitly opt-in real Codex metadata browser test; it submits no generation request. Native transport and stream tests are in `crates/lai-transports/tests`.
 
 The in-memory fixture service remains available to automated tests only. The public browser bootstrap has no fixture fallback.
+
+## Startup warm-up (opt-in)
+
+The launcher passes `--warm-metadata`. With it (HTTP only, plus `--allow-passive-discovery` and at least one `--allow-metadata` provider) the helper runs one passive scan and the metadata checks the host already permitted right after it starts, so results exist when a browser pairs. Different providers are checked concurrently; the profiles of one provider are checked in order, so two checks never race that provider's credential refresh. The helper keeps each observation and marks it fresh for 15 minutes; the demo shows fresh observations immediately ("Already current") and only checks the rest. Without the flag the helper never scans on startup.

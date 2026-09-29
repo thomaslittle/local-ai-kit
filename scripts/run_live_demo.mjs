@@ -78,7 +78,7 @@ if(registration)console.log('OpenCode metadata server ready on loopback with tem
 else console.log('OpenCode metadata is unavailable; start a protected OpenCode server to inspect that connection.');
 const env=registration?{...process.env,...registration.environment}:{...process.env};
 const args=[
- 'serve','--http','--port',port,'--assets',assets,'--allow-passive-discovery',
+ 'serve','--http','--port',port,'--assets',assets,'--allow-passive-discovery','--warm-metadata',
  ...metadataProviders.flatMap(provider=>['--allow-metadata',provider]),
  ...(nativeProfiles?['--native-profiles',nativeProfiles]:[]),
  ...liveDemoExecutionArgs(workspace,{nativeProfiles:Boolean(nativeProfiles)}),

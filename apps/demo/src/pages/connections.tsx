@@ -63,11 +63,11 @@ function ConnectionActions({ connection, local }: { connection: Connection; loca
   const mode = useDemo((state) => state.mode);
   const probing = useDemo((state) => state.probing);
   const batch = useDemo((state) => state.metadataBatch);
-  const checking = probing === connection.id;
+  const checking = probing.includes(connection.id);
   return (
     <div className="mt-5 flex flex-wrap gap-2">
       {mode === 'live' ? (
-        <Button variant="outline" size="sm" disabled={Boolean(probing) || Boolean(batch)} onClick={() => void actions.probeConnection(connection.id)}>
+        <Button variant="outline" size="sm" disabled={checking || Boolean(batch)} onClick={() => void actions.probeConnection(connection.id)}>
           {checking ? <Spinner data-icon="inline-start" /> : <ArrowsClockwiseIcon data-icon="inline-start" />}
           {checking ? 'Checking\u2026' : local ? 'Refresh local catalog' : 'Check account and models'}
         </Button>
@@ -86,8 +86,28 @@ function ConnectionActions({ connection, local }: { connection: Connection; loca
   );
 }
 
+/** Progress and outcome of this profile's metadata check. */
+function CheckStatus({ connectionId }: { connectionId: string }) {
+  const result = useDemo((state) => state.probeResults[connectionId]);
+  const checking = useDemo((state) => state.probing.includes(connectionId));
+  const queued = useDemo((state) => state.metadataBatch !== null && !state.probing.includes(connectionId) && !state.probeResults[connectionId]);
+  if (checking || queued) {
+    return (
+      <p role="status" aria-live="polite" className="mt-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs text-muted-foreground">
+        {checking ? <Spinner /> : null}
+        {checking ? 'Checking account and models\u2026' : 'Waiting for the earlier check of this provider'}
+      </p>
+    );
+  }
+  if (!result) return null;
+  return (
+    <p role="status" aria-live="polite" className={cn('metadata-result mt-4 rounded-lg border px-3 py-2 text-xs', result.ok ? 'border-success/25 bg-success/10 text-success' : 'border-warning/25 bg-warning/10 text-warning')}>
+      {result.message}
+    </p>
+  );
+}
+
 function ConnectionCard({ connection, snapshot }: { connection: Connection; snapshot: Snapshot }) {
-  const result = useDemo((state) => state.probeResults[connection.id]);
   const provider = snapshot.providers.find((item) => item.id === connection.providerId)?.name ?? connection.providerId;
   const local = isLocalRuntimeProvider(connection);
   const catalogReady = hasLocalCatalog(connection, snapshot);
@@ -108,11 +128,7 @@ function ConnectionCard({ connection, snapshot }: { connection: Connection; snap
         <Badge variant={catalogReady ? 'success' : 'outline'}>{local ? (catalogReady ? 'Local catalog ready' : 'Catalog not reported') : freshness}</Badge>
       </div>
       <ConnectionFacts connection={connection} />
-      {result ? (
-        <p role="status" aria-live="polite" className={cn('metadata-result mt-4 rounded-lg border px-3 py-2 text-xs', result.ok ? 'border-success/25 bg-success/10 text-success' : 'border-warning/25 bg-warning/10 text-warning')}>
-          {result.message}
-        </p>
-      ) : null}
+      <CheckStatus connectionId={connection.id} />
       <details className="mt-4">
         <summary className="cursor-pointer text-xs text-muted-foreground select-none hover:text-foreground">Evidence and freshness</summary>
         <CodeBlock className="mt-3">{JSON.stringify({ auth: connection.auth, plan: connection.plan }, null, 2)}</CodeBlock>
@@ -135,7 +151,7 @@ function CardGrid({ list, snapshot, testId }: { list: Connection[]; snapshot: Sn
 function ProfileMetadata() {
   const actions = useActions();
   const batch = useDemo((state) => state.metadataBatch);
-  const probing = useDemo((state) => state.probing);
+  const probing = useDemo((state) => state.probing.length > 0);
   const checked = useDemo((state) => Object.keys(state.probeResults).length > 0);
   return (
     <Section title="Profile metadata" description="Metadata-only: check every detected account and local catalog in sequence. No model prompts are sent.">
@@ -147,7 +163,7 @@ function ProfileMetadata() {
           </div>
         </div>
       ) : null}
-      <Button data-testid="check-all-profiles" disabled={Boolean(probing) || Boolean(batch)} onClick={() => void actions.probeAllConnections()}>
+      <Button data-testid="check-all-profiles" disabled={probing || Boolean(batch)} onClick={() => void actions.probeAllConnections()}>
         {batch ? <Spinner data-icon="inline-start" /> : <ScanIcon data-icon="inline-start" />}
         {batch ? `Checking profile ${Math.min(batch.completed + 1, batch.total)} of ${batch.total}…` : checked ? 'Recheck all profiles' : 'Check all detected profiles'}
       </Button>
