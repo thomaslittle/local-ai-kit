@@ -18,6 +18,26 @@ The research references T3 Code, CodeNotch, CodeNotch cross-platform, and Prmptr
 
 See [SOURCE-AUDIT.md](SOURCE-AUDIT.md) for the previously inspected revisions and exact paths. Before porting each module, verify the license at the exact source revision and preserve required copyright and license text.
 
+## Tokscale discovery knowledge
+
+| Field | Value |
+| --- | --- |
+| Project | Tokscale |
+| Source | https://github.com/junhoyeo/tokscale |
+| Pinned commit | `1d9a9395418efc6952944b794097935d7d6fa1e8` |
+| Release noted at pin time | `v4.17.0` (`dcf8d3656bbcecf05d112c6f35f9be328e4f66b7`) |
+| Upstream paths reviewed | `crates/tokscale-core/src/clients.rs`, `paths.rs`, `scanner.rs`, `cc_mirror.rs`, `sessions/` |
+| License | MIT |
+| Copyright | Copyright (c) 2025 Junho Yeo |
+| License text | [licenses/tokscale-MIT.txt](licenses/tokscale-MIT.txt) |
+| Destination | `crates/lai-discovery` path rules; `upstream/tokscale/snapshot.json` factual extract |
+| What was reused | Discovery locations, environment-variable names, and Windows/XDG path behavior. Reimplemented. No Tokscale source file is copied into the build. |
+| What was not reused | Pricing, token aggregation, dashboards, submission infrastructure, leaderboards, and TUI code. |
+| Modifications | Normalized into Local AI Kit profile roots and `EvidenceSource` provenance. Tokscale is not authoritative when an official client or a local qualification disagrees. |
+| Endorsement | None. Tokscale does not endorse Local AI Kit. |
+
+See [upstream/tokscale/NOTICE.md](upstream/tokscale/NOTICE.md).
+
 ## Required ledger for every future reuse
 
 Record the source URL, exact commit/blob, original path, copied or adapted symbols, destination path, license/SPDX identifier, copyright holder, retained notices, modifications, and applicable asset/model/dependency conditions. Add the required license text under a dedicated licenses directory when applicable. Do not mark this ledger complete merely because the root repository is MIT-licensed.
