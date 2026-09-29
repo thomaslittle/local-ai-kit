@@ -418,6 +418,14 @@ impl NativeService {
             .iter()
             .find(|connection| connection.id == route.connection_id)
             .ok_or_else(denied)?;
+        // Only managed Codex startup participates in ChatGPT sign-out. Hold
+        // this lease through native peer opening and session publication.
+        let _managed_lifecycle =
+            if self.chatgpt_auth.is_some() && connection.provider_id == "codex_managed" {
+                Some(self.chatgpt_lifecycle.lock().await)
+            } else {
+                None
+            };
         if !grant.allows(connection)
             || !(self
                 .execution_state
@@ -932,6 +940,20 @@ impl NativeService {
             }
             "turns.start" => {
                 let request: Start = decode(p)?;
+                let managed = self
+                    .execution_state
+                    .session_context
+                    .read()
+                    .map_err(|_| denied())?
+                    .get(&request.session_id)
+                    .is_some_and(|context| {
+                        context.owner == client && context.provider_id == "codex_managed"
+                    });
+                let _managed_lifecycle = if managed && self.chatgpt_auth.is_some() {
+                    Some(self.chatgpt_lifecycle.lock().await)
+                } else {
+                    None
+                };
                 let session = self.check_session(client, &request.session_id)?;
                 let snapshot = self.projected(client)?;
                 let model = validate_selection(

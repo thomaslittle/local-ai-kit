@@ -179,17 +179,12 @@ impl NativeService {
         Ok(serde_json::json!({"watching":true}))
     }
     pub async fn handle(&self, client: &str, method: &str, params: Value) -> Result<Value> {
-        // Keep this lease through execute_method: create/resume publishes its
-        // session context only after opening the native peer.
-        let _chatgpt_lifecycle = if self.chatgpt_auth.is_some()
-            && matches!(
-                method,
-                "auth.chatgpt.disconnect" | "sessions.create" | "sessions.resume" | "turns.start"
-            ) {
-            Some(self.chatgpt_lifecycle.lock().await)
-        } else {
-            None
-        };
+        let _chatgpt_lifecycle =
+            if self.chatgpt_auth.is_some() && method == "auth.chatgpt.disconnect" {
+                Some(self.chatgpt_lifecycle.lock().await)
+            } else {
+                None
+            };
         self.policy(client)?;
         // Staged images are the only params allowed beyond the general 64 KiB bound;
         // inputs.put decodes into a closed typed struct and enforces its own byte ceiling.
@@ -238,8 +233,13 @@ impl NativeService {
                     // Clear durable credentials before sweeping sessions. The
                     // lifecycle lease prevents a concurrent create from
                     // publishing a new session after this sweep.
-                    let disconnect = auth.disconnect().await;
-                    self.close_managed_sessions().await?;
+                    let mut close_result = Ok(());
+                    let disconnect = auth
+                        .disconnect_with(|| async {
+                            close_result = self.close_managed_sessions().await;
+                        })
+                        .await;
+                    close_result?;
                     // Remote revocation can fail after local sign-out. Never
                     // restore secrets or report the local disconnect as failed.
                     if let Err(error) = disconnect {

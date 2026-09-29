@@ -177,3 +177,85 @@ async fn disconnect_waits_for_inflight_managed_create_then_closes_its_session() 
             || closed.unwrap()["state"] == serde_json::to_value(SessionState::Closed).unwrap()
     );
 }
+
+#[tokio::test]
+async fn unrelated_provider_startup_does_not_delay_managed_disconnect() {
+    let tmp = tempfile::tempdir().unwrap();
+    let auth = Arc::new(AuthManager::new(tmp.path().join("auth"), "crntly".into()).unwrap());
+    auth.status().await.unwrap();
+    let snapshot = common::fixture();
+    let inventory = Arc::new(move |_: &std::sync::atomic::AtomicBool| {
+        Ok(ScanResult {
+            snapshot: snapshot.clone(),
+            locations: BTreeMap::from([(
+                "personal".into(),
+                lai_discovery::LocatedClient {
+                    provider_id: "test".into(),
+                    profile_home: std::env::temp_dir(),
+                    executable: None,
+                },
+            )]),
+            metadata_probes: 0,
+        })
+    });
+    let entered = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let (started, proceed) = (entered.clone(), release.clone());
+    let service = Arc::new(
+        NativeService::new(inventory, Duration::ZERO)
+            .with_chatgpt_auth(auth)
+            .with_execution(
+                BTreeSet::from(["test".into()]),
+                Arc::new(move |_| {
+                    let (started, proceed) = (started.clone(), proceed.clone());
+                    Box::pin(async move {
+                        started.notify_one();
+                        proceed.notified().await;
+                        Ok(Box::new(IdleAgent) as Box<dyn Agent>)
+                    })
+                }),
+            ),
+    );
+    let mut policy = ClientPolicy::passive();
+    policy.probe_provider_ids.insert("codex_managed".into());
+    service.register_client("a", policy).unwrap();
+    service
+        .register_execution(
+            "a",
+            lai_service::ExecutionGrant {
+                connection_ids: BTreeSet::from(["personal".into()]),
+                workspaces: BTreeMap::from([("scratch".into(), std::env::temp_dir())]),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    service
+        .handle("a", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let create_service = service.clone();
+    let create = tokio::spawn(async move {
+        create_service
+            .handle(
+                "a",
+                "sessions.create",
+                json!({
+                    "selection": common::selection(), "workspaceId": "scratch",
+                }),
+            )
+            .await
+    });
+    entered.notified().await;
+    let disconnected = tokio::time::timeout(
+        Duration::from_secs(2),
+        service.handle("a", "auth.chatgpt.disconnect", json!({})),
+    )
+    .await;
+    assert!(
+        disconnected.is_ok(),
+        "unrelated provider startup blocked managed disconnect"
+    );
+    assert!(disconnected.unwrap().is_ok());
+    release.notify_one();
+    assert!(create.await.unwrap().is_ok());
+}
