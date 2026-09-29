@@ -2,6 +2,22 @@
 use lai_contracts::AdapterDescriptor;
 pub fn descriptors() -> Vec<AdapterDescriptor> {
     let mut items = Vec::new();
+    items.push(AdapterDescriptor {
+        id: "codex_managed".into(),
+        name: "ChatGPT plan (Codex)".into(),
+        integration: "native_client".into(),
+        passive_discovery: true,
+        metadata: true,
+        text_sessions: true,
+        native_tool_approval: true,
+        cancellation: true,
+        persistent_resumption: true,
+        qualification: "Codex app-server 0.157+ with host-managed SIWC token".into(),
+        limitations: vec![
+            "Model catalog does not prove model entitlement".into(),
+            "Account quota is not reported by this route".into(),
+        ],
+    });
     for def in lai_discovery::definitions() {
         let metadata = matches!(
             def.id,

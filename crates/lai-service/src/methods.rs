@@ -30,6 +30,14 @@ impl NativeService {
         if self.metadata_source.is_some() {
             methods.push("connections.probe");
         }
+        if self.chatgpt_auth.is_some() {
+            methods.extend([
+                "auth.chatgpt.status",
+                "auth.chatgpt.start",
+                "auth.chatgpt.cancel",
+                "auth.chatgpt.disconnect",
+            ]);
+        }
         methods
     }
     pub(crate) fn dispatch(&self, client: &str, method: &str, p: &Value) -> Result<Value> {

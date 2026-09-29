@@ -11,6 +11,7 @@ mod methods;
 mod params;
 mod resume_token;
 use cache::InventoryCache;
+use lai_chatgpt_auth::AuthManager;
 use lai_contracts::{DomainError, ErrorCode, Result, Snapshot};
 use lai_core::{ClientPolicy, project_snapshot};
 use lai_discovery::ScanResult;
@@ -34,6 +35,9 @@ pub struct NativeService {
     watchers: std::sync::Mutex<BTreeMap<String, MetadataWatcher>>,
     /// Stable application identity per connection, for durable resume tokens.
     app_identities: RwLock<BTreeMap<String, String>>,
+    chatgpt_auth: Option<Arc<AuthManager>>,
+    /// Serializes managed sign-out with session publication and turn enqueue.
+    chatgpt_lifecycle: tokio::sync::Mutex<()>,
 }
 impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
@@ -45,11 +49,19 @@ impl NativeService {
             metadata_locks: std::sync::Mutex::new(BTreeMap::new()),
             watchers: std::sync::Mutex::new(BTreeMap::new()),
             app_identities: RwLock::new(BTreeMap::new()),
+            chatgpt_auth: None,
+            chatgpt_lifecycle: tokio::sync::Mutex::new(()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
         }
     }
     pub fn with_adapters(mut self, adapters: Vec<lai_contracts::AdapterDescriptor>) -> Self {
         self.adapters = adapters;
+        self
+    }
+    /// Opt-in host-managed SIWC authentication. Callers still require an
+    /// explicit managed-provider metadata grant for every auth RPC.
+    pub fn with_chatgpt_auth(mut self, auth: Arc<AuthManager>) -> Self {
+        self.chatgpt_auth = Some(auth);
         self
     }
     /// Host-only API. Duplicate registration cannot silently replace a grant.
@@ -167,6 +179,17 @@ impl NativeService {
         Ok(serde_json::json!({"watching":true}))
     }
     pub async fn handle(&self, client: &str, method: &str, params: Value) -> Result<Value> {
+        // Keep this lease through execute_method: create/resume publishes its
+        // session context only after opening the native peer.
+        let _chatgpt_lifecycle = if self.chatgpt_auth.is_some()
+            && matches!(
+                method,
+                "auth.chatgpt.disconnect" | "sessions.create" | "sessions.resume" | "turns.start"
+            ) {
+            Some(self.chatgpt_lifecycle.lock().await)
+        } else {
+            None
+        };
         self.policy(client)?;
         // Staged images are the only params allowed beyond the general 64 KiB bound;
         // inputs.put decodes into a closed typed struct and enforces its own byte ceiling.
@@ -182,6 +205,53 @@ impl NativeService {
             params::allow(&params, &[])?;
             self.close_client(client);
             return Ok(serde_json::json!({"closed":true}));
+        }
+        if method.starts_with("auth.chatgpt.") {
+            if !self
+                .policy(client)?
+                .probe_provider_ids
+                .contains("codex_managed")
+            {
+                return Err(denied());
+            }
+            let auth = self.chatgpt_auth.as_ref().ok_or_else(unsupported)?;
+            let map_auth = |error: lai_chatgpt_auth::AuthError| {
+                DomainError::new(lai_contracts::ErrorCode::ProviderUnavailable, error.message)
+            };
+            let value = match method {
+                "auth.chatgpt.status" => {
+                    params::allow(&params, &[])?;
+                    serde_json::to_value(auth.status().await.map_err(map_auth)?)
+                }
+                "auth.chatgpt.start" => {
+                    params::allow(&params, &[])?;
+                    serde_json::to_value(auth.start().await.map_err(map_auth)?)
+                }
+                "auth.chatgpt.cancel" => {
+                    params::allow(&params, &["loginId"])?;
+                    let id = params::text(&params, "loginId")?.ok_or_else(params::invalid)?;
+                    auth.cancel(id).await.map_err(map_auth)?;
+                    Ok(serde_json::json!({}))
+                }
+                "auth.chatgpt.disconnect" => {
+                    params::allow(&params, &[])?;
+                    // Clear durable credentials before sweeping sessions. The
+                    // lifecycle lease prevents a concurrent create from
+                    // publishing a new session after this sweep.
+                    let disconnect = auth.disconnect().await;
+                    self.close_managed_sessions().await?;
+                    // Remote revocation can fail after local sign-out. Never
+                    // restore secrets or report the local disconnect as failed.
+                    if let Err(error) = disconnect {
+                        if error.code != "REVOCATION_UNCONFIRMED" {
+                            return Err(map_auth(error));
+                        }
+                    }
+                    Ok(serde_json::json!({}))
+                }
+                _ => return Err(unsupported()),
+            };
+            return value.map_err(|_| params::invalid());
         }
         if method == "discovery.refresh" {
             params::allow(&params, &["level"])?;

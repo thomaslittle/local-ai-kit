@@ -9,6 +9,7 @@ use lai_adapters::{
     native_clients::config::NativeRegistry,
     process::LaunchSpec,
 };
+use lai_chatgpt_auth::AuthManager;
 use lai_contracts::{DomainError, ErrorCode};
 use lai_service::{InventorySource, NativeService};
 use std::{
@@ -62,7 +63,7 @@ pub fn build_service_with_declarations(
     )
 }
 /// Providers whose adapters persist and reattach native conversations.
-pub const PERSISTENT_PROVIDERS: [&str; 3] = ["codex", "claude_code", "opencode"];
+pub const PERSISTENT_PROVIDERS: [&str; 4] = ["codex", "codex_managed", "claude_code", "opencode"];
 /// The kit's per-user state directory (holds `resume.key`). With a virtual
 /// `home` it stays inside that home. Nothing is created here.
 pub fn default_state_dir(home: Option<&std::path::Path>) -> Option<std::path::PathBuf> {
@@ -97,10 +98,33 @@ pub fn build_service_with_state(
     declarations: Arc<BillingDeclarations>,
     state_dir: Option<std::path::PathBuf>,
 ) -> Arc<NativeService> {
+    build_service_with_chatgpt(
+        source,
+        execute,
+        registry,
+        native_registry,
+        declarations,
+        state_dir,
+        None,
+    )
+}
+
+/// The managed SIWC route is opt-in. The manager owns protected credentials;
+/// this service retains only an Arc and never serializes tokens into catalog data.
+pub fn build_service_with_chatgpt(
+    source: InventorySource,
+    execute: bool,
+    registry: Arc<Registry>,
+    native_registry: Arc<NativeRegistry>,
+    declarations: Arc<BillingDeclarations>,
+    state_dir: Option<std::path::PathBuf>,
+    chatgpt: Option<(Arc<AuthManager>, String)>,
+) -> Arc<NativeService> {
     let metadata_registry = registry.clone();
     let metadata_native = native_registry.clone();
     let metadata_declarations = declarations.clone();
-    let service = NativeService::new(source, Duration::from_secs(2))
+    let metadata_chatgpt = chatgpt.clone();
+    let mut service = NativeService::new(source, Duration::from_secs(2))
         .with_adapters(crate::adapter_info::descriptors())
         .with_metadata(Arc::new(move |located, connection, route| {
             let endpoint = metadata_registry.for_connection(&connection, &located.provider_id);
@@ -108,6 +132,7 @@ pub fn build_service_with_state(
             let native_browser = metadata_native.browser_blocker.clone();
             let declarations = metadata_declarations.clone();
             let provider = located.provider_id.clone();
+            let chatgpt = metadata_chatgpt.clone();
             Box::pin(async move {
                 let mut report = probe_metadata(
                     located,
@@ -116,16 +141,27 @@ pub fn build_service_with_state(
                     endpoint,
                     native_profile,
                     native_browser,
+                    chatgpt,
                 )
                 .await?;
                 declarations.apply(&provider, &mut report);
                 Ok(report)
             })
         }));
+    if let Some((auth, _)) = &chatgpt {
+        service = service.with_chatgpt_auth(auth.clone());
+    }
     if !execute {
         return Arc::new(service);
     }
-    build_execution(service, registry, native_registry, declarations, state_dir)
+    build_execution(
+        service,
+        registry,
+        native_registry,
+        declarations,
+        state_dir,
+        chatgpt,
+    )
 }
 async fn probe_metadata(
     located: lai_discovery::LocatedClient,
@@ -134,7 +170,55 @@ async fn probe_metadata(
     endpoint: Option<EndpointConfig>,
     native_profile: Option<lai_adapters::native_clients::config::NativeProfile>,
     native_browser: Option<std::path::PathBuf>,
+    chatgpt: Option<(Arc<AuthManager>, String)>,
 ) -> lai_contracts::Result<lai_contracts::ConnectionMetadata> {
+    if located.provider_id == "codex_managed" {
+        let (auth, app_name) = chatgpt.ok_or_else(|| {
+            DomainError::new(
+                ErrorCode::CapabilityUnsupported,
+                "Managed ChatGPT integration is unavailable",
+            )
+        })?;
+        let credentials = auth.credentials().await.map_err(auth_failure)?;
+        let executable = located.executable.as_deref().ok_or_else(|| {
+            DomainError::new(
+                ErrorCode::RuntimeMissing,
+                "Native Codex executable unavailable",
+            )
+        })?;
+        std::fs::create_dir_all(&located.profile_home).map_err(|_| {
+            DomainError::new(
+                ErrorCode::LocalAccessDenied,
+                "Managed Codex profile is unavailable",
+            )
+        })?;
+        let workspace = tempfile::Builder::new()
+            .prefix("lai-managed-codex-metadata-")
+            .tempdir()
+            .map_err(|_| {
+                DomainError::new(
+                    ErrorCode::LocalAccessDenied,
+                    "Neutral metadata workspace unavailable",
+                )
+            })?;
+        let spec = codex::managed_launch_spec(
+            executable,
+            &located.profile_home,
+            workspace.path(),
+            &credentials.access_token,
+        )?;
+        return codex::managed_metadata(
+            spec,
+            &connection,
+            &route,
+            &credentials.subject,
+            &credentials.client_id,
+            credentials.email.as_deref(),
+            &app_name,
+            Duration::from_secs(20),
+        )
+        .await;
+    }
     if let Some(profile) = native_profile {
         return lai_adapters::native_clients::client::probe(
             &profile,
@@ -193,6 +277,7 @@ fn build_execution(
     native_registry: Arc<NativeRegistry>,
     declarations: Arc<BillingDeclarations>,
     state_dir: Option<std::path::PathBuf>,
+    chatgpt: Option<(Arc<AuthManager>, String)>,
 ) -> Arc<NativeService> {
     let mut native_connections = native_registry
         .profiles
@@ -212,10 +297,12 @@ fn build_execution(
         None => service,
     };
     let execution_native = native_registry.clone();
+    let execution_chatgpt = chatgpt.clone();
     Arc::new(
         service.with_execution_scoped(
             [
                 "codex",
+                "codex_managed",
                 "claude_code",
                 "ollama",
                 "lmstudio",
@@ -231,6 +318,7 @@ fn build_execution(
             .collect::<BTreeSet<_>>(),
             native_connections,
             Arc::new(move |input| {
+                let chatgpt = execution_chatgpt.clone();
                 let endpoint =
                     registry.for_connection(&input.connection_id, &input.located.provider_id);
                 let native_profile = declared_native_profile(
@@ -241,6 +329,49 @@ fn build_execution(
                 );
                 let native_browser = execution_native.browser_blocker.clone();
                 Box::pin(async move {
+                    if input.located.provider_id == "codex_managed" {
+                        let (auth, app_name) = chatgpt.ok_or_else(|| DomainError::new(
+                            ErrorCode::CapabilityUnsupported, "Managed ChatGPT integration is unavailable",
+                        ))?;
+                        let credentials = auth.credentials().await.map_err(auth_failure)?;
+                        let executable = input.located.executable.as_deref().ok_or_else(|| DomainError::new(
+                            ErrorCode::RuntimeMissing, "Native Codex executable unavailable",
+                        ))?;
+                        std::fs::create_dir_all(&input.located.profile_home).map_err(|_| DomainError::new(
+                            ErrorCode::LocalAccessDenied, "Managed Codex profile is unavailable",
+                        ))?;
+                        let spec = codex::managed_launch_spec(executable, &input.located.profile_home,
+                            &input.workspace, &credentials.access_token)?;
+                        let source: lai_adapters::execution::ManagedCredentialSource = Arc::new(move || {
+                            let auth = auth.clone();
+                            Box::pin(async move {
+                                let value = auth.credentials().await.map_err(auth_failure)?;
+                                Ok(lai_adapters::execution::ManagedCredential {
+                                    access_token: value.access_token,
+                                    subject: value.subject,
+                                    client_id: value.client_id,
+                                    email: value.email,
+                                })
+                            })
+                        });
+                        return lai_adapters::execution::open_managed_codex(
+                            spec,
+                            CodexExecution {
+                                model: input.model, connection: input.connection_id,
+                                route: input.route_id, writable: input.writable,
+                                review_requests: input.review_requests,
+                                host_mcp_servers: input.host_mcp_servers,
+                                persistent: input.persistent, resume_thread: input.native_resume,
+                            },
+                            codex::ManagedIdentity {
+                                app_name,
+                                subject: credentials.subject,
+                                client_id: credentials.client_id,
+                                email: credentials.email,
+                            },
+                            source,
+                        ).await;
+                    }
                     if let Some(profile) = native_profile {
                         if input.writable || input.native_policy {
                             return Err(DomainError::new(
@@ -437,6 +568,13 @@ fn build_execution(
                 })
             }),
         ),
+    )
+}
+
+fn auth_failure(_: lai_chatgpt_auth::AuthError) -> DomainError {
+    DomainError::new(
+        ErrorCode::AuthRequired,
+        "ChatGPT sign-in or refresh is required",
     )
 }
 

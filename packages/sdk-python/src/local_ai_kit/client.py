@@ -29,6 +29,23 @@ class _Namespace:
         return call
 
 
+class _ChatgptNamespace:
+    def __init__(self, client):
+        self._client = client
+
+    def __getattr__(self, name):
+        if name not in ('status', 'start', 'cancel', 'disconnect'):
+            raise AttributeError(name)
+        def call(params=None, **options):
+            return self._client.request(f'auth.chatgpt.{name}', params, **options)
+        return call
+
+
+class _AuthNamespace:
+    def __init__(self, client):
+        self.chatgpt = _ChatgptNamespace(client)
+
+
 class AsyncClient:
     @classmethod
     async def connect(cls, transport):
@@ -48,6 +65,8 @@ class AsyncClient:
         return self
 
     def __getattr__(self, name):
+        if name == 'auth':
+            return _AuthNamespace(self)
         if name not in FAMILIES:
             raise AttributeError(name)
         return _Namespace(self, name)
@@ -108,6 +127,8 @@ class Client:
         return self
 
     def __getattr__(self, name):
+        if name == 'auth':
+            return _AuthNamespace(self)
         if name not in FAMILIES:
             raise AttributeError(name)
         return _Namespace(self, name)

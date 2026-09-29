@@ -1,7 +1,8 @@
-use super::{CodexExecution, PathBuf, failure, native_id};
+use super::{CodexExecution, ManagedCredentialSource, PathBuf, failure, native_id};
 use crate::{
+    codex::ManagedIdentity,
     host_mcp::{HostTools, native_tool_refused},
-    process::Peer,
+    process::{LaunchSpec, Peer, exchange_with_identity},
 };
 use lai_contracts::*;
 use lai_runtime::{Agent, BoxFuture, ImageInput, TurnContext};
@@ -18,6 +19,13 @@ pub(super) struct CodexAgent {
     pub thread: Option<String>,
     /// A turn completed (or the thread was reattached), so history exists.
     pub resumable: bool,
+    pub managed: Option<ManagedRuntime>,
+}
+pub(super) struct ManagedRuntime {
+    pub identity: ManagedIdentity,
+    pub source: ManagedCredentialSource,
+    pub template: LaunchSpec,
+    pub current_token: zeroize::Zeroizing<String>,
 }
 /// Thread config. Read-only sessions are text-only: besides the always-off
 /// integrations, Codex's command, exec and generation tools are disabled so
@@ -78,6 +86,54 @@ pub(crate) fn turn_input(prompt: &str, images: &[ImageInput]) -> Value {
 }
 
 impl CodexAgent {
+    async fn refresh_managed(&mut self) -> Result<()> {
+        let Some(managed) = &self.managed else {
+            return Ok(());
+        };
+        let credential = (managed.source)().await?;
+        if credential.subject != managed.identity.subject
+            || credential.client_id != managed.identity.client_id
+        {
+            return Err(failure(ErrorCode::SelectionStale));
+        }
+        if credential.access_token == *managed.current_token {
+            return Ok(());
+        }
+        let mut spec = managed.template.clone();
+        spec.env.insert(
+            "ACCESS_TOKEN".into(),
+            credential.access_token.clone().into(),
+        );
+        let mut next = Peer::spawn(spec).await?;
+        let report = tokio::time::timeout(
+            Duration::from_secs(20),
+            exchange_with_identity(
+                &mut next,
+                &self.config.connection,
+                &self.config.route,
+                Some(&managed.identity),
+            ),
+        )
+        .await
+        .map_err(|_| failure(ErrorCode::Timeout))??;
+        if report.auth.fresh_value() != Some(&AuthState::Authenticated)
+            || !report.models.iter().any(|model| {
+                model.id == self.config.model.id && model.revision == self.config.model.revision
+            })
+        {
+            next.shutdown().await;
+            return Err(failure(ErrorCode::SelectionStale));
+        }
+        let mut previous = std::mem::replace(&mut self.peer, next);
+        self.config.resume_thread = self.thread.take().or(self.config.resume_thread.clone());
+        let resumed = self.ensure_thread().await;
+        previous.shutdown().await;
+        resumed?;
+        if let Some(managed) = &mut self.managed {
+            managed.current_token = zeroize::Zeroizing::new(credential.access_token);
+        }
+        Ok(())
+    }
     /// Read-only, unreviewed sessions allow no client tool but the host's.
     fn text_only(&self) -> bool {
         !self.config.writable && !self.config.review_requests
@@ -206,6 +262,7 @@ impl CodexAgent {
             d.validate(value)
                 .map_err(|_| failure(ErrorCode::OptionUnsupported))?;
         }
+        self.refresh_managed().await?;
         tokio::time::timeout(Duration::from_secs(10), self.peer.verify_account())
             .await
             .map_err(|_| failure(ErrorCode::Timeout))??;
@@ -259,6 +316,7 @@ impl CodexAgent {
             // identity re-read before every turn.
             if method == "model/rerouted"
                 || (method == "account/updated"
+                    && self.managed.is_none()
                     && crate::process::account_update_signs_out(&message["params"]))
             {
                 return Err(failure(ErrorCode::SelectionStale));

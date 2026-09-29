@@ -1,5 +1,10 @@
 import sys,json,os
 mode=sys.argv[1]
+if mode=='managed':
+ log=os.environ.get('TEST_METHODS_LOG')
+ if log:
+  token_kind = 'initial' if os.environ.get('ACCESS_TOKEN') == 'token-old' else 'rotated' if os.environ.get('ACCESS_TOKEN') == 'token-new' else 'unknown'
+  with open(log,'a',newline='\n') as f:f.write('process '+token_kind+'\n')
 model={"id":"native-id","model":"test-native","displayName":"Test native","description":"Fixture","hidden":False,"isDefault":True,"supportedReasoningEfforts":[{"reasoningEffort":"future","description":"Future"}],"defaultReasoningEffort":"future","inputModalities":["text"]}
 def send(v): print(json.dumps(v),flush=True)
 def emit(method,params): send({"method":method,"params":params})
@@ -8,25 +13,28 @@ turn=''
 account_reads=0
 for line in sys.stdin:
  r=json.loads(line);method=r.get('method');p=r.get('params',{});id=r.get('id')
- if method=='initialize':reply(id,{"userAgent":"codex/0.156.1"})
+ if mode=='managed' and log:
+  with open(log,'a',newline='\n') as f:f.write(method+'\n')
+ if method=='initialize':reply(id,{"userAgent":"codex/0.157.0" if mode=='managed' else "codex/0.156.1"})
  elif method=='initialized':pass
  elif method=='account/read':
   account_reads+=1
-  reply(id,{"account":{"type":"chatgpt","email":"changed@example.test" if mode=='account-changed-before-turn' and account_reads>1 else "test@example.test","planType":"test"},"requiresOpenaiAuth":True})
+  if mode=='managed':reply(id,{"account":None,"requiresOpenaiAuth":False})
+  else:reply(id,{"account":{"type":"chatgpt","email":"changed@example.test" if mode=='account-changed-before-turn' and account_reads>1 else "test@example.test","planType":"test"},"requiresOpenaiAuth":True})
  elif method=='model/list':reply(id,{"data":[model],"nextCursor":None})
  elif method=='account/rateLimits/read':reply(id,{"rateLimits":{}})
  elif method=='mcpServerStatus/list':
   assert mode.startswith('host')
   reply(id,{"data":[{"name":"design" if mode=='host_collision' else "user_global"}],"nextCursor":None})
  elif method=='thread/resume':
-  assert mode.startswith('resume'), mode
+  assert mode.startswith('resume') or (mode=='managed' and os.environ.get('ACCESS_TOKEN')=='token-new'), mode
   assert p['threadId']=='native-thread' and p['excludeTurns'] is True and p['sandbox']=='read-only'
   assert p['config']['features.shell_tool'] is False and 'ephemeral' not in p
   if mode=='resume_missing':send({"id":id,"error":{"code":-32600,"message":"thread not found: native-thread"}});continue
   reply(id,{"thread":{"id":"other-thread" if mode=='resume_other' else "native-thread"},"model":"test-native","sandbox":{"type":"readOnly"},"approvalPolicy":"never","cwd":os.getcwd()})
  elif method=='thread/start':
-  assert not mode.startswith('resume'), 'resume must not start a new thread'
-  assert p['ephemeral'] is (mode!='persist') and p['sandbox']=='read-only' and p['serviceTier']=='default'
+  assert not mode.startswith('resume') and not (mode=='managed' and os.environ.get('ACCESS_TOKEN')=='token-new'), 'resume must not start a new thread'
+  assert p['ephemeral'] is (mode not in ('persist','managed')) and p['sandbox']=='read-only' and p['serviceTier']=='default'
   assert p['config']['features.shell_tool'] is False and p['config']['features.unified_exec'] is False
   if mode.startswith('host'):
    expected={'url':'http://127.0.0.1:48123/mcp','http_headers':{'Authorization':'Bearer '+'k'*40},'enabled_tools':['echo_color'],'default_tools_approval_mode':'approve','required':True}

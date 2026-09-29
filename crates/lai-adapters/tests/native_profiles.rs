@@ -14,6 +14,59 @@ fn empty() -> ScanResult {
         metadata_probes: 0,
     }
 }
+
+#[test]
+fn managed_codex_is_inert_isolated_and_stable() {
+    let tmp = tempfile::tempdir().unwrap();
+    let codex = tmp.path().join("codex.exe");
+    std::fs::write(&codex, b"fixture").unwrap();
+    let state = tmp.path().join("kit-state");
+    let mut first = empty();
+    first.locations.insert(
+        "native-codex".into(),
+        lai_discovery::LocatedClient {
+            provider_id: "codex".into(),
+            profile_home: tmp.path().join("personal-codex"),
+            executable: Some(codex.clone()),
+        },
+    );
+    inject_managed_codex(&mut first, &state);
+    let managed = first
+        .snapshot
+        .connections
+        .iter()
+        .find(|c| c.provider_id == "codex_managed")
+        .unwrap();
+    let located = &first.locations[&managed.id];
+    assert_eq!(located.profile_home, state.join("chatgpt-codex-home"));
+    assert_eq!(located.executable.as_ref(), Some(&codex));
+    assert!(first.snapshot.accounts.is_empty());
+    assert!(managed.auth.value().is_none());
+    assert!(managed.plan.value().is_none());
+    assert!(
+        !state.exists(),
+        "passive inventory must not open managed auth storage"
+    );
+    let projection = serde_json::to_string(&first.snapshot).unwrap();
+    assert!(!projection.contains("ACCESS_TOKEN"));
+    assert!(!projection.contains("refresh_token"));
+    let mut second = empty();
+    second.locations.insert(
+        "native-codex".into(),
+        first.locations["native-codex"].clone(),
+    );
+    inject_managed_codex(&mut second, &state);
+    assert_eq!(
+        managed.id,
+        second
+            .snapshot
+            .connections
+            .iter()
+            .find(|c| c.provider_id == "codex_managed")
+            .unwrap()
+            .id
+    );
+}
 #[test]
 fn native_registration_is_inert_and_retains_distinct_google_clients() {
     let r = NativeRegistry::parse(&document().to_string(), "source").unwrap();

@@ -13,6 +13,7 @@ pub struct Args {
     pub home: Option<PathBuf>,
     pub endpoints: Option<PathBuf>,
     pub native_profiles: Option<PathBuf>,
+    pub chatgpt_app_name: Option<String>,
     pub billing_declarations: Option<PathBuf>,
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
@@ -67,6 +68,7 @@ impl Args {
             home: None,
             endpoints: None,
             native_profiles: None,
+            chatgpt_app_name: None,
             billing_declarations: None,
             allow_passive: false,
             allow_codex_metadata: false,
@@ -102,6 +104,21 @@ impl Args {
                 "--native-profiles" if matches!(args.action, Action::Serve | Action::Scan) => {
                     args.native_profiles = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
+                "--chatgpt-app-name" if matches!(args.action, Action::Serve) => {
+                    let name = input
+                        .next()
+                        .and_then(|v| v.into_string().ok())
+                        .ok_or_else(invalid)?;
+                    if name.is_empty()
+                        || name.len() > 64
+                        || !name.bytes().all(|b| {
+                            b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'-'
+                        })
+                    {
+                        return Err(invalid());
+                    }
+                    args.chatgpt_app_name = Some(name);
+                }
                 "--billing-declarations" if matches!(args.action, Action::Serve | Action::Scan) => {
                     args.billing_declarations = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
@@ -127,6 +144,7 @@ impl Args {
                         .filter(|v| {
                             [
                                 "codex",
+                                "codex_managed",
                                 "claude_code",
                                 "ollama",
                                 "lmstudio",
@@ -370,5 +388,23 @@ mod additional_provider_tests {
             )
             .is_err()
         );
+    }
+    #[test]
+    fn managed_chatgpt_registration_is_opt_in_and_needs_no_native_profile_file() {
+        let parse = |args: &[&str]| Args::parse(args.iter().map(OsString::from));
+        let args = parse(&[
+            "serve",
+            "--stdio",
+            "--allow-passive-discovery",
+            "--chatgpt-app-name",
+            "crntly",
+            "--allow-metadata",
+            "codex_managed",
+        ])
+        .unwrap();
+        assert_eq!(args.chatgpt_app_name.as_deref(), Some("crntly"));
+        assert!(args.native_profiles.is_none());
+        assert!(!args.allow_execution);
+        assert!(parse(&["serve", "--stdio", "--chatgpt-app-name", "bad name"]).is_err());
     }
 }

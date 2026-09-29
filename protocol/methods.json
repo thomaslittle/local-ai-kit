@@ -292,6 +292,71 @@
       ],
       "type": "string"
     },
+    "ChatgptAuthStart": {
+      "properties": {
+        "authUrl": {
+          "type": "string"
+        },
+        "loginId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "loginId",
+        "authUrl"
+      ],
+      "type": "object"
+    },
+    "ChatgptAuthState": {
+      "enum": [
+        "signed_out",
+        "pending",
+        "connected",
+        "error"
+      ],
+      "type": "string"
+    },
+    "ChatgptAuthStatus": {
+      "properties": {
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "errorCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "loginId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/ChatgptAuthState"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "type": "object"
+    },
+    "ChatgptCancelParams": {
+      "additionalProperties": false,
+      "properties": {
+        "loginId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "loginId"
+      ],
+      "type": "object"
+    },
     "Choice": {
       "additionalProperties": false,
       "properties": {
@@ -1169,6 +1234,18 @@
         "artifacts.read": {
           "$ref": "#/$defs/ArtifactReadParams"
         },
+        "auth.chatgpt.cancel": {
+          "$ref": "#/$defs/ChatgptCancelParams"
+        },
+        "auth.chatgpt.disconnect": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "auth.chatgpt.start": {
+          "$ref": "#/$defs/EmptyParams"
+        },
+        "auth.chatgpt.status": {
+          "$ref": "#/$defs/EmptyParams"
+        },
         "capabilities.read": {
           "$ref": "#/$defs/ModelParams"
         },
@@ -1261,6 +1338,10 @@
         }
       },
       "required": [
+        "auth.chatgpt.status",
+        "auth.chatgpt.start",
+        "auth.chatgpt.cancel",
+        "auth.chatgpt.disconnect",
         "runtime.closeClient",
         "artifacts.read",
         "runtime.handshake",
@@ -1309,6 +1390,14 @@
         "approvals.respond": true,
         "artifacts.read": {
           "$ref": "#/$defs/ArtifactChunk"
+        },
+        "auth.chatgpt.cancel": true,
+        "auth.chatgpt.disconnect": true,
+        "auth.chatgpt.start": {
+          "$ref": "#/$defs/ChatgptAuthStart"
+        },
+        "auth.chatgpt.status": {
+          "$ref": "#/$defs/ChatgptAuthStatus"
         },
         "capabilities.read": {
           "items": {
@@ -1395,6 +1484,10 @@
         }
       },
       "required": [
+        "auth.chatgpt.status",
+        "auth.chatgpt.start",
+        "auth.chatgpt.cancel",
+        "auth.chatgpt.disconnect",
         "runtime.closeClient",
         "artifacts.read",
         "runtime.handshake",
@@ -3005,6 +3098,42 @@
       },
       "resultSchema": {
         "$ref": "#/$defs/ArtifactChunk"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "auth.chatgpt.cancel",
+      "paramsSchema": {
+        "$ref": "#/$defs/ChatgptCancelParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "auth.chatgpt.disconnect",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": true
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "auth.chatgpt.start",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/ChatgptAuthStart"
+      }
+    },
+    {
+      "availability": "Negotiate runtime.handshake; per-client grants apply.",
+      "name": "auth.chatgpt.status",
+      "paramsSchema": {
+        "$ref": "#/$defs/EmptyParams"
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/ChatgptAuthStatus"
       }
     },
     {

@@ -25,6 +25,7 @@ Usage:
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
   --native-profiles ABSOLUTE_JSON explicitly registers Gemini CLI, Antigravity ACP, or Grok native profiles; the file contains paths/labels, never tokens.
+  --chatgpt-app-name NAME opts in a separate managed Codex profile and SIWC auth RPCs; grant --allow-metadata codex_managed to use them.
   --billing-declarations ABSOLUTE_JSON declares billing for discovered connections whose provider leaves it unknown; recorded as user-supplied evidence, never verification.
   local-ai-kit --version
 
@@ -44,6 +45,28 @@ async fn execute(args: Args) -> Result<()> {
         return broker_cli::connect(args.ipc.as_deref().unwrap()).await;
     }
     let registry = Arc::new(endpoints::load(args.endpoints.as_deref())?);
+    let state_dir = host::default_state_dir(args.home.as_deref());
+    let chatgpt = args
+        .chatgpt_app_name
+        .clone()
+        .map(|name| {
+            let root = state_dir.as_ref().ok_or_else(|| {
+                DomainError::new(
+                    ErrorCode::LocalAccessDenied,
+                    "Managed ChatGPT state directory is unavailable",
+                )
+            })?;
+            let manager =
+                lai_chatgpt_auth::AuthManager::new(root.join("chatgpt-auth"), name.clone())
+                    .map_err(|_| {
+                        DomainError::new(
+                            ErrorCode::ProviderUnavailable,
+                            "Managed ChatGPT state is unavailable",
+                        )
+                    })?;
+            Ok::<_, DomainError>((Arc::new(manager), name))
+        })
+        .transpose()?;
     let mut native = native_profiles::load(args.native_profiles.as_deref())?;
     native.browser_blocker = native_profiles::packaged_browser_blocker();
     let native = Arc::new(native);
@@ -53,19 +76,24 @@ async fn execute(args: Args) -> Result<()> {
     let original = source(args.home.clone());
     let scan_registry = registry.clone();
     let scan_native = native.clone();
+    let managed_root = chatgpt.as_ref().and(state_dir.as_ref()).cloned();
     let inventory: InventorySource = Arc::new(move |cancel| {
         let mut result = original(cancel)?;
         scan_registry.inject(&mut result);
         scan_native.inject(&mut result);
+        if let Some(root) = &managed_root {
+            lai_adapters::native_clients::config::inject_managed_codex(&mut result, root);
+        }
         Ok(result)
     });
-    let service = host::build_service_with_state(
+    let service = lai_kit::build_service_with_chatgpt(
         inventory,
         args.allow_execution,
         registry,
         native,
         declarations,
-        host::default_state_dir(args.home.as_deref()),
+        state_dir,
+        chatgpt,
     );
     let policy = host::policy(&args);
     let grant = host::execution_grant(&args);

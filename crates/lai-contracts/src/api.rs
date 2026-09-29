@@ -7,6 +7,33 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct EmptyParams {}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ChatgptCancelParams {
+    pub login_id: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatgptAuthStatus {
+    pub state: ChatgptAuthState,
+    pub login_id: Option<String>,
+    pub email: Option<String>,
+    pub error_code: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ChatgptAuthState {
+    SignedOut,
+    Pending,
+    Connected,
+    Error,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatgptAuthStart {
+    pub login_id: String,
+    pub auth_url: String,
+}
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HandshakeParams {
@@ -351,6 +378,14 @@ pub struct ValidationResult {
 #[serde(deny_unknown_fields)]
 #[allow(dead_code)]
 pub struct MethodInputs {
+    #[serde(rename = "auth.chatgpt.status")]
+    chatgpt_status: EmptyParams,
+    #[serde(rename = "auth.chatgpt.start")]
+    chatgpt_start: EmptyParams,
+    #[serde(rename = "auth.chatgpt.cancel")]
+    chatgpt_cancel: ChatgptCancelParams,
+    #[serde(rename = "auth.chatgpt.disconnect")]
+    chatgpt_disconnect: EmptyParams,
     #[serde(rename = "runtime.closeClient")]
     close_client: EmptyParams,
     #[serde(rename = "artifacts.read")]
@@ -422,6 +457,14 @@ pub struct MethodInputs {
 #[serde(deny_unknown_fields)]
 #[allow(dead_code)]
 pub struct MethodOutputs {
+    #[serde(rename = "auth.chatgpt.status")]
+    chatgpt_status: ChatgptAuthStatus,
+    #[serde(rename = "auth.chatgpt.start")]
+    chatgpt_start: ChatgptAuthStart,
+    #[serde(rename = "auth.chatgpt.cancel")]
+    chatgpt_cancel: Value,
+    #[serde(rename = "auth.chatgpt.disconnect")]
+    chatgpt_disconnect: Value,
     #[serde(rename = "runtime.closeClient")]
     close_client: Value,
     #[serde(rename = "artifacts.read")]
