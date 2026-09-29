@@ -33,15 +33,13 @@ The executable is `target/debug/local-ai-kit` (`.exe` on Windows). `scan --json`
 
 ## Run the showroom
 
-The default demo runs the native local service and loads detected local installations after browser pairing. It does not insert sample accounts or models. Build tools and the native helper must be available:
+The demo runs the native local service and loads detected local installations after browser pairing. It does not insert sample accounts or models. Build tools and the native helper must be available. There is one command, and it serves the UI with hot module replacement:
 
-```powershell
-npm run demo
+```sh
+npm run dev
 ```
 
-Open `http://127.0.0.1:4499` and choose **Show current pairing code**. The browser reads the active one-use code from the same-origin local helper, fills it in, and leaves pairing as an explicit action. After refresh or expiry, the same button issues a replacement code. Hosts and SDK consumers can call `GET /runtime/pairing-code` / `getPairingCode({ baseUrl })`, or explicitly rotate with `POST /runtime/pairing-code` / `issuePairingCode({ baseUrl })`. Pairing triggers passive local discovery, then the browser checks metadata for profiles allowed by the host without sending model prompts. The demo grants supported text execution in an isolated temporary workspace, but a turn still requires account consent and an explicit **Run live turn** click. See the [live demo guide](docs/integration/live-demo.md) and [pairing API](docs/integration/pairing.md).
-
-For UI work with hot reload against the same real native helper, run `npm run dev` and open `http://127.0.0.1:5173/`. With no paired runtime the UI falls back to clearly labeled example data. See [apps/demo](apps/demo/README.md) for the stack, routes, and tests.
+Open `http://127.0.0.1:5173/` and choose **Show current pairing code**. The browser reads the active one-use code from the same-origin local helper, fills it in, and leaves pairing as an explicit action. After refresh or expiry, the same button issues a replacement code. Hosts and SDK consumers can call `GET /runtime/pairing-code` / `getPairingCode({ baseUrl })`, or explicitly rotate with `POST /runtime/pairing-code` / `issuePairingCode({ baseUrl })`. Pairing triggers passive local discovery, then the browser checks metadata for profiles allowed by the host without sending model prompts. The demo grants supported text execution in an isolated temporary workspace, but a turn still requires account consent and an explicit **Run live turn** click. With no paired runtime the UI falls back to clearly labeled example data. See the [live demo guide](docs/integration/live-demo.md), the [pairing API](docs/integration/pairing.md) and [apps/demo](apps/demo/README.md) for the stack, routes, and tests.
 
 ## Register an existing native AI client
 

@@ -1,6 +1,6 @@
 /**
  * Demo dev server: Vite with hot module replacement in front of the real native helper.
- * The helper is the same one `npm run demo` starts (passive discovery and metadata-only
+ * The helper is scripts/run_live_demo.mjs (passive discovery and metadata-only
  * provider checks with the host's permission flags); nothing here is sample data. The UI
  * needs the helper's pairing flow, exactly as in the built demo.
  *

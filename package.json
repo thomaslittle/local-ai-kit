@@ -24,7 +24,6 @@
     "test:ui": "python scripts/verify.py --profile ui",
     "test:a11y": "npm run build && node --test scripts/test_accessibility.mjs scripts/test_component_accessibility.mjs",
     "build:demo": "npm run build && node scripts/build_demo.mjs",
-    "demo": "npm run build:demo && node scripts/run_live_demo.mjs",
     "dev": "npm run build && node scripts/dev_demo.mjs",
     "doctor": "npm run doctor -w @local-ai-kit/demo"
   },

@@ -8,11 +8,10 @@ From the repository root with Node 22.16+ (CI uses 22.20):
 
 ```sh
 npm install --ignore-scripts
-npm run demo         # real native helper + built UI  -> http://127.0.0.1:4499/
-npm run dev          # the same helper, with the UI on Vite hot reload -> http://127.0.0.1:5173/
+npm run dev          # native helper + UI on Vite hot reload -> http://127.0.0.1:5173/
 ```
 
-Both start the **native helper**, so the demo shows what is actually detected on this machine (passive discovery, then metadata-only provider checks, no prompts). Choose **Show current pairing code**, then **Pair**; pairing is an explicit action. Imports never start a listener.
+It starts the **native helper**, so the demo shows what is actually detected on this machine (passive discovery, then metadata-only provider checks, no prompts). Choose **Show current pairing code**, then **Pair**; pairing is an explicit action. Imports never start a listener.
 
 **Real data first, labeled example data as the fallback.** With a paired runtime everything on screen is real. If no native runtime is reachable, or you choose **Explore example data** on the pairing screen, the demo shows clearly labeled synthetic data ("Synthetic showcase" banner) with a **Pair a runtime** button back to the real thing. Example data is never mixed with real results, and a failed explicit connection clears it.
 

@@ -20,7 +20,7 @@ The review preserved the existing worktree and fixed OpenCode loopback authentic
 
 The final paired browser returned 137 route-specific model entries: two Codex installations with 7 each, Claude Code 11, Grok 1, and OpenCode 111. Checks are metadata-only; no inference was sent. Ollama/LM Studio were detected but offline. The [application integration guide](../integration/prompt-app.md) covers a crntly-style host, provider/model selection, grants, streaming, and scene-output validation.
 
-The live launcher runs a temporary helper copy so Windows builds can proceed while the demo stays open. `npm run demo` grants metadata only. Its owned OpenCode server requires temporary Basic Auth; startup verifies anonymous HTTP 401 and an authenticated response.
+The live launcher runs a temporary helper copy so Windows builds can proceed while the demo stays open. `npm run dev` (which starts the same launcher) grants metadata only. Its owned OpenCode server requires temporary Basic Auth; startup verifies anonymous HTTP 401 and an authenticated response.
 
 External macOS blocker: GitHub run `36302338910` created jobs with no executed steps. Check annotations explicitly report failed recent account payments or an insufficient spending limit. No billing settings were changed. macOS remains unqualified; current Windows/Linux results are independent local platform execution. The September 25 WSL EIO interruption is historical and does not describe the successful September 27 run.
 

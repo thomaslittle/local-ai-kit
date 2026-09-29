@@ -13,7 +13,7 @@ const port=String(process.env.LAI_DEMO_PORT??4499);
 const metadataProviders=['codex','claude_code','grok','gemini_cli','antigravity','opencode','ollama','lmstudio','cursor','openai_api','anthropic_api','gemini_api','xai_api','compatible_api'];
 const demoFlags=process.argv.slice(2);
 if(demoFlags.length){
- console.error('Usage: npm run demo');
+ console.error('Usage: npm run dev (this script is the helper launcher that `npm run dev` starts)');
  process.exit(2);
 }
 const nativeProfiles=process.env.LAI_NATIVE_PROFILES;
