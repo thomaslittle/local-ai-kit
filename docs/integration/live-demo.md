@@ -33,3 +33,9 @@ The in-memory fixture service remains available to automated tests only. The pub
 ## Startup warm-up (opt-in)
 
 The launcher passes `--warm-metadata`. With it (HTTP only, plus `--allow-passive-discovery` and at least one `--allow-metadata` provider) the helper runs one passive scan and the metadata checks the host already permitted right after it starts, so results exist when a browser pairs. Different providers are checked concurrently; the profiles of one provider are checked in order, so two checks never race that provider's credential refresh. The helper keeps each observation and marks it fresh for 15 minutes; the demo shows fresh observations immediately ("Already current") and only checks the rest. Without the flag the helper never scans on startup.
+
+## Persisted observations
+
+While serving with a metadata provider grant, the helper keeps its last metadata observations in its state directory (`metadata-cache.json`; `LOCAL_AI_KIT_STATE_DIR`, `%LOCALAPPDATA%\local-ai-kit`, or `<home>/.local-ai-kit` with `--home`) and reloads them after a restart. They return with their original age, so anything older than the 15-minute freshness window is served as stale and refreshed; entries older than 7 days are dropped. Account identity (labels, identity sources) is never written, the file is written atomically with owner-only permissions on Unix, and `--no-metadata-cache` turns the cache off. A corrupt or foreign file is ignored.
+
+The launcher does not register its own protected OpenCode server by default, because the discovered OpenCode installation is already listed and checked. Set `LAI_DEMO_OPENCODE_ENDPOINT=1` to demonstrate an explicitly registered endpoint (it then appears as a second `OpenCode local` connection).

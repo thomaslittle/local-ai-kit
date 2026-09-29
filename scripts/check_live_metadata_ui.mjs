@@ -23,7 +23,7 @@ try{
  const card=page.locator('section.card').filter({has:page.getByRole('heading',{name:/Codex/})}).first();await card.waitFor();
  const probe=page.waitForResponse(r=>r.url().endsWith('/v1/rpc')&&r.request().postDataJSON()?.method==='connections.probe',{timeout:30000});
  await card.getByRole('button',{name:'Check account and models'}).click();const result=await (await probe).json();if(result.error)throw Error(result.error.data.code);
- await nav(page,'Models');await page.locator('#selection-json').waitFor();
+ await nav(page,'Models');await page.locator('table [data-testid]').first().click();await page.locator('#selection-json').waitFor();
  if(errors.length)throw Error(errors.join(';'));
  console.log(JSON.stringify({nativeBrowserPairing:true,nativeAccountProbe:result.result.status,liveModelSelector:true,providerPromptsSubmitted:0,browserErrors:errors.length}));
  await page.screenshot({path:resolve(root,'.verification/live-native-selector.png'),fullPage:true});

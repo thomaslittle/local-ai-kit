@@ -46,6 +46,13 @@ class DemoTests(unittest.TestCase):
         self.page.close()
         self.assertEqual(self.errors, [])
 
+    def open_playground(self):
+        # Nothing is selected until a person picks a route, so choose the first one from the composer.
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.page.get_by_role('button',name='Choose a model and account').click()
+        self.page.get_by_role('dialog').get_by_role('option').first.click()
+        expect(self.page.get_by_role('button',name=re.compile(r'^Model:'))).to_be_visible()
+
     def load(self, fixture_options=None):
         # Offline browser rendering respects the container's navigation restriction.
         # Network/HTTP semantics are tested independently by the real HTTP SDK tests.
@@ -102,7 +109,7 @@ class DemoTests(unittest.TestCase):
 
     def test_playground_streams_through_sdk(self):
         self.load()
-        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.open_playground()
         self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         expect(self.page.locator('#response-text')).to_contain_text('No AI provider was called',timeout=5000)
@@ -110,7 +117,7 @@ class DemoTests(unittest.TestCase):
 
     def test_failed_turn_explains_safe_error_code_without_showing_provider_text(self):
         self.load({'turnError': {'code': 'PROVIDER_UNAVAILABLE', 'message': 'PRIVATE_PROVIDER_DETAIL'}})
-        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.open_playground()
         self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         expect(self.page.get_by_role('alert')).to_contain_text('provider client stopped or returned an unavailable response',timeout=5000)
@@ -120,7 +127,7 @@ class DemoTests(unittest.TestCase):
     def test_playground_picker_selects_provider_and_route_without_selector_lab(self):
         self.load()
         self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
-        self.page.get_by_role('button',name=re.compile(r'^Model:')).click()
+        self.page.get_by_role('button',name='Choose a model and account').click()
         picker=self.page.get_by_role('dialog')
         # Real provider marks label the rail; the list shows every route for the chosen provider.
         picker.get_by_role('button',name='OpenCode',exact=True).click()
@@ -135,7 +142,7 @@ class DemoTests(unittest.TestCase):
 
     def test_tool_approval_can_be_denied(self):
         self.load()
-        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.open_playground()
         self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('checkbox',name='Simulate a tool approval',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
@@ -144,7 +151,7 @@ class DemoTests(unittest.TestCase):
 
     def test_cancel_stops_a_simulated_turn(self):
         self.load()
-        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.open_playground()
         self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('checkbox',name='Simulate a tool approval',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
@@ -153,7 +160,7 @@ class DemoTests(unittest.TestCase):
 
     def test_native_resume_token_stays_out_of_rendered_demo_and_diagnostics(self):
         self.load({'nativeResumption': True})
-        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.open_playground()
         self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         expect(self.page.locator('#session-status')).to_contain_text('Completed')

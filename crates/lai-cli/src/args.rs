@@ -17,6 +17,7 @@ pub struct Args {
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
     pub warm_metadata: bool,
+    pub no_metadata_cache: bool,
     pub http: bool,
     pub ipc: Option<String>,
     pub port: u16,
@@ -72,6 +73,7 @@ impl Args {
             allow_passive: false,
             allow_codex_metadata: false,
             warm_metadata: false,
+            no_metadata_cache: false,
             http: false,
             ipc: None,
             port: 4499,
@@ -161,6 +163,9 @@ impl Args {
                 }
                 "--warm-metadata" if matches!(args.action, Action::Serve) => {
                     args.warm_metadata = true
+                }
+                "--no-metadata-cache" if matches!(args.action, Action::Serve) => {
+                    args.no_metadata_cache = true
                 }
                 "--workspace" if matches!(args.action, Action::Serve) => {
                     args.workspace = Some(absolute(input.next().ok_or_else(invalid)?)?)

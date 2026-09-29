@@ -113,13 +113,16 @@ function SelectorView({ catalog }: { catalog: boolean }) {
 
 /** Selector lab (eight variants) or, with `catalog`, the Models page (comparison table). */
 export function SelectorsPage({ catalog = false }: { catalog?: boolean }) {
+  const hasSelection = useDemo((state) => state.selection !== null);
+  // The catalog table gets the full width until a route is picked; the lab keeps its panel for guidance.
+  const showPanel = !catalog || hasSelection;
   return (
     <div>
       {catalog ? null : <VariantTabs />}
       <Toolbar />
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]">
+      <div className={showPanel ? 'grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]' : 'grid gap-5'}>
         <SelectorView catalog={catalog} />
-        <ConfigurationPanel />
+        {showPanel ? <ConfigurationPanel /> : null}
       </div>
     </div>
   );

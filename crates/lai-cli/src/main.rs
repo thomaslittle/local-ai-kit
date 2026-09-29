@@ -21,7 +21,7 @@ Usage:
       [--allow-passive-discovery] [--allow-codex-metadata]
       [--allow-codex-execution --workspace ABSOLUTE_DIRECTORY]
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
-      [--warm-metadata]
+      [--warm-metadata] [--no-metadata-cache]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
@@ -29,6 +29,9 @@ Usage:
   --billing-declarations ABSOLUTE_JSON declares billing for discovered connections whose provider leaves it unknown; recorded as user-supplied evidence, never verification.
   local-ai-kit --version
 
+Metadata observations are kept in the state directory (metadata-cache.json, no account
+identity, owner-only permissions) and reloaded after a restart as stale-while-revalidate
+data; --no-metadata-cache turns that off.
 Serving never scans on startup unless the host passes --warm-metadata (HTTP only,
 with --allow-passive-discovery and a metadata provider grant): the helper then runs
 one passive scan and the already-permitted metadata checks in the background, so
@@ -116,6 +119,14 @@ async fn execute(args: Args) -> Result<()> {
         declarations,
         host::default_state_dir(args.home.as_deref()),
     );
+    if matches!(args.action, Action::Serve)
+        && !args.metadata_providers.is_empty()
+        && !args.no_metadata_cache
+    {
+        if let Some(directory) = host::default_state_dir(args.home.as_deref()) {
+            service.enable_metadata_cache(directory.join("metadata-cache.json"));
+        }
+    }
     let policy = host::policy(&args);
     let grant = host::execution_grant(&args);
     match args.action {

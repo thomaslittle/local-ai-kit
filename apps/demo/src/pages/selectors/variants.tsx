@@ -167,26 +167,30 @@ export function CapabilityVariant({ candidates }: VariantProps) {
   );
 }
 
-const COMPARE_COLUMNS: { id: string; title: string }[] = [
-  { id: 'input.text', title: 'Text input' },
-  { id: 'input.image', title: 'Image input' },
-  { id: 'structured.output', title: 'Structured output' },
+/** Capabilities shown in the table, as icons. Anything the provider did not report is a plain dash. */
+const COMPARE_CAPABILITIES: { id: string; title: string }[] = [
+  { id: 'input.image', title: 'Images' },
   { id: 'tools', title: 'Tools' },
 ];
 
-const SUPPORT_LABEL: Record<string, string> = { supported: 'Supported', conditional: 'Conditional', unsupported: 'Unsupported' };
+const SUPPORT_LABEL: Record<string, string> = { supported: 'Supported', conditional: 'Conditional', unsupported: 'Not supported' };
 
-/** One capability cell. Anything the provider did not report reads "Not reported", never a guess. */
-function SupportCell({ support, conditions }: { support?: string; conditions?: readonly string[] }) {
-  const label = (support && SUPPORT_LABEL[support]) ?? 'Not reported';
-  const Glyph = support === 'supported' ? CheckCircleIcon : support === 'conditional' ? WarningCircleIcon : support === 'unsupported' ? XCircleIcon : MinusCircleIcon;
+function SupportIcon({ capability, support, conditions }: { capability: string; support?: string; conditions?: readonly string[] }) {
+  if (!support || !SUPPORT_LABEL[support]) {
+    return (
+      <span title={`${capability}: not reported by the provider`} className="text-muted-foreground">
+        <span aria-hidden="true">{'\u2014'}</span>
+        <span className="sr-only">{`${capability}: not reported`}</span>
+      </span>
+    );
+  }
+  const Glyph = support === 'supported' ? CheckCircleIcon : support === 'conditional' ? WarningCircleIcon : XCircleIcon;
+  const tone = support === 'supported' ? 'text-success' : support === 'conditional' ? 'text-warning' : 'text-destructive';
+  const detail = conditions?.length ? ` (requires ${conditions.join(', ')})` : '';
   return (
-    <span
-      title={conditions?.length ? `Requires: ${conditions.join(', ')}` : undefined}
-      className={cn('inline-flex items-center gap-1.5 whitespace-nowrap', support === 'supported' ? 'text-success' : support === 'conditional' ? 'text-warning' : 'text-muted-foreground')}
-    >
-      <Glyph weight="fill" className="size-3.5" aria-hidden="true" />
-      {label}
+    <span title={`${capability}: ${SUPPORT_LABEL[support]}${detail}`} className={cn('inline-flex', tone)}>
+      <Glyph weight="fill" className="size-4.5" aria-hidden="true" />
+      <span className="sr-only">{`${capability}: ${SUPPORT_LABEL[support]}${detail}`}</span>
     </span>
   );
 }
@@ -194,72 +198,85 @@ function SupportCell({ support, conditions }: { support?: string; conditions?: r
 export function CompareVariant({ candidates }: VariantProps) {
   const actions = useActions();
   const providers = useDemo((state) => state.snapshot?.providers ?? []);
+  const selectedModelId = useDemo((state) => state.selection?.modelId);
+  const rows = candidates.slice(0, 50);
+  const contextOf = (candidate: Candidate) => formatTokens(known((candidate.model as unknown as Model).contextWindow));
+  const hasContext = rows.some((candidate) => contextOf(candidate));
+  const capabilityColumns = COMPARE_CAPABILITIES.filter((column) => rows.some((candidate) => candidate.model.capabilities.some((item) => item.id === column.id)));
   return (
-    <Table>
+    <Table className="table-fixed">
       <TableHeader>
         <TableRow className="bg-surface-subtle hover:bg-surface-subtle">
-          {['Model / route', 'Billing', 'Context', ...COMPARE_COLUMNS.map((column) => column.title), 'Native options', 'Status', 'Select'].map((title) => (
-            <TableHead key={title} className="h-11 px-3 text-xs font-semibold text-muted-foreground">
-              {title}
+          <TableHead className="h-11 w-[42%] px-3 text-xs font-semibold text-muted-foreground">Model / route</TableHead>
+          <TableHead className="h-11 w-[18%] px-3 text-xs font-semibold text-muted-foreground">Billing</TableHead>
+          {hasContext ? <TableHead className="h-11 w-[10%] px-3 text-xs font-semibold text-muted-foreground">Context</TableHead> : null}
+          {capabilityColumns.map((column) => (
+            <TableHead key={column.id} className="h-11 w-[8%] px-3 text-center text-xs font-semibold text-muted-foreground">
+              {column.title}
             </TableHead>
           ))}
+          <TableHead className="h-11 w-[14%] px-3 text-xs font-semibold text-muted-foreground">Status</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {candidates.length ? (
-          candidates.slice(0, 50).map((candidate) => {
+          rows.map((candidate) => {
             const provider = providers.find((item) => item.id === candidate.route.providerId);
-            const context = formatTokens(known((candidate.model as unknown as Model).contextWindow));
+            const context = contextOf(candidate);
+            const providerLabel = providerName(candidate.route.providerId, provider?.name);
+            // "Claude Code · Default profile", not "Claude Code · Claude Code · Default profile".
+            const account = candidate.connection.displayName.toLowerCase().startsWith(providerLabel.toLowerCase()) ? candidate.connection.displayName : `${providerLabel} \u00b7 ${candidate.connection.displayName}`;
+            const selected = selectedModelId === candidate.model.id;
             return (
-              <TableRow key={candidate.key} className="hover:bg-accent-subtle">
+              <TableRow
+                key={candidate.key}
+                data-state={selected ? 'selected' : undefined}
+                onClick={() => actions.select(candidate)}
+                className="cursor-pointer hover:bg-accent-subtle data-[state=selected]:bg-accent-surface"
+              >
                 <TableCell className="px-3 py-3">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
                     <ProviderGlyph id={candidate.route.providerId} name={provider?.name} />
                     <span className="grid min-w-0">
-                      <strong className="text-sm font-semibold">{candidate.model.name}</strong>
-                      <small className="text-xs text-muted-foreground">{`${providerName(candidate.route.providerId, provider?.name)} \u00b7 ${candidate.connection.displayName}`}</small>
+                      <button
+                        type="button"
+                        data-testid={candidate.model.id}
+                        aria-pressed={selected}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          actions.select(candidate);
+                        }}
+                        className="truncate text-left text-sm font-semibold outline-none hover:underline focus-visible:underline"
+                      >
+                        {candidate.model.name}
+                      </button>
+                      <small className="truncate text-xs text-muted-foreground">{account}</small>
                     </span>
                   </div>
                 </TableCell>
                 <TableCell className="px-3">
-                  <Badge variant={billingVariant(candidate.billingLabel)}>{candidate.billingLabel}</Badge>
+                  <Badge variant={billingVariant(candidate.billingLabel)} className="max-w-full truncate">
+                    {candidate.billingLabel}
+                  </Badge>
                 </TableCell>
-                <TableCell className="px-3 font-mono text-xs tabular-nums">{context ?? <span className="text-muted-foreground">Not reported</span>}</TableCell>
-                {COMPARE_COLUMNS.map((column) => {
+                {hasContext ? <TableCell className="px-3 font-mono text-xs tabular-nums">{context ?? <span className="text-muted-foreground">{'\u2014'}</span>}</TableCell> : null}
+                {capabilityColumns.map((column) => {
                   const capability = candidate.model.capabilities.find((item) => item.id === column.id);
                   return (
-                    <TableCell key={column.id} className="px-3 text-xs">
-                      <SupportCell support={capability?.support} conditions={capability?.conditions} />
+                    <TableCell key={column.id} className="px-3 text-center">
+                      <SupportIcon capability={column.title} support={capability?.support} conditions={capability?.conditions} />
                     </TableCell>
                   );
                 })}
-                <TableCell className="px-3 text-xs">
-                  {candidate.model.options.length ? (
-                    <span className="flex flex-wrap gap-1">
-                      {candidate.model.options.map((option) => (
-                        <Badge key={option.id} variant="outline">
-                          {option.label}
-                        </Badge>
-                      ))}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">None advertised</span>
-                  )}
-                </TableCell>
                 <TableCell className="px-3">
                   <Badge variant={candidate.eligible ? 'success' : 'warning'}>{candidate.eligible ? 'Eligible' : 'Needs attention'}</Badge>
-                </TableCell>
-                <TableCell className="px-3">
-                  <Button variant="outline" size="sm" data-testid={candidate.model.id} aria-label={`Inspect ${candidate.model.name} through ${candidate.connection.displayName}`} onClick={() => actions.select(candidate)}>
-                    Inspect
-                  </Button>
                 </TableCell>
               </TableRow>
             );
           })
         ) : (
           <TableRow>
-            <TableCell colSpan={10} className="p-4">
+            <TableCell colSpan={6} className="p-4">
               <EmptyRoutes />
             </TableCell>
           </TableRow>

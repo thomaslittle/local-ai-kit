@@ -169,10 +169,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
       if (reconciled.needsReview) notice = 'The catalog changed. Review the updated selection before use.';
     }
     const resolved = resolveCandidates(catalog, { allowPaidFallback: current.allowPaid });
-    if (!selection) {
-      const first = resolved.find((candidate) => candidate.eligible) ?? resolved[0];
-      if (first) selection = { routeId: first.route.id, modelId: first.model.id, revision: first.model.revision, options: {} };
-    }
+    // No default selection: a route is only "selected" after a person picks it.
     const selected = resolved.find((candidate) => candidate.route.id === selection?.routeId && candidate.model.id === selection?.modelId);
     // The rail defaults to the first provider; when that provider is absent from
     // this catalog, fall back to All instead of an unexplained empty list.

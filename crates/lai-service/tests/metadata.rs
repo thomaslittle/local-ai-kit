@@ -570,3 +570,69 @@ async fn watching_needs_discovery_permission_and_can_be_stopped() {
             .is_empty()
     );
 }
+#[tokio::test]
+async fn observations_survive_a_restart_as_stale_while_revalidate_data_without_identity() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("metadata-cache.json");
+    let first = service(Arc::new(AtomicUsize::new(0)), Duration::ZERO);
+    first.enable_metadata_cache(path.clone());
+    first.register_client("app", probe_policy()).unwrap();
+    first
+        .handle("app", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    first
+        .handle(
+            "app",
+            "connections.probe",
+            json!({"connectionId":"personal"}),
+        )
+        .await
+        .unwrap();
+    let written = std::fs::read_to_string(&path).unwrap();
+    assert!(written.contains("synthetic-plan"));
+    assert!(
+        !written.contains("personal@example.test"),
+        "account identity must not be written to disk"
+    );
+    // A new process: no probe runs, yet the earlier observation is there right after discovery.
+    let probes = Arc::new(AtomicUsize::new(0));
+    let second = service(probes.clone(), Duration::ZERO);
+    second.enable_metadata_cache(path);
+    second.register_client("app", probe_policy()).unwrap();
+    second
+        .handle("app", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let snapshot = second
+        .handle("app", "snapshot.get", json!({}))
+        .await
+        .unwrap();
+    assert_eq!(probes.load(Ordering::SeqCst), 0);
+    assert_eq!(snapshot["models"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        snapshot["connections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["id"] == "personal")
+            .unwrap()["plan"]["value"]["nativeId"],
+        "synthetic-plan"
+    );
+}
+#[tokio::test]
+async fn a_corrupt_or_foreign_cache_file_is_ignored() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("metadata-cache.json");
+    std::fs::write(&path, b"{ not json").unwrap();
+    let s = service(Arc::new(AtomicUsize::new(0)), Duration::ZERO);
+    s.enable_metadata_cache(path.clone());
+    s.register_client("app", probe_policy()).unwrap();
+    s.handle("app", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let snapshot = s.handle("app", "snapshot.get", json!({})).await.unwrap();
+    assert_eq!(snapshot["models"].as_array().unwrap().len(), 0);
+    std::fs::write(&path, br#"{"version":99,"entries":[]}"#).unwrap();
+    s.enable_metadata_cache(path);
+}

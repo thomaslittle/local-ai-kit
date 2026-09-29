@@ -217,9 +217,10 @@ test('showroom raises no Content Security Policy violations on any page or popup
   for(const section of ['Overview','Connections','Models','Usage','Selector lab','Playground','Diagnostics']){
    await nav(page,section);
    if(section==='Usage')await page.locator('[data-slot="chart"]').first().waitFor();
-   if(section==='Playground'){await page.getByRole('button',{name:/^Model:/}).click();await page.getByRole('option').first().waitFor();await page.keyboard.press('Escape');}
+   if(section==='Playground'){await page.getByRole('button',{name:/^(Model:|Choose a model)/}).click();await page.getByRole('option').first().waitFor();await page.keyboard.press('Escape');}
   }
   await nav(page,'Selector lab');
+  await page.getByTestId('model-codex-personal-0').click();
   await page.getByRole('combobox',{name:'Reasoning effort',exact:true}).click();
   await page.getByRole('option',{name:'Cosmic',exact:true}).waitFor();
   await page.keyboard.press('Escape');

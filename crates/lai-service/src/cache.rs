@@ -1,20 +1,96 @@
 use crate::InventorySource;
-use lai_contracts::{DataMode, DomainError, ErrorCode, Result, Snapshot};
+use lai_contracts::{
+    ConnectionMetadata, DataMode, DomainError, ErrorCode, Observation, Result, Snapshot,
+};
 use lai_discovery::{LocatedClient, ScanResult};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
     },
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 use tokio::sync::watch;
 
 type RefreshResult = Option<Result<()>>;
 const METADATA_PROBE_CACHE_TTL: Duration = Duration::from_secs(60);
 const METADATA_FRESHNESS_TTL: Duration = Duration::from_secs(15 * 60);
+/// Persisted observations older than this are dropped instead of shown as stale.
+const PERSISTED_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
+const PERSISTED_VERSION: u32 = 1;
+/// The on-disk form of the last metadata observations (stale-while-revalidate across restarts).
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PersistedMetadata {
+    version: u32,
+    entries: Vec<PersistedEntry>,
+}
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PersistedEntry {
+    saved_at_ms: u64,
+    report: ConnectionMetadata,
+}
+fn unix_ms(at: SystemTime) -> u64 {
+    at.duration_since(UNIX_EPOCH)
+        .map(|d| u64::try_from(d.as_millis()).unwrap_or(u64::MAX))
+        .unwrap_or(0)
+}
+/// Public snapshots already mask account identity, so the disk copy never stores it either.
+fn without_identity(mut report: ConnectionMetadata) -> ConnectionMetadata {
+    if let Some(account) = report.account.as_mut() {
+        account.display_label = Observation::unknown("NOT_PERSISTED");
+        account.identity_source = Observation::unknown("NOT_PERSISTED");
+    }
+    report
+}
+fn write_private(path: &Path, bytes: &[u8]) {
+    if let Some(directory) = path.parent() {
+        let _ = std::fs::create_dir_all(directory);
+    }
+    let temporary = path.with_extension("json.tmp");
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let written = options.open(&temporary).and_then(|mut file| {
+        use std::io::Write;
+        file.write_all(bytes)
+    });
+    if written.is_ok() {
+        let _ = std::fs::rename(&temporary, path);
+    } else {
+        let _ = std::fs::remove_file(&temporary);
+    }
+}
+fn read_persisted(path: &Path) -> BTreeMap<String, (Instant, ConnectionMetadata)> {
+    let Ok(bytes) = std::fs::read(path) else {
+        return BTreeMap::new();
+    };
+    let Ok(file) = serde_json::from_slice::<PersistedMetadata>(&bytes) else {
+        return BTreeMap::new();
+    };
+    if file.version != PERSISTED_VERSION {
+        return BTreeMap::new();
+    }
+    let now = unix_ms(SystemTime::now());
+    file.entries
+        .into_iter()
+        .filter_map(|entry| {
+            let age = Duration::from_millis(now.saturating_sub(entry.saved_at_ms));
+            (age < PERSISTED_MAX_AGE).then(|| {
+                let observed = Instant::now().checked_sub(age).unwrap_or_else(Instant::now);
+                (entry.report.connection_id.clone(), (observed, entry.report))
+            })
+        })
+        .collect()
+}
 fn metadata_is_stale(age: Duration) -> bool {
     age >= METADATA_FRESHNESS_TTL
 }
@@ -28,6 +104,9 @@ struct CacheState {
     snapshot: Snapshot,
     metadata: BTreeMap<String, (Instant, lai_contracts::ConnectionMetadata)>,
     metadata_failures: BTreeMap<String, MetadataFailure>,
+    /// Observations loaded from disk, adopted on the first scan for connections that still exist.
+    restored: BTreeMap<String, (Instant, ConnectionMetadata)>,
+    persist_path: Option<PathBuf>,
     // Native-only: never serialize filesystem locations into public responses.
     _locations: BTreeMap<String, LocatedClient>,
     updated: Option<Instant>,
@@ -66,11 +145,53 @@ impl InventoryCache {
                 snapshot: Snapshot::empty(DataMode::Live),
                 metadata: BTreeMap::new(),
                 metadata_failures: BTreeMap::new(),
+                restored: BTreeMap::new(),
+                persist_path: None,
                 _locations: BTreeMap::new(),
                 updated: None,
                 failure: None,
                 flight: None,
             }),
+        }
+    }
+    /// Keep the last metadata observations on disk and reload them after a restart. They come back
+    /// with their original age, so anything past the freshness window is served as stale and the
+    /// caller refreshes it. Account identity is never written.
+    pub fn enable_persistence(&self, path: PathBuf) {
+        let restored = read_persisted(&path);
+        if let Ok(mut state) = self.state.lock() {
+            state.restored = restored;
+            state.persist_path = Some(path);
+        }
+    }
+    fn persist(&self) {
+        let (path, entries) = {
+            let Ok(state) = self.state.lock() else {
+                return;
+            };
+            let Some(path) = state.persist_path.clone() else {
+                return;
+            };
+            let entries = state
+                .metadata
+                .values()
+                .map(|(at, report)| PersistedEntry {
+                    saved_at_ms: unix_ms(
+                        SystemTime::now()
+                            .checked_sub(at.elapsed())
+                            .unwrap_or_else(SystemTime::now),
+                    ),
+                    report: without_identity(report.clone()),
+                })
+                .collect::<Vec<_>>();
+            (path, entries)
+        };
+        let file = PersistedMetadata {
+            version: PERSISTED_VERSION,
+            entries,
+        };
+        if let Ok(bytes) = serde_json::to_vec(&file) {
+            write_private(&path, &bytes);
         }
     }
     pub fn snapshot(&self) -> Result<Snapshot> {
@@ -117,6 +238,8 @@ impl InventoryCache {
         state
             .metadata
             .insert(report.connection_id.clone(), (Instant::now(), report));
+        drop(state);
+        self.persist();
         Ok(())
     }
     pub(crate) fn metadata_failure(&self, connection: &str) -> Result<Option<DomainError>> {
@@ -155,6 +278,8 @@ impl InventoryCache {
                 error,
             },
         );
+        drop(state);
+        self.persist();
         Ok(())
     }
     pub(crate) fn watch_roots(&self) -> Result<BTreeMap<String, PathBuf>> {
@@ -172,6 +297,8 @@ impl InventoryCache {
             state.metadata_failures.remove(id);
         }
         state.updated = None;
+        drop(state);
+        self.persist();
         Ok(())
     }
     pub async fn refresh(self: &Arc<Self>) -> Result<()> {
@@ -240,6 +367,16 @@ impl InventoryCache {
                     .retain(|id, _| result.snapshot.connections.iter().any(|c| c.id == *id));
                 state.snapshot = result.snapshot;
                 state._locations = result.locations;
+                // Adopt the observations kept on disk for connections that are still here and have no
+                // newer live observation. They keep their original age (stale after the window).
+                let restored = std::mem::take(&mut state.restored);
+                for (id, entry) in restored {
+                    if state.snapshot.connections.iter().any(|c| c.id == id)
+                        && !state.metadata.contains_key(&id)
+                    {
+                        state.metadata.insert(id, entry);
+                    }
+                }
                 state.updated = Some(Instant::now());
                 state.failure = None;
                 Ok(())
