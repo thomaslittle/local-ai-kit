@@ -4,7 +4,6 @@ export function fixtureSnapshot(){
  const source={kind:'synthetic',adapterId:'synthetic',adapterVersion:'0.1.0-alpha.1',reference:'bundled demonstration scenarios'};
  const known=value=>({state:'known',value,source,observedAt:now,freshness:'fresh',verification:'reported'});
  const unknown=reason=>({state:'unknown',reason});
- const cap=(id,support='supported')=>({id,support,origin:'model',conditions:[],evidence:known('Illustrative fixture only')});
  const providers=[['codex','Codex'],['antigravity','Antigravity'],['grok','Grok'],['opencode','OpenCode'],['claude','Claude Code'],['local','Local runtime']].map(([id,name])=>({id,name,kind:'synthetic_client'}));
  const rows=[
   ['codex-personal','codex','Personal workspace','subscription','authenticated'],
@@ -30,10 +29,22 @@ export function fixtureSnapshot(){
   :id.startsWith('antigravity')?[{id:'thinkingBudget',label:'Thinking budget',scope:'turn',revision:'fixture-1',category:'thought_level',source,control:{type:'number',min:0,max:16384,step:1024}}]
   :id.startsWith('grok')?[{id:'serviceTier',label:'Service tier',scope:'session',revision:'fixture-1',category:'service_tier',billingSensitive:true,source,control:{type:'select',choices:[{value:'standard',label:'Standard'},{value:'priority',label:'Priority'}],defaultValue:'standard'}}]
   :[];
+ // Every capability the demo shows is reported explicitly (supported, conditional, or unsupported),
+ // so the comparison table never has to print a missing value. Conditional means "supported once
+ // the stated condition holds", which selection treats as unmet, never as supported.
+ const cap=(id,support='supported',conditions=[])=>({id,support,origin:'model',conditions,evidence:known('Illustrative fixture only')});
+ const contextWindows={codex:['128000','200000'],antigravity:['1000000','2000000'],grok:['256000','256000'],opencode:['128000','200000'],claude:['200000','1000000'],local:['32768','65536']};
+ const imageInput={codex:[true,true],antigravity:[true,true],grok:[false,true],opencode:[true,true],claude:[true,true],local:[false,false]};
  const models=routes.flatMap((route,i)=>[0,1].map(n=>({
   id:`model-${route.connectionId}-${n}`,routeId:route.id,nativeId:n===0?'fixture/balanced':'fixture/precise',name:n===0?'Example Balanced':'Example Precise',revision:'fixture-1',isDefault:n===0,
-  capabilities:[cap('generation.text'),cap('structured.output',n?'supported':'unknown'),cap('tools',i%3===0?'supported':'conditional'),...(route.providerId==='local'?[cap('offline')]:[])],
-  options:n===0?options(route.connectionId):[],contextWindow:n===0?known('128000'):unknown('NOT_REPORTED'),
+  capabilities:[
+   cap('generation.text'),cap('input.text'),
+   cap('input.image',(imageInput[route.providerId]??[false,false])[n]?'supported':'unsupported'),
+   n?cap('structured.output'):cap('structured.output','conditional',['json_mode']),
+   i%3===0?cap('tools'):cap('tools','conditional',['tool_approval']),
+   ...(route.providerId==='local'?[cap('offline')]:[]),
+  ],
+  options:n===0?options(route.connectionId):[],contextWindow:known((contextWindows[route.providerId]??['128000','128000'])[n]),
  })));
  const reading=(unit,used,limit)=>known({unit,used:String(used),limit:limit===null?null:String(limit),remaining:limit===null?null:String(Math.max(0,limit-used)),usedFraction:limit===null?null:used/limit});
  const quotaPools=[

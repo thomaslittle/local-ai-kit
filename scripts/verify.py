@@ -40,7 +40,7 @@ def main():
         run([sys.executable,'-m','unittest','discover','-s','tests/packaging','-v'])
         run([sys.executable,'scripts/check_project.py'])
     if a.profile=='ui' or full:
-        run(['npm','run','build']);run(['node','scripts/build_demo.mjs']);run(['node','scripts/build_extension.mjs']);run(['cargo','build','--locked','-p','lai-cli'])
+        run(['npm','run','build']);run(['npm','run','doctor']);run(['node','scripts/build_demo.mjs']);run(['node','scripts/build_extension.mjs']);run(['cargo','build','--locked','-p','lai-cli'])
         run(['node','--test',*sorted((ROOT/'apps/demo/tests').glob('*.test.mjs'))])
         run([sys.executable,'scripts/test_demo.py'])
         run(['node','--test','scripts/test_live_demo.mjs','scripts/test_live_demo_opencode.mjs','scripts/test_demo_profile_auth.mjs','scripts/test_demo_errors.mjs','scripts/test_demo_catalog_visibility.mjs'])

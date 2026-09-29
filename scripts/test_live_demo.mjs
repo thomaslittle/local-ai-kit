@@ -6,6 +6,16 @@ import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {chromium} from '@playwright/test';
 import {liveDemoExecutionArgs} from './live_demo_policy.mjs';
+
+/** Sidebar navigation. Routes load lazily, so wait until the new page (not its skeleton) is on screen. */
+async function nav(page,name){
+ const link=page.locator('[data-slot="sidebar"]').getByRole('link',{name,exact:true});
+ // Below the md breakpoint the sidebar is an off-canvas sheet; open it first.
+ if(!(await link.count()))await page.getByRole('button',{name:'Toggle Sidebar'}).click();
+ await link.click();
+ await page.waitForFunction(title=>document.querySelector('#page-title')?.textContent===title&&!document.querySelector('[data-slot="skeleton"]'),name);
+}
+
 const root=resolve(import.meta.dirname,'..');
 const binary=resolve(root,'target/debug',process.platform==='win32'?'local-ai-kit.exe':'local-ai-kit');
 test('live demo authorizes every supported provider in its isolated workspace without enabling paid use',()=>{
@@ -38,15 +48,15 @@ test('real native host requires explicit pairing, then discovers real empty-home
   await app.page.getByLabel('Pairing code').fill(app.code);
   await app.page.getByRole('button',{name:'Pair with this runtime'}).click();
   await app.page.locator('#mode-banner.live').waitFor();
-  await app.page.getByRole('button',{name:'Connections',exact:true}).waitFor();
+  await app.page.locator('[data-slot="sidebar"]').getByRole('link',{name:'Connections',exact:true}).waitFor();
   const detected=app.page.getByTestId('detected-profiles');
   await detected.waitFor();
   assert.equal(await app.page.getByTestId('verified-profiles').count(),0);
   assert.equal(await detected.getByRole('heading',{name:/Codex/}).first().isVisible(),true);
-  await app.page.getByRole('button',{name:'Selector lab',exact:true}).click();
+  await nav(app.page,'Selector lab');
   await app.page.locator('[data-variant="compare"]').click();
   await app.page.getByText('No routes match the current filters.',{exact:true}).waitFor();
-  await app.page.getByRole('button',{name:'Overview',exact:true}).click();
+  await nav(app.page,'Overview');
   assert.equal(await app.page.getByText(/Synthetic mode remains a separate/i).count(),0);
   assert.match(await app.page.locator('#mode-banner').innerText(),/Live connection/);
   assert.equal(await app.page.getByText('Synthetic showcase',{exact:true}).count(),0);
@@ -57,7 +67,7 @@ test('pairing automatically checks metadata and reports an outcome for every det
  const app=await setup();try{
   await app.page.goto(app.url);await app.page.getByLabel('Pairing code').fill(app.code);
   await app.page.getByRole('button',{name:'Pair with this runtime'}).click();
-  await app.page.getByRole('button',{name:'Connections',exact:true}).waitFor();
+  await app.page.locator('[data-slot="sidebar"]').getByRole('link',{name:'Connections',exact:true}).waitFor();
   await app.page.waitForFunction(()=>{
    const total=document.querySelectorAll('.profile-card').length;
    return total>0
@@ -72,8 +82,8 @@ test('live selector empty states are useful and stay inside the viewport',async(
   await app.page.setViewportSize({width:1440,height:1000});
   await app.page.goto(app.url);await app.page.getByLabel('Pairing code').fill(app.code);
   await app.page.getByRole('button',{name:'Pair with this runtime'}).click();
-  await app.page.getByRole('button',{name:'Connections',exact:true}).waitFor();
-  await app.page.getByRole('button',{name:'Selector lab',exact:true}).click();
+  await app.page.locator('[data-slot="sidebar"]').getByRole('link',{name:'Connections',exact:true}).waitFor();
+  await nav(app.page,'Selector lab');
   await app.page.locator('[data-variant="compare"]').click();
   await app.page.getByText('No routes match the current filters.',{exact:true}).waitFor();
   await app.page.getByText('Check account and model metadata on an authorized connection to load routes.',{exact:true}).waitFor();
@@ -84,13 +94,26 @@ test('live selector empty states are useful and stay inside the viewport',async(
     assert.equal(await app.page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,`${variant} has horizontal page overflow at ${width}px`);
    }
   }
-  await app.page.getByRole('button',{name:'Playground',exact:true}).click();
+  await nav(app.page,'Playground');
   const prompt=app.page.getByLabel('Prompt');
   assert.equal(await prompt.inputValue(),'');
   assert.equal(await prompt.isDisabled(),false);
   await prompt.fill('Draft a scene concept');
   assert.equal(await prompt.inputValue(),'Draft a scene concept');
   assert.equal(await app.page.getByRole('button',{name:'Run live turn'}).isDisabled(),true);
+  assert.equal(app.errors.length,0,app.errors.join('\n'));
+ }finally{await app.close();}
+});
+test('pairing is the preferred path; example data is an explicit, labeled choice that leads back to pairing',async()=>{
+ const app=await setup();try{
+  await app.page.goto(app.url);
+  await app.page.getByRole('heading',{name:'Connect your local runtime'}).waitFor();
+  assert.equal(await app.page.locator('#mode-banner').count(),0,'nothing is shown before pairing or an explicit choice');
+  await app.page.getByRole('button',{name:'Explore example data'}).click();
+  await app.page.locator('#mode-banner.synthetic').waitFor();
+  assert.match(await app.page.locator('#mode-banner').innerText(),/no native runtime is paired/i);
+  await app.page.getByRole('button',{name:'Pair a runtime'}).click();
+  await app.page.getByRole('heading',{name:'Connect your local runtime'}).waitFor();
   assert.equal(app.errors.length,0,app.errors.join('\n'));
  }finally{await app.close();}
 });

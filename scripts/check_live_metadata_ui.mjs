@@ -1,6 +1,16 @@
 import {spawn} from 'node:child_process';
 import {resolve} from 'node:path';
 import {chromium} from '@playwright/test';
+
+/** Sidebar navigation. Routes load lazily, so wait until the new page (not its skeleton) is on screen. */
+async function nav(page,name){
+ const link=page.locator('[data-slot="sidebar"]').getByRole('link',{name,exact:true});
+ // Below the md breakpoint the sidebar is an off-canvas sheet; open it first.
+ if(!(await link.count()))await page.getByRole('button',{name:'Toggle Sidebar'}).click();
+ await link.click();
+ await page.waitForFunction(title=>document.querySelector('#page-title')?.textContent===title&&!document.querySelector('[data-slot="skeleton"]'),name);
+}
+
 if(!process.argv.includes('--allow-metadata'))throw Error('Explicit --allow-metadata is required; no generation is ever requested.');
 const root=resolve(import.meta.dirname,'..');
 const child=spawn(resolve(root,'target/debug',process.platform==='win32'?'local-ai-kit.exe':'local-ai-kit'),['serve','--http','--port','0','--assets',resolve(root,'apps/demo/dist'),'--allow-passive-discovery','--allow-codex-metadata'],{stdio:['ignore','pipe','pipe'],windowsHide:true});
@@ -13,7 +23,7 @@ try{
  const card=page.locator('section.card').filter({has:page.getByRole('heading',{name:/Codex/})}).first();await card.waitFor();
  const probe=page.waitForResponse(r=>r.url().endsWith('/v1/rpc')&&r.request().postDataJSON()?.method==='connections.probe',{timeout:30000});
  await card.getByRole('button',{name:'Check account and models'}).click();const result=await (await probe).json();if(result.error)throw Error(result.error.data.code);
- await page.getByRole('button',{name:'Models',exact:true}).click();await page.locator('#selection-json').waitFor();
+ await nav(page,'Models');await page.locator('table [data-testid]').first().click();await page.locator('#selection-json').waitFor();
  if(errors.length)throw Error(errors.join(';'));
  console.log(JSON.stringify({nativeBrowserPairing:true,nativeAccountProbe:result.result.status,liveModelSelector:true,providerPromptsSubmitted:0,browserErrors:errors.length}));
  await page.screenshot({path:resolve(root,'.verification/live-native-selector.png'),fullPage:true});

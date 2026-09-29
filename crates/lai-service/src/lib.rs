@@ -48,6 +48,11 @@ impl NativeService {
             cache: Arc::new(InventoryCache::new(source, ttl)),
         }
     }
+    /// Host-only: persist the last metadata observations at `path` (identity excluded) and reload
+    /// them after a restart, so status is shown immediately and refreshed in the background.
+    pub fn enable_metadata_cache(&self, path: std::path::PathBuf) {
+        self.cache.enable_persistence(path);
+    }
     pub fn with_adapters(mut self, adapters: Vec<lai_contracts::AdapterDescriptor>) -> Self {
         self.adapters = adapters;
         self

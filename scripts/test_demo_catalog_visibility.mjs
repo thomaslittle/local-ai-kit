@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {filterLiveCatalog} from '../apps/demo/public/catalog_visibility.mjs';
+import {filterLiveCatalog} from '../apps/demo/lib/catalog_visibility.mjs';
 
 const source={kind:'native',adapterId:'test',adapterVersion:'1',reference:'fixture'};
 const observed=value=>({state:'known',value,source,observedAt:'2026-09-25T12:00:00Z',freshness:'fresh',verification:'observed'});
