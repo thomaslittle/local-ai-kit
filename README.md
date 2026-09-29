@@ -72,6 +72,11 @@ A declaration only fills billing that is still unknown after a probe (including 
 
 ## Use the packages
 
+Hosts can also offer [ChatGPT managed sign-in](docs/integration/chatgpt-managed-auth.md)
+using `--chatgpt-app-name` and the separately granted `codex_managed` connection.
+The helper owns OAuth and protected credentials; the installed Codex login is
+kept separate.
+
 Building a prompt-driven application? Start with the [desktop app integration flow](docs/integration/prompt-app.md) for provider/model selection, grants, streaming, follow-up turns, and scene-output validation.
 
 The [distribution guide](docs/integration/distribution.md) shows how to build a checksummed native bundle and install its four npm tarballs or Python wheel. Registry publication and signing are separate, unperformed operations. The standalone native executables need neither Node nor Python.
