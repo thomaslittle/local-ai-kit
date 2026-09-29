@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyIcon } from '@phosphor-icons/react';
+import { ArrowRightIcon, FlaskIcon, KeyIcon } from '@phosphor-icons/react';
 import type { LocalAIClient } from '@local-ai-kit/sdk';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
@@ -52,7 +52,7 @@ export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalA
   return (
     <main className="pairing-screen">
       <div aria-hidden="true" className="ambient" />
-      <Card className="pairing-card w-full max-w-lg gap-6 bg-card/80 p-2 backdrop-blur-xl">
+      <Card className="pairing-card w-full max-w-lg gap-6 bg-card/80 py-7 backdrop-blur-xl [--card-spacing:--spacing(7)]">
         <CardHeader>
           <span className="mb-2 grid size-11 place-items-center rounded-xl bg-primary/10 text-brand-foreground ring-1 ring-primary/25">
             <KeyIcon className="size-5" aria-hidden="true" />
@@ -94,17 +94,24 @@ export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalA
               Pair with this runtime
             </Button>
           </div>
-          <p aria-live="polite" role={failed ? 'alert' : undefined} className="min-h-6 text-sm text-muted-foreground">
+          <p aria-live="polite" role={failed ? 'alert' : undefined} className="text-sm text-muted-foreground empty:sr-only">
             {status}
           </p>
           <p className="text-xs leading-relaxed text-muted-foreground">
             Access is limited to the permissions granted when starting this runtime. Your provider credentials stay with the native client.
           </p>
           {onExampleData ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs text-muted-foreground">
-              <span>Not ready to pair? Example data is labeled and never mixed with real results.</span>
-              <Button variant="ghost" size="sm" onClick={onExampleData}>
-                Explore example data
+            <div className="grid gap-3 border-t pt-5">
+              <p className="text-center text-[0.65rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">Or</p>
+              <Button variant="outline" onClick={onExampleData} className="h-auto w-full justify-start gap-3 rounded-xl px-3.5 py-3 text-left whitespace-normal">
+                <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-lg bg-info/10 text-info ring-1 ring-info/25">
+                  <FlaskIcon className="size-4.5" />
+                </span>
+                <span className="grid min-w-0 flex-1 gap-0.5">
+                  <span className="text-sm font-semibold">Explore example data</span>
+                  <span className="text-xs leading-snug font-normal text-muted-foreground">Sample accounts, clearly labeled. Never mixed with real results.</span>
+                </span>
+                <ArrowRightIcon aria-hidden="true" className="ml-auto size-4 shrink-0 text-muted-foreground" />
               </Button>
             </div>
           ) : null}
