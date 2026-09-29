@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct TokenRecord {
     pub access_token: String,
     pub refresh_token: String,

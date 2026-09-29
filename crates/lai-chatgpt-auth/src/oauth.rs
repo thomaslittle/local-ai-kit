@@ -5,6 +5,7 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header, jw
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
+    future::Future,
     path::PathBuf,
     sync::{
         Arc, Mutex as StdMutex, Weak,
@@ -278,7 +279,37 @@ impl AuthManager {
     }
     pub async fn status(&self) -> Result<AuthStatus> {
         self.ensure_loaded().await?;
-        let state = self.inner.state.lock().await;
+        let mut state = self.inner.state.lock().await;
+        // These are atomic records; reading them never waits for another
+        // process's refresh lock or its remote token request.
+        let latest = self.inner.store.load_or(&state.file)?;
+        if state.file.host_id != latest.host_id || state.file.registration != latest.registration {
+            return Err(error("IDENTITY_CHANGED", "ChatGPT registration changed"));
+        }
+        let epoch_changed = latest.epoch != state.file.epoch;
+        if epoch_changed {
+            state.generation += 1;
+            state.pending = None;
+            state.error_code = None;
+            if let Ok(mut slot) = self.inner.listener.lock() {
+                if let Some(task) = slot.take() {
+                    task.abort();
+                }
+            }
+        }
+        let (latest_tokens, unusable) = match self.inner.store.load_tokens(&latest) {
+            Ok(tokens) => (tokens, false),
+            Err(problem) if problem.code == "CREDENTIAL_UNUSABLE" => {
+                state.error_code = Some(problem.code.into());
+                (None, true)
+            }
+            Err(problem) => return Err(problem),
+        };
+        if !unusable && state.tokens != latest_tokens {
+            state.error_code = None;
+        }
+        state.file = latest;
+        state.tokens = latest_tokens;
         let current = if state.pending.is_some() {
             AuthState::Pending
         } else if state.error_code.is_some() {
@@ -431,6 +462,13 @@ impl AuthManager {
         Ok(())
     }
     pub async fn disconnect(&self) -> Result<()> {
+        self.disconnect_with(|| async {}).await
+    }
+    pub async fn disconnect_with<F, Fut>(&self, after_local_clear: F) -> Result<()>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = ()>,
+    {
         self.ensure_loaded().await?;
         let _refresh = self.inner.refresh.lock().await;
         let (tokens, client_id) = {
@@ -467,6 +505,7 @@ impl AuthManager {
             }
             (tokens, client_id)
         };
+        after_local_clear().await;
         if let (Some(tokens), Some(client_id)) = (tokens, client_id) {
             // Local sign-out is already durable. Bound the best-effort remote
             // cleanup so the host can finish disconnecting within its RPC budget.
@@ -1311,6 +1350,23 @@ mod tests {
         restarted.cancel(&third.login_id).await.unwrap();
     }
     #[tokio::test]
+    async fn status_invalidates_pending_after_another_manager_disconnects() {
+        let dir = tempfile::tempdir().unwrap();
+        let endpoints = fake_endpoints(1234);
+        let first = with_endpoints(dir.path().to_path_buf(), endpoints.clone());
+        let started = first.start().await.unwrap();
+        assert_eq!(first.status().await.unwrap().state, AuthState::Pending);
+        let second = with_endpoints(dir.path().to_path_buf(), endpoints);
+        second.disconnect().await.unwrap();
+        let status = first.status().await.unwrap();
+        assert_eq!(status.state, AuthState::SignedOut);
+        assert!(status.login_id.is_none());
+        assert_eq!(
+            first.cancel(&started.login_id).await.unwrap_err().code,
+            "LOGIN_NOT_FOUND"
+        );
+    }
+    #[tokio::test]
     async fn signed_id_requires_issuer_audience_nonce_expiry_and_signature() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let port = listener.local_addr().unwrap().port();
@@ -1494,6 +1550,8 @@ mod tests {
         assert_eq!(connected.access_token, "access-1");
         assert_eq!(connected.subject, "sub-1");
         assert_eq!(connected.client_id, "oaiapp_fixture");
+        let twin = with_endpoints(dir.path().to_path_buf(), endpoints.clone());
+        assert_eq!(twin.status().await.unwrap().state, AuthState::Connected);
         {
             let mut state = manager.inner.state.lock().await;
             state.tokens.as_mut().unwrap().expires_at = now() - 1;
@@ -1507,7 +1565,7 @@ mod tests {
         let refreshed = manager.credentials().await.unwrap();
         assert_eq!(refreshed.access_token, "access-2");
         assert_eq!(token_calls.load(Ordering::SeqCst), 2);
-        let twin = with_endpoints(dir.path().to_path_buf(), endpoints.clone());
+        assert_eq!(twin.status().await.unwrap().state, AuthState::Connected);
         assert_eq!(twin.credentials().await.unwrap().access_token, "access-2");
         assert_eq!(token_calls.load(Ordering::SeqCst), 2);
         #[cfg(windows)]
@@ -1525,9 +1583,22 @@ mod tests {
             let sealed = std::fs::read(credential_file.path()).unwrap();
             assert!(!String::from_utf8_lossy(&sealed).contains("access-2"));
         }
-        manager.disconnect().await.unwrap();
+        let seen_local_clear = Arc::new(AtomicUsize::new(0));
+        let seen = seen_local_clear.clone();
+        let checker = manager.clone();
+        let before_revoke = revocations.clone();
+        manager
+            .disconnect_with(move || async move {
+                assert_eq!(checker.status().await.unwrap().state, AuthState::SignedOut);
+                assert_eq!(before_revoke.load(Ordering::SeqCst), 0);
+                seen.store(1, Ordering::SeqCst);
+            })
+            .await
+            .unwrap();
+        assert_eq!(seen_local_clear.load(Ordering::SeqCst), 1);
         assert_eq!(revocations.load(Ordering::SeqCst), 1);
         assert_eq!(manager.status().await.unwrap().state, AuthState::SignedOut);
+        assert_eq!(twin.status().await.unwrap().state, AuthState::SignedOut);
         assert_eq!(twin.credentials().await.unwrap_err().code, "NOT_CONNECTED");
         let returning = with_endpoints(dir.path().to_path_buf(), endpoints.clone());
         let start = returning.start().await.unwrap();
@@ -1576,10 +1647,7 @@ mod tests {
         .unwrap();
         tokio::time::timeout(Duration::from_secs(5), async {
             loop {
-                if returning.status().await.unwrap().state == AuthState::Error
-                    && returning.status().await.unwrap().error_code.as_deref()
-                        == Some("LOGIN_CANCELLED")
-                {
+                if returning.status().await.unwrap().state == AuthState::SignedOut {
                     break;
                 }
                 tokio::time::sleep(Duration::from_millis(10)).await;
