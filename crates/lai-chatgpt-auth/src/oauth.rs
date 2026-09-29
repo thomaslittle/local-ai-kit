@@ -246,7 +246,13 @@ impl AuthManager {
         let mut state = self.inner.state.lock().await;
         if !state.loaded {
             let file = self.inner.store.load()?;
-            let tokens = self.inner.store.load_tokens(&file)?;
+            let tokens = match self.inner.store.load_tokens(&file) {
+                Ok(tokens) => tokens,
+                Err(problem) => {
+                    state.error_code = Some(problem.code.into());
+                    None
+                }
+            };
             state.file = file;
             state.tokens = tokens;
             state.loaded = true;
@@ -317,8 +323,22 @@ impl AuthManager {
         if state.pending.is_some() {
             return Err(error("LOGIN_PENDING", "ChatGPT sign-in is already pending"));
         }
-        let file = self.inner.store.load()?;
-        let tokens = self.inner.store.load_tokens(&file)?;
+        let file = self.inner.store.load_or(&state.file)?;
+        if state.file.host_id != file.host_id || state.file.registration != file.registration {
+            return Err(error("IDENTITY_CHANGED", "ChatGPT registration changed"));
+        }
+        let tokens = match self.inner.store.load_tokens(&file) {
+            Ok(tokens) => tokens,
+            Err(problem) if problem.code == "CREDENTIAL_UNUSABLE" => {
+                // Only the known credential record is unusable. Keep the verified
+                // registration and host identity for a fresh OAuth attempt.
+                state.file = file;
+                self.inner.store.save_tokens(&mut state.file, None)?;
+                None
+            }
+            Err(problem) => return Err(problem),
+        };
+        let file = self.inner.store.load_or(&state.file)?;
         state.file = file;
         state.tokens = tokens;
         if state.tokens.is_some() {
@@ -416,7 +436,7 @@ impl AuthManager {
         let (tokens, client_id) = {
             let _file_lock = self.inner.store.lock_refresh().await?;
             let mut state = self.inner.state.lock().await;
-            let latest = self.inner.store.load()?;
+            let latest = self.inner.store.load_or(&state.file)?;
             if state.file.host_id != latest.host_id
                 || state.file.registration != latest.registration
             {
@@ -426,7 +446,7 @@ impl AuthManager {
             state.generation += 1;
             state.pending = None;
             state.error_code = None;
-            state.tokens = self.inner.store.load_tokens(&state.file)?;
+            state.tokens = self.inner.store.load_tokens(&state.file).unwrap_or(None);
             let tokens = state.tokens.clone();
             state.file.epoch = state
                 .file
@@ -448,38 +468,50 @@ impl AuthManager {
             (tokens, client_id)
         };
         if let (Some(tokens), Some(client_id)) = (tokens, client_id) {
-            let endpoints = self.endpoints().await.map_err(|_| {
-                error(
+            // Local sign-out is already durable. Bound the best-effort remote
+            // cleanup so the host can finish disconnecting within its RPC budget.
+            let revocation = async {
+                let endpoints = self.endpoints().await.map_err(|_| {
+                    error(
+                        "REVOCATION_UNCONFIRMED",
+                        "ChatGPT signed out locally; remote revocation was not confirmed",
+                    )
+                })?;
+                for delay in [0, 200, 500] {
+                    if delay != 0 {
+                        tokio::time::sleep(Duration::from_millis(delay)).await;
+                    }
+                    let reply = self
+                        .inner
+                        .http
+                        .post(&endpoints.revocation)
+                        .form(&[
+                            ("token", tokens.refresh_token.as_str()),
+                            ("token_type_hint", "refresh_token"),
+                            ("client_id", client_id.as_str()),
+                        ])
+                        .send()
+                        .await;
+                    match reply {
+                        Ok(response) if response.status().is_success() => return Ok(()),
+                        Ok(response) if response.status().is_server_error() => continue,
+                        Err(_) => continue,
+                        Ok(_) => break,
+                    }
+                }
+                Err(error(
                     "REVOCATION_UNCONFIRMED",
                     "ChatGPT signed out locally; remote revocation was not confirmed",
-                )
-            })?;
-            for delay in [0, 200, 500] {
-                if delay != 0 {
-                    tokio::time::sleep(Duration::from_millis(delay)).await;
-                }
-                let reply = self
-                    .inner
-                    .http
-                    .post(&endpoints.revocation)
-                    .form(&[
-                        ("token", tokens.refresh_token.as_str()),
-                        ("token_type_hint", "refresh_token"),
-                        ("client_id", client_id.as_str()),
-                    ])
-                    .send()
-                    .await;
-                match reply {
-                    Ok(response) if response.status().is_success() => return Ok(()),
-                    Ok(response) if response.status().is_server_error() => continue,
-                    Err(_) => continue,
-                    Ok(_) => break,
-                }
-            }
-            return Err(error(
-                "REVOCATION_UNCONFIRMED",
-                "ChatGPT signed out locally; remote revocation was not confirmed",
-            ));
+                ))
+            };
+            return tokio::time::timeout(Duration::from_secs(10), revocation)
+                .await
+                .unwrap_or_else(|_| {
+                    Err(error(
+                        "REVOCATION_UNCONFIRMED",
+                        "ChatGPT signed out locally; remote revocation was not confirmed",
+                    ))
+                });
         }
         Ok(())
     }
@@ -489,7 +521,7 @@ impl AuthManager {
         let _file_lock = self.inner.store.lock_refresh().await?;
         let (tokens, reg, host_id, generation) = {
             let mut state = self.inner.state.lock().await;
-            let latest = self.inner.store.load()?;
+            let latest = self.inner.store.load_or(&state.file)?;
             if state.file.host_id != latest.host_id
                 || state.file.registration != latest.registration
             {
@@ -987,6 +1019,162 @@ mod tests {
         Arc::get_mut(&mut manager.inner).unwrap().endpoints = Some(endpoints);
         manager
     }
+    #[cfg(windows)]
+    fn seeded_credentials(root: &std::path::Path) -> (Store, StateFile) {
+        let store = Store::new(root.to_path_buf());
+        let mut file = StateFile::fresh();
+        file.registration = Some(Registration {
+            client_id: "oaiapp_synthetic".into(),
+            subject: "synthetic-sub".into(),
+            email: Some("synthetic@example.test".into()),
+        });
+        store
+            .save_tokens(
+                &mut file,
+                Some(TokenRecord {
+                    access_token: "synthetic-access".into(),
+                    refresh_token: "synthetic-refresh".into(),
+                    id_token: "synthetic-id".into(),
+                    expires_at: now() + 3600,
+                    scopes: SCOPES.split_ascii_whitespace().map(str::to_owned).collect(),
+                }),
+            )
+            .unwrap();
+        (store, file)
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn inactive_marker_survives_crash_before_ciphertext_deletion() {
+        use crate::store::{credential_path, keyring_entry};
+        let dir = tempfile::tempdir().unwrap();
+        let (store, mut file) = seeded_credentials(dir.path());
+        let reg = file.registration.clone().unwrap();
+        let path = credential_path(dir.path(), &file.host_id, &reg);
+        assert!(path.exists());
+        assert!(
+            keyring_entry(&file.host_id, &reg)
+                .unwrap()
+                .get_password()
+                .is_ok()
+        );
+        // Exact crash boundary: disconnect persisted the tombstone, but the
+        // process stopped before it removed the old file and key.
+        file.epoch += 1;
+        file.credential_active = false;
+        store.save(&file).unwrap();
+        let fresh = AuthManager::new(dir.path().to_path_buf(), "crntly".into()).unwrap();
+        assert_eq!(fresh.status().await.unwrap().state, AuthState::SignedOut);
+        assert_eq!(fresh.credentials().await.unwrap_err().code, "NOT_CONNECTED");
+        assert!(path.exists());
+        store.save_tokens(&mut file, None).unwrap();
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn missing_key_allows_disconnect_to_invalidate_and_clear_local_material() {
+        use crate::store::{credential_path, keyring_entry};
+        let dir = tempfile::tempdir().unwrap();
+        let (store, file) = seeded_credentials(dir.path());
+        let reg = file.registration.clone().unwrap();
+        let path = credential_path(dir.path(), &file.host_id, &reg);
+        keyring_entry(&file.host_id, &reg)
+            .unwrap()
+            .delete_credential()
+            .unwrap();
+        let manager = AuthManager::new(dir.path().to_path_buf(), "crntly".into()).unwrap();
+        let status = manager.status().await.unwrap();
+        assert_eq!(status.state, AuthState::Error);
+        assert_eq!(status.error_code.as_deref(), Some("CREDENTIAL_UNUSABLE"));
+        manager.disconnect().await.unwrap();
+        assert_eq!(manager.status().await.unwrap().state, AuthState::SignedOut);
+        let saved = store.load().unwrap();
+        assert!(saved.epoch > file.epoch);
+        assert!(!saved.credential_active);
+        assert_eq!(saved.host_id, file.host_id);
+        assert_eq!(saved.registration, file.registration);
+        assert!(!path.exists());
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn corrupt_key_allows_fresh_sign_in_without_changing_registration() {
+        use crate::store::{credential_path, keyring_entry};
+        let dir = tempfile::tempdir().unwrap();
+        let (store, file) = seeded_credentials(dir.path());
+        let reg = file.registration.clone().unwrap();
+        let path = credential_path(dir.path(), &file.host_id, &reg);
+        keyring_entry(&file.host_id, &reg)
+            .unwrap()
+            .set_password("corrupt-key")
+            .unwrap();
+        let manager = with_endpoints(dir.path().to_path_buf(), fake_endpoints(1234));
+        assert_eq!(manager.status().await.unwrap().state, AuthState::Error);
+        let start = manager.start().await.unwrap();
+        let params: std::collections::HashMap<_, _> = Url::parse(&start.auth_url)
+            .unwrap()
+            .query_pairs()
+            .into_owned()
+            .collect();
+        assert_eq!(params["client_id"], reg.client_id);
+        assert_eq!(params["ext_agent_host_id"], file.host_id);
+        let saved = store.load().unwrap();
+        assert!(!saved.credential_active);
+        assert_eq!(saved.registration, file.registration);
+        assert!(!path.exists());
+        manager.cancel(&start.login_id).await.unwrap();
+    }
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn changed_verified_registration_is_not_reset() {
+        use crate::store::credential_path;
+        let dir = tempfile::tempdir().unwrap();
+        let (store, mut file) = seeded_credentials(dir.path());
+        let original = file.registration.clone().unwrap();
+        let old_cipher = credential_path(dir.path(), &file.host_id, &original);
+        let manager = with_endpoints(dir.path().to_path_buf(), fake_endpoints(1234));
+        assert_eq!(manager.status().await.unwrap().state, AuthState::Connected);
+        file.registration.as_mut().unwrap().subject = "different-subject".into();
+        store.save(&file).unwrap();
+        assert_eq!(manager.start().await.unwrap_err().code, "IDENTITY_CHANGED");
+        assert_eq!(
+            manager.disconnect().await.unwrap_err().code,
+            "IDENTITY_CHANGED"
+        );
+        assert!(old_cipher.exists());
+        file.registration = Some(original);
+        store.save_tokens(&mut file, None).unwrap();
+    }
+    #[tokio::test]
+    async fn direct_first_run_disconnect_is_idempotent() {
+        let dir = tempfile::tempdir().unwrap();
+        let manager = AuthManager::new(dir.path().to_path_buf(), "crntly".into()).unwrap();
+        manager.disconnect().await.unwrap();
+        assert_eq!(manager.status().await.unwrap().state, AuthState::SignedOut);
+        let saved = Store::new(dir.path().to_path_buf()).load().unwrap();
+        assert!(saved.host_id.starts_with("urn:uuid:"));
+        assert!(saved.registration.is_none());
+    }
+    #[tokio::test]
+    async fn malformed_registration_is_not_reset_by_auth_actions() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("chatgpt-auth.json");
+        std::fs::write(&path, b"{\"host_id\":\"bad\",\"registration\":null}").unwrap();
+        let manager = with_endpoints(dir.path().to_path_buf(), fake_endpoints(1234));
+        assert_eq!(
+            manager.start().await.unwrap_err().code,
+            "STORAGE_UNAVAILABLE"
+        );
+        assert_eq!(
+            manager.disconnect().await.unwrap_err().code,
+            "STORAGE_UNAVAILABLE"
+        );
+        assert_eq!(
+            std::fs::read(&path).unwrap(),
+            b"{\"host_id\":\"bad\",\"registration\":null}"
+        );
+    }
+
     #[test]
     fn callback_accepts_only_expected_path_and_requires_state() {
         assert!(parse_callback("GET /callback?state=x&code=y HTTP/1.1\r\n").is_none());
