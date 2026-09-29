@@ -13,6 +13,9 @@ use std::{
     time::Duration,
 };
 async fn setup() -> (HttpServer, Arc<AtomicUsize>) {
+    setup_with_assets(None).await
+}
+async fn setup_with_assets(assets: Option<std::path::PathBuf>) -> (HttpServer, Arc<AtomicUsize>) {
     let count = Arc::new(AtomicUsize::new(0));
     let reads = count.clone();
     let service = Arc::new(NativeService::new(
@@ -33,7 +36,7 @@ async fn setup() -> (HttpServer, Arc<AtomicUsize>) {
                 port: 0,
                 policy: ClientPolicy::passive(),
                 execution: None,
-                assets: None,
+                assets,
             },
         )
         .await
@@ -305,4 +308,101 @@ async fn repeated_pair_and_revoke_does_not_exhaust_broker_client_slots() {
         );
     }
     s.close().await;
+}
+
+fn asset_dir(label: &str) -> std::path::PathBuf {
+    let dir = std::env::temp_dir().join(format!("lai-assets-{label}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("index.html"), "<!doctype html><title>spa</title>").unwrap();
+    std::fs::write(dir.join("x.woff2"), b"wOF2\x00\x01\x02").unwrap();
+    dir
+}
+async fn raw_status(server: &HttpServer, target: &str) -> String {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let addr = server.url.trim_start_matches("http://");
+    let mut stream = tokio::net::TcpStream::connect(addr).await.unwrap();
+    let request = format!("GET {target} HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n\r\n");
+    stream.write_all(request.as_bytes()).await.unwrap();
+    let mut reply = String::new();
+    stream.read_to_string(&mut reply).await.unwrap();
+    reply.lines().next().unwrap_or_default().to_string()
+}
+#[tokio::test]
+async fn client_routes_serve_index_and_everything_else_stays_strict() {
+    let dir = asset_dir("routes");
+    let (s, _) = setup_with_assets(Some(dir.clone())).await;
+    let index = "<!doctype html><title>spa</title>";
+    for route in [
+        "/",
+        "/overview",
+        "/connections",
+        "/models",
+        "/usage",
+        "/selector-lab",
+        "/playground",
+        "/diagnostics",
+    ] {
+        let response = client()
+            .get(format!("{}{route}", s.url))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 200, "{route}");
+        assert_eq!(
+            response.headers()["content-type"],
+            "text/html; charset=utf-8"
+        );
+        assert_eq!(response.text().await.unwrap(), index, "{route}");
+    }
+    let head = client()
+        .head(format!("{}/connections", s.url))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(head.status(), 200);
+    assert_eq!(head.headers()["content-type"], "text/html; charset=utf-8");
+    for route in [
+        "/nope",
+        "/connections/",
+        "/connections/extra",
+        "/Connections",
+        "/overview.txt",
+    ] {
+        let response = client()
+            .get(format!("{}{route}", s.url))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 404, "{route}");
+    }
+    // reqwest normalizes dot segments, so send the traversal target on the wire.
+    assert!(raw_status(&s, "/../connections").await.contains(" 404 "));
+    assert!(raw_status(&s, "/connections").await.contains(" 200 "));
+    s.close().await;
+    let _ = std::fs::remove_dir_all(dir);
+}
+#[tokio::test]
+async fn variable_font_assets_are_served_as_woff2() {
+    let dir = asset_dir("font");
+    let (s, _) = setup_with_assets(Some(dir.clone())).await;
+    let response = client()
+        .get(format!("{}/x.woff2", s.url))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    assert_eq!(response.headers()["content-type"], "font/woff2");
+    assert_eq!(
+        response.bytes().await.unwrap().as_ref(),
+        b"wOF2\x00\x01\x02"
+    );
+    let missing = client()
+        .get(format!("{}/missing.woff2", s.url))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(missing.status(), 404);
+    s.close().await;
+    let _ = std::fs::remove_dir_all(dir);
 }

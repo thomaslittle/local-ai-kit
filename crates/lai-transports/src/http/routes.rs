@@ -168,6 +168,16 @@ pub(super) async fn events(
         .keep_alive(KeepAlive::new().interval(Duration::from_secs(15)))
         .into_response()
 }
+/// Exact single-segment client-side routes of the demo SPA; each serves `index.html`.
+const CLIENT_ROUTES: [&str; 7] = [
+    "/overview",
+    "/connections",
+    "/models",
+    "/usage",
+    "/selector-lab",
+    "/playground",
+    "/diagnostics",
+];
 pub(super) async fn asset(State(state): State<Arc<Shared>>, method: Method, uri: Uri) -> Response {
     if method != Method::GET && method != Method::HEAD {
         return reject(StatusCode::METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED");
@@ -176,7 +186,7 @@ pub(super) async fn asset(State(state): State<Arc<Shared>>, method: Method, uri:
         return reject(StatusCode::NOT_FOUND, "NOT_FOUND");
     };
     let path = uri.path();
-    let name = if path == "/" {
+    let name = if path == "/" || CLIENT_ROUTES.contains(&path) {
         "index.html"
     } else {
         path.trim_start_matches('/')
@@ -199,6 +209,7 @@ pub(super) async fn asset(State(state): State<Arc<Shared>>, method: Method, uri:
         "css" => "text/css; charset=utf-8",
         "js" | "mjs" => "text/javascript; charset=utf-8",
         "svg" => "image/svg+xml",
+        "woff2" => "font/woff2",
         _ => return reject(StatusCode::NOT_FOUND, "NOT_FOUND"),
     };
     let Ok(root) = tokio::fs::canonicalize(root).await else {

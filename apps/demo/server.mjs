@@ -7,7 +7,8 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createFixtureService} from './fixture/service.mjs';
 const HERE=dirname(fileURLToPath(import.meta.url));
 const DIST=resolve(HERE,'dist');
-const MIME={html:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',svg:'image/svg+xml'};
+const MIME={html:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',svg:'image/svg+xml',woff2:'font/woff2'};
+const CLIENT_ROUTES=new Set(['/overview','/connections','/models','/usage','/selector-lab','/playground','/diagnostics']);
 const SEGMENT=/^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 export async function createFixtureServer({port=0}={}){
  if(!Number.isInteger(port)||port<0||port>65535)throw Error('INVALID_PORT');
@@ -55,7 +56,7 @@ export async function createFixtureServer({port=0}={}){
    // Static showcase assets. Mirrors the native helper: only extension-allowlisted
    // files without traversal segments are served, capped at 2 MiB.
    if(req.method!=='GET'&&req.method!=='HEAD'){json(res,405,{error:'METHOD_NOT_ALLOWED'});return;}
-   const name=current.pathname==='/'?'index.html':current.pathname.replace(/^\/+/,'');
+   const name=current.pathname==='/'||CLIENT_ROUTES.has(current.pathname)?'index.html':current.pathname.replace(/^\/+/,'');
    const parts=name.split('/');
    const extension=name.includes('.')?name.split('.').pop():'';
    const ok=name.length>0&&name.length<=256&&parts.every(part=>SEGMENT.test(part))&&Object.hasOwn(MIME,extension);
@@ -66,8 +67,8 @@ export async function createFixtureServer({port=0}={}){
     const info=await stat(path);
     if(!info.isFile()||info.size>2097152){json(res,404,{error:'NOT_FOUND'});return;}
     content=await readFile(path);
-   }catch{json(res,404,{error:'BUILD_ASSET_MISSING'});return;}
-   res.writeHead(200,{...headers,'Content-Type':MIME[extension]+'; charset=utf-8','Content-Length':content.length});if(req.method==='GET')res.end(content);else res.end();
+   }catch{json(res,404,{error:'BUILD_ASSET_MISSING',hint:'Run `npm run build:demo` first.'});return;}
+   res.writeHead(200,{...headers,'Content-Type':MIME[extension]+(extension==='woff2'?'':'; charset=utf-8'),'Content-Length':content.length});if(req.method==='GET')res.end(content);else res.end();
   }catch{if(!res.headersSent)json(res,400,{error:'INVALID_REQUEST'});else res.end();}
  });
  server.maxConnections=64;server.headersTimeout=10000;server.requestTimeout=15000;server.keepAliveTimeout=5000;
