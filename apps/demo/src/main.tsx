@@ -1,16 +1,16 @@
 import './styles.css';
 import { createRoot } from 'react-dom/client';
-import { createHttpTransport, createLocalAI, LocalAIError, type LocalAIClient } from '@local-ai-kit/sdk';
-import { App } from './components/app';
-import { Pairing } from './components/pairing';
-import type { DemoFactory } from './state/demo';
+import { LocalAIError, type LocalAIClient } from '@local-ai-kit/sdk';
+import { App } from '@/components/app';
+import { Pairing } from '@/components/pairing';
+import { connectRuntime } from '@/lib/runtime';
+import { applyStoredTheme } from '@/lib/theme';
+import { createAppRouter, warmRoutes } from '@/router';
+import { pathFor } from '@/lib/pages';
+import { createDemoStore } from '@/state/store';
+import type { FixtureFlags } from '@/state/types';
 
-async function connect(endpoint: string, token: string): Promise<LocalAIClient> {
-  return createLocalAI({ clientName: 'local-ai-kit-showcase', transport: createHttpTransport({ baseUrl: endpoint, token }) });
-}
-
-function fixtureFlagsFromParams(params: URLSearchParams): DemoFactory['fixtureFlags'] {
-  if (!params.has('demo-fixture')) return undefined;
+function fixtureFlagsFromParams(params: URLSearchParams): FixtureFlags {
   const mode = params.get('mode');
   return {
     staleAuth: params.has('staleAuth'),
@@ -21,57 +21,67 @@ function fixtureFlagsFromParams(params: URLSearchParams): DemoFactory['fixtureFl
   };
 }
 
+async function fetchJson(path: string): Promise<Record<string, unknown> | null> {
+  const response = await fetch(path, { credentials: 'omit', cache: 'no-store', redirect: 'error' });
+  return response.ok ? ((await response.json()) as Record<string, unknown>) : null;
+}
+
+function showUnavailable(): void {
+  const status = document.createElement('p');
+  status.textContent =
+    'The native runtime is unavailable. Start the Local AI Kit demo command and reload this page. No example data has been substituted.';
+  status.setAttribute('role', 'alert');
+  status.className = 'm-8 text-muted-foreground';
+  document.querySelector('#app')?.replaceChildren(status);
+}
+
 async function boot(): Promise<void> {
-  const container = document.querySelector('#app') ?? document.body;
-  const root = createRoot(container);
+  applyStoredTheme();
+  const root = createRoot(document.querySelector('#app') ?? document.body);
   // Scripted flags live in the hash fragment so they never reach the server:
   // asset routes reject query strings on every path except /v1/events.
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 
   if (params.has('demo-fixture')) {
-    // Scripted HTTP fixture for automated checks. The browser never fabricates
-    // accounts: every record comes from the loopback fixture service.
-    const response = await fetch('/fixture/bootstrap', { credentials: 'omit', cache: 'no-store', redirect: 'error' });
-    if (!response.ok) throw new Error('RUNTIME_UNAVAILABLE');
-    const bootstrap = await response.json();
-    const client = await connect(window.location.origin, bootstrap.sessionToken);
-    const flags = fixtureFlagsFromParams(params);
-    root.render(
-      <App
-        connectFixture={async () => client}
-        connectLive={async () => {
-          throw new LocalAIError('TRANSPORT_FAILED');
-        }}
-        initialClient={client}
-        initialMode="synthetic"
-        fixtureFlags={flags}
-      />,
-    );
+    // Scripted HTTP fixture for automated checks. Every record comes from the loopback fixture service.
+    const bootstrap = await fetchJson('/fixture/bootstrap');
+    if (!bootstrap) throw new Error('RUNTIME_UNAVAILABLE');
+    const client = await connectRuntime(window.location.origin, String(bootstrap.sessionToken));
+    const router = createAppRouter();
+    const demo = createDemoStore({
+      navigate: (page) => void router.navigate({ to: pathFor(page) }),
+      connectFixture: async () => client,
+      connectLive: async () => {
+        throw new LocalAIError('TRANSPORT_FAILED');
+      },
+      initialClient: client,
+      initialMode: 'synthetic',
+      fixtureFlags: fixtureFlagsFromParams(params),
+    });
+    root.render(<App demo={demo} router={router} />);
+    warmRoutes(router);
     return;
   }
 
-  const response = await fetch('/runtime/info', { credentials: 'omit', cache: 'no-store', redirect: 'error' });
-  if (response.ok) {
-    const info = await response.json();
-    if (info.mode !== 'live' || info.pairingRequired !== true) throw new Error('INVALID_RUNTIME');
-    root.render(
-      <Pairing
-        onPaired={(client) =>
-          root.render(
-            <App connectFixture={async () => client} connectLive={connect} initialClient={client} initialMode="live" />,
-          )
-        }
-      />,
-    );
-    return;
-  }
-  throw new Error('RUNTIME_UNAVAILABLE');
+  const info = await fetchJson('/runtime/info');
+  if (!info) throw new Error('RUNTIME_UNAVAILABLE');
+  if (info.mode !== 'live' || info.pairingRequired !== true) throw new Error('INVALID_RUNTIME');
+  root.render(
+    <Pairing
+      onPaired={(client: LocalAIClient) => {
+        const router = createAppRouter();
+        const demo = createDemoStore({
+          navigate: (page) => void router.navigate({ to: pathFor(page) }),
+          connectFixture: async () => client,
+          connectLive: connectRuntime,
+          initialClient: client,
+          initialMode: 'live',
+        });
+        root.render(<App demo={demo} router={router} />);
+        warmRoutes(router);
+      }}
+    />,
+  );
 }
 
-boot().catch(() => {
-  const status = document.createElement('p');
-  status.textContent =
-    'The native runtime is unavailable. Start the Local AI Kit demo command and reload this page. No example data has been substituted.';
-  status.setAttribute('role', 'alert');
-  document.querySelector('#app')?.replaceChildren(status);
-});
+boot().catch(showUnavailable);

@@ -1,112 +1,106 @@
 import { useState } from 'react';
-import type * as React from 'react';
-import { createHttpTransport, createLocalAI, getPairingCode, issuePairingCode, type LocalAIClient } from '@local-ai-kit/sdk';
-import { Button } from './ui/button';
-import { Input } from './ui/field';
-import { Card } from './ui/card';
+import { KeyIcon } from '@phosphor-icons/react';
+import type { LocalAIClient } from '@local-ai-kit/sdk';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { fetchPairingCode, pairWithCode } from '@/lib/pairing';
 
-async function connect(endpoint: string, token: string): Promise<LocalAIClient> {
-  return createLocalAI({ clientName: 'local-ai-kit-showcase', transport: createHttpTransport({ baseUrl: endpoint, token }) });
-}
-
-export function Pairing({ onPaired }: { onPaired: (client: LocalAIClient) => void }): React.ReactElement {
+export function Pairing({ onPaired }: { onPaired: (client: LocalAIClient) => void }) {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState('');
   const [failed, setFailed] = useState(false);
   const [working, setWorking] = useState(false);
 
-  async function showCode(): Promise<void> {
+  function showCode() {
     setWorking(true);
     setFailed(false);
-    setStatus('Getting the current code…');
-    try {
-      let pairing;
-      let issued = false;
-      try {
-        pairing = await getPairingCode({ baseUrl: window.location.origin });
-      } catch (error) {
-        if ((error as any)?.code !== 'HTTP_403') throw error;
-        pairing = await issuePairingCode({ baseUrl: window.location.origin });
-        issued = true;
-      }
-      setCode(pairing.code);
-      setStatus(`${issued ? 'New code issued. ' : ''}Code expires in about ${pairing.expiresInSeconds} seconds.`);
-    } catch {
-      setFailed(true);
-      setStatus('Could not get a pairing code from this local runtime. Check that the helper is running and reload the page.');
-    } finally {
-      setWorking(false);
-    }
+    setStatus('Getting the current code\u2026');
+    fetchPairingCode()
+      .then(
+        (pairing) => {
+          setCode(pairing.code);
+          setStatus(`${pairing.issued ? 'New code issued. ' : ''}Code expires in about ${pairing.expiresInSeconds} seconds.`);
+        },
+        () => {
+          setFailed(true);
+          setStatus('Could not get a pairing code from this local runtime. Check that the helper is running and reload the page.');
+        },
+      )
+      .finally(() => setWorking(false));
   }
 
-  async function submit(): Promise<void> {
+  function submit() {
     setWorking(true);
     setFailed(false);
-    setStatus('Connecting…');
-    try {
-      const response = await fetch('/v1/pair', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim() }),
-        credentials: 'omit',
-        cache: 'no-store',
-        redirect: 'error',
-      });
-      if (!response.ok) throw new Error('PAIRING_DENIED');
-      const data = await response.json();
-      if (typeof data.token !== 'string') throw new Error('INVALID_PAIRING');
-      const client = await connect(window.location.origin, data.token);
-      setCode('');
-      onPaired(client);
-    } catch {
-      setFailed(true);
-      setStatus('Pairing failed. Get a fresh code and try again.');
-      setWorking(false);
-    }
+    setStatus('Connecting\u2026');
+    pairWithCode(code.trim()).then(
+      (client) => {
+        setCode('');
+        onPaired(client);
+      },
+      () => {
+        setFailed(true);
+        setStatus('Pairing failed. Get a fresh code and try again.');
+        setWorking(false);
+      },
+    );
   }
 
   return (
     <main className="pairing-screen">
-      <Card className="pairing-card grid w-full max-w-[32rem] gap-4 p-6">
-        <span className="text-[0.55rem] font-bold tracking-[0.15rem] text-muted-foreground">LOCAL AI KIT</span>
-        <h1 className="text-3xl font-semibold tracking-tight">Connect your local runtime</h1>
-        <p className="text-sm text-muted-foreground">
-          Connect to the local helper to inspect available providers and models. Pairing checks metadata only; model turns still require your action.
-        </p>
-        <label htmlFor="pairing-code" className="text-xs font-medium">
-          Pairing code
-        </label>
-        <Input
-          id="pairing-code"
-          type="text"
-          maxLength={12}
-          autoComplete="off"
-          spellCheck={false}
-          placeholder="12-character code"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !working) {
-              event.preventDefault();
-              void submit();
-            }
-          }}
-          className="tracking-[0.15em]"
-        />
-        <div className="pairing-actions flex flex-wrap gap-2.5">
-          <Button variant="outline" onClick={() => void showCode()} disabled={working}>
-            Show current pairing code
-          </Button>
-          <Button variant="default" onClick={() => void submit()} disabled={working}>
-            Pair with this runtime
-          </Button>
-        </div>
-        <p aria-live="polite" role={failed ? 'alert' : undefined} className="min-h-[1.5em] text-xs text-muted-foreground">
-          {status}
-        </p>
-        <p className="fine-print text-[10px] leading-relaxed text-muted-foreground">
-          Access is limited to the permissions granted when starting this runtime. Your provider credentials stay with the native client.
-        </p>
+      <div aria-hidden="true" className="ambient" />
+      <Card className="pairing-card w-full max-w-lg gap-6 bg-card/80 p-2 backdrop-blur-xl">
+        <CardHeader>
+          <span className="mb-2 grid size-11 place-items-center rounded-xl bg-primary/10 text-brand-foreground ring-1 ring-primary/25">
+            <KeyIcon className="size-5" aria-hidden="true" />
+          </span>
+          <span className="text-[0.65rem] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Local AI Kit</span>
+          <h1 data-slot="card-title" className="text-2xl font-semibold tracking-tight">
+            Connect your local runtime
+          </h1>
+          <CardDescription>
+            Connect to the local helper to inspect available providers and models. Pairing checks metadata only; model turns still require your action.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <Field>
+            <FieldLabel htmlFor="pairing-code">Pairing code</FieldLabel>
+            <Input
+              id="pairing-code"
+              maxLength={12}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="12-character code"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !working) {
+                  event.preventDefault();
+                  submit();
+                }
+              }}
+              className="font-mono tracking-[0.2em]"
+            />
+          </Field>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={showCode} disabled={working}>
+              Show current pairing code
+            </Button>
+            <Button onClick={submit} disabled={working}>
+              {working ? <Spinner data-icon="inline-start" /> : null}
+              Pair with this runtime
+            </Button>
+          </div>
+          <p aria-live="polite" role={failed ? 'alert' : undefined} className="min-h-6 text-sm text-muted-foreground">
+            {status}
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Access is limited to the permissions granted when starting this runtime. Your provider credentials stay with the native client.
+          </p>
+        </CardContent>
       </Card>
     </main>
   );

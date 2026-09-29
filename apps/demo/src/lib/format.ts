@@ -9,41 +9,56 @@ export const capNames: Record<string, string> = {
   offline: 'Offline operation',
 };
 
+const REASONS: Record<string, string> = {
+  AUTH_UNVERIFIED: 'Authentication has not been checked',
+  AUTH_REQUIRED: 'Authentication needs attention',
+  BILLING_UNKNOWN: 'Billing classification is not reported',
+  BILLING_CONSENT_REQUIRED: 'Metered access needs your consent',
+  RATE_LIMITED: 'The provider reports no ordinary usage allowance right now',
+};
+
 export function reasonLabel(reason: string): string {
-  const [code, id] = reason.split(':', 2);
+  const [code, id = ''] = reason.split(':', 2);
   const capability = capNames[id] ?? id;
   if (code === 'CAPABILITY_UNKNOWN') return `${capability} is not confirmed`;
   if (code === 'CAPABILITY_UNSUPPORTED') return `${capability} is not supported`;
   if (code === 'CAPABILITY_CONDITIONAL') return `${capability} has unmet requirements`;
-  return (
-    (
-      {
-        AUTH_UNVERIFIED: 'Authentication has not been checked',
-        AUTH_REQUIRED: 'Authentication needs attention',
-        BILLING_UNKNOWN: 'Billing classification is not reported',
-        BILLING_CONSENT_REQUIRED: 'Metered access needs your consent',
-        RATE_LIMITED: 'The provider reports no ordinary usage allowance right now',
-      } as Record<string, string>
-    )[code] ?? reason
-  );
+  return REASONS[code] ?? reason;
 }
 
 export function compactIdentity(value: string): string {
-  const text = String(value);
-  return text.length > 28 ? `${text.slice(0, 25)}…` : text;
+  return value.length > 28 ? `${value.slice(0, 25)}…` : value;
 }
 
-export function titleCase(text: string): string {
-  return String(text)
-    .replaceAll('_', ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+type KnownValue<T> = Extract<T, { state: 'known'; value: unknown }>['value'];
+
+/** The value of a "known" observation, otherwise undefined. */
+export function known<T extends { state: string }>(observation: T | null | undefined): KnownValue<T> | undefined {
+  return observation && observation.state === 'known' ? (observation as unknown as { value: KnownValue<T> }).value : undefined;
 }
 
-type Observation = { state: string; value?: unknown } | null | undefined;
+/** Deterministic hue so every provider keeps the same accent across the UI. */
+export function providerHue(id: string): number {
+  let hash = 0;
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) % 360;
+  return hash;
+}
 
-export function known(observation: Observation): any {
-  if (observation && typeof observation === 'object' && observation.state === 'known') {
-    return (observation as { value: unknown }).value;
-  }
-  return undefined;
+/** Token counts as compact tokens: 128000 becomes "128K", 1000000 becomes "1M". */
+export function formatTokens(value: unknown): string | undefined {
+  const count = Number(value);
+  if (!Number.isFinite(count) || count <= 0) return undefined;
+  if (count >= 1_000_000) return `${Number((count / 1_000_000).toFixed(1))}M`;
+  if (count >= 1_000) return `${Number((count / 1_000).toFixed(count >= 100_000 ? 0 : 1))}K`;
+  return String(count);
+}
+
+export type BillingVariant = 'success' | 'info' | 'warning' | 'outline';
+
+/** Badge tone for a billing label: included allowance and local compute read as safe, metered as a decision. */
+export function billingVariant(label: string): BillingVariant {
+  if (label === 'Included allowance') return 'success';
+  if (label === 'Local compute') return 'info';
+  if (label === 'Metered access' || label === 'Prepaid credits') return 'warning';
+  return 'outline';
 }

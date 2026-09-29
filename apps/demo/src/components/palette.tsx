@@ -1,84 +1,90 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type * as React from 'react';
-import { resolveCandidates } from '@local-ai-kit/selector-core';
-import { Button } from './ui/button';
-import { Dialog, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
-import type { Demo } from '../state/demo';
+import { useDeferredValue, useMemo, useState } from 'react';
+import { CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
+import { groupCandidates, resolveCandidates } from '@local-ai-kit/selector-core';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Kbd } from '@/components/ui/kbd';
+import { ProviderGlyph } from '@/components/common/provider-glyph';
+import { useActions, useDemo } from '@/state/context';
 
-export function PaletteDialog({ demo, onClose }: { demo: Demo; onClose: () => void }): React.ReactElement {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+const MAX_RESULTS = 40;
+
+/** Keyboard-first route search. Filtering is done by the selector core, not by cmdk. */
+export default function PaletteDialog() {
+  const actions = useActions();
+  const catalog = useDemo((state) => state.catalog);
+  const allowPaid = useDemo((state) => state.allowPaid);
+  const providers = useDemo((state) => state.snapshot?.providers);
   const [query, setQuery] = useState('');
+  const [highlight, setHighlight] = useState('');
+  const deferredQuery = useDeferredValue(query);
 
-  useEffect(() => {
-    dialogRef.current?.showModal();
-    inputRef.current?.focus();
-  }, []);
+  const groups = useMemo(() => {
+    if (!catalog) return [];
+    const results = resolveCandidates(catalog, { query: deferredQuery, allowPaidFallback: allowPaid }).slice(0, MAX_RESULTS);
+    return groupCandidates(results);
+  }, [catalog, deferredQuery, allowPaid]);
 
-  const candidates = useMemo(
-    () => (demo.catalog ? resolveCandidates(demo.catalog, { query, allowPaidFallback: demo.allowPaid }).slice(0, 40) : []),
-    [demo.catalog, demo.allowPaid, query, demo.snapshot],
-  );
+  // Filtering is external, so cmdk cannot re-highlight on its own: highlight the first
+  // result unless the user has moved to another one that is still listed.
+  const keys = groups.flatMap((group) => group.candidates.map((candidate) => candidate.key));
+  const active = keys.includes(highlight) ? highlight : (keys[0] ?? '');
 
   return (
-    <Dialog ref={dialogRef} id="palette-dialog" aria-label="Find a provider model" onClose={onClose} className="palette-dialog">
-      <DialogHeader>
-        <DialogTitle>Find a route</DialogTitle>
-        <Button variant="outline" size="sm" type="button" onClick={() => dialogRef.current?.close()}>
-          Close
-        </Button>
-      </DialogHeader>
-      <input
-        ref={inputRef}
-        type="search"
-        aria-label="Search every model"
-        placeholder="Search every provider, model, account…"
-        value={query}
-        onChange={(event) => setQuery((event.target as HTMLInputElement).value)}
-        onKeyDown={(event) => {
-          if (event.key === 'ArrowDown') {
-            event.preventDefault();
-            dialogRef.current?.querySelector<HTMLButtonElement>('.palette-results button')?.focus();
-          }
-        }}
-        className="palette-search flex h-10 w-full rounded-md border border-input bg-background/60 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-      />
-      <div
-        className="palette-results mt-3 max-h-[25rem] overflow-y-auto"
-        onKeyDown={(event) => {
-          if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
-          event.preventDefault();
-          const buttons = [...(event.currentTarget as HTMLDivElement).querySelectorAll('button')];
-          const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
-          const next = index + (event.key === 'ArrowDown' ? 1 : -1);
-          if (next < 0) inputRef.current?.focus();
-          else buttons[Math.min(buttons.length - 1, next)]?.focus();
-        }}
-      >
-        {candidates.map((c) => (
-          <Button
-            key={c.key}
-            variant="ghost"
-            onClick={() => {
-              demo.select(c);
-              dialogRef.current?.close();
+    <Dialog open onOpenChange={(open) => actions.patch({ paletteOpen: open })}>
+      <DialogContent id="palette-dialog" showCloseButton={false} className="top-[18%] -translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-xl" aria-label="Find a provider model">
+        <DialogTitle className="sr-only">Find a route</DialogTitle>
+        <DialogDescription className="sr-only">Search every provider, model, account, and native identifier.</DialogDescription>
+        <Command shouldFilter={false} loop value={active} onValueChange={setHighlight} className="rounded-none bg-transparent p-0">
+          <CommandInput aria-label="Search every model" placeholder="Search every provider, model, account…" value={query}
+            onValueChange={(next) => {
+              setQuery(next);
+              setHighlight('');
             }}
-            className="palette-result mb-1 h-auto w-full flex-col items-start gap-1 border border-transparent p-3 text-left"
-          >
-            <strong className="block text-sm">{c.model.name}</strong>
-            <small className="mt-1 block text-[10px] text-muted-foreground">{`${c.connection.displayName} · ${c.billingLabel}`}</small>
-          </Button>
-        ))}
-        {!candidates.length ? <p className="text-xs text-muted-foreground">No matching routes.</p> : null}
-      </div>
-      <DialogFooter className="palette-footer">
-        <kbd className="inline-block rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">↑ ↓</kbd>
-        <span>Navigate</span>
-        <kbd className="inline-block rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Enter</kbd>
-        <span>Inspect</span>
-        <kbd className="inline-block rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Esc</kbd>
-        <span>Close</span>
-      </DialogFooter>
+          />
+          <CommandList className="max-h-[26rem] p-2">
+            <CommandEmpty>No matching routes.</CommandEmpty>
+            {groups.map((group) => {
+              const provider = providers?.find((item) => item.id === group.providerId);
+              const name = provider?.name ?? group.providerId;
+              return (
+                <CommandGroup key={group.providerId} heading={name}>
+                  {group.candidates.map((candidate) => (
+                    <CommandItem
+                      key={candidate.key}
+                      value={candidate.key}
+                      onSelect={() => {
+                        actions.select(candidate);
+                        actions.patch({ paletteOpen: false });
+                      }}
+                      className="items-center gap-3 py-2"
+                    >
+                      <ProviderGlyph id={group.providerId} name={name} />
+                      <span className="grid min-w-0 flex-1 text-left">
+                        <strong className="truncate text-sm font-medium">{candidate.model.name}</strong>
+                        <small className="truncate text-xs text-muted-foreground">{`${candidate.connection.displayName} · ${candidate.billingLabel}`}</small>
+                      </span>
+                      {candidate.eligible ? (
+                        <CheckCircleIcon className="size-4 text-success" aria-label="Eligible in snapshot" />
+                      ) : (
+                        <WarningCircleIcon className="size-4 text-warning" aria-label="Needs attention" />
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              );
+            })}
+          </CommandList>
+          <div className="flex items-center gap-2 border-t px-4 py-2.5 text-xs text-muted-foreground">
+            <Kbd>↑ ↓</Kbd>
+            <span>Navigate</span>
+            <Kbd>Enter</Kbd>
+            <span>Inspect</span>
+            <Kbd>Esc</Kbd>
+            <span>Close</span>
+          </div>
+        </Command>
+      </DialogContent>
     </Dialog>
   );
 }

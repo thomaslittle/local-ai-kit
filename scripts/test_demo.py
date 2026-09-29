@@ -1,6 +1,7 @@
 """Browser interaction checks for the public-SDK-only, explicitly synthetic showroom."""
 import contextlib
 import json
+import re
 import os
 import pathlib
 import subprocess
@@ -21,10 +22,10 @@ class DemoTests(unittest.TestCase):
         if result.returncode:
             raise RuntimeError(result.stderr)
         cls.bundle = bundle.read_text(encoding="utf-8")
-        # Styles are the real Tailwind output from the Vite build (`node scripts/build_demo.mjs`).
+        # Styles are the real Tailwind output from the Vite build (`npm run build:demo`).
         sheets = sorted((ROOT / 'apps/demo/dist/assets').glob('*.css'))
         if not sheets:
-            raise RuntimeError('Missing demo stylesheet; run `node scripts/build_demo.mjs` first')
+            raise RuntimeError('Missing demo stylesheet; run `npm run build:demo` first')
         cls.styles = sheets[0].read_text(encoding="utf-8")
         cls.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE')
@@ -59,11 +60,12 @@ class DemoTests(unittest.TestCase):
         self.load()
         expect(self.page.get_by_test_id('provider-rail')).to_be_visible()
         self.page.get_by_test_id('model-codex-personal-0').click()
-        effort=self.page.get_by_label('Reasoning effort', exact=True)
-        effort.select_option('"cosmic"')
+        effort=self.page.get_by_role('combobox', name='Reasoning effort', exact=True)
+        effort.click()
+        self.page.get_by_role('option', name='Cosmic', exact=True).click()
         expect(self.page.locator('#selection-json')).to_contain_text('cosmic')
         self.page.get_by_test_id('model-codex-personal-1').click()
-        expect(self.page.get_by_label('Reasoning effort', exact=True)).to_have_count(0)
+        expect(self.page.get_by_role('combobox', name='Reasoning effort', exact=True)).to_have_count(0)
 
     def test_all_eight_variants_preserve_the_same_selection(self):
         self.load()
@@ -85,14 +87,14 @@ class DemoTests(unittest.TestCase):
     def test_capability_requirements_do_not_treat_unknown_as_supported(self):
         self.load()
         self.page.locator('[data-variant="capability"]').click()
-        self.page.get_by_label('Structured output',exact=True).check()
-        self.page.get_by_label('Only eligible routes',exact=True).check()
+        self.page.get_by_role('checkbox',name='Structured output',exact=True).check()
+        self.page.get_by_role('checkbox',name='Only eligible routes',exact=True).check()
         expect(self.page.get_by_test_id('model-codex-personal-0')).to_have_count(0)
         expect(self.page.get_by_test_id('model-codex-personal-1')).to_be_visible()
 
     def test_usage_unknown_total_has_no_percentage_gauge(self):
         self.load()
-        self.page.get_by_role('button',name='Usage',exact=True).click()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Usage',exact=True).click()
         card=self.page.locator('[data-pool="pool-unknown-total"]')
         expect(card).to_contain_text('17')
         expect(card.locator('progress')).to_have_count(0)
@@ -100,60 +102,59 @@ class DemoTests(unittest.TestCase):
 
     def test_playground_streams_through_sdk(self):
         self.load()
-        self.page.get_by_role('button',name='Playground',exact=True).click()
-        self.page.get_by_label('Allow this simulated session',exact=True).check()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         expect(self.page.locator('#response-text')).to_contain_text('No AI provider was called',timeout=5000)
         expect(self.page.locator('#session-status')).to_contain_text('Completed')
 
     def test_failed_turn_explains_safe_error_code_without_showing_provider_text(self):
         self.load({'turnError': {'code': 'PROVIDER_UNAVAILABLE', 'message': 'PRIVATE_PROVIDER_DETAIL'}})
-        self.page.get_by_role('button',name='Playground',exact=True).click()
-        self.page.get_by_label('Allow this simulated session',exact=True).check()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         expect(self.page.get_by_role('alert')).to_contain_text('provider client stopped or returned an unavailable response',timeout=5000)
         expect(self.page.get_by_role('alert')).to_contain_text('PROVIDER_UNAVAILABLE')
         expect(self.page.get_by_test_id('turn-debug')).to_contain_text('PRIVATE_PROVIDER_DETAIL')
 
-    def test_playground_selects_provider_and_route_model_without_selector_lab(self):
+    def test_playground_picker_selects_provider_and_route_without_selector_lab(self):
         self.load()
-        self.page.get_by_role('button',name='Playground',exact=True).click()
-        provider=self.page.get_by_label('Provider',exact=True)
-        model=self.page.get_by_label('Model',exact=True)
-        provider.select_option('opencode')
-        options=model.locator('option').all_text_contents()
-        self.assertEqual(len(options)-1,4)
-        self.assertTrue(any('Linked account' in option for option in options[1:]))
-        self.assertTrue(any('API-key route' in option for option in options[1:]))
-        selected=model.locator('option').filter(has_text='Example Balanced · Linked account').first
-        value=selected.get_attribute('value')
-        model.select_option(value)
-        self.assertEqual(model.input_value(),value)
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.page.get_by_role('button',name=re.compile(r'^Model:')).click()
+        picker=self.page.get_by_role('dialog')
+        # Real provider marks label the rail; the list shows every route for the chosen provider.
+        picker.get_by_role('button',name='OpenCode',exact=True).click()
+        options=picker.get_by_role('option')
+        expect(options).to_have_count(4)
+        texts=options.all_text_contents()
+        self.assertTrue(any('Linked account' in text for text in texts))
+        self.assertTrue(any('API-key route' in text for text in texts))
+        options.filter(has_text='Example Balanced').filter(has_text='Linked account').first.click()
         expect(self.page.locator('#configuration-panel')).to_contain_text('Example Balanced')
         expect(self.page.locator('#configuration-panel')).to_contain_text('Linked account')
 
     def test_tool_approval_can_be_denied(self):
         self.load()
-        self.page.get_by_role('button',name='Playground',exact=True).click()
-        self.page.get_by_label('Allow this simulated session',exact=True).check()
-        self.page.get_by_label('Simulate a tool approval',exact=True).check()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
+        self.page.get_by_role('checkbox',name='Simulate a tool approval',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         self.page.get_by_role('button',name='Deny',exact=True).click()
         expect(self.page.locator('#session-status')).to_contain_text('Denied')
 
     def test_cancel_stops_a_simulated_turn(self):
         self.load()
-        self.page.get_by_role('button',name='Playground',exact=True).click()
-        self.page.get_by_label('Allow this simulated session',exact=True).check()
-        self.page.get_by_label('Simulate a tool approval',exact=True).check()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
+        self.page.get_by_role('checkbox',name='Simulate a tool approval',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         self.page.get_by_role('button',name='Cancel turn',exact=True).click()
         expect(self.page.locator('#session-status')).to_contain_text('Cancelled')
 
     def test_native_resume_token_stays_out_of_rendered_demo_and_diagnostics(self):
         self.load({'nativeResumption': True})
-        self.page.get_by_role('button',name='Playground',exact=True).click()
-        self.page.get_by_label('Allow this simulated session',exact=True).check()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
+        self.page.get_by_role('checkbox',name='Allow this simulated session',exact=True).check()
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
         expect(self.page.locator('#session-status')).to_contain_text('Completed')
         self.page.get_by_role('button',name='Suspend native session',exact=True).click()
@@ -161,11 +162,11 @@ class DemoTests(unittest.TestCase):
         token='test-only-resume-token-sentinel'
         self.assertNotIn(token,self.page.locator('body').inner_text())
         self.assertNotIn(token,self.page.locator('body').inner_html())
-        self.page.get_by_role('button',name='Diagnostics',exact=True).click()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Diagnostics',exact=True).click()
         self.page.get_by_role('button',name='Refresh diagnostics',exact=True).click()
         self.assertNotIn(token,self.page.locator('body').inner_text())
         self.assertNotIn(token,self.page.locator('body').inner_html())
-        self.page.get_by_role('button',name='Playground',exact=True).click()
+        self.page.locator('[data-slot="sidebar"]').get_by_role('link',name='Playground',exact=True).click()
         self.page.get_by_role('button',name='Resume native session',exact=True).click()
         expect(self.page.locator('#session-status')).to_have_text('Ready')
         self.page.get_by_role('button',name='Simulate turn',exact=True).click()
@@ -187,8 +188,9 @@ class DemoTests(unittest.TestCase):
         self.page.keyboard.press('Control+k')
         palette=self.page.locator('#palette-dialog')
         expect(palette).to_be_visible()
-        palette.get_by_role('searchbox').fill('Work workspace')
-        self.page.keyboard.press('ArrowDown')
+        # cmdk highlights the first result as soon as the list renders.
+        palette.get_by_role('combobox').fill('Work workspace')
+        expect(palette.get_by_role('option').first).to_be_visible()
         self.page.keyboard.press('Enter')
         expect(palette).not_to_be_visible()
         expect(self.page.locator('#selection-json')).to_contain_text('codex-work')
@@ -204,7 +206,7 @@ class DemoTests(unittest.TestCase):
         self.page.locator('#variant-view').get_by_role('button',name='Codex',exact=True).click()
         self.page.locator('#variant-view').get_by_role('button',name='Personal workspace',exact=True).click()
         self.page.get_by_test_id('model-codex-personal-0').click()
-        expect(self.page.get_by_label('Reasoning effort',exact=True)).to_be_visible()
+        expect(self.page.get_by_role('combobox',name='Reasoning effort',exact=True)).to_be_visible()
         self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'))
 
     def test_untrusted_model_name_is_text_not_markup(self):

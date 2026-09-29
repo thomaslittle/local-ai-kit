@@ -16,6 +16,14 @@ Inspect `git status`, current HEAD, branch, and remote refs before writing. Star
 
 Implement tasks in dependency order and use their targeted test-first verification. Product manifests, locked toolchains, native/SDK/UI code, distribution scripts, and CI already exist. Resume from the ledger and verified source checkpoint; do not restart Task 1 or overwrite implemented modules. Do not run nonexistent scripts and call their absence a product failure. Never replace required checks with success-printing stubs.
 
+## React demo (apps/demo)
+
+- Stack: React 19 with the React Compiler, Vite 8, Tailwind CSS v4, shadcn/ui (style `base-mira`, Base UI, Phosphor icons), TanStack Router, zustand. Add or refresh UI primitives only with the shadcn CLI (`npx shadcn@latest add <name> --cwd apps/demo`, with `pnpm-workspace.yaml` temporarily moved aside so the CLI uses npm); do not hand-write copies of shadcn components.
+- State lives in the framework-free store (`src/state/store.ts`). Components subscribe to slices; do not add `useEffect` for anything but subscriptions to external systems.
+- Pages are real routes. Every route in `src/lib/pages.ts` must also be listed in the fixture server (`apps/demo/server.mjs`) and the native helper (`crates/lai-transports/src/http/routes.rs`).
+- `npm run doctor` (React Doctor) must report no warnings or errors. It is a required pull-request check (`.github/workflows/react-doctor.yml`). Fix root causes; a suppression needs a written reason next to it.
+- Run the demo with `npm run dev` (Vite + synthetic fixture, `http://127.0.0.1:5173/#demo-fixture`).
+
 ## Product invariants
 
 - Rust is the canonical implementation of detection/provider behavior. SDKs are thin; React/Tauri/Electron are optional consumers, never core requirements.

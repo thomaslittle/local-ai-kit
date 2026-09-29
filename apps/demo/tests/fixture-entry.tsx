@@ -1,57 +1,79 @@
 // Test-only browser host; never used by the shipped live/HTTP entry point.
 import '../src/styles.css';
 import { createRoot } from 'react-dom/client';
-import { createLocalAI, LocalAIError } from '@local-ai-kit/sdk';
+import { createLocalAI, LocalAIError, type CallOptions, type LocalAIClient, type Transport } from '@local-ai-kit/sdk';
 import { App } from '../src/components/app';
+import { createTestRouter } from '../src/router';
+import { pathFor } from '../src/lib/pages';
+import { createDemoStore } from '../src/state/store';
 import { fixtureSnapshot } from '../fixture/snapshot.mjs';
 import { createFixtureService } from '../fixture/service.mjs';
 import { fixtureTransport } from '../fixture/transport.mjs';
 
-(globalThis as any).mountTestApp = async (options: any = {}) => {
-  const snapshot: any = fixtureSnapshot();
+interface TestOptions {
+  maliciousLabel?: boolean;
+  largeCatalog?: boolean;
+  turnError?: { code: string; message: string } | null;
+  nativeResumption?: boolean;
+}
+
+type TestGlobals = typeof globalThis & {
+  mountTestApp: (options?: TestOptions) => Promise<void>;
+  testNativeCalls: string[];
+};
+
+(globalThis as TestGlobals).mountTestApp = async (options: TestOptions = {}) => {
+  const snapshot = fixtureSnapshot();
   if (options.maliciousLabel) snapshot.models[0].name = '<img src=x onerror="globalThis.__unsafeExecuted=true">';
   if (options.largeCatalog) {
     const models = snapshot.models;
-    snapshot.models = Array.from({ length: 5000 }, (_, i) => ({
-      ...models[i % models.length],
-      id: 'huge-' + i,
-      name: 'Catalog Model ' + i,
-      nativeId: 'fixture/huge-' + i,
+    snapshot.models = Array.from({ length: 5000 }, (_, index) => ({
+      ...models[index % models.length],
+      id: `huge-${index}`,
+      name: `Catalog Model ${index}`,
+      nativeId: `fixture/huge-${index}`,
     }));
   }
   const connectFixture = async () =>
-    createLocalAI({ transport: fixtureTransport((createFixtureService as any)({ snapshot, turnError: options.turnError ?? null })) });
-  let initialClient: Awaited<ReturnType<typeof createLocalAI>> | null = null;
+    createLocalAI({ transport: fixtureTransport(createFixtureService({ snapshot, turnError: options.turnError ?? null })) });
+  let initialClient: LocalAIClient | null = null;
   if (options.nativeResumption) {
-    (globalThis as any).testNativeCalls = [];
-    const service = (createFixtureService as any)({ snapshot });
-    const transport: any = fixtureTransport(service);
-    const request = transport.request.bind(transport);
-    let previousSession: any = null;
-    transport.request = async (method: string, params: any = {}, call: any = {}) => {
-      if (['sessions.create', 'sessions.close', 'turns.start'].includes(method)) (globalThis as any).testNativeCalls.push(method);
-      if (method === 'runtime.handshake') {
-        const handshake = await request(method, params, call);
-        return { ...handshake, methods: [...handshake.methods, 'sessions.suspend', 'sessions.resume'] };
-      }
-      if (method === 'sessions.create') {
-        previousSession = { ...(await request(method, params, call)), nativeResumption: true };
-        return previousSession;
-      }
-      if (method === 'sessions.suspend') return { resumeToken: 'test-only-resume-token-sentinel' };
-      if (method === 'sessions.resume') return { ...previousSession, state: 'ready' };
-      return request(method, params, call);
+    (globalThis as TestGlobals).testNativeCalls = [];
+    const service = createFixtureService({ snapshot });
+    const base = fixtureTransport(service);
+    let previousSession: Record<string, unknown> | null = null;
+    // Layer native-resumption behaviour over the in-memory fixture transport.
+    const transport: Transport = {
+      ...base,
+      subscribe: base.subscribe?.bind(base),
+      close: () => base.close(),
+      async request<T>(method: string, params: unknown = {}, call?: CallOptions): Promise<T> {
+        if (['sessions.create', 'sessions.close', 'turns.start'].includes(method)) (globalThis as TestGlobals).testNativeCalls.push(method);
+        if (method === 'runtime.handshake') {
+          const handshake = await base.request<{ methods: string[] }>(method, params, call);
+          return { ...handshake, methods: [...handshake.methods, 'sessions.suspend', 'sessions.resume'] } as T;
+        }
+        if (method === 'sessions.create') {
+          previousSession = { ...(await base.request<Record<string, unknown>>(method, params, call)), nativeResumption: true };
+          return previousSession as T;
+        }
+        if (method === 'sessions.suspend') return { resumeToken: 'test-only-resume-token-sentinel' } as T;
+        if (method === 'sessions.resume') return { ...previousSession, state: 'ready' } as T;
+        return base.request<T>(method, params, call);
+      },
     };
     initialClient = await createLocalAI({ transport });
   }
-  createRoot(document.querySelector('#app') as HTMLElement).render(
-    <App
-      connectFixture={connectFixture}
-      connectLive={async () => {
-        throw new LocalAIError('TRANSPORT_FAILED');
-      }}
-      initialClient={initialClient}
-      initialMode="synthetic"
-    />,
-  );
+  // In-memory history: the offline test page has no real URL to push state onto.
+  const router = createTestRouter();
+  const demo = createDemoStore({
+    navigate: (page) => void router.navigate({ to: pathFor(page) }),
+    connectFixture,
+    connectLive: async () => {
+      throw new LocalAIError('TRANSPORT_FAILED');
+    },
+    initialClient,
+    initialMode: 'synthetic',
+  });
+  createRoot(document.querySelector('#app') as HTMLElement).render(<App demo={demo} router={router} />);
 };

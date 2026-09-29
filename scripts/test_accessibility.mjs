@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import { chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createFixtureServer } from '../apps/demo/server.mjs';
+
+/** Sidebar navigation. Routes load lazily, so wait until the new page (not its skeleton) is on screen. */
+async function nav(page,name){
+ const link=page.locator('[data-slot="sidebar"]').getByRole('link',{name,exact:true});
+ // Below the md breakpoint the sidebar is an off-canvas sheet; open it first.
+ if(!(await link.count()))await page.getByRole('button',{name:'Toggle Sidebar'}).click();
+ await link.click();
+ await page.waitForFunction(title=>document.querySelector('#page-title')?.textContent===title&&!document.querySelector('[data-slot="skeleton"]'),name);
+}
+
 let server, browser;
 before(async()=>{server=await createFixtureServer();browser=await chromium.launch({headless:true});});
 after(async()=>{await browser?.close();await server?.close();});
@@ -31,7 +41,7 @@ for(const section of ['Overview','Connections','Models','Usage','Playground','Di
   const context=await browser.newContext();const page=await context.newPage();
   try{
    await mountFixture(page);
-   await page.getByRole('button',{name:section,exact:true}).click();
+   await nav(page,section);
    assert.deepEqual(details(await new AxeBuilder({page}).withTags(tags).analyze()),[]);
   }finally{await context.close();}
  });
@@ -40,7 +50,7 @@ test('showroom presents only authenticated profiles as connected',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page);
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Connections');
   const verified=page.getByTestId('verified-profiles');
   assert.equal(await verified.locator('[data-connection-id]').count(),6);
   assert.match(await verified.innerText(),/Personal workspace/);
@@ -62,7 +72,7 @@ test('overview and connections distinguish stale evidence from never-verified pr
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page,'#demo-fixture&staleAuth=1&mode=live','#mode-banner.live');
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Connections');
   const text=await page.locator('body').innerText();
   assert.match(text,/Previously authenticated/);
   assert.match(text,/Personal workspace/);
@@ -70,11 +80,11 @@ test('overview and connections distinguish stale evidence from never-verified pr
   assert.doesNotMatch(text,/No fresh authenticated profiles|No fresh authentication checks/);
   assert.equal(await page.getByRole('heading',{name:'Verified profiles',exact:true}).count(),0);
   assert.equal(await page.getByRole('heading',{name:'Authenticated profiles',exact:true}).count(),0);
-  await page.getByRole('button',{name:'Overview',exact:true}).click();
+  await nav(page,'Overview');
   const overviewStale=page.getByTestId('previously-authenticated-overview');
   assert.equal(await overviewStale.isVisible(),true);
   assert.match(await overviewStale.innerText(),/Personal workspace/);
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Connections');
   assert.equal(await page.getByTestId('previously-authenticated-profiles').isVisible(),true);
  }finally{await context.close();}
 });
@@ -82,12 +92,12 @@ test('detected client disclosure remains open across page rerenders unless the u
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page);
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Connections');
   let detected=page.getByTestId('detected-profiles');
   assert.equal(await detected.evaluate(e=>e.open),true);
   await detected.locator(':scope > summary').click();
-  await page.getByRole('button',{name:'Overview',exact:true}).click();
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Overview');
+  await nav(page,'Connections');
   detected=page.getByTestId('detected-profiles');
   assert.equal(await detected.evaluate(e=>e.open),false);
  }finally{await context.close();}
@@ -96,7 +106,7 @@ test('local runtimes and confirmed unauthenticated profiles have separate live s
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page,'#demo-fixture&extraProfiles=1&mode=live','#mode-banner.live');
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Connections');
   await page.getByRole('heading',{name:'Local runtimes',exact:true}).waitFor();
   assert.equal(await page.getByRole('heading',{name:'LM Studio · Default profile',exact:true}).isVisible(),true);
   assert.equal(await page.getByRole('button',{name:'Refresh local catalog',exact:true}).isVisible(),true);
@@ -110,7 +120,7 @@ test('live connections expose an explicit bulk metadata check',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page,'#demo-fixture&bulkProbeHook=1&mode=live','#mode-banner.live');
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Connections');
   await page.getByRole('button',{name:'Check all detected profiles',exact:true}).click();
   assert.equal(await page.locator('body').getAttribute('data-bulk-probe'),'started');
   assert.match(await page.locator('#app').innerText(),/metadata-only/i);
@@ -120,7 +130,7 @@ test('detected profiles with completed checks are not labeled as still unchecked
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page,'#demo-fixture&probeResults=1&mode=live','#mode-banner.live');
-  await page.getByRole('button',{name:'Connections',exact:true}).click();
+  await nav(page,'Connections');
   const detected=page.getByTestId('detected-profiles');
   assert.match(await detected.innerText(),/checked, not confirmed/);
   assert.doesNotMatch(await detected.innerText(),/need a metadata check/);
@@ -131,7 +141,7 @@ test('showroom keeps revision details in the exact-payload disclosure',async()=>
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page);
-  await page.getByRole('button',{name:'Selector lab',exact:true}).click();
+  await nav(page,'Selector lab');
   await page.locator('[data-variant="rail"]').click();
   const text=await page.locator('#variant-view').innerText();
   assert.doesNotMatch(text,/input\.(?:text|image)/);
@@ -140,18 +150,19 @@ test('showroom keeps revision details in the exact-payload disclosure',async()=>
   assert.equal(await page.locator('#configuration-panel details[open]').count(),0);
  }finally{await context.close();}
 });
-test('showroom explains when required capability evidence is unknown',async()=>{
+test('showroom explains why a route misses a required capability',async()=>{
  const context=await browser.newContext();const page=await context.newPage();
  try{
   await mountFixture(page);
-  await page.getByRole('button',{name:'Selector lab',exact:true}).click();
+  await nav(page,'Selector lab');
   await page.locator('[data-variant="capability"]').click();
-  await page.getByLabel('Image input').check();
-  assert.equal(await page.getByLabel('Image input').isChecked(),true);
+  await page.getByRole('checkbox',{name:'Image input'}).check();
+  assert.equal(await page.getByRole('checkbox',{name:'Image input'}).isChecked(),true);
   const candidates=await page.locator('#variant-view').innerText();
-  assert.match(candidates,/Image input is not confirmed/);
-  assert.doesNotMatch(candidates,/CAPABILITY_UNKNOWN/);
-  await page.getByLabel('Only eligible routes').check();
+  assert.match(candidates,/Image input is not supported/);
+  assert.doesNotMatch(candidates,/CAPABILITY_(UNKNOWN|UNSUPPORTED|CONDITIONAL)/);
+  await page.getByRole('checkbox',{name:'Offline operation'}).check();
+  await page.getByRole('checkbox',{name:'Only eligible routes'}).check();
   await page.getByText('No routes have confirmed all selected capabilities.',{exact:true}).waitFor();
   await page.getByText('Unknown support is not treated as supported.',{exact:true}).waitFor();
  }finally{await context.close();}
@@ -160,14 +171,14 @@ test('showroom selectors with a populated catalog stay within responsive viewpor
  const context=await browser.newContext({viewport:{width:1440,height:960}});const page=await context.newPage();
  try{
   await mountFixture(page);
-  await page.getByRole('button',{name:'Selector lab',exact:true}).click();
+  await nav(page,'Selector lab');
   for(const width of [1440,1324,1024,390]){
    await page.setViewportSize({width,height:900});
    for(const variant of ['rail','compact','palette','capability','compare','allowance','preset','mobile']){
     await page.locator(`[data-variant="${variant}"]`).click();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,`${variant} overflows at ${width}px`);
-    assert.equal(await page.evaluate(()=>document.querySelector('.configuration').getBoundingClientRect().right<=window.innerWidth),true,`${variant} configuration is clipped at ${width}px`);
-    assert.equal(await page.evaluate(()=>document.querySelector('.top-actions').getBoundingClientRect().right<=window.innerWidth),true,`${variant} top actions are clipped at ${width}px`);
+    assert.equal(await page.evaluate(()=>document.querySelector('#configuration-panel').getBoundingClientRect().right<=window.innerWidth),true,`${variant} configuration is clipped at ${width}px`);
+    assert.equal(await page.evaluate(()=>document.querySelector('[data-top-actions]').getBoundingClientRect().right<=window.innerWidth),true,`${variant} top actions are clipped at ${width}px`);
    }
   }
  }finally{await context.close();}
@@ -177,7 +188,7 @@ test('showroom rendered text has no common mojibake markers',async()=>{
  try{
   await mountFixture(page);
   for(const section of ['Overview','Connections','Models','Usage','Selector lab','Playground','Diagnostics']){
-   await page.getByRole('button',{name:section,exact:true}).click();
+   await nav(page,section);
    const text=await page.locator('body').innerText();
    assert.doesNotMatch(text,/(?:Â|Ã|â€|â€¦|ï»¿|ðŸ)/,`${section} contains garbled text`);
   }
