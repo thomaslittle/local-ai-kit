@@ -120,16 +120,41 @@ async fn valid_host_servers_reach_the_adapter_and_are_never_echoed() {
     assert!(!events.to_string().contains(TOKEN));
 }
 #[tokio::test]
-async fn a_host_mcp_allowlist_of_118_tools_fits_session_create() {
+async fn a_host_mcp_allowlist_of_130_tools_fits_session_create() {
     let (service, seen) = setup(false).await;
-    let tools: Vec<String> = (0..118).map(|i| format!("tool_{i:03}")).collect();
+    let tools: Vec<String> = (0..130).map(|i| format!("tool_{i:03}")).collect();
     let mut host = server();
     host["allowedTools"] = json!(tools);
     service
         .handle("a", "sessions.create", create(json!([host])))
         .await
         .unwrap();
-    assert_eq!(seen.lock().unwrap()[0][0].allowed_tools.len(), 118);
+    assert_eq!(seen.lock().unwrap()[0][0].allowed_tools.len(), 130);
+}
+#[tokio::test]
+async fn two_host_servers_can_share_a_256_tool_allowlist() {
+    let (service, seen) = setup(false).await;
+    let mut first = server();
+    first["allowedTools"] = json!(
+        (0..128)
+            .map(|i| format!("first_{i:03}"))
+            .collect::<Vec<_>>()
+    );
+    let mut second = server();
+    second["name"] = json!("tools_2");
+    second["allowedTools"] = json!(
+        (0..128)
+            .map(|i| format!("second_{i:03}"))
+            .collect::<Vec<_>>()
+    );
+    service
+        .handle("a", "sessions.create", create(json!([first, second])))
+        .await
+        .unwrap();
+    let seen = seen.lock().unwrap();
+    assert_eq!(seen[0].len(), 2);
+    assert_eq!(seen[0][0].allowed_tools.len(), 128);
+    assert_eq!(seen[0][1].allowed_tools.len(), 128);
 }
 #[tokio::test]
 async fn omitted_host_servers_are_backwards_compatible() {
@@ -152,7 +177,20 @@ async fn invalid_host_servers_are_refused_before_any_launch() {
         s[key] = value;
         json!([s])
     };
-    let many_tools: Vec<String> = (0..129).map(|i| format!("t{i}")).collect();
+    let many_tools: Vec<String> = (0..257).map(|i| format!("t{i}")).collect();
+    let mut first = server();
+    first["allowedTools"] = json!(
+        (0..128)
+            .map(|i| format!("first_{i:03}"))
+            .collect::<Vec<_>>()
+    );
+    let mut second = server();
+    second["name"] = json!("tools_2");
+    second["allowedTools"] = json!(
+        (0..129)
+            .map(|i| format!("second_{i:03}"))
+            .collect::<Vec<_>>()
+    );
     let cases = [
         with("url", json!("https://127.0.0.1:48123/mcp")),
         with("url", json!("http://localhost:48123/mcp")),
@@ -179,6 +217,7 @@ async fn invalid_host_servers_are_refused_before_any_launch() {
         with("allowedTools", json!(["echo", "echo"])),
         with("allowedTools", json!(["a".repeat(65)])),
         with("allowedTools", json!(many_tools)),
+        json!([first, second]),
         with("extra", json!(true)),
         json!([server(), server()]),
         json!([

@@ -148,7 +148,7 @@ pub struct SessionCreateParams {
 /// Most host MCP servers a single session may attach.
 pub const MAX_HOST_MCP_SERVERS: usize = 2;
 /// Most allowed tools across every host MCP server of a session.
-pub const MAX_HOST_MCP_TOOLS: usize = 128;
+pub const MAX_HOST_MCP_TOOLS: usize = 256;
 /// A loopback streamable-HTTP MCP server run by the host application.
 ///
 /// `url` must be `http://127.0.0.1:<port>/...` or `http://[::1]:<port>/...`.

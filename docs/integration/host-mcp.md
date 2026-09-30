@@ -25,7 +25,7 @@ Validation is strict; any violation is `INVALID_REQUEST` before a client is laun
 
 | Field | Rule |
 | --- | --- |
-| list | at most 2 servers, at most 128 allowed tools in total, unique names |
+| list | at most 2 servers, at most 256 allowed tools in total, unique names |
 | `name` | `^[a-z][a-z0-9_]{0,31}$` |
 | `url` | `http://127.0.0.1:<port>/...` or `http://[::1]:<port>/...`; port 1-65535; a path is required; no other host, no `https`, no userinfo, whitespace, `\` or fragment |
 | `bearerToken` | 32-512 characters, printable ASCII without spaces |
