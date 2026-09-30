@@ -15,13 +15,14 @@ const HELP: &str = "Local AI Kit - native discovery and SDK helper
 Usage:
   local-ai-kit serve --ipc LOCAL_ADDRESS [--allow-passive-discovery]
   local-ai-kit connect --ipc LOCAL_ADDRESS
-  local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY]
+  local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
   local-ai-kit serve --http --port 4499 --assets ABSOLUTE_DIST_DIRECTORY
       [--allow-passive-discovery] [--allow-codex-metadata]
       [--allow-codex-execution --workspace ABSOLUTE_DIRECTORY]
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
+  --executable-only-provider PROVIDER may repeat for known discovery providers; retains private executable candidates without publishing their profiles or routes.
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
   --native-profiles ABSOLUTE_JSON explicitly registers Gemini CLI, Antigravity ACP, or Grok native profiles; the file contains paths/labels, never tokens.
@@ -68,12 +69,13 @@ async fn execute(args: Args) -> Result<()> {
         })
         .transpose()?;
     let mut native = native_profiles::load(args.native_profiles.as_deref())?;
+    host::validate_executable_only_sources(&args, &registry, &native)?;
     native.browser_blocker = native_profiles::packaged_browser_blocker();
     let native = Arc::new(native);
     let declarations = Arc::new(native_profiles::load_declarations(
         args.billing_declarations.as_deref(),
     )?);
-    let original = source(args.home.clone());
+    let original = source(args.home.clone(), args.executable_only_providers.clone());
     let scan_registry = registry.clone();
     let scan_native = native.clone();
     let managed_root = chatgpt.as_ref().and(state_dir.as_ref()).cloned();

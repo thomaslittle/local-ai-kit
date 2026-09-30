@@ -75,7 +75,9 @@ A declaration only fills billing that is still unknown after a probe (including 
 Hosts can also offer [ChatGPT managed sign-in](docs/integration/chatgpt-managed-auth.md)
 using `--chatgpt-app-name` and the separately granted `codex_managed` connection.
 The helper owns OAuth and protected credentials; the installed Codex login is
-kept separate.
+kept separate. Add `--executable-only-provider codex` to keep only the private
+Codex executable candidate and omit legacy Codex profiles and routes from
+discovery; other providers keep their normal inventory.
 
 Building a prompt-driven application? Start with the [desktop app integration flow](docs/integration/prompt-app.md) for provider/model selection, grants, streaming, follow-up turns, and scene-output validation.
 

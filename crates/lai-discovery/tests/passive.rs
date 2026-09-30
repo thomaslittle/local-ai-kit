@@ -2,10 +2,96 @@ use lai_contracts::*;
 use lai_discovery::*;
 use lai_platform::*;
 use std::{
+    collections::BTreeSet,
     fs,
     path::{Path, PathBuf},
-    sync::atomic::{AtomicBool, AtomicUsize, Ordering},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    },
 };
+struct ProbeSpy {
+    probed: Arc<Mutex<Vec<PathBuf>>>,
+}
+impl LocalFilesystem for ProbeSpy {
+    fn probe(&self, p: &Path) -> Result<EntryKind> {
+        self.probed.lock().unwrap().push(p.into());
+        NativeFilesystem.probe(p)
+    }
+    fn children(&self, p: &Path, n: usize) -> Result<DirectoryListing> {
+        NativeFilesystem.children(p, n)
+    }
+    fn read_chunk(&self, _: &Path, _: u64, _: usize) -> Result<ReadChunk> {
+        panic!("executable-only scan read file content")
+    }
+}
+#[test]
+fn executable_only_provider_never_probes_its_profiles_or_publishes_legacy_routes() {
+    let tmp = tempfile::tempdir().unwrap();
+    fs::create_dir_all(tmp.path().join(".codex-work")).unwrap();
+    fs::create_dir_all(tmp.path().join(".codex")).unwrap();
+    fs::create_dir_all(tmp.path().join(".claude")).unwrap();
+    let bin = tmp.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    let codex = bin.join("codex");
+    fs::write(&codex, b"fixture").unwrap();
+    let mut env = environment(tmp.path(), HostPlatform::Linux);
+    env.search_path.push(bin);
+    let probed = Arc::new(Mutex::new(Vec::new()));
+    let spy = ProbeSpy {
+        probed: probed.clone(),
+    };
+    let result = Scanner::new(spy)
+        .with_executable_only_providers(BTreeSet::from(["codex".into()]))
+        .scan(&env, &AtomicBool::new(false), |_| {})
+        .unwrap();
+    let probes = probed.lock().unwrap();
+    assert!(
+        !probes
+            .iter()
+            .any(|p| p == &env.home.join(".codex") || p == &env.home.join(".codex-work")),
+        "executable-only provider profile root was probed"
+    );
+    assert!(probes.iter().any(|p| p == &env.home.join(".claude")));
+    drop(probes);
+    assert!(result.snapshot.providers.iter().all(|p| p.id != "codex"));
+    assert!(
+        result
+            .snapshot
+            .installations
+            .iter()
+            .all(|i| i.provider_id != "codex")
+    );
+    assert!(
+        result
+            .snapshot
+            .connections
+            .iter()
+            .all(|c| c.provider_id != "codex")
+    );
+    assert!(
+        result
+            .snapshot
+            .routes
+            .iter()
+            .all(|r| r.provider_id != "codex")
+    );
+    assert!(
+        result
+            .snapshot
+            .connections
+            .iter()
+            .any(|c| c.provider_id == "claude_code")
+    );
+    let private: Vec<_> = result
+        .locations
+        .values()
+        .filter(|c| c.provider_id == "codex")
+        .collect();
+    assert_eq!(private.len(), 1);
+    assert_eq!(private[0].executable.as_deref(), Some(codex.as_path()));
+    assert_eq!(private[0].profile_home, env.home);
+}
 struct MetadataOnly {
     reads: AtomicUsize,
 }

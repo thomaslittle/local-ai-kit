@@ -99,11 +99,7 @@ impl<F: LocalFilesystem> Scanner<F> {
         let mut installations = BTreeSet::new();
         for definition in definitions() {
             cancelled(cancel)?;
-            result.snapshot.providers.push(Provider {
-                id: definition.id.into(),
-                name: definition.name.into(),
-                kind: "local_client".into(),
-            });
+            let executable_only = self.executable_only_providers.contains(definition.id);
             let mut binaries = BTreeSet::new();
             for directory in &directories {
                 for command in definition.commands {
@@ -119,11 +115,11 @@ impl<F: LocalFilesystem> Scanner<F> {
                             Ok(EntryKind::File) => {
                                 binaries.insert(path);
                             }
-                            Ok(EntryKind::Symlink) => result
+                            Ok(EntryKind::Symlink) if !executable_only => result
                                 .snapshot
                                 .diagnostics
                                 .push(format!("{}_EXECUTABLE_SYMLINK_NOT_FOLLOWED", definition.id)),
-                            Err(_) => result
+                            Err(_) if !executable_only => result
                                 .snapshot
                                 .diagnostics
                                 .push(format!("{}_EXECUTABLE_METADATA_UNAVAILABLE", definition.id)),
@@ -132,7 +128,7 @@ impl<F: LocalFilesystem> Scanner<F> {
                     }
                 }
             }
-            if binaries.len() > 8 {
+            if binaries.len() > 8 && !executable_only {
                 result
                     .snapshot
                     .diagnostics
@@ -155,6 +151,29 @@ impl<F: LocalFilesystem> Scanner<F> {
             if executables.is_empty() {
                 executables.push(None);
             }
+            if executable_only {
+                for executable in executables.into_iter().flatten() {
+                    let key = stable_id(
+                        "private-executable",
+                        &[definition.id, &path_key(&executable)],
+                    );
+                    result.locations.insert(
+                        key,
+                        LocatedClient {
+                            provider_id: definition.id.into(),
+                            profile_home: env.home.clone(),
+                            executable: Some(executable),
+                        },
+                    );
+                }
+                progress(&result.snapshot);
+                continue;
+            }
+            result.snapshot.providers.push(Provider {
+                id: definition.id.into(),
+                name: definition.name.into(),
+                kind: "local_client".into(),
+            });
             let mut roots = definition.roots(env);
             if !definition.has_override(env) {
                 if let Some(prefix) = definition.profile_prefix {

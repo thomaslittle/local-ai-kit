@@ -7,12 +7,20 @@ required; no API key or developer client secret is required.
 
 ```sh
 local-ai-kit serve --stdio --allow-passive-discovery \
-  --chatgpt-app-name crntly --allow-metadata codex_managed
+  --executable-only-provider codex \
+  --chatgpt-app-name my_app --allow-metadata codex_managed
 ```
 
-Use your application's stable name instead of `crntly`. The same name is sent in
+Use your application's stable name. The same name is sent in
 the first OAuth registration and Codex `initialize.clientInfo.name`. The helper
-creates one managed connection from a detected Codex executable. Startup and
+creates one managed connection from a detected Codex executable. With
+`--executable-only-provider codex`, the executable stays a private candidate
+for that managed connection: passive discovery does not inspect Codex profile
+roots or expose a separate legacy Codex provider, profile, connection, or route.
+The option accepts any known discovery provider ID, may be repeated, and cannot
+be combined with a metadata or execution grant or explicit registration for
+the same provider. Omit it to retain the default passive discovery behavior.
+Startup and
 passive discovery do not read credentials or contact the OAuth service.
 
 Every `auth.chatgpt.*` RPC requires the host's `codex_managed` metadata grant.

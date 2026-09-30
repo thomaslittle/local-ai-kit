@@ -71,12 +71,13 @@ fn run() -> Result<()> {
         })
         .transpose()?;
     let mut native = native_profiles::load(args.native_profiles.as_deref())?;
+    host::validate_executable_only_sources(&args, &registry, &native)?;
     native.browser_blocker = native_profiles::packaged_browser_blocker();
     let native = std::sync::Arc::new(native);
     let declarations = std::sync::Arc::new(native_profiles::load_declarations(
         args.billing_declarations.as_deref(),
     )?);
-    let base = inventory::source(args.home.clone());
+    let base = inventory::source(args.home.clone(), args.executable_only_providers.clone());
     let entries = registry.clone();
     let native_entries = native.clone();
     let managed_root = chatgpt.as_ref().and(state_dir.as_ref()).cloned();

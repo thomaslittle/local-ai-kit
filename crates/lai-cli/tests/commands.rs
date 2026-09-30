@@ -39,6 +39,54 @@ fn scan_calls_native_discovery_without_verifying_credentials() {
     );
 }
 #[test]
+fn executable_only_scan_omits_legacy_provider_but_keeps_other_profiles() {
+    let home = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(home.path().join(".local/bin")).unwrap();
+    std::fs::create_dir_all(home.path().join(".codex")).unwrap();
+    std::fs::create_dir_all(home.path().join(".claude")).unwrap();
+    std::fs::write(home.path().join(".local/bin/codex.exe"), b"fixture").unwrap();
+    let result = Command::new(binary())
+        .args(["scan", "--json", "--home"])
+        .arg(home.path())
+        .args(["--executable-only-provider", "codex"])
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let snapshot: Value = serde_json::from_slice(&result.stdout).unwrap();
+    assert!(
+        snapshot["providers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|p| p["id"] != "codex")
+    );
+    assert!(
+        snapshot["connections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|c| c["providerId"] != "codex")
+    );
+    assert!(
+        snapshot["routes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|r| r["providerId"] != "codex")
+    );
+    assert!(
+        snapshot["connections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["providerId"] == "claude_code")
+    );
+}
+#[test]
 fn explicit_empty_home_does_not_fall_back_to_personal_profiles() {
     let home = tempfile::tempdir().unwrap();
     let result = Command::new(binary())
