@@ -1,4 +1,4 @@
-use lai_adapters::codex::managed_metadata;
+use lai_adapters::codex::{ManagedIdentity, managed_metadata};
 use lai_adapters::process::{LaunchSpec, codex_metadata};
 use lai_contracts::ErrorCode;
 use std::{
@@ -73,10 +73,12 @@ async fn managed_identity_fetches_catalog_without_native_account_or_usage() {
         launch("managed", tmp.path()),
         "managed-connection",
         "managed-route",
-        "subject-123",
-        "oaiapp_client",
-        Some("person@example.test"),
-        "crntly",
+        ManagedIdentity {
+            app_name: "crntly".into(),
+            subject: "subject-123".into(),
+            client_id: "oaiapp_client".into(),
+            email: Some("person@example.test".into()),
+        },
         Duration::from_secs(5),
     )
     .await
@@ -99,10 +101,12 @@ async fn managed_route_requires_codex_0157_or_newer() {
         launch("managed-old", tmp.path()),
         "c",
         "r",
-        "subject",
-        "oaiapp_id",
-        None,
-        "crntly",
+        ManagedIdentity {
+            app_name: "crntly".into(),
+            subject: "subject".into(),
+            client_id: "oaiapp_id".into(),
+            email: None,
+        },
         Duration::from_secs(5),
     )
     .await

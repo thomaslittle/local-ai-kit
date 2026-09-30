@@ -274,7 +274,7 @@ impl Runtime {
             return Err(err(ErrorCode::InvalidRequest));
         }
         if prompt.is_empty()
-            || prompt.len() > 65_536
+            || prompt.len() > MAX_TURN_PROMPT_BYTES
             || prompt.contains('\0')
             || request.is_empty()
             || request.len() > 128

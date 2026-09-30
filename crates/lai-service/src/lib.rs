@@ -12,7 +12,7 @@ mod params;
 mod resume_token;
 use cache::InventoryCache;
 use lai_chatgpt_auth::AuthManager;
-use lai_contracts::{DomainError, ErrorCode, Result, Snapshot};
+use lai_contracts::{DomainError, ErrorCode, MAX_TURN_START_PARAMS_BYTES, Result, Snapshot};
 use lai_core::{ClientPolicy, project_snapshot};
 use lai_discovery::ScanResult;
 use lai_platform::watcher::MetadataWatcher;
@@ -186,10 +186,11 @@ impl NativeService {
                 None
             };
         self.policy(client)?;
-        // Staged images are the only params allowed beyond the general 64 KiB bound;
-        // inputs.put decodes into a closed typed struct and enforces its own byte ceiling.
+        // Staged images and turn text have separate bounds and closed typed params.
         if method == "inputs.put" {
             params.as_object().ok_or_else(params::invalid)?;
+        } else if method == "turns.start" {
+            params::object_with_limit(&params, MAX_TURN_START_PARAMS_BYTES)?;
         } else {
             params::object(&params)?;
         }

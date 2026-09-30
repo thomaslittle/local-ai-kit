@@ -377,7 +377,7 @@ pub(crate) async fn exchange_with_identity(
 ) -> Result<ConnectionMetadata> {
     peer.managed = managed.is_some();
     let app_name = managed.map_or("local_ai_kit", |identity| identity.app_name.as_str());
-    let app_title = managed.map_or("Local AI Kit", |_| "Crntly");
+    let app_title = managed.map_or("Local AI Kit", |identity| identity.app_name.as_str());
     let initialize=peer.request("initialize",json!({"clientInfo":{"name":app_name,"title":app_title,"version":env!("CARGO_PKG_VERSION")},"capabilities":{"experimentalApi":false}})).await?;
     peer.send(json!({"method":"initialized","params":{}}))
         .await?;

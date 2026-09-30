@@ -111,7 +111,7 @@ pub fn inject_managed_codex(scan: &mut ScanResult, state_dir: &Path) {
     scan.snapshot.profiles.push(Profile {
         id: profile.clone(),
         installation_id: installation.clone(),
-        label: "Crntly ChatGPT plan".into(),
+        label: "Host-managed ChatGPT plan".into(),
     });
     scan.snapshot.connections.push(Connection {
         id: connection.clone(),

@@ -120,6 +120,18 @@ async fn valid_host_servers_reach_the_adapter_and_are_never_echoed() {
     assert!(!events.to_string().contains(TOKEN));
 }
 #[tokio::test]
+async fn a_host_mcp_allowlist_of_118_tools_fits_session_create() {
+    let (service, seen) = setup(false).await;
+    let tools: Vec<String> = (0..118).map(|i| format!("tool_{i:03}")).collect();
+    let mut host = server();
+    host["allowedTools"] = json!(tools);
+    service
+        .handle("a", "sessions.create", create(json!([host])))
+        .await
+        .unwrap();
+    assert_eq!(seen.lock().unwrap()[0][0].allowed_tools.len(), 118);
+}
+#[tokio::test]
 async fn omitted_host_servers_are_backwards_compatible() {
     let (service, seen) = setup(false).await;
     service

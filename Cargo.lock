@@ -858,7 +858,7 @@ dependencies = [
 
 [[package]]
 name = "lai-adapters"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "axum",
  "chrono",
@@ -880,7 +880,7 @@ dependencies = [
 
 [[package]]
 name = "lai-chatgpt-auth"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "base64",
  "fs4",
@@ -901,7 +901,7 @@ dependencies = [
 
 [[package]]
 name = "lai-cli"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "lai-adapters",
  "lai-chatgpt-auth",
@@ -920,7 +920,7 @@ dependencies = [
 
 [[package]]
 name = "lai-contracts"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -933,7 +933,7 @@ dependencies = [
 
 [[package]]
 name = "lai-core"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "lai-contracts",
  "serde",
@@ -942,7 +942,7 @@ dependencies = [
 
 [[package]]
 name = "lai-discovery"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "lai-contracts",
  "lai-platform",
@@ -953,7 +953,7 @@ dependencies = [
 
 [[package]]
 name = "lai-kit"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "axum",
  "lai-adapters",
@@ -972,7 +972,7 @@ dependencies = [
 
 [[package]]
 name = "lai-platform"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "file-id",
  "lai-contracts",
@@ -983,7 +983,7 @@ dependencies = [
 
 [[package]]
 name = "lai-runtime"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "base64",
  "lai-contracts",
@@ -994,7 +994,7 @@ dependencies = [
 
 [[package]]
 name = "lai-service"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "base64",
  "getrandom 0.3.4",
@@ -1013,7 +1013,7 @@ dependencies = [
 
 [[package]]
 name = "lai-transports"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "async-stream",
  "axum",

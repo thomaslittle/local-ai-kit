@@ -1,6 +1,12 @@
 # Resume — Local AI Kit
 
-Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
+## September 29 ChatGPT managed-auth follow-up
+
+The owner-authorized auth work is on `codex/chatgpt-managed-auth`, based on alpha.8. Alpha.9 source is `bdefd56107096298cca0ceec799a68f58fb82f34`; its published assets are immutable. The alpha.10 follow-up fixes the generic turn contract: prompts accept up to 512 KiB of UTF-8 text, with serialized turn params limited separately to 1 MiB minus 8 KiB. Other RPC methods keep their 64 KiB bound, and provider frame guards remain enforced. Tests prove a 130,000-byte prompt reaches a fixture agent unchanged, exercise both bounds and escaping, and cover a 118-tool host allowlist. Two host-specific branding strings now use generic profile wording and the caller's application name.
+
+A separately owned headless alpha.9 managed session completed a real-account read-only Sol turn with exactly `AUTH_OK`; its helper was terminated. A production-built synthetic Current Scene prompt exceeded alpha.9's 64 KiB cap and was rejected before execution. Alpha.10 publication and qualification are recorded by the final release manifest and notes; do not infer them from earlier fixtures. No other agent's dev app was used or stopped for these checks.
+
+The earlier ledger below covers `feature/initial-implementation`. `main` remains unchanged by this auth follow-up. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 
 The live playground grants text execution for every provider with a registered execution adapter, including explicit API routes, in an isolated temporary workspace. Native ACP profile adapters join when `LAI_NATIVE_PROFILES` is set. Each turn requires the browser consent checkbox and Run click; the helper leaves paid billing options and file writes disabled. The Playground selects provider and route/model directly from the live catalog. No inference was sent during this follow-up.
 

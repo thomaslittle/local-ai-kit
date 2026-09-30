@@ -290,6 +290,11 @@ pub const MAX_INPUT_IMAGE_EDGE: u32 = 2048;
 pub const MAX_INPUTS_PER_TURN: usize = 4;
 /// Staged, unconsumed inputs a single session may hold.
 pub const MAX_INPUTS_PER_SESSION: usize = 8;
+/// Largest UTF-8 prompt accepted by a text turn.
+pub const MAX_TURN_PROMPT_BYTES: usize = 512 * 1024;
+/// Largest serialized `turns.start` params object, reserving 8 KiB for protocol
+/// envelopes. Transports and native clients also enforce their own frame limits.
+pub const MAX_TURN_START_PARAMS_BYTES: usize = 1024 * 1024 - 8192;
 /// Request frame size that native stdio and HTTP accept, sized for one base64 image plus envelope.
 pub const MAX_REQUEST_FRAME_BYTES: usize = 8 * 1024 * 1024;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

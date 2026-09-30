@@ -211,10 +211,12 @@ async fn probe_metadata(
             spec,
             &connection,
             &route,
-            &credentials.subject,
-            &credentials.client_id,
-            credentials.email.as_deref(),
-            &app_name,
+            codex::ManagedIdentity {
+                app_name,
+                subject: credentials.subject,
+                client_id: credentials.client_id,
+                email: credentials.email,
+            },
             Duration::from_secs(20),
         )
         .await;

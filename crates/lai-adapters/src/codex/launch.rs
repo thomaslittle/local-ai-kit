@@ -108,25 +108,10 @@ pub async fn managed_metadata(
     spec: LaunchSpec,
     connection: &str,
     route: &str,
-    subject: &str,
-    client_id: &str,
-    email: Option<&str>,
-    app_name: &str,
+    identity: super::ManagedIdentity,
     deadline: Duration,
 ) -> Result<ConnectionMetadata> {
-    codex_managed_metadata(
-        spec,
-        connection,
-        route,
-        super::ManagedIdentity {
-            app_name: app_name.into(),
-            subject: subject.into(),
-            client_id: client_id.into(),
-            email: email.map(str::to_owned),
-        },
-        deadline,
-    )
-    .await
+    codex_managed_metadata(spec, connection, route, identity, deadline).await
 }
 
 /// Invocation-only SIWC provider settings. No token or provider setting is
