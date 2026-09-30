@@ -39,6 +39,8 @@ for line in sys.stdin:
   if mode.startswith('host'):
    expected={'url':'http://127.0.0.1:48123/mcp','http_headers':{'Authorization':'Bearer '+'k'*40},'enabled_tools':['echo_color'],'default_tools_approval_mode':'approve','required':True}
    assert p['config']['mcp_servers.design']==expected, p['config']
+   assert p['config']['features.code_mode.direct_only_tool_namespaces']==['mcp__design'], p['config']
+   assert p['config']['features.non_prefixed_mcp_tool_names'] is False, p['config']
    assert p['approvalPolicy']=='never'
    assert p['config']['mcp_servers.user_global.enabled'] is False, p['config']
   reply(id,{"thread":{"id":"native-thread"},"model":"test-native","sandbox":{"type":"dangerFullAccess" if mode=='unsafe' else 'readOnly'},"approvalPolicy":"onRequest","cwd":os.getcwd()})

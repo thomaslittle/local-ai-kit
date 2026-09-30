@@ -44,8 +44,28 @@ pub(crate) fn thread_config(
     writable: bool,
     host_mcp_servers: &[HostMcpServer],
     other_mcp_servers: &[String],
-) -> Value {
+) -> Result<Value> {
     let mut config = json!({"features.apps":false,"features.plugins":false,"features.hooks":false,"features.multi_agent":false,"features.browser_use":false,"features.computer_use":false,"web_search":"disabled"});
+    if !host_mcp_servers.is_empty() {
+        // These are host-owned MCP calls, so expose them directly even for
+        // models that otherwise defer tools to the disabled code-mode host.
+        // Keep MCP namespaces distinct from built-ins such as `functions`.
+        config["features.non_prefixed_mcp_tool_names"] = Value::Bool(false);
+        let namespaces: BTreeSet<_> = host_mcp_servers
+            .iter()
+            .map(|server| {
+                if server.name.starts_with("mcp__") {
+                    server.name.clone()
+                } else {
+                    format!("mcp__{}", server.name)
+                }
+            })
+            .collect();
+        if namespaces.len() != host_mcp_servers.len() {
+            return Err(failure(ErrorCode::IntegrationRestricted));
+        }
+        config["features.code_mode.direct_only_tool_namespaces"] = json!(namespaces);
+    }
     for server in host_mcp_servers {
         config[format!("mcp_servers.{}", server.name)] = json!({
             "url": server.url,
@@ -70,7 +90,7 @@ pub(crate) fn thread_config(
             config[feature] = Value::Bool(false);
         }
     }
-    config
+    Ok(config)
 }
 
 /// `turn/start` input items: the text item, then one app-server `image`
@@ -200,7 +220,7 @@ impl CodexAgent {
         } else {
             "never"
         };
-        let config = thread_config(self.config.writable, &self.config.host_mcp_servers, &others);
+        let config = thread_config(self.config.writable, &self.config.host_mcp_servers, &others)?;
         let (method, params) = match &self.config.resume_thread {
             // Reattach a persisted thread with the same policy it was started with.
             Some(thread) => (
@@ -570,5 +590,50 @@ impl Agent for CodexAgent {
             self.peer.shutdown().await;
             Ok(thread)
         })
+    }
+}
+
+#[cfg(test)]
+mod direct_namespace_tests {
+    use super::*;
+
+    #[test]
+    fn host_namespace_cannot_make_builtin_functions_direct() {
+        let server = HostMcpServer {
+            name: "functions".into(),
+            url: "http://127.0.0.1:48123/mcp".into(),
+            bearer_token: "k".repeat(40),
+            allowed_tools: vec!["echo".into()],
+        };
+        assert!(server.validate());
+        let config = thread_config(false, std::slice::from_ref(&server), &[]).unwrap();
+        assert_eq!(config["features.non_prefixed_mcp_tool_names"], false);
+        assert_eq!(
+            config["features.code_mode.direct_only_tool_namespaces"],
+            json!(["mcp__functions"])
+        );
+        assert_eq!(config["features.shell_tool"], false);
+        assert_eq!(config["features.unified_exec"], false);
+        let prefixed = HostMcpServer {
+            name: "mcp__functions".into(),
+            ..server.clone()
+        };
+        let config = thread_config(false, std::slice::from_ref(&prefixed), &[]).unwrap();
+        assert_eq!(
+            config["features.code_mode.direct_only_tool_namespaces"],
+            json!(["mcp__functions"])
+        );
+        assert_eq!(
+            thread_config(false, &[server, prefixed], &[])
+                .unwrap_err()
+                .code,
+            ErrorCode::IntegrationRestricted
+        );
+        let plain = thread_config(false, &[], &[]).unwrap();
+        assert!(
+            plain
+                .get("features.code_mode.direct_only_tool_namespaces")
+                .is_none()
+        );
     }
 }

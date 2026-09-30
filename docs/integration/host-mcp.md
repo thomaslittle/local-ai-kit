@@ -61,4 +61,8 @@ Claude Code 2.1 ignores `--mcp-config` servers in `--safe-mode` (verified: `mcp_
 
 ## Live checks
 
+Codex models that defer tools to code mode need the host MCP namespaces exposed as direct tools. The adapter sets `features.code_mode.direct_only_tool_namespaces` for only those namespaces and disables `features.non_prefixed_mcp_tool_names` so they cannot overlap built-ins such as `functions`. An already-prefixed server name retains its prefix; server names that normalize to the same namespace fail with `INTEGRATION_RESTRICTED`. The code-mode host, shell/exec, unrelated integrations and existing tool-call guards stay unchanged. See the [official configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
+On Windows with Codex 0.159.2, a separately owned managed ChatGPT session and a Claude Code session each called one fixed, read-only host tool and completed with the exact expected reply. The earlier managed configuration completed text turns but made no tool call and reported that the tool host was disabled. This qualifies the bounded host-tool round trip, not every host application's editor actions.
+
 `crates/lai-adapters/tests/host_mcp_live.rs` is opt-in: set `LAI_LIVE_CLAUDE`, `LAI_LIVE_CLAUDE_HOME`, `LAI_LIVE_MCP_URL`, `LAI_LIVE_MCP_TOKEN` (and optionally `LAI_LIVE_CLAUDE_MODEL`, default `haiku`). `LAI_LIVE_MCP_STATUS_ONLY=1` stops after the no-inference connection check; without it the test runs one text turn that must call `echo_color` and nothing else.
