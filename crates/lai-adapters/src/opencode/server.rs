@@ -8,7 +8,7 @@
 //! created with a deny-all permission ruleset (see `client::open`).
 use crate::{
     http::{Authentication, Endpoint},
-    process::{LaunchSpec, ManagedChild},
+    process::{LaunchSpec, ManagedChild, capture},
 };
 use lai_contracts::*;
 use lai_runtime::{Agent, BoxFuture, TurnContext};
@@ -106,6 +106,19 @@ pub struct ManagedServer {
 /// `/provider` endpoint answers.
 pub async fn start(located_executable: &Path, cwd: &Path) -> Result<ManagedServer> {
     let executable = resolve_executable(located_executable)?;
+    // OpenCode 2 uses a different launch and HTTP/event protocol. Do not
+    // start it with legacy flags or infer a generation from a 200 HTML page.
+    let version = capture(
+        LaunchSpec {
+            executable: executable.clone(),
+            args: vec!["--version".into()],
+            cwd: cwd.into(),
+            env: BTreeMap::new(),
+        },
+        Duration::from_secs(4),
+    )
+    .await?;
+    super::version::require_legacy(&version)?;
     let port = free_port()?;
     let secret = password();
     let mut child = ManagedChild::spawn(LaunchSpec {

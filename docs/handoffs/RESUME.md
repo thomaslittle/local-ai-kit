@@ -83,3 +83,20 @@ The worktree resumed from local/remote `d1705fd92a2d19b38bf8bf1134ee2c543c7ce82b
 Implementation source `702d98d7cb77ba788f09ce5e890149fef8908ac2` passed Windows `verify.py --profile all`, strict format/Clippy, and `verify.py --profile release`. The clean Windows distribution, package smoke, and performance evidence are recorded in `docs/qualification/RELEASE-CANDIDATE.md`. It was pushed to `origin/feature/initial-implementation`; `main` was not changed.
 
 Linux WSL2 executed the full Rust test workspace and the deterministic SDK/integration suites up to Playwright demo tests. Chromium cache cleanup then failed with EIO and the WSL distro stopped launching; no current-source Linux package was built. GitHub Actions run `36140653176` failed before any steps appeared on Windows, Ubuntu, or macOS, and logs are unavailable. macOS remains unexecuted/unqualified. The exact current evidence and limits are in the release-candidate report.
+
+## October 5 OpenCode protocol compatibility checkpoint
+
+Audit against T3 Code `ca952677321abf9f3762ae4bb0129454e5a63955`
+(`opencodeVersionProbe.ts`, `Drivers/OpenCodeDriver.ts`, MIT) found that
+OpenCode 2 uses a separate launch/auth/HTTP/event contract. This kit checkpoint
+still implements the OpenCode 1.x protocol. Before starting an owned server,
+`opencode --version` is read with a four-second bounded metadata capture.
+Unknown or unsupported generations fail with `PROTOCOL_INCOMPATIBLE` before
+legacy `serve --pure` flags or HTTP routes are used. No installed client is
+upgraded, downgraded, reconfigured, or used for inference by this check.
+
+A synthetic executable reproduced the old incorrect legacy launch and now
+verifies that a reported v2 executable never starts that server. Existing
+fake gateway catalog and loopback reply tests remain green. Full OpenCode 2
+communication is a separate adapter follow-up; this guard does not claim
+that support. No upstream implementation was copied for this checkpoint.
