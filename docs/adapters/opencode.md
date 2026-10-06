@@ -37,3 +37,70 @@ Four gateway catalog tests and two actual mock-server/runtime session tests pass
 ## Persistent resumption
 
 Persistent sessions and durable resume tokens are described in [native session resumption](../integration/native-session-resumption.md).
+
+## OpenCode 2 adapter staging (October 2026)
+
+The independent `opencode::client_v2` and `opencode::catalog_v2` modules model
+OpenCode 2.0.23's public protocol, compared with T3 Code source
+`ca952677321abf9f3762ae4bb0129454e5a63955` and the official
+`@opencode/protocol`/`@opencode/schema` 2.0.23 packages (MIT). No upstream
+implementation was copied wholesale. They are **not wired into automatic
+managed-client discovery or execution**. `server::start` still fails closed
+on v2 rather than running it with v1 flags.
+
+The v2 catalog preserves gateway owner/upstream/native-model identity and
+reported capability/variant metadata. It deliberately reports unknown auth:
+`/api/integration` projects configured credentials and process-local errors;
+absence of `needs_auth` is not positive authentication evidence. Explicit
+billing declarations do not change that state or bypass selection guards.
+
+The v2 transport accepts an explicitly supplied endpoint, verifies returned
+model/workspace/deny-all permissions, subscribes before prompting, reconciles
+text deltas with final blocks, rejects native tool requests, and cleans up
+only the owned session. Images and native resume are not advertised. Its
+loopback fixture enforces synthetic Basic Auth, selected model and no-tool
+permissions and covers streaming/final-only/duplicate replies, missing or
+mismatched text, errors, disconnected streams, cancellation, foreign-session
+events, and rejected model/workspace/permission echoes.
+
+Automatic startup remains blocked: the v2 CLI lacks the v1 `--pure` contract.
+Project-config disabling and a temporary config directory still leave global
+compatibility and well-known configuration sources. A later `plugins: ["-*"]`
+directive is insufficient: the upstream plugin supervisor loads add
+operations before processing the removal. Deny-all session rules do not
+prevent startup module side effects. Do not enable v2 startup until a
+supported isolation path is independently verified; do not change user
+configuration, copy credentials, downgrade clients, or infer authentication
+to bypass this gate.
+
+Qualification: 12 synthetic v2 transport/catalog tests and 12 runtime
+cleanup/lifecycle tests pass on Linux, Rust 1.97.1. No live account, installed OpenCode binary, provider inference,
+Windows/macOS execution, release artifact, or Crntly helper pin is qualified
+by these tests.
+
+### Review hardening
+
+Text-block start markers are tracked even when no text arrives. New text
+ordinals must increase within one assistant message (gaps may represent
+reasoning blocks), and an earlier assistant message cannot re-enter later
+output. Assistant IDs observed on prior turns cannot be reused as fresh
+text. Known durable execution/text boundaries validate the session aggregate
+and monotonic durable sequence; an old terminal cannot complete a new turn. UTF-8 event chunks stay at or below 8 KiB without splitting a character.
+
+A failed or cancelled v2 DELETE retains the owned session ID and prevents
+further turns. The runtime keeps that adapter for explicit close retries,
+returns cleanup errors/timeouts, and does not prune closed records while
+cleanup is pending. Failed-turn cleanup follows the same retention rule.
+These are retry guarantees while the runtime and owner remain present;
+revocation, runtime destruction, process failure, or an abandoned caller
+can still leave an external server record. No reliable remote deletion is
+claimed outside the owned-server lifecycle. Unsupported v2 managed launch
+and unknown authentication remain unchanged.
+
+For a lost successful DELETE response, a retry may complete only on an
+authenticated `application/json` HTTP 404 whose bounded body carries the
+official `SessionNotFoundError` tag and this exact owned `sessionID`.
+Wrong IDs/tags, unauthenticated responses, HTML, 403 and oversized bodies
+remain uncertain failures. Legacy deletion behavior is unchanged. Cleanup
+of an open that fails validation remains best-effort because no usable
+adapter is returned; this staging does not promise external-record cleanup.
