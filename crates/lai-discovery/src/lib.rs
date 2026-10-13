@@ -6,8 +6,11 @@ mod scanner;
 pub use environment::{HostPlatform, ScanEnvironment};
 use lai_contracts::Snapshot;
 use lai_platform::LocalFilesystem;
-pub use registry::{ProviderDefinition, definitions};
-use std::{collections::BTreeMap, path::PathBuf};
+pub use registry::{MUSE_BINARY_OVERRIDE, ProviderDefinition, definitions};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    path::PathBuf,
+};
 #[derive(Debug, Clone)]
 pub struct LocatedClient {
     pub provider_id: String,
@@ -22,9 +25,18 @@ pub struct ScanResult {
 }
 pub struct Scanner<F: LocalFilesystem> {
     filesystem: F,
+    executable_only_providers: BTreeSet<String>,
 }
 impl<F: LocalFilesystem> Scanner<F> {
     pub fn new(filesystem: F) -> Self {
-        Self { filesystem }
+        Self {
+            filesystem,
+            executable_only_providers: BTreeSet::new(),
+        }
+    }
+    /// Keep selected providers' executable candidates private for dependent integrations.
+    pub fn with_executable_only_providers(mut self, providers: BTreeSet<String>) -> Self {
+        self.executable_only_providers = providers;
+        self
     }
 }

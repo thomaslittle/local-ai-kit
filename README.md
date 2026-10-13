@@ -68,9 +68,16 @@ For connections that were discovered rather than registered (for example a defau
 { "declarations": [{ "connectionId": "connection_...", "providerId": "grok", "billing": "subscription" }] }
 ```
 
-A declaration only fills billing that is still unknown after a probe (including OpenCode gateway sub-routes), never replaces reported billing, must name the provider actually discovered on that connection, and is recorded as `userSupplied` evidence. `unknown`/`mixed` are rejected, as is `local` for account clients (Gemini CLI, Antigravity, Grok). A declared, discovered default-profile Grok may run text-only sessions; undeclared unknown billing stays refused, and metered/credit billing still requires paid consent.
+A declaration only fills billing that is still unknown after a probe (including OpenCode gateway sub-routes), never replaces reported billing, must name the provider actually discovered on that connection, and is recorded as `userSupplied` evidence. `unknown`/`mixed` are rejected, as is `local` for account clients (Gemini CLI, Antigravity, Grok, Muse Code). A declared, discovered default-profile Grok may run text-only sessions; undeclared unknown billing stays refused, and metered/credit billing still requires paid consent.
 
 ## Use the packages
+
+Hosts can also offer [ChatGPT managed sign-in](docs/integration/chatgpt-managed-auth.md)
+using `--chatgpt-app-name` and the separately granted `codex_managed` connection.
+The helper owns OAuth and protected credentials; the installed Codex login is
+kept separate. Add `--executable-only-provider codex` to keep only the private
+Codex executable candidate and omit legacy Codex profiles and routes from
+discovery; other providers keep their normal inventory.
 
 Building a prompt-driven application? Start with the [desktop app integration flow](docs/integration/prompt-app.md) for provider/model selection, grants, streaming, follow-up turns, and scene-output validation.
 

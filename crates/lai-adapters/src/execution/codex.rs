@@ -1,7 +1,8 @@
-use super::{CodexExecution, PathBuf, failure, native_id};
+use super::{CodexExecution, ManagedCredentialSource, PathBuf, failure, native_id};
 use crate::{
+    codex::ManagedIdentity,
     host_mcp::{HostTools, native_tool_refused},
-    process::Peer,
+    process::{LaunchSpec, Peer, exchange_with_identity},
 };
 use lai_contracts::*;
 use lai_runtime::{Agent, BoxFuture, ImageInput, TurnContext};
@@ -18,6 +19,13 @@ pub(super) struct CodexAgent {
     pub thread: Option<String>,
     /// A turn completed (or the thread was reattached), so history exists.
     pub resumable: bool,
+    pub managed: Option<ManagedRuntime>,
+}
+pub(super) struct ManagedRuntime {
+    pub identity: ManagedIdentity,
+    pub source: ManagedCredentialSource,
+    pub template: LaunchSpec,
+    pub current_token: zeroize::Zeroizing<String>,
 }
 /// Thread config. Read-only sessions are text-only: besides the always-off
 /// integrations, Codex's command, exec and generation tools are disabled so
@@ -36,8 +44,28 @@ pub(crate) fn thread_config(
     writable: bool,
     host_mcp_servers: &[HostMcpServer],
     other_mcp_servers: &[String],
-) -> Value {
+) -> Result<Value> {
     let mut config = json!({"features.apps":false,"features.plugins":false,"features.hooks":false,"features.multi_agent":false,"features.browser_use":false,"features.computer_use":false,"web_search":"disabled"});
+    if !host_mcp_servers.is_empty() {
+        // These are host-owned MCP calls, so expose them directly even for
+        // models that otherwise defer tools to the disabled code-mode host.
+        // Keep MCP namespaces distinct from built-ins such as `functions`.
+        config["features.non_prefixed_mcp_tool_names"] = Value::Bool(false);
+        let namespaces: BTreeSet<_> = host_mcp_servers
+            .iter()
+            .map(|server| {
+                if server.name.starts_with("mcp__") {
+                    server.name.clone()
+                } else {
+                    format!("mcp__{}", server.name)
+                }
+            })
+            .collect();
+        if namespaces.len() != host_mcp_servers.len() {
+            return Err(failure(ErrorCode::IntegrationRestricted));
+        }
+        config["features.code_mode.direct_only_tool_namespaces"] = json!(namespaces);
+    }
     for server in host_mcp_servers {
         config[format!("mcp_servers.{}", server.name)] = json!({
             "url": server.url,
@@ -62,7 +90,7 @@ pub(crate) fn thread_config(
             config[feature] = Value::Bool(false);
         }
     }
-    config
+    Ok(config)
 }
 
 /// `turn/start` input items: the text item, then one app-server `image`
@@ -78,6 +106,54 @@ pub(crate) fn turn_input(prompt: &str, images: &[ImageInput]) -> Value {
 }
 
 impl CodexAgent {
+    async fn refresh_managed(&mut self) -> Result<()> {
+        let Some(managed) = &self.managed else {
+            return Ok(());
+        };
+        let credential = (managed.source)().await?;
+        if credential.subject != managed.identity.subject
+            || credential.client_id != managed.identity.client_id
+        {
+            return Err(failure(ErrorCode::SelectionStale));
+        }
+        if credential.access_token == *managed.current_token {
+            return Ok(());
+        }
+        let mut spec = managed.template.clone();
+        spec.env.insert(
+            "ACCESS_TOKEN".into(),
+            credential.access_token.clone().into(),
+        );
+        let mut next = Peer::spawn(spec).await?;
+        let report = tokio::time::timeout(
+            Duration::from_secs(20),
+            exchange_with_identity(
+                &mut next,
+                &self.config.connection,
+                &self.config.route,
+                Some(&managed.identity),
+            ),
+        )
+        .await
+        .map_err(|_| failure(ErrorCode::Timeout))??;
+        if report.auth.fresh_value() != Some(&AuthState::Authenticated)
+            || !report.models.iter().any(|model| {
+                model.id == self.config.model.id && model.revision == self.config.model.revision
+            })
+        {
+            next.shutdown().await;
+            return Err(failure(ErrorCode::SelectionStale));
+        }
+        let mut previous = std::mem::replace(&mut self.peer, next);
+        self.config.resume_thread = self.thread.take().or(self.config.resume_thread.clone());
+        let resumed = self.ensure_thread().await;
+        previous.shutdown().await;
+        resumed?;
+        if let Some(managed) = &mut self.managed {
+            managed.current_token = zeroize::Zeroizing::new(credential.access_token);
+        }
+        Ok(())
+    }
     /// Read-only, unreviewed sessions allow no client tool but the host's.
     fn text_only(&self) -> bool {
         !self.config.writable && !self.config.review_requests
@@ -144,7 +220,7 @@ impl CodexAgent {
         } else {
             "never"
         };
-        let config = thread_config(self.config.writable, &self.config.host_mcp_servers, &others);
+        let config = thread_config(self.config.writable, &self.config.host_mcp_servers, &others)?;
         let (method, params) = match &self.config.resume_thread {
             // Reattach a persisted thread with the same policy it was started with.
             Some(thread) => (
@@ -206,6 +282,7 @@ impl CodexAgent {
             d.validate(value)
                 .map_err(|_| failure(ErrorCode::OptionUnsupported))?;
         }
+        self.refresh_managed().await?;
         tokio::time::timeout(Duration::from_secs(10), self.peer.verify_account())
             .await
             .map_err(|_| failure(ErrorCode::Timeout))??;
@@ -259,6 +336,7 @@ impl CodexAgent {
             // identity re-read before every turn.
             if method == "model/rerouted"
                 || (method == "account/updated"
+                    && self.managed.is_none()
                     && crate::process::account_update_signs_out(&message["params"]))
             {
                 return Err(failure(ErrorCode::SelectionStale));
@@ -512,5 +590,50 @@ impl Agent for CodexAgent {
             self.peer.shutdown().await;
             Ok(thread)
         })
+    }
+}
+
+#[cfg(test)]
+mod direct_namespace_tests {
+    use super::*;
+
+    #[test]
+    fn host_namespace_cannot_make_builtin_functions_direct() {
+        let server = HostMcpServer {
+            name: "functions".into(),
+            url: "http://127.0.0.1:48123/mcp".into(),
+            bearer_token: "k".repeat(40),
+            allowed_tools: vec!["echo".into()],
+        };
+        assert!(server.validate());
+        let config = thread_config(false, std::slice::from_ref(&server), &[]).unwrap();
+        assert_eq!(config["features.non_prefixed_mcp_tool_names"], false);
+        assert_eq!(
+            config["features.code_mode.direct_only_tool_namespaces"],
+            json!(["mcp__functions"])
+        );
+        assert_eq!(config["features.shell_tool"], false);
+        assert_eq!(config["features.unified_exec"], false);
+        let prefixed = HostMcpServer {
+            name: "mcp__functions".into(),
+            ..server.clone()
+        };
+        let config = thread_config(false, std::slice::from_ref(&prefixed), &[]).unwrap();
+        assert_eq!(
+            config["features.code_mode.direct_only_tool_namespaces"],
+            json!(["mcp__functions"])
+        );
+        assert_eq!(
+            thread_config(false, &[server, prefixed], &[])
+                .unwrap_err()
+                .code,
+            ErrorCode::IntegrationRestricted
+        );
+        let plain = thread_config(false, &[], &[]).unwrap();
+        assert!(
+            plain
+                .get("features.code_mode.direct_only_tool_namespaces")
+                .is_none()
+        );
     }
 }

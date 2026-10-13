@@ -2,6 +2,22 @@
 use lai_contracts::AdapterDescriptor;
 pub fn descriptors() -> Vec<AdapterDescriptor> {
     let mut items = Vec::new();
+    items.push(AdapterDescriptor {
+        id: "codex_managed".into(),
+        name: "ChatGPT plan (Codex)".into(),
+        integration: "native_client".into(),
+        passive_discovery: true,
+        metadata: true,
+        text_sessions: true,
+        native_tool_approval: true,
+        cancellation: true,
+        persistent_resumption: true,
+        qualification: "Codex app-server 0.157+ with host-managed SIWC token".into(),
+        limitations: vec![
+            "Model catalog does not prove model entitlement".into(),
+            "Account quota is not reported by this route".into(),
+        ],
+    });
     for def in lai_discovery::definitions() {
         let metadata = matches!(
             def.id,
@@ -14,6 +30,7 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
                 | "ollama"
                 | "lmstudio"
                 | "opencode"
+                | "muse"
         );
         let execution = matches!(
             def.id,
@@ -25,6 +42,7 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
                 | "ollama"
                 | "lmstudio"
                 | "opencode"
+                | "muse"
         );
         items.push(AdapterDescriptor {
             id: def.id.into(),
@@ -38,9 +56,12 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
             passive_discovery: true,
             metadata,
             text_sessions: execution,
-            native_tool_approval: matches!(def.id, "codex" | "gemini_cli" | "antigravity" | "grok"),
+            native_tool_approval: matches!(
+                def.id,
+                "codex" | "gemini_cli" | "antigravity" | "grok" | "muse"
+            ),
             cancellation: execution,
-            persistent_resumption: matches!(def.id, "gemini_cli" | "antigravity" | "grok"),
+            persistent_resumption: matches!(def.id, "gemini_cli" | "antigravity" | "grok" | "muse"),
             qualification: "See per-operation qualification reports; no account capability implied"
                 .into(),
             limitations: if metadata {
@@ -79,4 +100,19 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
         });
     }
     items
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn muse_is_a_native_client_with_mediated_approvals_and_resumption() {
+        let muse = super::descriptors()
+            .into_iter()
+            .find(|d| d.id == "muse")
+            .unwrap();
+        assert_eq!(muse.name, "Muse Code");
+        assert_eq!(muse.integration, "native_client");
+        assert!(muse.passive_discovery && muse.metadata && muse.text_sessions);
+        assert!(muse.native_tool_approval && muse.cancellation && muse.persistent_resumption);
+    }
 }

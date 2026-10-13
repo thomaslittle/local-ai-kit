@@ -58,27 +58,45 @@ fn run() -> Result<()> {
         return Err(denied());
     }
     let registry = std::sync::Arc::new(endpoints::load(args.endpoints.as_deref())?);
+    let state_dir = host::default_state_dir(args.home.as_deref());
+    let chatgpt = args
+        .chatgpt_app_name
+        .clone()
+        .map(|name| {
+            let root = state_dir.as_ref().ok_or_else(denied)?;
+            let manager =
+                lai_chatgpt_auth::AuthManager::new(root.join("chatgpt-auth"), name.clone())
+                    .map_err(|_| denied())?;
+            Ok::<_, DomainError>((std::sync::Arc::new(manager), name))
+        })
+        .transpose()?;
     let mut native = native_profiles::load(args.native_profiles.as_deref())?;
+    host::validate_executable_only_sources(&args, &registry, &native)?;
     native.browser_blocker = native_profiles::packaged_browser_blocker();
     let native = std::sync::Arc::new(native);
     let declarations = std::sync::Arc::new(native_profiles::load_declarations(
         args.billing_declarations.as_deref(),
     )?);
-    let base = inventory::source(args.home.clone());
+    let base = inventory::source(args.home.clone(), args.executable_only_providers.clone());
     let entries = registry.clone();
     let native_entries = native.clone();
-    let service = host::build_service_with_state(
+    let managed_root = chatgpt.as_ref().and(state_dir.as_ref()).cloned();
+    let service = lai_kit::build_service_with_chatgpt(
         std::sync::Arc::new(move |cancel| {
             let mut scan = base(cancel)?;
             entries.inject(&mut scan);
             native_entries.inject(&mut scan);
+            if let Some(root) = &managed_root {
+                lai_adapters::native_clients::config::inject_managed_codex(&mut scan, root);
+            }
             Ok(scan)
         }),
         args.allow_execution,
         registry,
         native,
         declarations,
-        host::default_state_dir(args.home.as_deref()),
+        state_dir,
+        chatgpt,
     );
     let client = stable_id("extension", &[&origin]);
     service.register_client(&client, host::policy(&args))?;

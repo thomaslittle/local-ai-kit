@@ -8,7 +8,8 @@ for raw in sys.stdin:
     with log.open('a',encoding='utf-8',newline='\n') as f:f.write(method+'\n')
     if method=='initialized':initialized=True;continue
     if method=='initialize':
-        result={'userAgent':'codex_cli_rs/0.156.1','codexHome':'PRIVATE-HOME','platformFamily':'synthetic','platformOs':'synthetic'}
+        version='0.157.0' if mode=='managed' else '0.156.1'
+        result={'userAgent':'codex_cli_rs/'+version,'codexHome':'PRIVATE-HOME','platformFamily':'synthetic','platformOs':'synthetic'}
     elif not initialized:raise RuntimeError('Initialization order violated')
     elif method=='account/read':
         assert item['params'].get('refreshToken') is False
@@ -18,7 +19,7 @@ for raw in sys.stdin:
         reads=globals().get('reads',0)+1;globals()['reads']=reads
         email='other@example.test' if mode=='changed-account' and reads>1 else 'synthetic@example.test'
         plan='refreshed-plan' if mode=='token-refresh' and reads>1 else 'future-plan'
-        result={'account':None if mode=='signed-out' else {'type':'chatgpt','email':email,'planType':plan},'requiresOpenaiAuth':True}
+        result={'account':None if mode in ('signed-out','managed','managed-old') else {'type':'chatgpt','email':email,'planType':plan},'requiresOpenaiAuth':mode not in ('managed','managed-old')}
     elif method=='model/list':
         cursor=item['params'].get('cursor')
         number='2' if cursor else '1'

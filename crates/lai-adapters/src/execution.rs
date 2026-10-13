@@ -1,9 +1,18 @@
 //! Native Codex execution: no token extraction, shell launch, or generation on construction.
 mod codex;
-use crate::process::{LaunchSpec, Peer, exchange};
+use crate::process::{LaunchSpec, Peer, exchange, exchange_with_identity};
 use lai_contracts::*;
 use lai_runtime::Agent;
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
+
+pub struct ManagedCredential {
+    pub access_token: String,
+    pub subject: String,
+    pub client_id: String,
+    pub email: Option<String>,
+}
+pub type ManagedCredentialSource =
+    Arc<dyn Fn() -> lai_runtime::BoxFuture<'static, ManagedCredential> + Send + Sync>;
 #[derive(Clone)]
 pub struct CodexExecution {
     pub model: Model,
@@ -19,12 +28,58 @@ pub struct CodexExecution {
     pub resume_thread: Option<String>,
 }
 pub async fn open_codex(spec: LaunchSpec, config: CodexExecution) -> Result<Box<dyn Agent>> {
+    open_codex_inner(spec, config, None).await
+}
+
+pub async fn open_managed_codex(
+    spec: LaunchSpec,
+    config: CodexExecution,
+    identity: crate::codex::ManagedIdentity,
+    source: ManagedCredentialSource,
+) -> Result<Box<dyn Agent>> {
+    let token = spec
+        .env
+        .get(std::ffi::OsStr::new("ACCESS_TOKEN"))
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| failure(ErrorCode::AuthRequired))?
+        .to_owned();
+    let mut template = spec.clone();
+    template.env.remove(std::ffi::OsStr::new("ACCESS_TOKEN"));
+    open_codex_inner(
+        spec,
+        config,
+        Some(codex::ManagedRuntime {
+            identity,
+            source,
+            template,
+            current_token: zeroize::Zeroizing::new(token),
+        }),
+    )
+    .await
+}
+
+async fn open_codex_inner(
+    spec: LaunchSpec,
+    config: CodexExecution,
+    managed: Option<codex::ManagedRuntime>,
+) -> Result<Box<dyn Agent>> {
     let workspace = spec.cwd.clone();
     let mut peer = Peer::spawn(spec).await?;
-    let report = tokio::time::timeout(
-        Duration::from_secs(20),
-        exchange(&mut peer, &config.connection, &config.route),
-    )
+    let report = tokio::time::timeout(Duration::from_secs(20), async {
+        match &managed {
+            Some(managed) => {
+                exchange_with_identity(
+                    &mut peer,
+                    &config.connection,
+                    &config.route,
+                    Some(&managed.identity),
+                )
+                .await
+            }
+            None => exchange(&mut peer, &config.connection, &config.route).await,
+        }
+    })
     .await
     .map_err(|_| failure(ErrorCode::Timeout))??;
     let model = report
@@ -47,6 +102,7 @@ pub async fn open_codex(spec: LaunchSpec, config: CodexExecution) -> Result<Box<
         workspace,
         thread: None,
         resumable: false,
+        managed,
     };
     if agent.config.resume_thread.is_some() {
         // Reattach now so a missing thread fails the resume, not a later turn.

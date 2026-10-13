@@ -32,6 +32,7 @@ pub(crate) struct Peer {
     account_stamp: Option<String>,
     /// An `account/updated` arrived since the identity was last confirmed.
     pub(crate) account_update_seen: bool,
+    managed: bool,
 }
 fn error(code: ErrorCode) -> DomainError {
     DomainError::new(code, "Native client metadata request failed")
@@ -205,9 +206,16 @@ impl Peer {
             account_established: false,
             account_stamp: None,
             account_update_seen: false,
+            managed: false,
         })
     }
     pub(crate) async fn verify_account(&mut self) -> Result<()> {
+        // The managed provider's identity comes from a verified SIWC token,
+        // checked by its credential owner before each turn. Codex has no
+        // native account in this configuration.
+        if self.managed {
+            return Ok(());
+        }
         let current = self
             .request("account/read", json!({"refreshToken":false}))
             .await?;
@@ -234,6 +242,45 @@ impl Peer {
             .flush()
             .await
             .map_err(|_| error(ErrorCode::ProviderUnavailable))
+    }
+    /// Like [`Self::send`] with a caller-chosen frame cap, for protocols whose
+    /// requests legitimately carry inline images.
+    pub(crate) async fn send_bounded(&mut self, value: Value, max_frame: usize) -> Result<()> {
+        let mut bytes = serde_json::to_vec(&value).map_err(|_| error(ErrorCode::InvalidRequest))?;
+        if bytes.len() >= max_frame {
+            return Err(error(ErrorCode::FrameTooLarge));
+        }
+        bytes.push(b'\n');
+        self.input
+            .write_all(&bytes)
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        self.input
+            .flush()
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))
+    }
+    /// A cancel-safe [`Self::read`]: partial bytes stay in `pending`, owned by
+    /// the caller, so the read can be raced in `select!` and resumed later.
+    pub(crate) async fn read_buffered(&mut self, pending: &mut Vec<u8>) -> Result<Value> {
+        let room = (MAX_FRAME + 1).saturating_sub(pending.len() as u64);
+        let count = (&mut self.output)
+            .take(room)
+            .read_until(b'\n', pending)
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        if pending.last() != Some(&b'\n') {
+            if count == 0 {
+                return Err(error(ErrorCode::ProviderUnavailable));
+            }
+            return Err(error(if pending.len() as u64 > MAX_FRAME {
+                ErrorCode::FrameTooLarge
+            } else {
+                ErrorCode::ProtocolIncompatible
+            }));
+        }
+        let frame = std::mem::take(pending);
+        serde_json::from_slice(&frame).map_err(|_| error(ErrorCode::ProtocolIncompatible))
     }
     pub(crate) async fn read(&mut self) -> Result<Value> {
         let mut bytes = Vec::new();
@@ -268,7 +315,7 @@ impl Peer {
                     return Err(error(ErrorCode::IntegrationRestricted));
                 }
                 if message["method"] == "account/updated" && self.account_established {
-                    if account_update_signs_out(&message["params"]) {
+                    if !self.managed && account_update_signs_out(&message["params"]) {
                         return Err(error(ErrorCode::SelectionStale));
                     }
                     self.account_update_seen = true;
@@ -333,12 +380,44 @@ pub async fn codex_metadata(
     peer.shutdown().await;
     result
 }
+pub async fn codex_managed_metadata(
+    spec: LaunchSpec,
+    connection: &str,
+    route: &str,
+    identity: crate::codex::ManagedIdentity,
+    deadline: Duration,
+) -> Result<ConnectionMetadata> {
+    if deadline.is_zero() || deadline > Duration::from_secs(60) {
+        return Err(error(ErrorCode::InvalidRequest));
+    }
+    let mut peer = Peer::spawn(spec).await?;
+    let result = tokio::time::timeout(
+        deadline,
+        exchange_with_identity(&mut peer, connection, route, Some(&identity)),
+    )
+    .await
+    .unwrap_or_else(|_| Err(error(ErrorCode::Timeout)));
+    peer.shutdown().await;
+    result
+}
 pub(crate) async fn exchange(
     peer: &mut Peer,
     connection: &str,
     route: &str,
 ) -> Result<ConnectionMetadata> {
-    let initialize=peer.request("initialize",json!({"clientInfo":{"name":"local_ai_kit","title":"Local AI Kit","version":env!("CARGO_PKG_VERSION")},"capabilities":{"experimentalApi":false}})).await?;
+    exchange_with_identity(peer, connection, route, None).await
+}
+
+pub(crate) async fn exchange_with_identity(
+    peer: &mut Peer,
+    connection: &str,
+    route: &str,
+    managed: Option<&crate::codex::ManagedIdentity>,
+) -> Result<ConnectionMetadata> {
+    peer.managed = managed.is_some();
+    let app_name = managed.map_or("local_ai_kit", |identity| identity.app_name.as_str());
+    let app_title = managed.map_or("Local AI Kit", |identity| identity.app_name.as_str());
+    let initialize=peer.request("initialize",json!({"clientInfo":{"name":app_name,"title":app_title,"version":env!("CARGO_PKG_VERSION")},"capabilities":{"experimentalApi":false}})).await?;
     peer.send(json!({"method":"initialized","params":{}}))
         .await?;
     let account = peer
@@ -346,7 +425,7 @@ pub(crate) async fn exchange(
         .await?;
     peer.account_established = true;
     peer.account_stamp = account_identity_stamp(&account["account"]);
-    if account["account"].is_null() {
+    if managed.is_none() && account["account"].is_null() {
         return crate::codex::parse_metadata(connection, route, &initialize, &account, &[], None);
     }
     let mut models = Vec::new();
@@ -379,14 +458,27 @@ pub(crate) async fn exchange(
             return Err(error(ErrorCode::ProtocolIncompatible));
         }
     }
-    let limits = match peer.request("account/rateLimits/read", json!({})).await {
-        Ok(value) => Some(value),
-        Err(e) if e.code == ErrorCode::ProviderUnavailable => None,
-        Err(error) => return Err(error),
+    let limits = if managed.is_some() {
+        None
+    } else {
+        match peer.request("account/rateLimits/read", json!({})).await {
+            Ok(value) => Some(value),
+            Err(e) if e.code == ErrorCode::ProviderUnavailable => None,
+            Err(error) => return Err(error),
+        }
     };
     // A token refresh during the probe is fine; a different account is not.
     if peer.account_update_seen {
         peer.verify_account().await?;
+    }
+    if let Some(identity) = managed {
+        return crate::codex::parse_managed_metadata(
+            connection,
+            route,
+            &initialize,
+            identity,
+            &models,
+        );
     }
     crate::codex::parse_metadata(
         connection,

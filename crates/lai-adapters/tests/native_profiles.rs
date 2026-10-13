@@ -1,8 +1,11 @@
 use lai_adapters::native_clients::config::*;
 use lai_contracts::*;
 use lai_discovery::ScanResult;
+use lai_discovery::{HostPlatform, ScanEnvironment, Scanner};
+use lai_platform::NativeFilesystem;
 use serde_json::json;
 use std::collections::BTreeMap;
+use std::{collections::BTreeSet, sync::atomic::AtomicBool};
 fn document() -> serde_json::Value {
     let root = std::env::temp_dir();
     json!({"profiles":[{"id":"google","label":"My Google CLI","provider":"gemini_cli","executable":root.join("gemini"),"profileHome":root.join("google-home")},{"id":"antigravity","label":"Google ACP","provider":"antigravity","executable":root.join("agy_acp_server.exe"),"profileHome":root.join("gemini/antigravity-acp"),"authMethod":"oauth-personal"},{"id":"grok","label":"Grok","provider":"grok","executable":root.join("grok.exe"),"profileHome":root.join(".grok"),"billing":"subscription"}]})
@@ -13,6 +16,85 @@ fn empty() -> ScanResult {
         locations: BTreeMap::new(),
         metadata_probes: 0,
     }
+}
+
+#[test]
+fn managed_codex_is_inert_isolated_and_stable() {
+    let tmp = tempfile::tempdir().unwrap();
+    let codex = tmp.path().join("codex.exe");
+    std::fs::write(&codex, b"fixture").unwrap();
+    let state = tmp.path().join("kit-state");
+    let mut first = empty();
+    first.locations.insert(
+        "native-codex".into(),
+        lai_discovery::LocatedClient {
+            provider_id: "codex".into(),
+            profile_home: tmp.path().join("personal-codex"),
+            executable: Some(codex.clone()),
+        },
+    );
+    inject_managed_codex(&mut first, &state);
+    let managed = first
+        .snapshot
+        .connections
+        .iter()
+        .find(|c| c.provider_id == "codex_managed")
+        .unwrap();
+    let located = &first.locations[&managed.id];
+    assert_eq!(located.profile_home, state.join("chatgpt-codex-home"));
+    assert_eq!(located.executable.as_ref(), Some(&codex));
+    assert!(first.snapshot.accounts.is_empty());
+    assert!(managed.auth.value().is_none());
+    assert!(managed.plan.value().is_none());
+    assert!(
+        !state.exists(),
+        "passive inventory must not open managed auth storage"
+    );
+    let projection = serde_json::to_string(&first.snapshot).unwrap();
+    assert!(!projection.contains("ACCESS_TOKEN"));
+    assert!(!projection.contains("refresh_token"));
+    let mut second = empty();
+    second.locations.insert(
+        "native-codex".into(),
+        first.locations["native-codex"].clone(),
+    );
+    inject_managed_codex(&mut second, &state);
+    assert_eq!(
+        managed.id,
+        second
+            .snapshot
+            .connections
+            .iter()
+            .find(|c| c.provider_id == "codex_managed")
+            .unwrap()
+            .id
+    );
+}
+#[test]
+fn managed_codex_can_use_private_executable_only_inventory() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bin = tmp.path().join("bin");
+    std::fs::create_dir(&bin).unwrap();
+    let executable = bin.join("codex.exe");
+    std::fs::write(&executable, b"fixture").unwrap();
+    std::fs::create_dir(tmp.path().join(".codex")).unwrap();
+    let mut env = ScanEnvironment::for_home(tmp.path().into(), HostPlatform::Windows);
+    env.search_path.push(bin);
+    let mut scan = Scanner::new(NativeFilesystem)
+        .with_executable_only_providers(BTreeSet::from(["codex".into()]))
+        .scan(&env, &AtomicBool::new(false), |_| {})
+        .unwrap();
+    assert!(scan.snapshot.connections.is_empty());
+    inject_managed_codex(&mut scan, &tmp.path().join("managed-state"));
+    assert_eq!(scan.snapshot.connections.len(), 1);
+    assert_eq!(scan.snapshot.connections[0].provider_id, "codex_managed");
+    assert_eq!(
+        scan.locations[&scan.snapshot.connections[0].id]
+            .executable
+            .as_ref(),
+        Some(&executable)
+    );
+    assert!(!tmp.path().join("managed-state").exists());
 }
 #[test]
 fn native_registration_is_inert_and_retains_distinct_google_clients() {

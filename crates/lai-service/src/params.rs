@@ -3,7 +3,10 @@ use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 
 pub(crate) fn object(params: &Value) -> Result<&Map<String, Value>> {
-    if serde_json::to_vec(params).map_err(|_| invalid())?.len() > 65_536 {
+    object_with_limit(params, 65_536)
+}
+pub(crate) fn object_with_limit(params: &Value, max_bytes: usize) -> Result<&Map<String, Value>> {
+    if serde_json::to_vec(params).map_err(|_| invalid())?.len() > max_bytes {
         return Err(invalid());
     }
     params.as_object().ok_or_else(invalid)

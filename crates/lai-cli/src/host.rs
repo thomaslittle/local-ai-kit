@@ -1,8 +1,29 @@
 use crate::args::{Action, Args};
 use lai_core::ClientPolicy;
-pub use lai_kit::{build_service_with_state, default_state_dir};
+pub use lai_kit::default_state_dir;
 use lai_service::ExecutionGrant;
 use std::collections::BTreeMap;
+pub fn validate_executable_only_sources(
+    args: &Args,
+    registry: &lai_adapters::http_provider::config::Registry,
+    native: &lai_adapters::native_clients::config::NativeRegistry,
+) -> lai_contracts::Result<()> {
+    if registry
+        .entries
+        .values()
+        .any(|entry| args.executable_only_providers.contains(entry.kind.id()))
+        || native.profiles.values().any(|profile| {
+            args.executable_only_providers
+                .contains(profile.provider.id())
+        })
+    {
+        return Err(lai_contracts::DomainError::new(
+            lai_contracts::ErrorCode::InvalidRequest,
+            "Executable-only providers cannot also have explicit provider registrations",
+        ));
+    }
+    Ok(())
+}
 pub fn policy(args: &Args) -> ClientPolicy {
     let mut policy = if args.allow_passive || matches!(args.action, Action::Scan) {
         ClientPolicy::passive()

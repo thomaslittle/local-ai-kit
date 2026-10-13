@@ -7,6 +7,7 @@
 - [Full build prompt](../CODEX-BUILD-PROMPT.md)
 - [Agent instructions](../AGENTS.md)
 - [Resume checkpoint](handoffs/RESUME.md)
+- [ChatGPT managed authentication](integration/chatgpt-managed-auth.md)
 
 ## Canonical planning documents
 

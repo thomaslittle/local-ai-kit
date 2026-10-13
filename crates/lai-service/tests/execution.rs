@@ -14,15 +14,16 @@ use std::{
     },
     time::Duration,
 };
-struct TestAgent;
+struct TestAgent(Arc<std::sync::Mutex<Vec<String>>>);
 impl Agent for TestAgent {
     fn turn<'a>(
         &'a mut self,
-        _: String,
+        prompt: String,
         _: BTreeMap<String, Value>,
         cx: TurnContext,
     ) -> BoxFuture<'a, ()> {
         Box::pin(async move {
+            self.0.lock().unwrap().push(prompt);
             cx.emit(EventPayload::TextDelta {
                 text: "service-native-fixture".into(),
             })?;
@@ -33,9 +34,17 @@ impl Agent for TestAgent {
         Box::pin(async { Ok(()) })
     }
 }
-fn setup(granted: bool) -> (Arc<NativeService>, Arc<AtomicUsize>) {
+fn setup(
+    granted: bool,
+) -> (
+    Arc<NativeService>,
+    Arc<AtomicUsize>,
+    Arc<std::sync::Mutex<Vec<String>>>,
+) {
     let count = Arc::new(AtomicUsize::new(0));
     let calls = count.clone();
+    let prompts = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let seen = prompts.clone();
     let service = Arc::new(
         NativeService::new(
             Arc::new(|_| {
@@ -66,7 +75,8 @@ fn setup(granted: bool) -> (Arc<NativeService>, Arc<AtomicUsize>) {
             BTreeSet::from(["test".into()]),
             Arc::new(move |_| {
                 calls.fetch_add(1, Ordering::SeqCst);
-                Box::pin(async { Ok(Box::new(TestAgent) as Box<dyn Agent>) })
+                let seen = seen.clone();
+                Box::pin(async move { Ok(Box::new(TestAgent(seen)) as Box<dyn Agent>) })
             }),
         ),
     );
@@ -88,7 +98,7 @@ fn setup(granted: bool) -> (Arc<NativeService>, Arc<AtomicUsize>) {
             )
             .unwrap();
     }
-    (service, count)
+    (service, count, prompts)
 }
 fn create() -> Value {
     json!({"selection":common::selection(),"workspaceId":"scratch"})
@@ -172,7 +182,7 @@ async fn revocation_during_open_then_regrant_closes_the_unpublished_agent() {
 }
 #[tokio::test]
 async fn discovery_permission_does_not_authorize_execution() {
-    let (s, c) = setup(false);
+    let (s, c, _) = setup(false);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();
     assert_eq!(
         s.handle("a", "sessions.create", create())
@@ -185,7 +195,7 @@ async fn discovery_permission_does_not_authorize_execution() {
 }
 #[tokio::test]
 async fn unknown_workspaces_and_permission_upgrades_are_rejected() {
-    let (s, c) = setup(true);
+    let (s, c, _) = setup(true);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();
     for extra in [
         json!({"workspaceId":"other"}),
@@ -203,7 +213,7 @@ async fn unknown_workspaces_and_permission_upgrades_are_rejected() {
 }
 #[tokio::test]
 async fn session_factory_and_events_go_through_public_service() {
-    let (s, c) = setup(true);
+    let (s, c, _) = setup(true);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();
     let session = s.handle("a", "sessions.create", create()).await.unwrap();
     assert_eq!(c.load(Ordering::SeqCst), 1);
@@ -249,8 +259,166 @@ async fn session_factory_and_events_go_through_public_service() {
     );
 }
 #[tokio::test]
+async fn long_turn_prompt_reaches_native_agent_unchanged() {
+    let (service, _, prompts) = setup(true);
+    service
+        .handle("a", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let session = service
+        .handle("a", "sessions.create", create())
+        .await
+        .unwrap();
+    let prompt = "design brief\n".repeat(10_000);
+    assert_eq!(prompt.len(), 130_000);
+    service
+        .handle(
+            "a",
+            "turns.start",
+            json!({"sessionId":session["id"],"prompt":prompt,"requestId":"long-design"}),
+        )
+        .await
+        .unwrap();
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            if prompts.lock().unwrap().len() == 1 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(prompts.lock().unwrap()[0], prompt);
+}
+#[tokio::test]
+async fn turn_prompt_and_serialized_params_have_separate_bounds() {
+    let (service, _, prompts) = setup(true);
+    service
+        .handle("a", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let session = service
+        .handle("a", "sessions.create", create())
+        .await
+        .unwrap();
+    let session_id = session["id"].as_str().unwrap();
+    let maximum_prompt = "a".repeat(512 * 1024);
+    service
+        .handle(
+            "a",
+            "turns.start",
+            json!({"sessionId":session_id,"prompt":maximum_prompt,"requestId":"max-prompt"}),
+        )
+        .await
+        .unwrap();
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            if service
+                .handle("a", "sessions.get", json!({"sessionId":session_id}))
+                .await
+                .unwrap()["state"]
+                == "completed"
+            {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(prompts.lock().unwrap()[0], maximum_prompt);
+
+    let too_long = "a".repeat(512 * 1024 + 1);
+    assert_eq!(
+        service
+            .handle(
+                "a",
+                "turns.start",
+                json!({"sessionId":session_id,"prompt":too_long,"requestId":"over-prompt"}),
+            )
+            .await
+            .unwrap_err()
+            .code,
+        ErrorCode::InvalidRequest
+    );
+    // The prompt's decoded byte length fits, but its JSON escaping exceeds the
+    // serialized params budget.
+    let escaped_too_large = "\u{0001}".repeat(175_000);
+    assert_eq!(
+        service
+            .handle(
+                "a",
+                "turns.start",
+                json!({"sessionId":session_id,"prompt":escaped_too_large,"requestId":"over-wire"}),
+            )
+            .await
+            .unwrap_err()
+            .code,
+        ErrorCode::InvalidRequest
+    );
+    assert_eq!(prompts.lock().unwrap().len(), 1);
+
+    let escaped_within_budget = "\u{0001}".repeat(170_000);
+    service
+        .handle(
+            "a",
+            "turns.start",
+            json!({"sessionId":session_id,"prompt":escaped_within_budget,"requestId":"escaped-ok"}),
+        )
+        .await
+        .unwrap();
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            if prompts.lock().unwrap().len() == 2 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(prompts.lock().unwrap()[1], escaped_within_budget);
+}
+#[tokio::test]
+async fn long_turn_exception_keeps_typed_and_other_method_bounds() {
+    let (service, _, prompts) = setup(true);
+    service
+        .handle("a", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    let session = service
+        .handle("a", "sessions.create", create())
+        .await
+        .unwrap();
+    let prompt = "design brief ".repeat(10_000);
+    for params in [
+        json!({"sessionId":session["id"],"prompt":prompt,"requestId":"unknown","extra":true}),
+        json!({"sessionId":session["id"],"prompt":prompt,"requestId":"smuggled","clientId":"b"}),
+        json!({"sessionId":session["id"],"prompt":123,"requestId":"wrong-type"}),
+    ] {
+        assert_eq!(
+            service
+                .handle("a", "turns.start", params)
+                .await
+                .unwrap_err()
+                .code,
+            ErrorCode::InvalidRequest
+        );
+    }
+    assert_eq!(
+        service
+            .handle("a", "snapshot.get", json!({"fields":["a".repeat(70_000)]}))
+            .await
+            .unwrap_err()
+            .code,
+        ErrorCode::InvalidRequest
+    );
+    assert!(prompts.lock().unwrap().is_empty());
+}
+#[tokio::test]
 async fn selection_smuggling_does_not_reach_factory() {
-    let (s, c) = setup(true);
+    let (s, c, _) = setup(true);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();
     let mut p = create();
     p["selection"]["routeId"] = json!("route-work");
@@ -259,7 +427,7 @@ async fn selection_smuggling_does_not_reach_factory() {
 }
 #[tokio::test]
 async fn request_cannot_supply_native_arguments_or_paths() {
-    let (s, c) = setup(true);
+    let (s, c, _) = setup(true);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();
     let mut p = create();
     p["executable"] = json!("arbitrary");
@@ -269,7 +437,7 @@ async fn request_cannot_supply_native_arguments_or_paths() {
 
 #[tokio::test]
 async fn artifacts_are_read_through_the_public_service_and_never_by_path() {
-    let (s, _) = setup(true);
+    let (s, _, _) = setup(true);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();
     let session = s.handle("a", "sessions.create", create()).await.unwrap();
     s.handle(

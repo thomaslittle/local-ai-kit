@@ -1,4 +1,4 @@
-use crate::process::{LaunchSpec, codex_metadata};
+use crate::process::{LaunchSpec, codex_managed_metadata, codex_metadata};
 use lai_contracts::{ConnectionMetadata, DomainError, ErrorCode, Result};
 use lai_discovery::LocatedClient;
 use std::{
@@ -102,4 +102,67 @@ pub async fn probe(
         Duration::from_secs(20),
     )
     .await
+}
+
+pub async fn managed_metadata(
+    spec: LaunchSpec,
+    connection: &str,
+    route: &str,
+    identity: super::ManagedIdentity,
+    deadline: Duration,
+) -> Result<ConnectionMetadata> {
+    codex_managed_metadata(spec, connection, route, identity, deadline).await
+}
+
+/// Invocation-only SIWC provider settings. No token or provider setting is
+/// written to the user's normal Codex profile.
+pub fn managed_launch_spec(
+    candidate: &Path,
+    profile_home: &Path,
+    workspace: &Path,
+    access_token: &str,
+) -> Result<LaunchSpec> {
+    if !profile_home.is_absolute()
+        || !workspace.is_absolute()
+        || access_token.is_empty()
+        || access_token.chars().any(char::is_control)
+    {
+        return Err(DomainError::new(
+            ErrorCode::InvalidRequest,
+            "Invalid managed Codex launch",
+        ));
+    }
+    let executable = resolve_executable(candidate)?;
+    let mut args: Vec<std::ffi::OsString> =
+        vec!["app-server".into(), "--listen".into(), "stdio://".into()];
+    for feature in [
+        "hooks",
+        "plugins",
+        "remote_plugin",
+        "apps",
+        "code_mode_host",
+        "shell_snapshot",
+    ] {
+        args.extend(["--disable".into(), feature.into()]);
+    }
+    for setting in [
+        "model_provider=\"openai_chatgpt_plan\"",
+        "model_providers.openai_chatgpt_plan.name=\"ChatGPT plan\"",
+        "model_providers.openai_chatgpt_plan.base_url=\"https://api.openai.com/v1\"",
+        "model_providers.openai_chatgpt_plan.env_key=\"ACCESS_TOKEN\"",
+        "model_providers.openai_chatgpt_plan.wire_api=\"responses\"",
+        "model_providers.openai_chatgpt_plan.requires_openai_auth=false",
+        "model_providers.openai_chatgpt_plan.supports_websockets=false",
+    ] {
+        args.extend(["-c".into(), setting.into()]);
+    }
+    Ok(LaunchSpec {
+        executable,
+        args,
+        cwd: workspace.into(),
+        env: BTreeMap::from([
+            ("CODEX_HOME".into(), profile_home.as_os_str().to_owned()),
+            ("ACCESS_TOKEN".into(), access_token.into()),
+        ]),
+    })
 }

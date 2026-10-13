@@ -7,6 +7,33 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct EmptyParams {}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ChatgptCancelParams {
+    pub login_id: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatgptAuthStatus {
+    pub state: ChatgptAuthState,
+    pub login_id: Option<String>,
+    pub email: Option<String>,
+    pub error_code: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ChatgptAuthState {
+    SignedOut,
+    Pending,
+    Connected,
+    Error,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatgptAuthStart {
+    pub login_id: String,
+    pub auth_url: String,
+}
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HandshakeParams {
@@ -121,7 +148,7 @@ pub struct SessionCreateParams {
 /// Most host MCP servers a single session may attach.
 pub const MAX_HOST_MCP_SERVERS: usize = 2;
 /// Most allowed tools across every host MCP server of a session.
-pub const MAX_HOST_MCP_TOOLS: usize = 128;
+pub const MAX_HOST_MCP_TOOLS: usize = 256;
 /// A loopback streamable-HTTP MCP server run by the host application.
 ///
 /// `url` must be `http://127.0.0.1:<port>/...` or `http://[::1]:<port>/...`.
@@ -263,6 +290,11 @@ pub const MAX_INPUT_IMAGE_EDGE: u32 = 2048;
 pub const MAX_INPUTS_PER_TURN: usize = 4;
 /// Staged, unconsumed inputs a single session may hold.
 pub const MAX_INPUTS_PER_SESSION: usize = 8;
+/// Largest UTF-8 prompt accepted by a text turn.
+pub const MAX_TURN_PROMPT_BYTES: usize = 512 * 1024;
+/// Largest serialized `turns.start` params object, reserving 8 KiB for protocol
+/// envelopes. Transports and native clients also enforce their own frame limits.
+pub const MAX_TURN_START_PARAMS_BYTES: usize = 1024 * 1024 - 8192;
 /// Request frame size that native stdio and HTTP accept, sized for one base64 image plus envelope.
 pub const MAX_REQUEST_FRAME_BYTES: usize = 8 * 1024 * 1024;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -351,6 +383,14 @@ pub struct ValidationResult {
 #[serde(deny_unknown_fields)]
 #[allow(dead_code)]
 pub struct MethodInputs {
+    #[serde(rename = "auth.chatgpt.status")]
+    chatgpt_status: EmptyParams,
+    #[serde(rename = "auth.chatgpt.start")]
+    chatgpt_start: EmptyParams,
+    #[serde(rename = "auth.chatgpt.cancel")]
+    chatgpt_cancel: ChatgptCancelParams,
+    #[serde(rename = "auth.chatgpt.disconnect")]
+    chatgpt_disconnect: EmptyParams,
     #[serde(rename = "runtime.closeClient")]
     close_client: EmptyParams,
     #[serde(rename = "artifacts.read")]
@@ -422,6 +462,14 @@ pub struct MethodInputs {
 #[serde(deny_unknown_fields)]
 #[allow(dead_code)]
 pub struct MethodOutputs {
+    #[serde(rename = "auth.chatgpt.status")]
+    chatgpt_status: ChatgptAuthStatus,
+    #[serde(rename = "auth.chatgpt.start")]
+    chatgpt_start: ChatgptAuthStart,
+    #[serde(rename = "auth.chatgpt.cancel")]
+    chatgpt_cancel: Value,
+    #[serde(rename = "auth.chatgpt.disconnect")]
+    chatgpt_disconnect: Value,
     #[serde(rename = "runtime.closeClient")]
     close_client: Value,
     #[serde(rename = "artifacts.read")]

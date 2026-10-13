@@ -75,6 +75,7 @@ impl ScanEnvironment {
             "CLAUDE_SECURESTORAGE_CONFIG_DIR",
             "CLAUDE_CONFIG_DIR",
             "OPENCODE_CONFIG_DIR",
+            crate::MUSE_BINARY_OVERRIDE,
         ] {
             if let Some(value) = std::env::var_os(key).filter(|v| !v.is_empty()) {
                 env.overrides

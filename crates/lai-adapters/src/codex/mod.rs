@@ -3,6 +3,7 @@ mod metadata;
 mod models;
 mod usage;
 use lai_contracts::{DomainError, ErrorCode, Result};
+pub use metadata::parse_managed_metadata;
 pub use metadata::parse_metadata;
 use serde_json::Value;
 fn invalid() -> DomainError {
@@ -20,4 +21,12 @@ fn required<'a>(value: &'a Value, key: &str) -> Result<&'a str> {
     text(&value[key]).ok_or_else(invalid)
 }
 mod launch;
-pub use launch::{probe, resolve_executable};
+pub use launch::{managed_launch_spec, managed_metadata, probe, resolve_executable};
+
+#[derive(Debug, Clone)]
+pub struct ManagedIdentity {
+    pub app_name: String,
+    pub subject: String,
+    pub client_id: String,
+    pub email: Option<String>,
+}

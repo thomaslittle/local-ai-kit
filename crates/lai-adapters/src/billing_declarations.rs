@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, BTreeSet};
 /// text-only session with every native tool removed (see `native_clients`).
 const DECLARED_NATIVE_EXECUTION: &[&str] = &["grok"];
 /// Native clients whose billing is an account plan, never a local runtime.
-const ACCOUNT_CLIENTS: &[&str] = &["gemini_cli", "antigravity", "grok"];
+const ACCOUNT_CLIENTS: &[&str] = &["gemini_cli", "antigravity", "grok", "muse"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BillingDeclaration {

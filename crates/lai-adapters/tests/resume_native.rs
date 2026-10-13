@@ -8,7 +8,9 @@ use axum::{
 };
 use lai_adapters::{
     claude::{self, client as claude_client},
-    execution::{CodexExecution, open_codex},
+    execution::{
+        CodexExecution, ManagedCredential, ManagedCredentialSource, open_codex, open_managed_codex,
+    },
     host_mcp::HostTools,
     http::{Authentication, Endpoint},
     opencode::client as opencode,
@@ -128,6 +130,149 @@ async fn codex_persistent_thread_suspends_to_its_native_id() {
         runtime.suspend("owner", &session).await.unwrap(),
         "native-thread"
     );
+}
+
+#[tokio::test]
+async fn managed_codex_rotated_token_restarts_and_resumes_same_thread() {
+    let tmp = tempfile::tempdir().unwrap();
+    let identity = lai_adapters::codex::ManagedIdentity {
+        app_name: "crntly".into(),
+        subject: "subject".into(),
+        client_id: "oaiapp_client".into(),
+        email: Some("person@example.test".into()),
+    };
+    let model_json = json!({"model":"test-native","displayName":"Test native","hidden":false,"isDefault":true,"supportedReasoningEfforts":[{"reasoningEffort":"future","description":"Future"}],"defaultReasoningEffort":"future","inputModalities":["text"]});
+    let report = lai_adapters::codex::parse_managed_metadata(
+        "c",
+        "r",
+        &json!({"userAgent":"codex/0.157.0"}),
+        &identity,
+        &[model_json],
+    )
+    .unwrap();
+    let model = report.models[0].clone();
+    let mut config = codex_config(true, None);
+    config.model = model.clone();
+    let mut spec = peer("execution_peer.py", "managed");
+    spec.env.insert("ACCESS_TOKEN".into(), "token-old".into());
+    let log = tmp.path().join("managed.log");
+    spec.env
+        .insert("TEST_METHODS_LOG".into(), log.clone().into_os_string());
+    let calls = Arc::new(AtomicUsize::new(0));
+    let source: ManagedCredentialSource = Arc::new(move || {
+        let token = if calls.fetch_add(1, Ordering::SeqCst) == 0 {
+            "token-old"
+        } else {
+            "token-new"
+        };
+        Box::pin(async move {
+            Ok(ManagedCredential {
+                access_token: token.into(),
+                subject: "subject".into(),
+                client_id: "oaiapp_client".into(),
+                email: Some("person@example.test".into()),
+            })
+        })
+    });
+    let agent = open_managed_codex(spec, config, identity, source)
+        .await
+        .unwrap();
+    let (runtime, session) = one_turn(agent, &model, json!({"reasoningEffort":"future"})).await;
+    runtime
+        .start("owner", &session, "again".into(), "2".into())
+        .await
+        .unwrap();
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while runtime.get("owner", &session).unwrap().state == SessionState::Running {
+            tokio::time::sleep(Duration::from_millis(3)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(
+        runtime.get("owner", &session).unwrap().state,
+        SessionState::Completed
+    );
+    let log = std::fs::read_to_string(log).unwrap();
+    assert!(log.contains("process initial\n"));
+    assert!(log.contains("process rotated\n"));
+    assert!(log.contains("thread/resume\n"));
+    assert!(!log.contains("token-old"));
+    assert!(!log.contains("token-new"));
+}
+#[tokio::test]
+async fn managed_codex_changed_identity_rejects_turn_before_native_thread_start() {
+    let tmp = tempfile::tempdir().unwrap();
+    let identity = lai_adapters::codex::ManagedIdentity {
+        app_name: "crntly".into(),
+        subject: "subject".into(),
+        client_id: "oaiapp_client".into(),
+        email: None,
+    };
+    let model_json = json!({"model":"test-native","displayName":"Test native","hidden":false,"isDefault":true,"supportedReasoningEfforts":[{"reasoningEffort":"future","description":"Future"}],"defaultReasoningEffort":"future","inputModalities":["text"]});
+    let report = lai_adapters::codex::parse_managed_metadata(
+        "c",
+        "r",
+        &json!({"userAgent":"codex/0.157.0"}),
+        &identity,
+        &[model_json],
+    )
+    .unwrap();
+    let model = report.models[0].clone();
+    let mut config = codex_config(true, None);
+    config.model = model.clone();
+    let mut spec = peer("execution_peer.py", "managed");
+    spec.env.insert("ACCESS_TOKEN".into(), "token-old".into());
+    let log = tmp.path().join("changed-identity.log");
+    spec.env
+        .insert("TEST_METHODS_LOG".into(), log.clone().into_os_string());
+    let source: ManagedCredentialSource = Arc::new(|| {
+        Box::pin(async {
+            Ok(ManagedCredential {
+                access_token: "token-new".into(),
+                subject: "different-subject".into(),
+                client_id: "oaiapp_client".into(),
+                email: None,
+            })
+        })
+    });
+    let agent = open_managed_codex(spec, config, identity, source)
+        .await
+        .unwrap();
+    let runtime = Runtime::new();
+    let session = runtime
+        .insert(
+            "owner",
+            "c".into(),
+            Selection {
+                route_id: model.route_id.clone(),
+                model_id: model.id.clone(),
+                revision: model.revision.clone(),
+                options: serde_json::from_value(json!({"reasoningEffort":"future"})).unwrap(),
+            },
+            agent,
+            Arc::new(|| Ok(())),
+        )
+        .unwrap();
+    runtime
+        .start("owner", &session.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while runtime.get("owner", &session.id).unwrap().state == SessionState::Running {
+            tokio::time::sleep(Duration::from_millis(3)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(
+        runtime.get("owner", &session.id).unwrap().state,
+        SessionState::Error
+    );
+    let log = std::fs::read_to_string(log).unwrap();
+    assert!(!log.contains("thread/start"));
+    assert!(!log.contains("turn/start"));
+    assert!(!log.contains("token-new"));
 }
 #[tokio::test]
 async fn codex_ephemeral_threads_stay_unresumable() {

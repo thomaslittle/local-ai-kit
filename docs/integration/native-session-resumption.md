@@ -9,6 +9,7 @@ Local AI Kit resumes only conversations the native client itself keeps. There is
 | Codex app-server | `sessions.create({ persistent: true })` starts a non-ephemeral thread (`ephemeral: false`) in the profile's `CODEX_HOME` | `thread/resume` by thread id, with the same read-only sandbox, approval policy and thread config. A missing or different thread is `RESUME_UNAVAILABLE`. |
 | Claude Code | `persistent: true` drops `--no-session-persistence` and names the conversation with `--session-id <uuid>` in the profile's `CLAUDE_CONFIG_DIR` | `--resume <uuid>` (same id, never `--fork-session`), only after the stored `projects/*/<uuid>.jsonl` is found. |
 | OpenCode (kit-managed server or configured endpoint) | `persistent: true` keeps the native session on suspend instead of deleting it | A new server looks the session up by id in the same directory and checks deny-all permissions again. |
+| Muse Code | `persistent: true` drops `--no-session-log`, so `muse serve` keeps the session in Muse's own history | `session/resume` by session id with `excludeItems: true`, then `session/setApprovalMode` (and `session/setModel` if needed). An unknown session is `RESUME_UNAVAILABLE`. |
 | ACP (native profiles) | The client's own session store, when it advertises `loadSession` | `session/load` (existing behavior; `persistent: true` is accepted only when `loadSession` is advertised). |
 | API and local-runtime routes | none | `persistent: true` is `CAPABILITY_UNSUPPORTED`. |
 
