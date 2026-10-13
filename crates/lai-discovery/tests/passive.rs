@@ -420,3 +420,87 @@ fn opencode_configuration_only_keeps_identity_when_data_directory_appears() {
         after.snapshot.connections[0].id
     );
 }
+
+#[test]
+fn muse_is_found_in_its_windows_install_directory_without_reading_it() {
+    let tmp = tempfile::tempdir().unwrap();
+    let install = tmp.path().join("AppData/Local/Programs/muse");
+    fs::create_dir_all(&install).unwrap();
+    fs::write(install.join("muse.cmd"), b"SHOULD_NOT_EXECUTE").unwrap();
+    fs::write(install.join(".muse-version"), b"1.4.7-R6101.1").unwrap();
+    fs::create_dir_all(tmp.path().join(".config/muse")).unwrap();
+    fs::write(
+        tmp.path().join(".config/muse/auth.json"),
+        b"DO_NOT_READ_SECRET",
+    )
+    .unwrap();
+    let s = scan(&environment(tmp.path(), HostPlatform::Windows));
+    let muse: Vec<_> = s
+        .locations
+        .values()
+        .filter(|l| l.provider_id == "muse")
+        .collect();
+    assert_eq!(muse.len(), 1);
+    assert_eq!(
+        muse[0].executable.as_deref(),
+        Some(install.join("muse.cmd").as_path())
+    );
+    assert_eq!(muse[0].profile_home, tmp.path().join(".config/muse"));
+    let connection = s
+        .snapshot
+        .connections
+        .iter()
+        .find(|c| c.provider_id == "muse")
+        .unwrap();
+    assert_eq!(connection.display_name, "Muse Code · Default profile");
+    assert_eq!(connection.status, "detected");
+    assert_ne!(
+        connection.auth.fresh_value(),
+        Some(&AuthState::Authenticated)
+    );
+    assert!(
+        !serde_json::to_string(&s.snapshot)
+            .unwrap()
+            .contains("DO_NOT_READ_SECRET")
+    );
+    // Linux has no such install directory.
+    let linux = scan(&environment(tmp.path(), HostPlatform::Linux));
+    assert!(
+        linux
+            .locations
+            .values()
+            .filter(|l| l.provider_id == "muse")
+            .all(|l| l.executable.is_none())
+    );
+}
+
+#[test]
+fn a_configured_muse_binary_replaces_the_search() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bin = tmp.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    fs::write(bin.join("muse"), b"on path").unwrap();
+    let custom = tmp.path().join("tools/muse-bin-1.4.7-R6101.1.exe");
+    fs::create_dir_all(custom.parent().unwrap()).unwrap();
+    fs::write(&custom, b"configured").unwrap();
+    let mut env = environment(tmp.path(), HostPlatform::Linux);
+    env.search_path.push(bin);
+    env.overrides
+        .insert(MUSE_BINARY_OVERRIDE.into(), custom.clone());
+    let s = scan(&env);
+    let muse: Vec<_> = s
+        .locations
+        .values()
+        .filter(|l| l.provider_id == "muse")
+        .collect();
+    assert_eq!(muse.len(), 1);
+    assert_eq!(muse[0].executable.as_deref(), Some(custom.as_path()));
+    env.overrides
+        .insert(MUSE_BINARY_OVERRIDE.into(), tmp.path().join("missing"));
+    let s = scan(&env);
+    assert!(
+        s.snapshot
+            .diagnostics
+            .contains(&"muse_CONFIGURED_EXECUTABLE_UNAVAILABLE".to_owned())
+    );
+}

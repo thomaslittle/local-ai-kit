@@ -63,7 +63,8 @@ pub fn build_service_with_declarations(
     )
 }
 /// Providers whose adapters persist and reattach native conversations.
-pub const PERSISTENT_PROVIDERS: [&str; 4] = ["codex", "codex_managed", "claude_code", "opencode"];
+pub const PERSISTENT_PROVIDERS: [&str; 5] =
+    ["codex", "codex_managed", "claude_code", "opencode", "muse"];
 /// The kit's per-user state directory (holds `resume.key`). With a virtual
 /// `home` it stays inside that home. Nothing is created here.
 pub fn default_state_dir(home: Option<&std::path::Path>) -> Option<std::path::PathBuf> {
@@ -257,6 +258,12 @@ async fn probe_metadata(
             })?;
             lai_adapters::opencode::server::probe(&executable, &connection, &route).await
         }
+        "muse" => {
+            let executable = located.executable.clone().ok_or_else(|| {
+                DomainError::new(ErrorCode::RuntimeMissing, "Native executable unavailable")
+            })?;
+            lai_adapters::muse::probe(&executable, &connection, &route).await
+        }
         "cursor" => tokio::task::spawn_blocking(move || {
             lai_adapters::cursor::read_cached(located, &connection, &route)
         })
@@ -314,6 +321,7 @@ fn build_execution(
                 "xai_api",
                 "compatible_api",
                 "opencode",
+                "muse",
             ]
             .into_iter()
             .map(str::to_owned)
@@ -470,6 +478,43 @@ fn build_execution(
                             input.workspace,
                             input.persistent,
                             input.native_resume,
+                        )
+                        .await;
+                    }
+                    if input.located.provider_id == "muse" {
+                        let executable = input.located.executable.clone().ok_or_else(|| {
+                            DomainError::new(
+                                ErrorCode::RuntimeMissing,
+                                "Native executable unavailable",
+                            )
+                        })?;
+                        // read_only: text plus host tools; workspace_write: Muse edits
+                        // and runs commands under its own sandbox, declining anything
+                        // that would ask; native_policy: Muse's allow-all mode (T3
+                        // Code's Full access). reviewRequests makes every Muse
+                        // approval a host approval (Supervised).
+                        let (posture, full_access) = if input.writable {
+                            (lai_adapters::muse::Posture::Workspace, false)
+                        } else if input.native_policy {
+                            (lai_adapters::muse::Posture::Workspace, true)
+                        } else {
+                            (lai_adapters::muse::Posture::ReadOnly, false)
+                        };
+                        return lai_adapters::muse::open(
+                            &executable,
+                            lai_adapters::muse::MuseOpen {
+                                model: input.model,
+                                connection: input.connection_id,
+                                route: input.route_id,
+                                workspace: input.workspace,
+                                posture,
+                                review: input.review_requests,
+                                full_access,
+                                host_mcp_servers: input.host_mcp_servers,
+                                persistent: input.persistent,
+                                resume: input.native_resume,
+                                routing: lai_adapters::muse::Routing::Meta,
+                            },
                         )
                         .await;
                     }

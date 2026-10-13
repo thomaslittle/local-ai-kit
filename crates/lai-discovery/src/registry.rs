@@ -1,5 +1,8 @@
 use crate::{HostPlatform, ScanEnvironment};
 use std::path::PathBuf;
+/// Absolute path of the Muse Code binary or launcher, for installs that are
+/// not on `PATH` or in the default install directory.
+pub const MUSE_BINARY_OVERRIDE: &str = "LOCAL_AI_KIT_MUSE_BINARY";
 #[derive(Debug, Clone, Copy)]
 pub struct ProviderDefinition {
     pub id: &'static str,
@@ -46,6 +49,12 @@ pub fn definitions() -> &'static [ProviderDefinition] {
             profile_prefix: None,
         },
         ProviderDefinition {
+            id: "muse",
+            name: "Muse Code",
+            commands: &["muse"],
+            profile_prefix: None,
+        },
+        ProviderDefinition {
             id: "cursor",
             name: "Cursor",
             commands: &["cursor-agent"],
@@ -86,6 +95,9 @@ impl ProviderDefinition {
             // They describe one installation profile; use its data root as the stable
             // identity because that is where its provider credentials are stored.
             "opencode" => vec![env.data_home.join("opencode")],
+            // Muse keeps settings and its credential store under
+            // `$XDG_CONFIG_HOME/muse`, else `~/.config/muse` (Windows too).
+            "muse" => vec![env.config_home.join("muse")],
             "cursor" => vec![match env.platform {
                 HostPlatform::Windows => env.app_data.join("Cursor"),
                 HostPlatform::Macos => env.home.join("Library/Application Support/Cursor"),
@@ -94,6 +106,21 @@ impl ProviderDefinition {
             "ollama" => vec![env.home.join(".ollama")],
             "lmstudio" => vec![env.home.join(".lmstudio")],
             _ => vec![],
+        }
+    }
+    /// Install directories searched in addition to `PATH` for this provider.
+    pub(crate) fn extra_directories(&self, env: &ScanEnvironment) -> Vec<PathBuf> {
+        match (self.id, env.platform) {
+            // The official Muse Code installer's per-user location.
+            ("muse", HostPlatform::Windows) => vec![env.local_app_data.join("Programs/muse")],
+            _ => vec![],
+        }
+    }
+    /// An explicitly configured executable that replaces the search.
+    pub(crate) fn executable_override<'a>(&self, env: &'a ScanEnvironment) -> Option<&'a PathBuf> {
+        match self.id {
+            "muse" => env.overrides.get(MUSE_BINARY_OVERRIDE),
+            _ => None,
         }
     }
     pub(crate) fn has_override(&self, env: &ScanEnvironment) -> bool {

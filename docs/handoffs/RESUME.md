@@ -1,5 +1,9 @@
 # Resume — Local AI Kit
 
+## October 13 Muse Code adapter
+
+Branch `feature/muse-provider`, based on alpha.13 (`470dee4`), adds provider `muse` ("Muse Code"): passive discovery (PATH, `%LOCALAPPDATA%\Programs\muse`, `LOCAL_AI_KIT_MUSE_BINARY`), metadata through a read-only `muse serve` (experimental `account/read` for auth/billing, `model/list`, `usage/read`; no prompt), and sessions over MSP v1 with host-reviewed approvals, host MCP servers (optional), images, cancellation, background workflow/subagent reporting and persistent resumption. It ports T3 Code's Muse provider behaviour; see [Muse Code](../adapters/muse.md) for the permission-mode mapping, event and extension mapping, gaps and evidence. Tests replay T3's recorded transcripts and Muse 1.4.7 echo recordings; live checks used only metadata and the free echo provider. No Meta model turn was run, and nothing was tagged or published.
+
 ## September 29 ChatGPT managed-auth follow-up
 
 Alpha.11 source `5612a13efc7ddcce17f5e7ff3eb80d718b4293cf` adds generic executable-only provider discovery, preserving a private runtime candidate while skipping that provider's profile roots and public routes. Alpha.12 adds direct-only Codex host MCP namespaces for code-mode models. It forces MCP prefixes, preserves already-prefixed names and refuses normalized collisions; shell/exec, code-mode host and unrelated integrations remain disabled. Windows Codex 0.159.2 managed ChatGPT and Claude Code each completed a real, read-only host-tool round trip in a separately owned native test app. Exact published source and asset hashes belong to each immutable release manifest; do not overwrite earlier release files.

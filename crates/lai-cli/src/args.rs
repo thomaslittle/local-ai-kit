@@ -176,6 +176,7 @@ impl Args {
                                 "xai_api",
                                 "compatible_api",
                                 "opencode",
+                                "muse",
                                 "gemini_cli",
                                 "antigravity",
                                 "grok",

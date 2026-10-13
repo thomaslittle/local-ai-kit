@@ -9,6 +9,7 @@ SUITES={
  'cursor':['cursor_metadata'],
  'http':['http','endpoint_config','http_catalogs','http_execution','http_frames'],
  'opencode':['opencode_catalog','opencode_execution'],
+ 'muse':['muse_catalog','muse_process'],
 }
 def main():
  p=argparse.ArgumentParser();p.add_argument('--all',action='store_true');p.add_argument('--adapter',choices=sorted(SUITES));args=p.parse_args()

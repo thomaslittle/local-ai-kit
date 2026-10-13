@@ -243,6 +243,45 @@ impl Peer {
             .await
             .map_err(|_| error(ErrorCode::ProviderUnavailable))
     }
+    /// Like [`Self::send`] with a caller-chosen frame cap, for protocols whose
+    /// requests legitimately carry inline images.
+    pub(crate) async fn send_bounded(&mut self, value: Value, max_frame: usize) -> Result<()> {
+        let mut bytes = serde_json::to_vec(&value).map_err(|_| error(ErrorCode::InvalidRequest))?;
+        if bytes.len() >= max_frame {
+            return Err(error(ErrorCode::FrameTooLarge));
+        }
+        bytes.push(b'\n');
+        self.input
+            .write_all(&bytes)
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        self.input
+            .flush()
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))
+    }
+    /// A cancel-safe [`Self::read`]: partial bytes stay in `pending`, owned by
+    /// the caller, so the read can be raced in `select!` and resumed later.
+    pub(crate) async fn read_buffered(&mut self, pending: &mut Vec<u8>) -> Result<Value> {
+        let room = (MAX_FRAME + 1).saturating_sub(pending.len() as u64);
+        let count = (&mut self.output)
+            .take(room)
+            .read_until(b'\n', pending)
+            .await
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        if pending.last() != Some(&b'\n') {
+            if count == 0 {
+                return Err(error(ErrorCode::ProviderUnavailable));
+            }
+            return Err(error(if pending.len() as u64 > MAX_FRAME {
+                ErrorCode::FrameTooLarge
+            } else {
+                ErrorCode::ProtocolIncompatible
+            }));
+        }
+        let frame = std::mem::take(pending);
+        serde_json::from_slice(&frame).map_err(|_| error(ErrorCode::ProtocolIncompatible))
+    }
     pub(crate) async fn read(&mut self) -> Result<Value> {
         let mut bytes = Vec::new();
         let count = (&mut self.output)

@@ -23,7 +23,7 @@ Usage:
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
   --executable-only-provider PROVIDER may repeat for known discovery providers; retains private executable candidates without publishing their profiles or routes.
-  Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
+  Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode, muse.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
   --native-profiles ABSOLUTE_JSON explicitly registers Gemini CLI, Antigravity ACP, or Grok native profiles; the file contains paths/labels, never tokens.
   --chatgpt-app-name NAME opts in a separate managed Codex profile and SIWC auth RPCs; grant --allow-metadata codex_managed to use them.

@@ -101,7 +101,29 @@ impl<F: LocalFilesystem> Scanner<F> {
             cancelled(cancel)?;
             let executable_only = self.executable_only_providers.contains(definition.id);
             let mut binaries = BTreeSet::new();
-            for directory in &directories {
+            let extra_dirs = definition.extra_directories(env);
+            let configured = definition.executable_override(env);
+            if let Some(path) = configured {
+                result.metadata_probes += 1;
+                match self.filesystem.probe(path) {
+                    Ok(EntryKind::File) => {
+                        binaries.insert(path.clone());
+                    }
+                    _ => result.snapshot.diagnostics.push(format!(
+                        "{}_CONFIGURED_EXECUTABLE_UNAVAILABLE",
+                        definition.id
+                    )),
+                }
+            }
+            let search = if configured.is_some() {
+                vec![]
+            } else {
+                directories
+                    .iter()
+                    .chain(extra_dirs.iter())
+                    .collect::<Vec<_>>()
+            };
+            for directory in search {
                 for command in definition.commands {
                     for suffix in if env.platform == HostPlatform::Windows {
                         &[".exe", ".cmd", ".bat", ""][..]

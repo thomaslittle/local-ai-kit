@@ -6,7 +6,7 @@ mod scanner;
 pub use environment::{HostPlatform, ScanEnvironment};
 use lai_contracts::Snapshot;
 use lai_platform::LocalFilesystem;
-pub use registry::{ProviderDefinition, definitions};
+pub use registry::{MUSE_BINARY_OVERRIDE, ProviderDefinition, definitions};
 use std::{
     collections::{BTreeMap, BTreeSet},
     path::PathBuf,

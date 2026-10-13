@@ -19,6 +19,46 @@ Reference does not imply affiliation, endorsement, inherited security guarantees
 
 See [SOURCE-AUDIT.md](SOURCE-AUDIT.md) for previously inspected revisions and exact paths. For any future reuse, verify the license at the exact source revision and preserve required copyright and license text.
 
+## Muse Code adapter (T3 Code port)
+
+The Muse Code adapter (`crates/lai-adapters/src/muse/`) ports the behaviour of T3 Code's Muse provider to Rust. No TypeScript was copied; the protocol subset, approval-choice mapping, launcher handling, item presentation (web search hits, workflow children, subagents) and documented limits follow it. Recorded protocol transcripts were copied unchanged.
+
+| Field | Value |
+| --- | --- |
+| Source | https://github.com/pingdotgg/t3code at `e9221e44dadd78126c83d2eeed0b51c25dcf0fb4` |
+| Referenced paths | `packages/provider-muse/src/server/{adapter,sdk,protocol,modelCatalog,status,itemPresentation,textGeneration}.ts`, `docs/user/providers-muse.md` |
+| Copied files | `apps/server/src/orchestration-v2/testkit/fixtures/{simple,multi_turn,turn_interrupt,muse_permission,muse_workflow,subagent_v2,muse_subagent_approval,muse_subagent_interrupt}/muse_transcript.ndjson` → `crates/lai-adapters/tests/fixtures/muse/t3/*.ndjson` (renamed, contents unchanged) |
+| License | MIT |
+| Copyright | Copyright (c) 2026 T3 Tools Inc. |
+
+T3 Code's MIT license text, which must accompany the copied transcripts:
+
+```text
+MIT License
+
+Copyright (c) 2026 T3 Tools Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+Muse Code itself is not redistributed. Its MSP schema was read from the installed binary (`muse schema generate-json-schema`, 1.4.7-R6101.1) to check wire shapes; the `echo_*` transcripts were recorded locally from that binary's free echo provider. No new Cargo dependency was added.
+
 ## New Cargo dependencies in the ChatGPT managed-auth change
 
 The following registry packages and versions were added to `Cargo.lock` in the managed-auth change. The SPDX expressions below are taken from each package's Cargo manifest metadata.
