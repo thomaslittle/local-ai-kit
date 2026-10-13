@@ -1,3 +1,4 @@
+use lai_adapters::codex::{ManagedIdentity, managed_metadata};
 use lai_adapters::process::{LaunchSpec, codex_metadata};
 use lai_contracts::ErrorCode;
 use std::{
@@ -63,6 +64,54 @@ async fn unauthenticated_client_does_not_fetch_model_or_usage_catalog() {
     assert!(report.models.is_empty());
     let methods = std::fs::read_to_string(tmp.path().join("methods.log")).unwrap();
     assert!(!methods.contains("model/list"));
+}
+
+#[tokio::test]
+async fn managed_identity_fetches_catalog_without_native_account_or_usage() {
+    let tmp = tempfile::tempdir().unwrap();
+    let report = managed_metadata(
+        launch("managed", tmp.path()),
+        "managed-connection",
+        "managed-route",
+        ManagedIdentity {
+            app_name: "crntly".into(),
+            subject: "subject-123".into(),
+            client_id: "oaiapp_client".into(),
+            email: Some("person@example.test".into()),
+        },
+        Duration::from_secs(5),
+    )
+    .await
+    .unwrap();
+    assert_eq!(report.models.len(), 2);
+    assert!(report.quota_pools.is_empty());
+    assert_eq!(
+        report.billing.fresh_value(),
+        Some(&lai_contracts::BillingMode::Subscription)
+    );
+    let methods = std::fs::read_to_string(tmp.path().join("methods.log")).unwrap();
+    assert!(methods.contains("model/list"));
+    assert!(!methods.contains("account/rateLimits/read"));
+}
+
+#[tokio::test]
+async fn managed_route_requires_codex_0157_or_newer() {
+    let tmp = tempfile::tempdir().unwrap();
+    let error = managed_metadata(
+        launch("managed-old", tmp.path()),
+        "c",
+        "r",
+        ManagedIdentity {
+            app_name: "crntly".into(),
+            subject: "subject".into(),
+            client_id: "oaiapp_id".into(),
+            email: None,
+        },
+        Duration::from_secs(5),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::ProtocolIncompatible);
 }
 #[tokio::test]
 async fn quota_endpoint_failure_keeps_account_catalog_and_redacts_error() {

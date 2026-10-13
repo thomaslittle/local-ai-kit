@@ -2,10 +2,96 @@ use lai_contracts::*;
 use lai_discovery::*;
 use lai_platform::*;
 use std::{
+    collections::BTreeSet,
     fs,
     path::{Path, PathBuf},
-    sync::atomic::{AtomicBool, AtomicUsize, Ordering},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    },
 };
+struct ProbeSpy {
+    probed: Arc<Mutex<Vec<PathBuf>>>,
+}
+impl LocalFilesystem for ProbeSpy {
+    fn probe(&self, p: &Path) -> Result<EntryKind> {
+        self.probed.lock().unwrap().push(p.into());
+        NativeFilesystem.probe(p)
+    }
+    fn children(&self, p: &Path, n: usize) -> Result<DirectoryListing> {
+        NativeFilesystem.children(p, n)
+    }
+    fn read_chunk(&self, _: &Path, _: u64, _: usize) -> Result<ReadChunk> {
+        panic!("executable-only scan read file content")
+    }
+}
+#[test]
+fn executable_only_provider_never_probes_its_profiles_or_publishes_legacy_routes() {
+    let tmp = tempfile::tempdir().unwrap();
+    fs::create_dir_all(tmp.path().join(".codex-work")).unwrap();
+    fs::create_dir_all(tmp.path().join(".codex")).unwrap();
+    fs::create_dir_all(tmp.path().join(".claude")).unwrap();
+    let bin = tmp.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    let codex = bin.join("codex");
+    fs::write(&codex, b"fixture").unwrap();
+    let mut env = environment(tmp.path(), HostPlatform::Linux);
+    env.search_path.push(bin);
+    let probed = Arc::new(Mutex::new(Vec::new()));
+    let spy = ProbeSpy {
+        probed: probed.clone(),
+    };
+    let result = Scanner::new(spy)
+        .with_executable_only_providers(BTreeSet::from(["codex".into()]))
+        .scan(&env, &AtomicBool::new(false), |_| {})
+        .unwrap();
+    let probes = probed.lock().unwrap();
+    assert!(
+        !probes
+            .iter()
+            .any(|p| p == &env.home.join(".codex") || p == &env.home.join(".codex-work")),
+        "executable-only provider profile root was probed"
+    );
+    assert!(probes.iter().any(|p| p == &env.home.join(".claude")));
+    drop(probes);
+    assert!(result.snapshot.providers.iter().all(|p| p.id != "codex"));
+    assert!(
+        result
+            .snapshot
+            .installations
+            .iter()
+            .all(|i| i.provider_id != "codex")
+    );
+    assert!(
+        result
+            .snapshot
+            .connections
+            .iter()
+            .all(|c| c.provider_id != "codex")
+    );
+    assert!(
+        result
+            .snapshot
+            .routes
+            .iter()
+            .all(|r| r.provider_id != "codex")
+    );
+    assert!(
+        result
+            .snapshot
+            .connections
+            .iter()
+            .any(|c| c.provider_id == "claude_code")
+    );
+    let private: Vec<_> = result
+        .locations
+        .values()
+        .filter(|c| c.provider_id == "codex")
+        .collect();
+    assert_eq!(private.len(), 1);
+    assert_eq!(private[0].executable.as_deref(), Some(codex.as_path()));
+    assert_eq!(private[0].profile_home, env.home);
+}
 struct MetadataOnly {
     reads: AtomicUsize,
 }
@@ -332,5 +418,89 @@ fn opencode_configuration_only_keeps_identity_when_data_directory_appears() {
     assert_eq!(
         before.snapshot.connections[0].id,
         after.snapshot.connections[0].id
+    );
+}
+
+#[test]
+fn muse_is_found_in_its_windows_install_directory_without_reading_it() {
+    let tmp = tempfile::tempdir().unwrap();
+    let install = tmp.path().join("AppData/Local/Programs/muse");
+    fs::create_dir_all(&install).unwrap();
+    fs::write(install.join("muse.cmd"), b"SHOULD_NOT_EXECUTE").unwrap();
+    fs::write(install.join(".muse-version"), b"1.4.7-R6101.1").unwrap();
+    fs::create_dir_all(tmp.path().join(".config/muse")).unwrap();
+    fs::write(
+        tmp.path().join(".config/muse/auth.json"),
+        b"DO_NOT_READ_SECRET",
+    )
+    .unwrap();
+    let s = scan(&environment(tmp.path(), HostPlatform::Windows));
+    let muse: Vec<_> = s
+        .locations
+        .values()
+        .filter(|l| l.provider_id == "muse")
+        .collect();
+    assert_eq!(muse.len(), 1);
+    assert_eq!(
+        muse[0].executable.as_deref(),
+        Some(install.join("muse.cmd").as_path())
+    );
+    assert_eq!(muse[0].profile_home, tmp.path().join(".config/muse"));
+    let connection = s
+        .snapshot
+        .connections
+        .iter()
+        .find(|c| c.provider_id == "muse")
+        .unwrap();
+    assert_eq!(connection.display_name, "Muse Code · Default profile");
+    assert_eq!(connection.status, "detected");
+    assert_ne!(
+        connection.auth.fresh_value(),
+        Some(&AuthState::Authenticated)
+    );
+    assert!(
+        !serde_json::to_string(&s.snapshot)
+            .unwrap()
+            .contains("DO_NOT_READ_SECRET")
+    );
+    // Linux has no such install directory.
+    let linux = scan(&environment(tmp.path(), HostPlatform::Linux));
+    assert!(
+        linux
+            .locations
+            .values()
+            .filter(|l| l.provider_id == "muse")
+            .all(|l| l.executable.is_none())
+    );
+}
+
+#[test]
+fn a_configured_muse_binary_replaces_the_search() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bin = tmp.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    fs::write(bin.join("muse"), b"on path").unwrap();
+    let custom = tmp.path().join("tools/muse-bin-1.4.7-R6101.1.exe");
+    fs::create_dir_all(custom.parent().unwrap()).unwrap();
+    fs::write(&custom, b"configured").unwrap();
+    let mut env = environment(tmp.path(), HostPlatform::Linux);
+    env.search_path.push(bin);
+    env.overrides
+        .insert(MUSE_BINARY_OVERRIDE.into(), custom.clone());
+    let s = scan(&env);
+    let muse: Vec<_> = s
+        .locations
+        .values()
+        .filter(|l| l.provider_id == "muse")
+        .collect();
+    assert_eq!(muse.len(), 1);
+    assert_eq!(muse[0].executable.as_deref(), Some(custom.as_path()));
+    env.overrides
+        .insert(MUSE_BINARY_OVERRIDE.into(), tmp.path().join("missing"));
+    let s = scan(&env);
+    assert!(
+        s.snapshot
+            .diagnostics
+            .contains(&"muse_CONFIGURED_EXECUTABLE_UNAVAILABLE".to_owned())
     );
 }

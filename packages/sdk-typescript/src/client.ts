@@ -20,6 +20,12 @@ interface SnapshotMethods {
   get<K extends keyof Snapshot>(params: { fields: K[] }, options?: CallOptions): Promise<Pick<Snapshot, K>>;
 }
 export type LocalAIClient = Omit<Families, 'snapshot'> & {
+  auth: { chatgpt: {
+    status: TypedMethod<'auth.chatgpt.status'>;
+    start: TypedMethod<'auth.chatgpt.start'>;
+    cancel: TypedMethod<'auth.chatgpt.cancel'>;
+    disconnect: TypedMethod<'auth.chatgpt.disconnect'>;
+  } };
   snapshot: SnapshotMethods;
   handshake: Readonly<Handshake>;
   close(): Promise<void>;
@@ -46,6 +52,12 @@ export async function createLocalAI(options: { transport: Transport; clientName?
     };
     client[family] = Object.freeze(group);
   }
+  client.auth = Object.freeze({ chatgpt: Object.freeze(Object.fromEntries(
+    ['status', 'start', 'cancel', 'disconnect'].map(name => [name, async <T>(params: unknown = {}, call: CallOptions = {}) => {
+      const method = `auth.chatgpt.${name}`; requireAvailable(method);
+      return transport.request<T>(method, params, call);
+    }]),
+  )) });
   return Object.assign(client, {
     handshake: Object.freeze({ ...handshake, methods: Object.freeze([...handshake.methods]) }),
     async close() {

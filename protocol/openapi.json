@@ -293,6 +293,71 @@
         ],
         "type": "string"
       },
+      "ChatgptAuthStart": {
+        "properties": {
+          "authUrl": {
+            "type": "string"
+          },
+          "loginId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "loginId",
+          "authUrl"
+        ],
+        "type": "object"
+      },
+      "ChatgptAuthState": {
+        "enum": [
+          "signed_out",
+          "pending",
+          "connected",
+          "error"
+        ],
+        "type": "string"
+      },
+      "ChatgptAuthStatus": {
+        "properties": {
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errorCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "loginId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/ChatgptAuthState"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "type": "object"
+      },
+      "ChatgptCancelParams": {
+        "additionalProperties": false,
+        "properties": {
+          "loginId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "loginId"
+        ],
+        "type": "object"
+      },
       "Choice": {
         "additionalProperties": false,
         "properties": {
@@ -1170,6 +1235,18 @@
           "artifacts.read": {
             "$ref": "#/components/schemas/ArtifactReadParams"
           },
+          "auth.chatgpt.cancel": {
+            "$ref": "#/components/schemas/ChatgptCancelParams"
+          },
+          "auth.chatgpt.disconnect": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
+          "auth.chatgpt.start": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
+          "auth.chatgpt.status": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
           "capabilities.read": {
             "$ref": "#/components/schemas/ModelParams"
           },
@@ -1262,6 +1339,10 @@
           }
         },
         "required": [
+          "auth.chatgpt.status",
+          "auth.chatgpt.start",
+          "auth.chatgpt.cancel",
+          "auth.chatgpt.disconnect",
           "runtime.closeClient",
           "artifacts.read",
           "runtime.handshake",
@@ -1310,6 +1391,14 @@
           "approvals.respond": true,
           "artifacts.read": {
             "$ref": "#/components/schemas/ArtifactChunk"
+          },
+          "auth.chatgpt.cancel": true,
+          "auth.chatgpt.disconnect": true,
+          "auth.chatgpt.start": {
+            "$ref": "#/components/schemas/ChatgptAuthStart"
+          },
+          "auth.chatgpt.status": {
+            "$ref": "#/components/schemas/ChatgptAuthStatus"
           },
           "capabilities.read": {
             "items": {
@@ -1396,6 +1485,10 @@
           }
         },
         "required": [
+          "auth.chatgpt.status",
+          "auth.chatgpt.start",
+          "auth.chatgpt.cancel",
+          "auth.chatgpt.disconnect",
           "runtime.closeClient",
           "artifacts.read",
           "runtime.handshake",
@@ -3357,6 +3450,110 @@
                       },
                       "params": {
                         "$ref": "#/components/schemas/ArtifactReadParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "auth.chatgpt.cancel"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/ChatgptCancelParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "auth.chatgpt.disconnect"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "auth.chatgpt.start"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "auth.chatgpt.status"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
                       }
                     },
                     "required": [

@@ -1,4 +1,4 @@
-use crate::environment::valid_root;
+use crate::environment::{join_relative, valid_root};
 use crate::{HostPlatform, LocatedClient, ScanEnvironment, ScanResult, Scanner, definitions};
 use lai_contracts::*;
 use lai_platform::{EntryKind, LocalFilesystem};
@@ -70,12 +70,12 @@ impl<F: LocalFilesystem> Scanner<F> {
             .cloned()
             .collect::<BTreeSet<_>>();
         directories.extend([
-            env.home.join(".local/bin"),
-            env.home.join(".cargo/bin"),
-            env.home.join(".bun/bin"),
+            join_relative(&env.home, ".local/bin"),
+            join_relative(&env.home, ".cargo/bin"),
+            join_relative(&env.home, ".bun/bin"),
         ]);
         if env.platform == HostPlatform::Windows {
-            directories.insert(env.app_data.join("npm"));
+            directories.insert(join_relative(&env.app_data, "npm"));
         }
         let children = self.filesystem.children(&env.home, 128);
         let extra = match children {
@@ -99,13 +99,31 @@ impl<F: LocalFilesystem> Scanner<F> {
         let mut installations = BTreeSet::new();
         for definition in definitions() {
             cancelled(cancel)?;
-            result.snapshot.providers.push(Provider {
-                id: definition.id.into(),
-                name: definition.name.into(),
-                kind: "local_client".into(),
-            });
+            let executable_only = self.executable_only_providers.contains(definition.id);
             let mut binaries = BTreeSet::new();
-            for directory in &directories {
+            let extra_dirs = definition.extra_directories(env);
+            let configured = definition.executable_override(env);
+            if let Some(path) = configured {
+                result.metadata_probes += 1;
+                match self.filesystem.probe(path) {
+                    Ok(EntryKind::File) => {
+                        binaries.insert(path.clone());
+                    }
+                    _ => result.snapshot.diagnostics.push(format!(
+                        "{}_CONFIGURED_EXECUTABLE_UNAVAILABLE",
+                        definition.id
+                    )),
+                }
+            }
+            let search = if configured.is_some() {
+                vec![]
+            } else {
+                directories
+                    .iter()
+                    .chain(extra_dirs.iter())
+                    .collect::<Vec<_>>()
+            };
+            for directory in search {
                 for command in definition.commands {
                     for suffix in if env.platform == HostPlatform::Windows {
                         &[".exe", ".cmd", ".bat", ""][..]
@@ -119,11 +137,11 @@ impl<F: LocalFilesystem> Scanner<F> {
                             Ok(EntryKind::File) => {
                                 binaries.insert(path);
                             }
-                            Ok(EntryKind::Symlink) => result
+                            Ok(EntryKind::Symlink) if !executable_only => result
                                 .snapshot
                                 .diagnostics
                                 .push(format!("{}_EXECUTABLE_SYMLINK_NOT_FOLLOWED", definition.id)),
-                            Err(_) => result
+                            Err(_) if !executable_only => result
                                 .snapshot
                                 .diagnostics
                                 .push(format!("{}_EXECUTABLE_METADATA_UNAVAILABLE", definition.id)),
@@ -132,7 +150,7 @@ impl<F: LocalFilesystem> Scanner<F> {
                     }
                 }
             }
-            if binaries.len() > 8 {
+            if binaries.len() > 8 && !executable_only {
                 result
                     .snapshot
                     .diagnostics
@@ -155,6 +173,29 @@ impl<F: LocalFilesystem> Scanner<F> {
             if executables.is_empty() {
                 executables.push(None);
             }
+            if executable_only {
+                for executable in executables.into_iter().flatten() {
+                    let key = stable_id(
+                        "private-executable",
+                        &[definition.id, &path_key(&executable)],
+                    );
+                    result.locations.insert(
+                        key,
+                        LocatedClient {
+                            provider_id: definition.id.into(),
+                            profile_home: env.home.clone(),
+                            executable: Some(executable),
+                        },
+                    );
+                }
+                progress(&result.snapshot);
+                continue;
+            }
+            result.snapshot.providers.push(Provider {
+                id: definition.id.into(),
+                name: definition.name.into(),
+                kind: "local_client".into(),
+            });
             let mut roots = definition.roots(env);
             if !definition.has_override(env) {
                 if let Some(prefix) = definition.profile_prefix {

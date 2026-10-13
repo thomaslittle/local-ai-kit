@@ -118,3 +118,75 @@ pub fn parse_metadata(
     }
     Ok(report)
 }
+
+/// SIWC identity is validated by the host-managed OAuth flow. Codex's custom
+/// Responses provider deliberately reports no native account, so its model
+/// list is a catalog and does not establish entitlement or quota.
+pub fn parse_managed_metadata(
+    connection: &str,
+    route: &str,
+    initialize: &Value,
+    identity: &super::ManagedIdentity,
+    native_models: &[Value],
+) -> Result<ConnectionMetadata> {
+    if connection.is_empty()
+        || route.is_empty()
+        || identity.subject.is_empty()
+        || identity.client_id.is_empty()
+        || native_models.len() > 2048
+    {
+        return Err(invalid());
+    }
+    let version = text(&initialize["userAgent"])
+        .and_then(|agent| agent.split_once('/').map(|(_, v)| v))
+        .ok_or_else(invalid)?;
+    let mut parts = version.split('.');
+    let major = parts
+        .next()
+        .and_then(|s| s.parse::<u32>().ok())
+        .ok_or_else(invalid)?;
+    let minor = parts
+        .next()
+        .and_then(|s| s.parse::<u32>().ok())
+        .ok_or_else(invalid)?;
+    if major == 0 && minor < 157 {
+        return Err(invalid());
+    }
+    let mut source = EvidenceSource::new(
+        EvidenceKind::OfficialProtocol,
+        "openai_chatgpt_plan",
+        "https://developers.openai.com/siwc/token-sharing-open-source/codex-app-server",
+    );
+    source.client_version = Some(version.into());
+    let account_id = stable_id(
+        "account",
+        &[connection, &identity.client_id, &identity.subject],
+    );
+    let display_label = identity.email.as_deref().unwrap_or("ChatGPT account");
+    Ok(ConnectionMetadata {
+        connection_id: connection.into(),
+        route_id: route.into(),
+        version: Observation::reported(version.into(), source.clone()),
+        auth: Observation::reported(AuthState::Authenticated, source.clone()),
+        plan: Observation::unknown("PLAN_NOT_REPORTED_BY_SIWC"),
+        billing: Observation::reported(BillingMode::Subscription, source.clone()),
+        account: Some(Account {
+            id: account_id.clone(),
+            provider_id: "openai".into(),
+            display_label: Observation::reported(display_label.into(), source.clone()),
+            identity_source: Observation::reported(
+                "Verified SIWC ID token subject and issued client registration".into(),
+                source.clone(),
+            ),
+        }),
+        models: models::parse_models(route, &account_id, native_models, &source)?,
+        additional_routes: vec![],
+        providers: vec![],
+        quota_pools: vec![],
+        included_usage_allowed: Observation::unknown("SIWC_USAGE_PERMISSION_NOT_REPORTED"),
+        diagnostics: vec![
+            "MODEL_CATALOG_NOT_ENTITLEMENT".into(),
+            "USAGE_UNAVAILABLE".into(),
+        ],
+    })
+}

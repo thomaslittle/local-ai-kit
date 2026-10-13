@@ -13,6 +13,7 @@ pub struct Args {
     pub home: Option<PathBuf>,
     pub endpoints: Option<PathBuf>,
     pub native_profiles: Option<PathBuf>,
+    pub chatgpt_app_name: Option<String>,
     pub billing_declarations: Option<PathBuf>,
     pub allow_passive: bool,
     pub allow_codex_metadata: bool,
@@ -29,6 +30,7 @@ pub struct Args {
     pub allow_paid: bool,
     pub metadata_providers: BTreeSet<String>,
     pub execution_providers: BTreeSet<String>,
+    pub executable_only_providers: BTreeSet<String>,
 }
 fn absolute(value: OsString) -> Result<PathBuf> {
     let path = PathBuf::from(value);
@@ -69,6 +71,7 @@ impl Args {
             home: None,
             endpoints: None,
             native_profiles: None,
+            chatgpt_app_name: None,
             billing_declarations: None,
             allow_passive: false,
             allow_codex_metadata: false,
@@ -85,13 +88,19 @@ impl Args {
             allow_paid: false,
             metadata_providers: BTreeSet::new(),
             execution_providers: BTreeSet::new(),
+            executable_only_providers: BTreeSet::new(),
         };
         let mut seen = BTreeSet::new();
         let (mut json, mut stdio) = (false, false);
         while let Some(flag) = input.next() {
             let flag = flag.to_str().ok_or_else(invalid)?;
             if !seen.insert(flag.to_owned())
-                && !["--allow-metadata", "--allow-execution"].contains(&flag)
+                && ![
+                    "--allow-metadata",
+                    "--allow-execution",
+                    "--executable-only-provider",
+                ]
+                .contains(&flag)
             {
                 return Err(invalid());
             }
@@ -105,6 +114,21 @@ impl Args {
                 }
                 "--native-profiles" if matches!(args.action, Action::Serve | Action::Scan) => {
                     args.native_profiles = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--chatgpt-app-name" if matches!(args.action, Action::Serve) => {
+                    let name = input
+                        .next()
+                        .and_then(|v| v.into_string().ok())
+                        .ok_or_else(invalid)?;
+                    if name.is_empty()
+                        || name.len() > 64
+                        || !name.bytes().all(|b| {
+                            b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'-'
+                        })
+                    {
+                        return Err(invalid());
+                    }
+                    args.chatgpt_app_name = Some(name);
                 }
                 "--billing-declarations" if matches!(args.action, Action::Serve | Action::Scan) => {
                     args.billing_declarations = Some(absolute(input.next().ok_or_else(invalid)?)?)
@@ -122,6 +146,21 @@ impl Args {
                 "--allow-passive-discovery" if matches!(args.action, Action::Serve) => {
                     args.allow_passive = true
                 }
+                "--executable-only-provider"
+                    if matches!(args.action, Action::Serve | Action::Scan) =>
+                {
+                    let provider = input
+                        .next()
+                        .and_then(|v| v.into_string().ok())
+                        .ok_or_else(invalid)?;
+                    if !lai_discovery::definitions()
+                        .iter()
+                        .any(|definition| definition.id == provider)
+                    {
+                        return Err(invalid());
+                    }
+                    args.executable_only_providers.insert(provider);
+                }
                 "--allow-metadata" | "--allow-execution"
                     if matches!(args.action, Action::Serve) =>
                 {
@@ -131,6 +170,7 @@ impl Args {
                         .filter(|v| {
                             [
                                 "codex",
+                                "codex_managed",
                                 "claude_code",
                                 "ollama",
                                 "lmstudio",
@@ -140,6 +180,7 @@ impl Args {
                                 "xai_api",
                                 "compatible_api",
                                 "opencode",
+                                "muse",
                                 "gemini_cli",
                                 "antigravity",
                                 "grok",
@@ -202,6 +243,15 @@ impl Args {
         }
         if seen.contains("--allow-codex-execution") {
             args.execution_providers.insert("codex".into());
+        }
+        if !args
+            .executable_only_providers
+            .is_disjoint(&args.metadata_providers)
+            || !args
+                .executable_only_providers
+                .is_disjoint(&args.execution_providers)
+        {
+            return Err(invalid());
         }
         let native_execution = args
             .execution_providers
@@ -429,6 +479,83 @@ mod additional_provider_tests {
                 .into_iter()
                 .map(OsString::from)
             )
+            .is_err()
+        );
+    }
+    #[test]
+    fn managed_chatgpt_registration_is_opt_in_and_needs_no_native_profile_file() {
+        let parse = |args: &[&str]| Args::parse(args.iter().map(OsString::from));
+        let args = parse(&[
+            "serve",
+            "--stdio",
+            "--allow-passive-discovery",
+            "--chatgpt-app-name",
+            "crntly",
+            "--allow-metadata",
+            "codex_managed",
+        ])
+        .unwrap();
+        assert_eq!(args.chatgpt_app_name.as_deref(), Some("crntly"));
+        assert!(args.native_profiles.is_none());
+        assert!(!args.allow_execution);
+        assert!(parse(&["serve", "--stdio", "--chatgpt-app-name", "bad name"]).is_err());
+    }
+    #[test]
+    fn executable_only_provider_is_repeatable_and_rejects_unknown_or_conflicting_grants() {
+        let parse = |args: &[&str]| Args::parse(args.iter().map(OsString::from));
+        let selected = parse(&[
+            "serve",
+            "--stdio",
+            "--executable-only-provider",
+            "codex",
+            "--executable-only-provider",
+            "claude_code",
+            "--executable-only-provider",
+            "codex",
+            "--allow-metadata",
+            "codex_managed",
+        ])
+        .unwrap();
+        assert_eq!(
+            selected.executable_only_providers,
+            BTreeSet::from(["claude_code".into(), "codex".into()])
+        );
+        assert!(parse(&["scan", "--json", "--executable-only-provider", "unknown"]).is_err());
+        assert!(
+            parse(&[
+                "serve",
+                "--stdio",
+                "--executable-only-provider",
+                "codex",
+                "--allow-metadata",
+                "codex"
+            ])
+            .is_err()
+        );
+        assert!(
+            parse(&[
+                "serve",
+                "--stdio",
+                "--executable-only-provider",
+                "codex",
+                "--allow-codex-metadata"
+            ])
+            .is_err()
+        );
+        let workspace = std::env::temp_dir();
+        assert!(
+            parse(&[
+                "serve",
+                "--stdio",
+                "--executable-only-provider",
+                "codex",
+                "--allow-metadata",
+                "codex",
+                "--allow-execution",
+                "codex",
+                "--workspace",
+                workspace.to_str().unwrap()
+            ])
             .is_err()
         );
     }

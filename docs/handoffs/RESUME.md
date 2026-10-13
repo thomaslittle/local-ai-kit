@@ -1,6 +1,26 @@
 # Resume — Local AI Kit
 
-Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
+## October 13 merge into `main` and alpha.15
+
+`main` now carries every branch with unmerged product work: `feature/muse-provider` (the whole alpha.9-alpha.14 line, including `codex/chatgpt-managed-auth`), `fix/opencode-protocol-compatibility` (dormant OpenCode v2 adapter; automatic launch stays disabled) and the committed `grok-tokscale-upstream-discovery` commits up to `22f4423` (Tokscale discovery knowledge; the Muse override and profile root were carried into its `knowledge::profile_roots` design). `feat/demo-react-vite` was already in `main` as #1. The demo app's workspace pins moved off alpha.8. `verify.py --profile all` passed on Windows on the merged tree: 555 Rust tests in 102 suites, 190 Node tests, 75 Python tests, React Doctor clean. Released from merged `main` as `v0.1.0-alpha.15` (GitHub prerelease and the update server's `ai-designer/v0.1.0-alpha.15/`); the release manifest holds the source commit and asset hashes.
+
+## October 13 Muse Code adapter
+
+Branch `feature/muse-provider`, based on alpha.13 (`470dee4`), adds provider `muse` ("Muse Code"): passive discovery (PATH, `%LOCALAPPDATA%\Programs\muse`, `LOCAL_AI_KIT_MUSE_BINARY`), metadata through a read-only `muse serve` (experimental `account/read` for auth/billing, `model/list`, `usage/read`; no prompt), and sessions over MSP v1 with host-reviewed approvals, host MCP servers (optional), images, cancellation, background workflow/subagent reporting and persistent resumption. It ports T3 Code's Muse provider behaviour; see [Muse Code](../adapters/muse.md) for the permission-mode mapping, event and extension mapping, gaps and evidence. Tests replay T3's recorded transcripts and Muse 1.4.7 echo recordings; live checks used only metadata and the free echo provider. No Meta model turn was run. Released as `v0.1.0-alpha.14`; `verify.py --profile all` passed on Windows (526 Rust tests). The Claude process test's 3 s completion wait flaked under the parallel run and is now 10 s.
+
+## September 29 ChatGPT managed-auth follow-up
+
+Alpha.11 source `5612a13efc7ddcce17f5e7ff3eb80d718b4293cf` adds generic executable-only provider discovery, preserving a private runtime candidate while skipping that provider's profile roots and public routes. Alpha.12 adds direct-only Codex host MCP namespaces for code-mode models. It forces MCP prefixes, preserves already-prefixed names and refuses normalized collisions; shell/exec, code-mode host and unrelated integrations remain disabled. Windows Codex 0.159.2 managed ChatGPT and Claude Code each completed a real, read-only host-tool round trip in a separately owned native test app. Exact published source and asset hashes belong to each immutable release manifest; do not overwrite earlier release files.
+
+The owner-authorized auth work is on `codex/chatgpt-managed-auth`, based on alpha.8. Alpha.9 source is `bdefd56107096298cca0ceec799a68f58fb82f34`; its published assets are immutable. The alpha.10 follow-up fixes the generic turn contract: prompts accept up to 512 KiB of UTF-8 text, with serialized turn params limited separately to 1 MiB minus 8 KiB. Other RPC methods keep their 64 KiB bound, and provider frame guards remain enforced. Tests prove a 130,000-byte prompt reaches a fixture agent unchanged, exercise both bounds and escaping, and cover a 118-tool host allowlist. Two host-specific branding strings now use generic profile wording and the caller's application name.
+
+A separately owned headless alpha.9 managed session completed a real-account read-only Sol turn with exactly `AUTH_OK`; its helper was terminated. A production-built synthetic Current Scene prompt exceeded alpha.9's 64 KiB cap and was rejected before execution. Alpha.10 publication and qualification are recorded by the final release manifest and notes; do not infer them from earlier fixtures. No other agent's dev app was used or stopped for these checks.
+
+The earlier ledger below covers `feature/initial-implementation`. This line was merged into `main` on October 13 (see above). Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
+
+## Tokscale discovery knowledge
+
+From `grok-tokscale-upstream-discovery` (merged into `main`). Tokscale commit `1d9a9395418efc6952944b794097935d7d6fa1e8` is a pinned knowledge source, not a runtime dependency. The daily watcher opens a review pull request and does not merge or change production discovery by itself. See [docs/upstream/tokscale.md](../upstream/tokscale.md).
 
 The live playground grants text execution for every provider with a registered execution adapter, including explicit API routes, in an isolated temporary workspace. Native ACP profile adapters join when `LAI_NATIVE_PROFILES` is set. Each turn requires the browser consent checkbox and Run click; the helper leaves paid billing options and file writes disabled. The Playground selects provider and route/model directly from the live catalog. No inference was sent during this follow-up.
 
@@ -75,3 +95,20 @@ The worktree resumed from local/remote `d1705fd92a2d19b38bf8bf1134ee2c543c7ce82b
 Implementation source `702d98d7cb77ba788f09ce5e890149fef8908ac2` passed Windows `verify.py --profile all`, strict format/Clippy, and `verify.py --profile release`. The clean Windows distribution, package smoke, and performance evidence are recorded in `docs/qualification/RELEASE-CANDIDATE.md`. It was pushed to `origin/feature/initial-implementation`; `main` was not changed.
 
 Linux WSL2 executed the full Rust test workspace and the deterministic SDK/integration suites up to Playwright demo tests. Chromium cache cleanup then failed with EIO and the WSL distro stopped launching; no current-source Linux package was built. GitHub Actions run `36140653176` failed before any steps appeared on Windows, Ubuntu, or macOS, and logs are unavailable. macOS remains unexecuted/unqualified. The exact current evidence and limits are in the release-candidate report.
+
+## October 5 OpenCode protocol compatibility checkpoint
+
+Audit against T3 Code `ca952677321abf9f3762ae4bb0129454e5a63955`
+(`opencodeVersionProbe.ts`, `Drivers/OpenCodeDriver.ts`, MIT) found that
+OpenCode 2 uses a separate launch/auth/HTTP/event contract. This kit checkpoint
+still implements the OpenCode 1.x protocol. Before starting an owned server,
+`opencode --version` is read with a four-second bounded metadata capture.
+Unknown or unsupported generations fail with `PROTOCOL_INCOMPATIBLE` before
+legacy `serve --pure` flags or HTTP routes are used. No installed client is
+upgraded, downgraded, reconfigured, or used for inference by this check.
+
+A synthetic executable reproduced the old incorrect legacy launch and now
+verifies that a reported v2 executable never starts that server. Existing
+fake gateway catalog and loopback reply tests remain green. Full OpenCode 2
+communication is a separate adapter follow-up; this guard does not claim
+that support. No upstream implementation was copied for this checkpoint.

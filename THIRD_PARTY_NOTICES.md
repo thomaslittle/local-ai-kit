@@ -1,12 +1,14 @@
 # Third-party notices and reuse ledger
 
-## Bootstrap status
+## Scope
 
-This repository currently contains original planning and project-guidance documents. No implementation code, provider logos, screenshots, model weights, or runtime binaries have been copied from reference repositories into this bootstrap.
+This file records third-party references and notices relevant to this project. It is not a complete inventory of every dependency; release artifacts include a generated dependency inventory and license materials as described below.
 
-The research references T3 Code, CodeNotch, CodeNotch cross-platform, and Prmptr. Reference is not a claim of affiliation, endorsement, inherited security guarantees, or blanket rights to use vendor services.
+The ChatGPT managed-auth integration is original Rust integration code in this repository. Its design used the OpenAI documentation linked from [the ChatGPT managed-auth guide](docs/integration/chatgpt-managed-auth.md). T3 Code's [pull request 14290](https://github.com/pingdotgg/t3code/pull/14290) was consulted as a reference only; no code from that pull request was copied.
 
-## Reference projects
+Reference does not imply affiliation, endorsement, inherited security guarantees, or blanket rights to use vendor services. Provider names are used for identification. Logos and trademarks are not granted by this repository's license. Provider authentication, subscription access, and endpoint use remain separate integration-policy questions.
+
+## Other reference projects
 
 | Project | Source | Intended reference |
 | --- | --- | --- |
@@ -16,11 +18,67 @@ The research references T3 Code, CodeNotch, CodeNotch cross-platform, and Prmptr
 | CodeNotch | https://github.com/vinzdg/codenotch | Broader provider/platform discovery. |
 | Prmptr | https://github.com/thomaslittle/prmptr | Vertical provider rail and grouped model selection. |
 
-See [SOURCE-AUDIT.md](SOURCE-AUDIT.md) for the previously inspected revisions and exact paths. Before porting each module, verify the license at the exact source revision and preserve required copyright and license text.
+See [SOURCE-AUDIT.md](SOURCE-AUDIT.md) for previously inspected revisions and exact paths. For any future reuse, verify the license at the exact source revision and preserve required copyright and license text.
 
-## Required ledger for every future reuse
+## Tokscale discovery knowledge
 
-Record the source URL, exact commit/blob, original path, copied or adapted symbols, destination path, license/SPDX identifier, copyright holder, retained notices, modifications, and applicable asset/model/dependency conditions. Add the required license text under a dedicated licenses directory when applicable. Do not mark this ledger complete merely because the root repository is MIT-licensed.
+| Field | Value |
+| --- | --- |
+| Project | Tokscale |
+| Source | https://github.com/junhoyeo/tokscale |
+| Pinned commit | `1d9a9395418efc6952944b794097935d7d6fa1e8` |
+| Release noted at pin time | `v4.17.0` (`dcf8d3656bbcecf05d112c6f35f9be328e4f66b7`) |
+| Upstream paths reviewed | `crates/tokscale-core/src/clients.rs`, `paths.rs`, `scanner.rs`, `cc_mirror.rs`, `sessions/` |
+| License | MIT |
+| Copyright | Copyright (c) 2025 Junho Yeo |
+| License text | [licenses/tokscale-MIT.txt](licenses/tokscale-MIT.txt) |
+| Destination | `crates/lai-discovery` path rules; `upstream/tokscale/snapshot.json` factual extract |
+| What was reused | Discovery locations, environment-variable names, and Windows/XDG path behavior. Reimplemented. No Tokscale source file is copied into the build. |
+| What was not reused | Pricing, token aggregation, dashboards, submission infrastructure, leaderboards, and TUI code. |
+| Modifications | Normalized into Local AI Kit profile roots and `EvidenceSource` provenance. Tokscale is not authoritative when an official client or a local qualification disagrees. |
+| Endorsement | None. Tokscale does not endorse Local AI Kit. |
+
+See [upstream/tokscale/NOTICE.md](upstream/tokscale/NOTICE.md).
+
+## Muse Code adapter (T3 Code port)
+
+The Muse Code adapter (`crates/lai-adapters/src/muse/`) ports the behaviour of T3 Code's Muse provider to Rust. No TypeScript was copied; the protocol subset, approval-choice mapping, launcher handling, item presentation (web search hits, workflow children, subagents) and documented limits follow it. Recorded protocol transcripts were copied unchanged.
+
+| Field | Value |
+| --- | --- |
+| Source | https://github.com/pingdotgg/t3code at `e9221e44dadd78126c83d2eeed0b51c25dcf0fb4` |
+| Referenced paths | `packages/provider-muse/src/server/{adapter,sdk,protocol,modelCatalog,status,itemPresentation,textGeneration}.ts`, `docs/user/providers-muse.md` |
+| Copied files | `apps/server/src/orchestration-v2/testkit/fixtures/{simple,multi_turn,turn_interrupt,muse_permission,muse_workflow,subagent_v2,muse_subagent_approval,muse_subagent_interrupt}/muse_transcript.ndjson` → `crates/lai-adapters/tests/fixtures/muse/t3/*.ndjson` (renamed, contents unchanged) |
+| License | MIT |
+| Copyright | Copyright (c) 2026 T3 Tools Inc. |
+
+T3 Code's MIT license text, which must accompany the copied transcripts:
+
+```text
+MIT License
+
+Copyright (c) 2026 T3 Tools Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+Muse Code itself is not redistributed. Its MSP schema was read from the installed binary (`muse schema generate-json-schema`, 1.4.7-R6101.1) to check wire shapes; the `echo_*` transcripts were recorded locally from that binary's free echo provider. No new Cargo dependency was added.
 
 ## Reuse ledger
 
@@ -59,4 +117,31 @@ Record the source URL, exact commit/blob, original path, copied or adapted symbo
 - Destination: `apps/demo/src/assets/providers/local.svg`.
 - Modifications: removed the `@license` comment, `class`, `width` and `height` attributes; `viewBox` and geometry unchanged.
 
-Provider names are used for identification. Logos and trademarks are not granted by this repository's license. Provider authentication, subscription access, and endpoint use remain separate integration-policy questions.
+## New Cargo dependencies in the ChatGPT managed-auth change
+
+The following registry packages and versions were added to `Cargo.lock` in the managed-auth change. The SPDX expressions below are taken from each package's Cargo manifest metadata.
+
+| Package | Version | SPDX license expression |
+| --- | --- | --- |
+| `byteorder` | `1.5.0` | `Unlicense OR MIT` |
+| `deranged` | `0.5.8` | `MIT OR Apache-2.0` |
+| `fs4` | `0.13.1` | `MIT OR Apache-2.0` |
+| `jsonwebtoken` | `9.3.1` | `MIT` |
+| `keyring` | `3.6.3` | `MIT OR Apache-2.0` |
+| `num-conv` | `0.2.2` | `MIT OR Apache-2.0` |
+| `pem` | `3.0.6` | `MIT` |
+| `powerfmt` | `0.2.0` | `MIT OR Apache-2.0` |
+| `simple_asn1` | `0.6.4` | `ISC` |
+| `time` | `0.3.55` | `MIT OR Apache-2.0` |
+| `time-core` | `0.1.9` | `MIT OR Apache-2.0` |
+| `time-macros` | `0.2.32` | `MIT OR Apache-2.0` |
+| `uuid` | `1.26.1` | `Apache-2.0 OR MIT` |
+| `windows-sys` | `0.59.0` | `MIT OR Apache-2.0` |
+
+## Release artifact license materials
+
+Standalone Windows helper releases include a generated Cargo dependency license appendix with the helper's `THIRD_PARTY_NOTICES.md`, and a CycloneDX SBOM. The full SDK bundle also carries per-crate license files under `licenses/`, alongside its SBOM. These materials inventory the dependencies represented by that build; they do not certify legal compliance or cover unrelated code provenance.
+
+## Required ledger for future reuse
+
+Record the source URL, exact commit/blob, original path, copied or adapted symbols, destination path, license/SPDX identifier, copyright holder, retained notices, modifications, and applicable asset/model/dependency conditions. Add required license text under the release's dependency license materials when applicable. Do not mark the ledger complete merely because the root repository is MIT-licensed.

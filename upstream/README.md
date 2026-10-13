@@ -1,0 +1,31 @@
+# Upstream discovery knowledge
+
+Local AI Kit discovers AI access that is already configured on a machine. Other open-source projects have accumulated real path, environment, and migration knowledge for those same clients. This directory records that knowledge as pinned, reviewed inputs.
+
+```text
+upstream knowledge sources
+        │
+        ├── Tokscale
+        ├── OpenUsage        (planned)
+        ├── AgentManager     (planned)
+        └── official client repositories
+                │
+                ▼
+       normalized discovery knowledge
+                │
+                ▼
+        Local AI Kit adapters
+```
+
+Released builds do not clone, download, or execute an upstream project, and they do not follow an upstream `main` branch. A source is useful only after its discovery-relevant changes have been normalized, tested, and given provenance.
+
+The manifest of sources is [sources.json](sources.json). Tokscale is the first pinned source; see [tokscale/NOTICE.md](tokscale/NOTICE.md) and [the upstream guide](../docs/upstream/tokscale.md).
+
+Authority, when sources disagree:
+
+1. Official client implementation or protocol.
+2. Direct Local AI Kit qualification.
+3. Well-tested upstream open-source evidence.
+4. Convention or inference.
+
+A legacy fallback can still be kept when a higher-authority source simply does not mention it. Upstream evidence never becomes unquestioned truth.

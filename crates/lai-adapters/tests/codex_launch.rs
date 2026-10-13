@@ -1,4 +1,45 @@
-use lai_adapters::codex::resolve_executable;
+use lai_adapters::codex::{managed_launch_spec, resolve_executable};
+
+#[test]
+fn managed_codex_launch_isolated_and_uses_responses_provider() {
+    let temp = tempfile::tempdir().unwrap();
+    let executable = temp
+        .path()
+        .join(if cfg!(windows) { "codex.exe" } else { "codex" });
+    std::fs::write(&executable, []).unwrap();
+    let home = temp.path().join("managed-home");
+    let spec =
+        managed_launch_spec(&executable, &home, temp.path(), "SENTINEL_ACCESS_TOKEN").unwrap();
+    assert_eq!(
+        spec.env.get(std::ffi::OsStr::new("CODEX_HOME")).unwrap(),
+        home.as_os_str()
+    );
+    assert_eq!(
+        spec.env.get(std::ffi::OsStr::new("ACCESS_TOKEN")).unwrap(),
+        "SENTINEL_ACCESS_TOKEN"
+    );
+    assert!(
+        !spec
+            .env
+            .contains_key(std::ffi::OsStr::new("OPENAI_API_KEY"))
+    );
+    let args = spec
+        .args
+        .iter()
+        .map(|a| a.to_string_lossy().to_string())
+        .collect::<Vec<_>>();
+    assert!(args.windows(2).any(|w| w == ["--listen", "stdio://"]));
+    for value in [
+        "model_provider=\"openai_chatgpt_plan\"",
+        "model_providers.openai_chatgpt_plan.base_url=\"https://api.openai.com/v1\"",
+        "model_providers.openai_chatgpt_plan.env_key=\"ACCESS_TOKEN\"",
+        "model_providers.openai_chatgpt_plan.wire_api=\"responses\"",
+        "model_providers.openai_chatgpt_plan.requires_openai_auth=false",
+        "model_providers.openai_chatgpt_plan.supports_websockets=false",
+    ] {
+        assert!(args.iter().any(|arg| arg == value), "missing {value}");
+    }
+}
 #[test]
 fn direct_native_executable_is_preserved() {
     let temp = tempfile::tempdir().unwrap();

@@ -67,6 +67,7 @@ struct SessionContext {
     review_requests: bool,
     allow_paid: bool,
     connection_id: String,
+    provider_id: String,
     account_id: Option<String>,
     route_id: String,
     host_mcp_servers: Vec<HostMcpServer>,
@@ -417,6 +418,14 @@ impl NativeService {
             .iter()
             .find(|connection| connection.id == route.connection_id)
             .ok_or_else(denied)?;
+        // Only managed Codex startup participates in ChatGPT sign-out. Hold
+        // this lease through native peer opening and session publication.
+        let _managed_lifecycle =
+            if self.chatgpt_auth.is_some() && connection.provider_id == "codex_managed" {
+                Some(self.chatgpt_lifecycle.lock().await)
+            } else {
+                None
+            };
         if !grant.allows(connection)
             || !(self
                 .execution_state
@@ -601,6 +610,7 @@ impl NativeService {
                 review_requests: request.review_requests,
                 allow_paid: request.allow_paid,
                 connection_id: connection.id.clone(),
+                provider_id: connection.provider_id.clone(),
                 account_id: connection.account_id.clone(),
                 route_id: route.id.clone(),
                 host_mcp_servers: request.host_mcp_servers.clone(),
@@ -930,6 +940,20 @@ impl NativeService {
             }
             "turns.start" => {
                 let request: Start = decode(p)?;
+                let managed = self
+                    .execution_state
+                    .session_context
+                    .read()
+                    .map_err(|_| denied())?
+                    .get(&request.session_id)
+                    .is_some_and(|context| {
+                        context.owner == client && context.provider_id == "codex_managed"
+                    });
+                let _managed_lifecycle = if managed && self.chatgpt_auth.is_some() {
+                    Some(self.chatgpt_lifecycle.lock().await)
+                } else {
+                    None
+                };
                 let session = self.check_session(client, &request.session_id)?;
                 let snapshot = self.projected(client)?;
                 let model = validate_selection(
@@ -1128,6 +1152,70 @@ impl NativeService {
     pub fn revoke_execution(&self, client: &str) {
         self.execution_state.revoke(client);
     }
+
+    /// Sign-out ends managed Codex sessions without disturbing native Codex
+    /// or another provider owned by the same application connection.
+    pub(crate) async fn close_managed_sessions(&self) -> Result<()> {
+        let sessions: Vec<(String, String)> = self
+            .execution_state
+            .session_context
+            .read()
+            .map_err(|_| denied())?
+            .iter()
+            .filter(|(_, context)| context.provider_id == "codex_managed")
+            .map(|(id, context)| (context.owner.clone(), id.clone()))
+            .collect();
+        let mut closes = tokio::task::JoinSet::new();
+        for (owner, id) in sessions {
+            let runtime = self.execution_state.runtime.clone();
+            closes.spawn(async move {
+                let result = runtime.close(&owner, &id).await;
+                (owner, id, result)
+            });
+        }
+        let mut incomplete = false;
+        while let Some(closed) = closes.join_next().await {
+            let (owner, id, result) = match closed {
+                Ok(closed) => closed,
+                Err(_) => {
+                    incomplete = true;
+                    continue;
+                }
+            };
+            if !matches!(
+                result,
+                Ok(_)
+                    | Err(DomainError {
+                        code: ErrorCode::NotFound,
+                        ..
+                    })
+            ) {
+                incomplete = true;
+                continue; // Retain the context so a later disconnect can retry.
+            }
+            self.execution_state
+                .session_context
+                .write()
+                .map_err(|_| denied())?
+                .remove(&id);
+            self.execution_state
+                .session_billing
+                .write()
+                .map_err(|_| denied())?
+                .remove(&id);
+            self.execution_state.clear_session_inputs(&owner, &id);
+        }
+        if let Ok(mut resumptions) = self.execution_state.resumptions.write() {
+            resumptions.retain(|_, record| record.context.provider_id != "codex_managed");
+        }
+        if incomplete {
+            return Err(DomainError::new(
+                ErrorCode::ProviderUnavailable,
+                "Managed sessions could not all be closed",
+            ));
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -1153,6 +1241,7 @@ mod lifecycle_tests {
                 review_requests: false,
                 allow_paid: false,
                 connection_id: "c".into(),
+                provider_id: "codex".into(),
                 account_id: None,
                 route_id: "r".into(),
                 host_mcp_servers: vec![],

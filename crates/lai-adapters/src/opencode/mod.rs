@@ -1,6 +1,9 @@
 //! OpenCode gateway integration; only allowlisted metadata crosses the adapter boundary.
+pub mod catalog_v2;
 pub mod client;
+pub mod client_v2;
 pub mod server;
+mod version;
 use lai_contracts::*;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};

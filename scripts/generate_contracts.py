@@ -226,7 +226,7 @@ def client_stub(schema):
     families = {}
     for method in sorted(inputs):
         family, name = method.split('.', 1)
-        if family == 'events' or method == 'runtime.handshake':
+        if family in ('events', 'auth') or method == 'runtime.handshake':
             continue
         families.setdefault(family, []).append((name, typename(inputs[method]), typename(outputs[method])))
     lines = ['# ' + BANNER, 'from typing import Any, AsyncIterator, Iterator, List',
@@ -234,6 +234,16 @@ def client_stub(schema):
     for prefix, asynchronous in [('Async', True), ('Sync', False)]:
         lines.append(f'class _{prefix}Events:')
         lines.append(f'    def subscribe(self, query: EventsParams | None = ...) -> {"AsyncIterator" if asynchronous else "Iterator"}[Event]: ...')
+        lines.append('')
+        lines.append(f'class _{prefix}Chatgpt:')
+        lines.append(f'    {"async " if asynchronous else ""}def status(self, params: EmptyParams | None = ..., **options: Any) -> ChatgptAuthStatus: ...')
+        lines.append(f'    {"async " if asynchronous else ""}def start(self, params: EmptyParams | None = ..., **options: Any) -> ChatgptAuthStart: ...')
+        lines.append(f'    {"async " if asynchronous else ""}def cancel(self, params: ChatgptCancelParams, **options: Any) -> Any: ...')
+        lines.append(f'    {"async " if asynchronous else ""}def disconnect(self, params: EmptyParams | None = ..., **options: Any) -> Any: ...')
+        lines.append('')
+        lines.append(f'class _{prefix}Auth:')
+        lines.append('    @property')
+        lines.append(f'    def chatgpt(self) -> _{prefix}Chatgpt: ...')
         lines.append('')
         for family, methods in families.items():
             lines.append(f'class _{prefix}{family.title()}:')
@@ -245,6 +255,7 @@ def client_stub(schema):
         lines.append(f'class {name}:')
         lines.append('    handshake: dict[str, Any]')
         lines.extend(['    @property', f'    def events(self) -> _{prefix}Events: ...'])
+        lines.extend(['    @property', f'    def auth(self) -> _{prefix}Auth: ...'])
         if asynchronous:
             lines.extend(['    @classmethod', '    async def connect(cls, transport: Any) -> AsyncClient: ...'])
         else:

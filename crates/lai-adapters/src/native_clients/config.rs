@@ -66,6 +66,83 @@ pub(crate) fn local_path(path: &Path) -> bool {
         && !text.starts_with(r"\")
         && !text.chars().any(char::is_control)
 }
+
+/// Add one host-managed ChatGPT-plan Codex route from a discovered executable.
+/// This is passive: no profile files, credentials, or accounts are read. The
+/// managed CODEX_HOME is separate from every discovered user's Codex home.
+pub fn inject_managed_codex(scan: &mut ScanResult, state_dir: &Path) {
+    if !local_path(state_dir)
+        || scan
+            .snapshot
+            .connections
+            .iter()
+            .any(|c| c.provider_id == "codex_managed")
+    {
+        return;
+    }
+    let executable = scan
+        .locations
+        .values()
+        .filter(|located| located.provider_id == "codex")
+        .filter_map(|located| located.executable.as_deref())
+        .filter_map(|path| crate::codex::resolve_executable(path).ok())
+        .min();
+    let Some(executable) = executable else { return };
+    let home = state_dir.join("chatgpt-codex-home");
+    let connection = stable_id(
+        "managed-codex-connection",
+        &[&state_dir.to_string_lossy(), &executable.to_string_lossy()],
+    );
+    let installation = stable_id("managed-codex-installation", &[&connection]);
+    let profile = stable_id("managed-codex-profile", &[&connection]);
+    let route = stable_id("route", &[&connection]);
+    scan.snapshot.providers.push(Provider {
+        id: "codex_managed".into(),
+        name: "ChatGPT plan (Codex)".into(),
+        kind: "managed_client".into(),
+    });
+    scan.snapshot.installations.push(Installation {
+        id: installation.clone(),
+        provider_id: "codex_managed".into(),
+        environment_id: "host-managed-chatgpt".into(),
+        location_hint: "Host-managed Codex executable; not launched".into(),
+        version: Observation::unknown("VERSION_NOT_PROBED"),
+    });
+    scan.snapshot.profiles.push(Profile {
+        id: profile.clone(),
+        installation_id: installation.clone(),
+        label: "Host-managed ChatGPT plan".into(),
+    });
+    scan.snapshot.connections.push(Connection {
+        id: connection.clone(),
+        provider_id: "codex_managed".into(),
+        installation_id: installation,
+        profile_id: profile,
+        display_name: "ChatGPT plan (Codex)".into(),
+        account_id: None,
+        auth: Observation::unknown("AUTH_NOT_CHECKED_PASSIVE_SCAN"),
+        plan: Observation::unknown("PLAN_NOT_REPORTED"),
+        status: "configured".into(),
+        diagnostics: vec!["HOST_MANAGED_CHATGPT_PROFILE".into()],
+    });
+    scan.snapshot.routes.push(AccessRoute {
+        id: route,
+        connection_id: connection.clone(),
+        provider_id: "codex_managed".into(),
+        display_name: "ChatGPT plan (Codex)".into(),
+        billing: Observation::unknown("NOT_PROBED"),
+        capabilities: vec![],
+        catalog_revision: "unprobed".into(),
+    });
+    scan.locations.insert(
+        connection,
+        LocatedClient {
+            provider_id: "codex_managed".into(),
+            profile_home: home,
+            executable: Some(executable),
+        },
+    );
+}
 fn identifier(s: &str) -> bool {
     !s.is_empty()
         && s.len() <= 128

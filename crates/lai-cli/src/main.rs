@@ -15,7 +15,7 @@ const HELP: &str = "Local AI Kit - native discovery and SDK helper
 Usage:
   local-ai-kit serve --ipc LOCAL_ADDRESS [--allow-passive-discovery]
   local-ai-kit connect --ipc LOCAL_ADDRESS
-  local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY]
+  local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
   local-ai-kit serve --http --port 4499 --assets ABSOLUTE_DIST_DIRECTORY
       [--allow-passive-discovery] [--allow-codex-metadata]
@@ -23,9 +23,11 @@ Usage:
       [--allow-writes] [--review-native-requests] [--allow-paid-options]
       [--warm-metadata] [--no-metadata-cache]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
-  Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
+  --executable-only-provider PROVIDER may repeat for known discovery providers; retains private executable candidates without publishing their profiles or routes.
+  Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode, muse.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
   --native-profiles ABSOLUTE_JSON explicitly registers Gemini CLI, Antigravity ACP, or Grok native profiles; the file contains paths/labels, never tokens.
+  --chatgpt-app-name NAME opts in a separate managed Codex profile and SIWC auth RPCs; grant --allow-metadata codex_managed to use them.
   --billing-declarations ABSOLUTE_JSON declares billing for discovered connections whose provider leaves it unknown; recorded as user-supplied evidence, never verification.
   local-ai-kit --version
 
@@ -96,28 +98,56 @@ async fn execute(args: Args) -> Result<()> {
         return broker_cli::connect(args.ipc.as_deref().unwrap()).await;
     }
     let registry = Arc::new(endpoints::load(args.endpoints.as_deref())?);
+    let state_dir = host::default_state_dir(args.home.as_deref());
+    let chatgpt = args
+        .chatgpt_app_name
+        .clone()
+        .map(|name| {
+            let root = state_dir.as_ref().ok_or_else(|| {
+                DomainError::new(
+                    ErrorCode::LocalAccessDenied,
+                    "Managed ChatGPT state directory is unavailable",
+                )
+            })?;
+            let manager =
+                lai_chatgpt_auth::AuthManager::new(root.join("chatgpt-auth"), name.clone())
+                    .map_err(|_| {
+                        DomainError::new(
+                            ErrorCode::ProviderUnavailable,
+                            "Managed ChatGPT state is unavailable",
+                        )
+                    })?;
+            Ok::<_, DomainError>((Arc::new(manager), name))
+        })
+        .transpose()?;
     let mut native = native_profiles::load(args.native_profiles.as_deref())?;
+    host::validate_executable_only_sources(&args, &registry, &native)?;
     native.browser_blocker = native_profiles::packaged_browser_blocker();
     let native = Arc::new(native);
     let declarations = Arc::new(native_profiles::load_declarations(
         args.billing_declarations.as_deref(),
     )?);
-    let original = source(args.home.clone());
+    let original = source(args.home.clone(), args.executable_only_providers.clone());
     let scan_registry = registry.clone();
     let scan_native = native.clone();
+    let managed_root = chatgpt.as_ref().and(state_dir.as_ref()).cloned();
     let inventory: InventorySource = Arc::new(move |cancel| {
         let mut result = original(cancel)?;
         scan_registry.inject(&mut result);
         scan_native.inject(&mut result);
+        if let Some(root) = &managed_root {
+            lai_adapters::native_clients::config::inject_managed_codex(&mut result, root);
+        }
         Ok(result)
     });
-    let service = host::build_service_with_state(
+    let service = lai_kit::build_service_with_chatgpt(
         inventory,
         args.allow_execution,
         registry,
         native,
         declarations,
-        host::default_state_dir(args.home.as_deref()),
+        state_dir,
+        chatgpt,
     );
     if matches!(args.action, Action::Serve)
         && !args.metadata_providers.is_empty()
