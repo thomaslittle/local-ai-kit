@@ -348,6 +348,54 @@ impl Endpoint {
             Err(error(ErrorCode::ProviderUnavailable))
         }
     }
+    /// Opt-in idempotent deletion for an adapter's already-owned resource.
+    /// A 404 is successful only with authentication, bounded JSON, and an
+    /// adapter-verified absence confirmation for that exact resource.
+    pub(crate) async fn delete_with_confirmed_absence(
+        &self,
+        path: &str,
+        query: &[(&str, &str)],
+        confirm_missing: impl FnOnce(&Value) -> bool + Send,
+    ) -> Result<()> {
+        let mut response = self
+            .client
+            .delete(self.query_url(path, query)?)
+            .headers(self.headers.clone())
+            .timeout(Duration::from_secs(5))
+            .send()
+            .await
+            .map_err(network)?;
+        if response.status().is_success() {
+            return Ok(());
+        }
+        let json_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.split(';').next())
+            .is_some_and(|value| value.trim().eq_ignore_ascii_case("application/json"));
+        if response.status() != reqwest::StatusCode::NOT_FOUND
+            || !self.headers.contains_key(AUTHORIZATION)
+            || !json_type
+        {
+            return Err(error(ErrorCode::ProviderUnavailable));
+        }
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response.chunk().await.map_err(network)? {
+            if bytes.len() + chunk.len() > 8192 {
+                return Err(error(ErrorCode::FrameTooLarge));
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        let body = serde_json::from_slice::<Value>(&bytes)
+            .map_err(|_| error(ErrorCode::ProviderUnavailable))?;
+        if confirm_missing(&body) {
+            Ok(())
+        } else {
+            Err(error(ErrorCode::ProviderUnavailable))
+        }
+    }
+
     pub async fn json(&self, path: &str, body: Option<Value>) -> Result<Value> {
         self.json_query(path, &[], body).await
     }

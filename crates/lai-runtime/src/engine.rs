@@ -31,6 +31,8 @@ pub(crate) struct Cell {
     pub agent: AsyncMutex<Option<Box<dyn Agent>>>,
     pub guard: Guard,
     pub active: AtomicBool,
+    /// Closed/unusable does not imply that remote cleanup completed.
+    cleanup_pending: AtomicBool,
     pub approvals: Mutex<BTreeMap<String, Pending>>,
     pub journal: Arc<Mutex<Journal>>,
     pub artifacts: Arc<Mutex<crate::artifact::ArtifactStore>>,
@@ -163,7 +165,10 @@ impl Runtime {
         sessions.retain(|_, cell| {
             cell.state
                 .lock()
-                .map(|s| s.view.state != SessionState::Closed)
+                .map(|s| {
+                    s.view.state != SessionState::Closed
+                        || cell.cleanup_pending.load(Ordering::Acquire)
+                })
                 .unwrap_or(true)
         });
         if sessions.len() >= 64 || sessions.values().filter(|s| s.owner == owner).count() >= 16 {
@@ -200,6 +205,7 @@ impl Runtime {
                 agent: AsyncMutex::new(Some(agent)),
                 guard,
                 active: AtomicBool::new(true),
+                cleanup_pending: AtomicBool::new(false),
                 approvals: Mutex::new(BTreeMap::new()),
                 journal,
                 artifacts: self.artifacts.clone(),
@@ -422,6 +428,7 @@ impl Runtime {
     }
     pub async fn close(&self, owner: &str, session: &str) -> Result<Value> {
         let cell = self.cell(owner, session)?;
+        cell.cleanup_pending.store(true, Ordering::Release);
         {
             let mut state = cell
                 .state
@@ -444,9 +451,8 @@ impl Runtime {
         let mut agent = tokio::time::timeout(Duration::from_secs(5), cell.agent.lock())
             .await
             .map_err(|_| err(ErrorCode::Timeout))?;
-        if let Some(mut driver) = agent.take() {
-            let _ = tokio::time::timeout(Duration::from_secs(2), driver.close()).await;
-        }
+        close_driver(&mut agent).await?;
+        cell.cleanup_pending.store(false, Ordering::Release);
         Ok(json!({"closed":true}))
     }
     pub fn approve(&self, owner: &str, approval: &str, allow: bool) -> Result<Value> {
@@ -531,6 +537,17 @@ impl Runtime {
         }
     }
 }
+/// Retain the adapter on failed or dropped cleanup, so a later close can retry.
+async fn close_driver(agent: &mut Option<Box<dyn Agent>>) -> Result<()> {
+    if let Some(driver) = agent.as_mut() {
+        tokio::time::timeout(Duration::from_secs(2), driver.close())
+            .await
+            .map_err(|_| err(ErrorCode::Timeout))??;
+        *agent = None;
+    }
+    Ok(())
+}
+
 async fn run(
     cell: Arc<Cell>,
     turn: String,
@@ -577,8 +594,10 @@ async fn run(
         Ok(())
     });
     if result.is_err() {
-        if let Some(mut driver) = agent.take() {
-            let _ = tokio::time::timeout(Duration::from_secs(2), driver.close()).await;
+        cell.cleanup_pending
+            .store(agent.is_some(), Ordering::Release);
+        if close_driver(&mut agent).await.is_ok() {
+            cell.cleanup_pending.store(false, Ordering::Release);
         }
     }
     if let Ok(mut approvals) = cell.approvals.lock() {
@@ -635,7 +654,7 @@ async fn run(
             .into(),
         },
     );
-    record.usable = result.is_ok();
+    record.usable = result.is_ok() && record.view.state != SessionState::Closed;
     record.cancel = None;
     record.turn = None;
     if record.view.state != SessionState::Closed {
