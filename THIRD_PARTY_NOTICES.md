@@ -20,6 +20,26 @@ Reference does not imply affiliation, endorsement, inherited security guarantees
 
 See [SOURCE-AUDIT.md](SOURCE-AUDIT.md) for previously inspected revisions and exact paths. For any future reuse, verify the license at the exact source revision and preserve required copyright and license text.
 
+## Tokscale discovery knowledge
+
+| Field | Value |
+| --- | --- |
+| Project | Tokscale |
+| Source | https://github.com/junhoyeo/tokscale |
+| Pinned commit | `1d9a9395418efc6952944b794097935d7d6fa1e8` |
+| Release noted at pin time | `v4.17.0` (`dcf8d3656bbcecf05d112c6f35f9be328e4f66b7`) |
+| Upstream paths reviewed | `crates/tokscale-core/src/clients.rs`, `paths.rs`, `scanner.rs`, `cc_mirror.rs`, `sessions/` |
+| License | MIT |
+| Copyright | Copyright (c) 2025 Junho Yeo |
+| License text | [licenses/tokscale-MIT.txt](licenses/tokscale-MIT.txt) |
+| Destination | `crates/lai-discovery` path rules; `upstream/tokscale/snapshot.json` factual extract |
+| What was reused | Discovery locations, environment-variable names, and Windows/XDG path behavior. Reimplemented. No Tokscale source file is copied into the build. |
+| What was not reused | Pricing, token aggregation, dashboards, submission infrastructure, leaderboards, and TUI code. |
+| Modifications | Normalized into Local AI Kit profile roots and `EvidenceSource` provenance. Tokscale is not authoritative when an official client or a local qualification disagrees. |
+| Endorsement | None. Tokscale does not endorse Local AI Kit. |
+
+See [upstream/tokscale/NOTICE.md](upstream/tokscale/NOTICE.md).
+
 ## Muse Code adapter (T3 Code port)
 
 The Muse Code adapter (`crates/lai-adapters/src/muse/`) ports the behaviour of T3 Code's Muse provider to Rust. No TypeScript was copied; the protocol subset, approval-choice mapping, launcher handling, item presentation (web search hits, workflow children, subagents) and documented limits follow it. Recorded protocol transcripts were copied unchanged.

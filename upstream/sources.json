@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "description": "Upstream discovery-knowledge sources. Local AI Kit normalizes adopted rules into its own adapters. Released builds do not download or execute these projects.",
+  "sources": [
+    {
+      "id": "tokscale",
+      "status": "pinned",
+      "kind": "oss-discovery",
+      "repository": "junhoyeo/tokscale",
+      "license": "MIT",
+      "lock": "upstream/tokscale/lock.json",
+      "consumes": [
+        "client config and session locations",
+        "environment-variable overrides",
+        "platform path edge cases"
+      ],
+      "doesNotConsume": [
+        "pricing",
+        "token aggregation",
+        "dashboards",
+        "submission and leaderboard infrastructure",
+        "TUI"
+      ]
+    },
+    {
+      "id": "openusage",
+      "status": "planned",
+      "kind": "oss-discovery",
+      "repository": null,
+      "note": "Add a lock, snapshot, and mapping beside Tokscale. Do not special-case the sync tool around one project."
+    },
+    {
+      "id": "agentmanager",
+      "status": "planned",
+      "kind": "oss-discovery",
+      "repository": null,
+      "note": "Same manifest shape as Tokscale. Official client repositories can use kind official-client when a path rule should outrank OSS evidence."
+    }
+  ]
+}

@@ -61,6 +61,12 @@ pub fn definitions() -> &'static [ProviderDefinition] {
             profile_prefix: None,
         },
         ProviderDefinition {
+            id: "github_copilot",
+            name: "GitHub Copilot",
+            commands: &["copilot"],
+            profile_prefix: None,
+        },
+        ProviderDefinition {
             id: "ollama",
             name: "Ollama",
             commands: &["ollama"],
@@ -76,37 +82,7 @@ pub fn definitions() -> &'static [ProviderDefinition] {
 }
 impl ProviderDefinition {
     pub(crate) fn roots(&self, env: &ScanEnvironment) -> Vec<PathBuf> {
-        let overrides: &[&str] = match self.id {
-            "codex" => &["CODEX_HOME"],
-            "claude_code" => &["CLAUDE_SECURESTORAGE_CONFIG_DIR", "CLAUDE_CONFIG_DIR"],
-            "opencode" => &["OPENCODE_CONFIG_DIR"],
-            _ => &[],
-        };
-        if let Some(root) = overrides.iter().find_map(|key| env.overrides.get(*key)) {
-            return vec![root.clone()];
-        }
-        match self.id {
-            "codex" => vec![env.home.join(".codex")],
-            "claude_code" => vec![env.home.join(".claude")],
-            "gemini_cli" => vec![env.home.join(".gemini")],
-            "antigravity" => vec![env.home.join(".gemini/antigravity")],
-            "grok" => vec![env.home.join(".grok")],
-            // OpenCode stores configuration and account data under separate XDG roots.
-            // They describe one installation profile; use its data root as the stable
-            // identity because that is where its provider credentials are stored.
-            "opencode" => vec![env.data_home.join("opencode")],
-            // Muse keeps settings and its credential store under
-            // `$XDG_CONFIG_HOME/muse`, else `~/.config/muse` (Windows too).
-            "muse" => vec![env.config_home.join("muse")],
-            "cursor" => vec![match env.platform {
-                HostPlatform::Windows => env.app_data.join("Cursor"),
-                HostPlatform::Macos => env.home.join("Library/Application Support/Cursor"),
-                HostPlatform::Linux => env.config_home.join("Cursor"),
-            }],
-            "ollama" => vec![env.home.join(".ollama")],
-            "lmstudio" => vec![env.home.join(".lmstudio")],
-            _ => vec![],
-        }
+        crate::knowledge::profile_roots(self.id, env)
     }
     /// Install directories searched in addition to `PATH` for this provider.
     pub(crate) fn extra_directories(&self, env: &ScanEnvironment) -> Vec<PathBuf> {
@@ -124,15 +100,6 @@ impl ProviderDefinition {
         }
     }
     pub(crate) fn has_override(&self, env: &ScanEnvironment) -> bool {
-        match self.id {
-            "codex" => env.overrides.contains_key("CODEX_HOME"),
-            "claude_code" => {
-                env.overrides.contains_key("CLAUDE_CONFIG_DIR")
-                    || env
-                        .overrides
-                        .contains_key("CLAUDE_SECURESTORAGE_CONFIG_DIR")
-            }
-            _ => false,
-        }
+        crate::knowledge::has_profile_override(self.id, env)
     }
 }

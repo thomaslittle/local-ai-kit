@@ -1,4 +1,4 @@
-use crate::environment::valid_root;
+use crate::environment::{join_relative, valid_root};
 use crate::{HostPlatform, LocatedClient, ScanEnvironment, ScanResult, Scanner, definitions};
 use lai_contracts::*;
 use lai_platform::{EntryKind, LocalFilesystem};
@@ -70,12 +70,12 @@ impl<F: LocalFilesystem> Scanner<F> {
             .cloned()
             .collect::<BTreeSet<_>>();
         directories.extend([
-            env.home.join(".local/bin"),
-            env.home.join(".cargo/bin"),
-            env.home.join(".bun/bin"),
+            join_relative(&env.home, ".local/bin"),
+            join_relative(&env.home, ".cargo/bin"),
+            join_relative(&env.home, ".bun/bin"),
         ]);
         if env.platform == HostPlatform::Windows {
-            directories.insert(env.app_data.join("npm"));
+            directories.insert(join_relative(&env.app_data, "npm"));
         }
         let children = self.filesystem.children(&env.home, 128);
         let extra = match children {

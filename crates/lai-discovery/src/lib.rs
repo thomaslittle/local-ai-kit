@@ -1,9 +1,14 @@
 //! Explicit passive inventory. No client launches, secret reads, or network calls.
 mod environment;
+pub mod knowledge;
 pub mod log_tail;
 mod registry;
 mod scanner;
-pub use environment::{HostPlatform, ScanEnvironment};
+pub use environment::{HostPlatform, ScanEnvironment, join_relative};
+pub use knowledge::{
+    DiscoveryRule, RuleBasis, RuleRole, TOKSCALE_COMMIT, TOKSCALE_REPOSITORY, discovery_rules,
+    has_profile_override, profile_roots, session_stores,
+};
 use lai_contracts::Snapshot;
 use lai_platform::LocalFilesystem;
 pub use registry::{MUSE_BINARY_OVERRIDE, ProviderDefinition, definitions};

@@ -14,6 +14,10 @@ A separately owned headless alpha.9 managed session completed a real-account rea
 
 The earlier ledger below covers `feature/initial-implementation`. `main` remains unchanged by this auth follow-up. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 
+## Tokscale discovery knowledge
+
+From `grok-tokscale-upstream-discovery` (merged into `main`). Tokscale commit `1d9a9395418efc6952944b794097935d7d6fa1e8` is a pinned knowledge source, not a runtime dependency. The daily watcher opens a review pull request and does not merge or change production discovery by itself. See [docs/upstream/tokscale.md](../upstream/tokscale.md).
+
 The live playground grants text execution for every provider with a registered execution adapter, including explicit API routes, in an isolated temporary workspace. Native ACP profile adapters join when `LAI_NATIVE_PROFILES` is set. Each turn requires the browser consent checkbox and Run click; the helper leaves paid billing options and file writes disabled. The Playground selects provider and route/model directly from the live catalog. No inference was sent during this follow-up.
 
 The local HTTP demo retrieves its active one-use pairing code from `GET /runtime/pairing-code`; after expiry/redemption, its **Show current pairing code** action explicitly falls back to `POST /runtime/pairing-code` to issue a replacement. TypeScript hosts can use `getPairingCode({ baseUrl })` and `issuePairingCode({ baseUrl })`. Both endpoints are loopback/origin guarded and `no-store`; issuing a replacement leaves already paired clients connected. The paired Codex browser demo was manually verified on September 27, including refresh/reissue/re-pair; metadata checks completed without inference. Focused verification: HTTP transport suite 8/8, TypeScript HTTP SDK 22/22, live demo browser E2E 7/7, generated contract check, SDK/demo build, format check, and transport/CLI Clippy.
