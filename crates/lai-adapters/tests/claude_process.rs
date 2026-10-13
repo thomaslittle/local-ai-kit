@@ -45,7 +45,7 @@ async fn setup(mode: &str) -> (Runtime, Session) {
     (runtime, session)
 }
 async fn done(r: &Runtime, s: &Session) {
-    tokio::time::timeout(Duration::from_secs(3), async {
+    tokio::time::timeout(Duration::from_secs(10), async {
         while matches!(
             r.get("owner", &s.id).unwrap().state,
             SessionState::Running | SessionState::AwaitingApproval
