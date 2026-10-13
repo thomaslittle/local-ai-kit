@@ -1,5 +1,9 @@
 # Resume — Local AI Kit
 
+## October 13 merge into `main` and alpha.15
+
+`main` now carries every branch with unmerged product work: `feature/muse-provider` (the whole alpha.9-alpha.14 line, including `codex/chatgpt-managed-auth`), `fix/opencode-protocol-compatibility` (dormant OpenCode v2 adapter; automatic launch stays disabled) and the committed `grok-tokscale-upstream-discovery` commits up to `22f4423` (Tokscale discovery knowledge; the Muse override and profile root were carried into its `knowledge::profile_roots` design). `feat/demo-react-vite` was already in `main` as #1. The demo app's workspace pins moved off alpha.8. `verify.py --profile all` passed on Windows on the merged tree: 555 Rust tests in 102 suites, 190 Node tests, 75 Python tests, React Doctor clean. Released from merged `main` as `v0.1.0-alpha.15` (GitHub prerelease and the update server's `ai-designer/v0.1.0-alpha.15/`); the release manifest holds the source commit and asset hashes.
+
 ## October 13 Muse Code adapter
 
 Branch `feature/muse-provider`, based on alpha.13 (`470dee4`), adds provider `muse` ("Muse Code"): passive discovery (PATH, `%LOCALAPPDATA%\Programs\muse`, `LOCAL_AI_KIT_MUSE_BINARY`), metadata through a read-only `muse serve` (experimental `account/read` for auth/billing, `model/list`, `usage/read`; no prompt), and sessions over MSP v1 with host-reviewed approvals, host MCP servers (optional), images, cancellation, background workflow/subagent reporting and persistent resumption. It ports T3 Code's Muse provider behaviour; see [Muse Code](../adapters/muse.md) for the permission-mode mapping, event and extension mapping, gaps and evidence. Tests replay T3's recorded transcripts and Muse 1.4.7 echo recordings; live checks used only metadata and the free echo provider. No Meta model turn was run. Released as `v0.1.0-alpha.14`; `verify.py --profile all` passed on Windows (526 Rust tests). The Claude process test's 3 s completion wait flaked under the parallel run and is now 10 s.
@@ -12,7 +16,7 @@ The owner-authorized auth work is on `codex/chatgpt-managed-auth`, based on alph
 
 A separately owned headless alpha.9 managed session completed a real-account read-only Sol turn with exactly `AUTH_OK`; its helper was terminated. A production-built synthetic Current Scene prompt exceeded alpha.9's 64 KiB cap and was rejected before execution. Alpha.10 publication and qualification are recorded by the final release manifest and notes; do not infer them from earlier fixtures. No other agent's dev app was used or stopped for these checks.
 
-The earlier ledger below covers `feature/initial-implementation`. `main` remains unchanged by this auth follow-up. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
+The earlier ledger below covers `feature/initial-implementation`. This line was merged into `main` on October 13 (see above). Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 
 ## Tokscale discovery knowledge
 
