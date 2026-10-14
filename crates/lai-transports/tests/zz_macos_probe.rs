@@ -17,7 +17,11 @@ fn probe_unix_socket_bind() {
     }
     let _ = std::fs::remove_file(&p);
     let short = std::path::PathBuf::from("/tmp/lai-probe-2.sock");
-    let name = short.to_str().unwrap().to_fs_name::<GenericFilePath>().unwrap();
+    let name = short
+        .to_str()
+        .unwrap()
+        .to_fs_name::<GenericFilePath>()
+        .unwrap();
     match ListenerOptions::new().name(name).create_sync() {
         Ok(_) => eprintln!("PROBE interprocess /tmp ok"),
         Err(e) => eprintln!("PROBE interprocess /tmp err {e:?}"),
