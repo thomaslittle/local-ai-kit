@@ -23,6 +23,12 @@ jobs:
       PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
+      - name: Free disk space (Linux runner)
+        if: runner.os == 'Linux'
+        run: |
+          # The debug test build plus the release bundle exceed the default runner disk.
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/swift /opt/hostedtoolcache/CodeQL
+          df -h /
       - uses: actions/setup-node@v4
         with:
           node-version: '22.20.0'
