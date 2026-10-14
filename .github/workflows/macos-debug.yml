@@ -1,0 +1,18 @@
+name: macOS debug (temporary)
+on:
+  pull_request:
+    paths: ['.github/workflows/macos-debug.yml']
+jobs:
+  mac:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: rustup toolchain install 1.97.1 --profile minimal
+      - run: |
+          cargo test --locked -p lai-transports --test zz_macos_probe -- --nocapture
+          cargo test --locked -p lai-transports --test local_ipc -- --nocapture || true
+          cargo test --locked -p lai-platform --test filesystem
+          cargo test --locked -p lai-adapters --test opencode_version

@@ -11,7 +11,7 @@ mod unix {
         let executable = dir.path().join("opencode");
         let marker = dir.path().join("legacy-server-launched");
         std::fs::write(&executable, format!(
-            "#!/usr/bin/python3\nimport sys,pathlib\nif sys.argv[1:] == ['--version']:\n print('opencode v2.0.18')\nelse:\n pathlib.Path({:?}).write_text('wrong protocol')\n sys.exit(77)\n",
+            "#!/usr/bin/env python3\nimport sys,pathlib\nif sys.argv[1:] == ['--version']:\n print('opencode v2.0.18')\nelse:\n pathlib.Path({:?}).write_text('wrong protocol')\n sys.exit(77)\n",
             marker.to_str().unwrap()
         )).unwrap();
         std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
