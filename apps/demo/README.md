@@ -1,6 +1,6 @@
-# Developer showcase — implementation preview
+# Developer showcase
 
-A working React application that consumes only the public TypeScript SDK and the selector core. It is explicitly synthetic by default and is **not** evidence of working native account detection. Nothing in it reads a credential, keyring, or provider client; the fixture is an in-memory loopback service.
+A React application that consumes only the public TypeScript SDK and the selector core. By default it pairs with the native helper and shows what is actually detected on your machine; clearly labeled example data is only a fallback when no runtime is paired. The app itself never reads a credential, keyring, or provider client; all of that stays in the native helper.
 
 ## Run it
 

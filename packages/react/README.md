@@ -1,5 +1,7 @@
 # @local-ai-kit/react
 
+> Alpha. Not yet published to npm.
+
 Optional React bindings for the public Local AI Kit SDK. Provider discovery and execution remain in Rust; importing or mounting these components makes no requests.
 
 Create a `SnapshotStore` from an explicitly connected public SDK client. Pass it to `LocalAIProvider`. `useLocalAISnapshot` subscribes through `useSyncExternalStore`; `useLocalAIStore` exposes explicit `load`, `scan`, and `probe` operations. The store deduplicates snapshot reads and owns immutable, stable snapshots. Hooks support SSR with a consistent initial snapshot.

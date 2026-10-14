@@ -1,20 +1,42 @@
 # Documentation
 
-## Start here
+New here? Start with the [root README](../README.md), then the [prompt-app guide](integration/prompt-app.md) if you are embedding the toolkit in an application.
 
-- [Root overview](../README.md)
-- [Codex kickoff](../CODEX-KICKOFF.md)
-- [Full build prompt](../CODEX-BUILD-PROMPT.md)
-- [Agent instructions](../AGENTS.md)
-- [Resume checkpoint](handoffs/RESUME.md)
-- [ChatGPT managed authentication](integration/chatgpt-managed-auth.md)
+## Integrating
 
-## Canonical planning documents
+| Topic | Document |
+|---|---|
+| Desktop/prompt apps: select a route and model, grant access, stream, follow up | [prompt-app.md](integration/prompt-app.md) |
+| Native helper CLI, SDK bridge, transports | [native-helper.md](integration/native-helper.md), [pairing.md](integration/pairing.md), [shared-broker.md](integration/shared-broker.md), [browser-extension.md](integration/browser-extension.md) |
+| Installing a built bundle (helper, npm tarballs, wheel) | [distribution.md](integration/distribution.md) |
+| Registering Gemini CLI / Antigravity / Grok; billing declarations | [native-profiles.md](integration/native-profiles.md) |
+| ChatGPT managed sign-in | [chatgpt-managed-auth.md](integration/chatgpt-managed-auth.md) |
+| Generated protocol, OpenAPI, JSON Schema | [generated-api.md](integration/generated-api.md), [protocol-preview.md](integration/protocol-preview.md) |
+| Sessions: artifacts, host MCP tools, native resumption | [artifacts.md](integration/artifacts.md), [host-mcp.md](integration/host-mcp.md), [native-session-resumption.md](integration/native-session-resumption.md) |
+| Incremental metadata, refresh, local change watching | [incremental-metadata.md](integration/incremental-metadata.md), [local-change-watching.md](integration/local-change-watching.md), [catalog-pages.md](integration/catalog-pages.md) |
+| Running the showcase against your own machine | [live-demo.md](integration/live-demo.md) |
+| Something is wrong | [troubleshooting.md](troubleshooting.md) |
 
-- [Product and architecture specification](superpowers/specs/2026-09-24-local-ai-kit-design.md)
-- [18-task implementation plan](superpowers/plans/2026-09-24-local-ai-kit-implementation.md)
-- [Source audit](../SOURCE-AUDIT.md)
+## Providers and adapters
 
-## Implementation status
+- [Support matrix](adapters/SUPPORT-MATRIX.md): what each provider supports, with its evidence level.
+- Per-provider notes: [Codex](adapters/codex.md), [Claude Code](adapters/claude-code.md), [ACP (Gemini CLI, Antigravity, Grok)](adapters/acp.md), [Grok/Google status](adapters/native-google-grok-status.md), [OpenCode](adapters/opencode.md), [Muse Code](adapters/muse.md), [Cursor](adapters/cursor.md), [HTTP providers](adapters/http-providers.md), [passive inventory](adapters/passive-inventory.md).
+- Writing an adapter: [AUTHORING.md](adapters/AUTHORING.md) and [VERSIONING.md](adapters/VERSIONING.md).
+- Upstream discovery knowledge: [Tokscale](upstream/tokscale.md).
 
-All 18 implementation tasks remain open. This documentation package is the starting point for Codex, not evidence of a functioning toolkit. Add adapter provenance, architecture decisions, integration examples, threat-model tests, measured benchmarks, and qualification reports as the plan creates them.
+## Design and security
+
+- [Architecture specification](design/architecture.md) (original design; see the support matrix for current status).
+- [Threat model](security/threat-model.md) and the [security policy](../SECURITY.md).
+- [Source audit](design/source-audit.md) and [third-party notices](../THIRD_PARTY_NOTICES.md).
+- [Historical implementation plan](design/implementation-plan.md).
+
+## Status, evidence, and history
+
+- [Changelog](../CHANGELOG.md): release-by-release summary.
+- [Development log](implementation/DEVELOPMENT-LOG.md) and [implementation ledger](implementation/LEDGER.md): what was built and how it was verified.
+- [Qualification records](qualification/) and [performance baseline](performance/BASELINE.md): dated platform and benchmark evidence. These describe specific commits and machines, not current guarantees.
+
+## Contributing
+
+[CONTRIBUTING.md](../CONTRIBUTING.md), [AGENTS.md](../AGENTS.md) (for AI coding agents), and the [Code of Conduct](../CODE_OF_CONDUCT.md).
