@@ -1,5 +1,7 @@
 # @local-ai-kit/ui-react
 
+> Alpha. Not yet published to npm.
+
 Optional, scoped React provider/model selection components. Import the stylesheet explicitly:
 
 ```tsx

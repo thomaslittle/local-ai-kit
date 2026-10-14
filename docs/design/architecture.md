@@ -1,9 +1,9 @@
 # Local AI Kit — Product and Architecture Specification
 
-**Status:** proposed design for implementation in a new standalone repository.
+**Status:** original design specification (2026-09-24). The implementation follows this design but has diverged in detail; for what exists today see the [support matrix](../adapters/SUPPORT-MATRIX.md) and the [implementation ledger](../implementation/LEDGER.md).
 **Date:** 2026-09-24.
 **Working identifier:** `local-ai-kit`. This is a development codename, not a claim of npm/PyPI/crates.io, domain, or trademark availability.
-**Source review:** `../../../SOURCE-AUDIT.md`.
+**Source review:** [source audit](source-audit.md).
 
 ## 1. Product definition
 
@@ -11,7 +11,7 @@ A local-first, language-neutral toolkit that lets an application discover the AI
 
 The developer experience should be: **connect once, inspect once, select a usable route, run a session**. Applications should not need to know credential paths, operating-system keyring APIs, provider-specific quota formats, CLI flags, model-option spellings, or streaming event dialects.
 
-This is a developer toolkit with an optional shared local runtime, SDKs, and reusable UI. It is not a new subscription service, a hosted credential proxy, a full IDE, or a consumer application tied to a specific use case. It contains no Maps integration or image-enhancement product logic.
+This is a developer toolkit with an optional shared local runtime, SDKs, and reusable UI. It is not a new subscription service, a hosted credential proxy, a full IDE, or a consumer application tied to a specific use case.
 
 ### The promise we can keep
 

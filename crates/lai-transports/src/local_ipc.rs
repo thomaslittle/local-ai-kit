@@ -79,6 +79,18 @@ fn name(value: &str) -> Result<interprocess::local_socket::Name<'_>> {
             .map_err(|_| fail(ErrorCode::InvalidRequest))
     }
 }
+/// The listener builder cannot set a socket mode on every Unix (macOS reports it unsupported), so
+/// those platforms restrict the endpoint to its owner right after binding and fail closed if they
+/// cannot. A connection also needs a one-use host grant, so the instant before this call exposes
+/// no usable access.
+#[cfg(all(unix, not(any(target_os = "linux", target_os = "android"))))]
+fn restrict_endpoint(address: &str) -> Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(address, std::fs::Permissions::from_mode(0o600)).map_err(|_| {
+        let _ = std::fs::remove_file(address);
+        fail(ErrorCode::LocalAccessDenied)
+    })
+}
 impl Broker {
     pub async fn start(service: Arc<NativeService>, address: &str) -> Result<Self> {
         let options = ListenerOptions::new().name(name(address)?);
@@ -94,7 +106,7 @@ impl Broker {
                     .map_err(|_| fail(ErrorCode::LocalAccessDenied))?,
             )
         };
-        #[cfg(unix)]
+        #[cfg(any(target_os = "linux", target_os = "android"))]
         let options = {
             use interprocess::os::unix::local_socket::ListenerOptionsExt;
             options.mode(0o600)
@@ -102,6 +114,8 @@ impl Broker {
         let listener = options
             .create_tokio()
             .map_err(|_| fail(ErrorCode::Conflict))?;
+        #[cfg(all(unix, not(any(target_os = "linux", target_os = "android"))))]
+        restrict_endpoint(address)?;
         let shared = Arc::new(Shared {
             service,
             pending: Mutex::new(BTreeMap::new()),

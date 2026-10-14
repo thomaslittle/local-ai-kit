@@ -8,9 +8,22 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Scratch directory for a test. macOS keeps its temp directory behind the
+/// `/var` -> `/private/var` symlink, which the tailer correctly refuses to
+/// follow, so resolve it there. Other platforms keep the plain path (Windows
+/// canonicalization adds a `\?\` prefix).
+fn tempdir() -> tempfile::TempDir {
+    let base = if cfg!(target_os = "macos") {
+        fs::canonicalize(std::env::temp_dir()).unwrap()
+    } else {
+        std::env::temp_dir()
+    };
+    tempfile::Builder::new().tempdir_in(base).unwrap()
+}
+
 #[test]
 fn append_and_partial_records_are_incremental() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events.jsonl");
     fs::write(&path, b"one\npar").unwrap();
     let mut state = LogTailState::default();
@@ -30,7 +43,7 @@ fn append_and_partial_records_are_incremental() {
 }
 #[test]
 fn truncation_restarts_without_replaying_old_records() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     fs::write(&path, b"a\nb\n").unwrap();
     let mut state = LogTailState::default();
@@ -49,7 +62,7 @@ fn truncation_restarts_without_replaying_old_records() {
 }
 #[test]
 fn replacement_rotation_is_detected_even_when_new_file_is_larger() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     fs::write(&path, b"old\n").unwrap();
     let mut state = LogTailState::default();
@@ -63,7 +76,7 @@ fn replacement_rotation_is_detected_even_when_new_file_is_larger() {
 }
 #[test]
 fn replacement_with_same_anchor_bytes_is_detected_by_file_identity() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     let suffix = b"k\n".repeat(32);
     let original = [b"a\n".repeat(32), suffix.clone()].concat();
@@ -80,7 +93,7 @@ fn replacement_with_same_anchor_bytes_is_detected_by_file_identity() {
 }
 #[test]
 fn line_limit_buffers_complete_records_without_duplicate_file_reads() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     fs::write(&path, b"a\nb\nc\n").unwrap();
     let mut state = LogTailState::default();
@@ -114,7 +127,7 @@ impl LocalFilesystem for ReusedIdentityFs {
 }
 #[test]
 fn changed_prefix_detects_rotation_when_identity_and_tail_anchor_are_reused() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     let suffix = b"same\n".repeat(32);
     fs::write(&path, [b"old\n".repeat(32), suffix.clone()].concat()).unwrap();
@@ -189,7 +202,7 @@ fn synthetic_gigabyte_log_reads_only_the_bounded_window() {
 }
 #[test]
 fn cancellation_is_checked_before_any_file_read() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     fs::write(&path, b"one\n").unwrap();
     let fs = CountingFs {
@@ -205,7 +218,7 @@ fn cancellation_is_checked_before_any_file_read() {
 }
 #[test]
 fn cancellation_during_a_poll_preserves_the_callers_saved_offset_and_buffer() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     fs::write(&path, b"one\npartial").unwrap();
     let fs = CountingFs {
@@ -226,7 +239,7 @@ fn cancellation_during_a_poll_preserves_the_callers_saved_offset_and_buffer() {
 #[cfg(unix)]
 #[test]
 fn tailer_rejects_symlink_paths() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let target = tmp.path().join("target");
     let link = tmp.path().join("events");
     fs::write(&target, b"private\n").unwrap();
@@ -238,7 +251,7 @@ fn tailer_rejects_symlink_paths() {
 #[cfg(unix)]
 #[test]
 fn tailer_rejects_paths_that_traverse_a_symlinked_directory() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let target_dir = tmp.path().join("real");
     let linked_dir = tmp.path().join("linked");
     fs::create_dir(&target_dir).unwrap();
@@ -259,7 +272,7 @@ fn tailer_rejects_paths_that_traverse_a_symlinked_directory() {
 }
 #[test]
 fn invalid_budgets_and_oversized_single_records_fail_closed() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = tempdir();
     let path = tmp.path().join("events");
     fs::write(&path, vec![b'x'; 1024 * 1024 + 1]).unwrap();
     let mut state = LogTailState::default();

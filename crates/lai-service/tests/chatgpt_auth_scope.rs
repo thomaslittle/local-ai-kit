@@ -29,7 +29,7 @@ impl Agent for IdleAgent {
 #[tokio::test]
 async fn chatgpt_auth_methods_require_managed_metadata_scope() {
     let tmp = tempfile::tempdir().unwrap();
-    let auth = Arc::new(AuthManager::new(tmp.path().join("auth"), "crntly".into()).unwrap());
+    let auth = Arc::new(AuthManager::new(tmp.path().join("auth"), "example-app".into()).unwrap());
     let source = Arc::new(|_: &std::sync::atomic::AtomicBool| {
         Ok(ScanResult {
             snapshot: Snapshot::empty(DataMode::Live),
@@ -106,7 +106,7 @@ async fn chatgpt_auth_methods_require_managed_metadata_scope() {
 #[tokio::test]
 async fn disconnect_waits_for_inflight_managed_create_then_closes_its_session() {
     let tmp = tempfile::tempdir().unwrap();
-    let auth = Arc::new(AuthManager::new(tmp.path().join("auth"), "crntly".into()).unwrap());
+    let auth = Arc::new(AuthManager::new(tmp.path().join("auth"), "example-app".into()).unwrap());
     auth.status().await.unwrap();
     let mut snapshot = common::fixture();
     for provider in &mut snapshot.providers {
@@ -213,7 +213,7 @@ async fn disconnect_waits_for_inflight_managed_create_then_closes_its_session() 
 #[tokio::test]
 async fn unrelated_provider_startup_does_not_delay_managed_disconnect() {
     let tmp = tempfile::tempdir().unwrap();
-    let auth = Arc::new(AuthManager::new(tmp.path().join("auth"), "crntly".into()).unwrap());
+    let auth = Arc::new(AuthManager::new(tmp.path().join("auth"), "example-app".into()).unwrap());
     auth.status().await.unwrap();
     let snapshot = common::fixture();
     let inventory = Arc::new(move |_: &std::sync::atomic::AtomicBool| {

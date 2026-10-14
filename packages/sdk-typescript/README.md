@@ -1,4 +1,6 @@
-# Local AI Kit TypeScript SDK — implementation preview
+# Local AI Kit TypeScript SDK (`@local-ai-kit/sdk`)
+
+> Alpha. Not yet published to npm; install the tarball from a release bundle or build from source (see [distribution](../../docs/integration/distribution.md)).
 
 Browser-safe HTTP/JSON-RPC and SSE client, plus a separate Node stdio entry point. No package import scans, reads credentials, starts processes, or makes requests. No provider-specific discovery logic lives here.
 
@@ -15,9 +17,9 @@ try {
 }
 ```
 
-For a native helper, import `openStdioTransport` from `@local-ai-kit/sdk/node`, pass its absolute executable path and explicit argument array, then give that transport to `createLocalAI`. The helper must implement this project's public protocol; this SDK does not launch Codex/Grok/etc. directly. The Rust service/adapters are still being implemented.
+For a native helper, import `openStdioTransport` from `@local-ai-kit/sdk/node`, pass its absolute executable path and explicit argument array, then give that transport to `createLocalAI`. The helper must implement this project's public protocol; this SDK does not launch Codex/Grok/etc. directly.
 
-Model/domain payloads are currently returned as `unknown` unless the caller supplies a type parameter. Full generated domain types require the Rust schema build to be qualified; this preview does not pretend hand-maintained types were generated.
+Domain and RPC types are generated from the Rust contracts (`src/generated.ts`); regenerate with `python scripts/generate_contracts.py` and verify with `npm run check:generated`.
 
 ## Implemented behavior
 
@@ -33,6 +35,6 @@ The native service remains responsible for grants, workspace enforcement, secret
 
 ## Development
 
-Node >=22.16, TypeScript 5.8.3. Run `tsc -p tsconfig.json`, then `node --experimental-strip-types --test tests/*.test.mjs`. Tests use local synthetic peers and injected responses, never paid accounts. Build produces the browser entry point; the Node entry point remains native ESM with separate declarations.
+Node >=22.16, TypeScript 7. Run `tsc -p tsconfig.json`, then `node --experimental-strip-types --test tests/*.test.mjs`. Tests use local synthetic peers and injected responses, never paid accounts. Build produces the browser entry point; the Node entry point remains native ESM with separate declarations.
 
-These SDK transports are fixture-tested, not qualified against a live Local AI Kit service or provider account. No runtime installer, automatic binary download, or registry publication is enabled.
+The transports are tested against synthetic peers and, in the package smoke test, the real native helper; none of that sends provider inference. No runtime installer, automatic binary download, or registry publication is enabled.

@@ -18,7 +18,7 @@ The inspected code-search revision was `e67abcf798f8c4d8458755e3b4dde02c2c1f628b
 
 Reuse the boundaries, parsers, test cases, and interaction patterns. Do not copy T3's entire server, Effect application graph, project database, terminal UI, or product settings into the toolkit.
 
-### 2. Thomas's CodeNotch cross-platform implementation — Rust discovery
+### 2. CodeNotch cross-platform implementation — Rust discovery
 
 Repository: <https://github.com/thomaslittle/codenotch-crossplatform>
 
@@ -32,7 +32,7 @@ Important adaptations: replace provider-only cache keys with account/connection-
 Repository: <https://github.com/vinzdg/codenotch>
 
 - [README provider table](https://github.com/vinzdg/codenotch/blob/main/README.md), inspected blob `9d6978acb74cab4abe73e33cbcb2fe9ea1a5836e`: documents a much wider provider inventory, including Grok, Antigravity, coding-plan services, and local runtimes. The README's “official” labels are the project's descriptions, not our certification.
-- Inspect `Sources/Providers/` and `windows/codenotch/src/` for relevant implementations. The prior conversation identified `windows/codenotch/src/grok.rs`; verify its current revision and license before reuse.
+- Inspect `Sources/Providers/` and `windows/codenotch/src/` for relevant implementations. Start with `windows/codenotch/src/grok.rs`; verify its current revision and license before reuse.
 
 Treat browser-login integrations, undocumented quota endpoints, and ordinary local-runtime discovery as different trust/support categories.
 

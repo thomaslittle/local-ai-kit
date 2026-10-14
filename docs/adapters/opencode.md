@@ -75,7 +75,7 @@ to bypass this gate.
 
 Qualification: 12 synthetic v2 transport/catalog tests and 12 runtime
 cleanup/lifecycle tests pass on Linux, Rust 1.97.1. No live account, installed OpenCode binary, provider inference,
-Windows/macOS execution, release artifact, or Crntly helper pin is qualified
+Windows/macOS execution, release artifact, or downstream helper pin is qualified
 by these tests.
 
 ### Review hardening

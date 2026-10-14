@@ -1,0 +1,137 @@
+# Changelog
+
+All notable changes to Local AI Kit are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions are developer alphas (`0.1.0-alpha.N`) and are not yet semver-stable: the protocol, SDKs, and helper flags can change between alphas. Each [GitHub release](https://github.com/thomaslittle/local-ai-kit/releases) carries its own manifest, SHA-256 checksums, SBOM, and retained notices. Release binaries are unsigned; a checksum detects corruption but is not a publisher signature. Verification details for each build are in the [development log](docs/implementation/DEVELOPMENT-LOG.md).
+
+## [Unreleased]
+
+### Changed
+
+- Prepared the repository for public release: rewrote the README, contributing guide, security policy, and agent guide; added a code of conduct, issue and pull-request templates, and dependency update configuration; moved historical planning material under `docs/design/`.
+- Package READMEs and docs no longer describe the project as a planning stub.
+
+### Fixed
+
+- macOS: discovery log-tail tests now use a canonical temp directory instead of tripping the symlink guard on `/var` -> `/private/var`.
+- CI: the Linux job frees runner disk space before the release build, and `cargo test` runs with `--no-fail-fast` so every failing suite is reported in one run.
+
+## [0.1.0-alpha.15] - 2026-10-13
+
+First release built from `main` after merging all outstanding work.
+
+### Added
+
+- Muse Code provider (`muse`) and the whole alpha.9 to alpha.14 line, including ChatGPT managed sign-in.
+- The React showcase (shadcn `base-mira`, TanStack Router, zustand) and the helper changes it needed: SPA client routes and `woff2` served from the asset route, metadata cache changes.
+- Discovery honors client home overrides (`GEMINI_CLI_HOME`, `GROK_HOME`, `LM_STUDIO_HOME`, plus the existing ones) and Windows path separators, and finds GitHub Copilot and Antigravity CLI profiles. [Tokscale](docs/upstream/tokscale.md) is a pinned knowledge source, not a runtime dependency.
+
+### Changed
+
+- An incompatible OpenCode protocol is rejected before legacy startup. A dormant OpenCode v2 adapter is staged; automatic OpenCode 2 launch stays disabled.
+
+## [0.1.0-alpha.14] - 2026-10-13
+
+### Added
+
+- Muse Code provider: passive discovery (PATH, `%LOCALAPPDATA%\Programs\muse`, `LOCAL_AI_KIT_MUSE_BINARY`), metadata from a read-only `muse serve` (`account/read`, `model/list`, `usage/read`), and sessions over Muse Session Protocol v1 with host-reviewed approvals, optional host MCP servers, images, cancellation, and persistent resumption. See [Muse Code](docs/adapters/muse.md).
+
+## [0.1.0-alpha.13] - 2026-09-30
+
+### Changed
+
+- Sessions can attach larger bounded host MCP tool catalogs: up to 256 tools across at most two servers. Loopback, name, token, read-only, and execution-grant validation are unchanged.
+
+## [0.1.0-alpha.12] - 2026-09-30
+
+### Fixed
+
+- Managed Codex host MCP tools stay callable when the separate code-mode tool host is disabled. Only approved host MCP namespaces are exposed as direct tools, with prefixed namespaces to avoid built-in collisions; normalized collisions are rejected before a thread opens.
+
+## [0.1.0-alpha.11] - 2026-09-30
+
+### Added
+
+- `--executable-only-provider PROVIDER`: retain a provider's private executable candidate for dependent integrations without inspecting its profile roots or publishing its providers, installations, profiles, connections, or routes.
+
+## [0.1.0-alpha.10] - 2026-09-30
+
+### Changed
+
+- `turns.start` accepts UTF-8 text prompts up to 512 KiB; serialized params have a separate ceiling of 1 MiB minus 8 KiB. Other methods keep their 64 KiB bound.
+- Managed ChatGPT connection labels and Codex client titles use generic host-derived wording.
+
+## [0.1.0-alpha.9] - 2026-09-29
+
+### Added
+
+- Opt-in managed ChatGPT sign-in: a `codex_managed` connection with `auth.chatgpt.status`, `start`, `cancel`, and `disconnect` RPCs. The helper owns Sign in with ChatGPT OAuth and protected credential storage, separate from the installed Codex client's login. See [ChatGPT managed authentication](docs/integration/chatgpt-managed-auth.md).
+
+## [0.1.0-alpha.8] - 2026-09-28
+
+### Added
+
+- Image input for native Claude Code and Codex sessions. Claude Code receives base64 `image` blocks; Codex receives app-server `image` input items. Codex image turns are fixture-tested only.
+
+## [0.1.0-alpha.7] - 2026-09-28
+
+### Added
+
+- Host-provided MCP servers on sessions (`hostMcpServers`; loopback-only, bearer token never in argv or logs) for Claude Code, Codex, and ACP peers advertising `mcpCapabilities.http`.
+- Persistent, restart-surviving session resume (`persistent: true`, sealed `lai1_` tokens) for Claude Code, Codex, OpenCode, and ACP. An unavailable conversation returns `RESUME_UNAVAILABLE` instead of silently starting a fresh one.
+
+## [0.1.0-alpha.6] - 2026-09-28
+
+### Changed
+
+- A stale sign-in now stands until the client reports it signed out; signed-out, expired, or never-checked connections still block.
+
+## [0.1.0-alpha.5] - 2026-09-28
+
+### Added
+
+- `--billing-declarations ABSOLUTE_JSON`: host-supplied billing for discovered connections whose provider leaves it unknown, recorded as user-supplied evidence. See [native profiles](docs/integration/native-profiles.md).
+
+## [0.1.0-alpha.4] - 2026-09-28
+
+### Changed
+
+- `sessions.create` re-reads a connection's live auth when its metadata is older than 60 seconds; signed-out clients fail with `AUTH_REQUIRED`.
+- Grok sessions run with no native tools; any tool call in a text-only native-client turn fails the turn. Gemini CLI and Antigravity text-only sessions are refused because their read tools cannot be disabled.
+- OpenCode runs as a kit-managed `opencode serve` on a random loopback port with a password.
+- Model revisions are stable (semantic content only) and the Codex account identity check uses type and email only.
+
+## [0.1.0-alpha.3] - 2026-09-28
+
+### Fixed
+
+- Codex 0.157+ app-server contract: thread sandbox modes are sent in kebab case and turns send the bare sandbox type. Read-only Codex threads disable shell, unified exec, image generation, tool suggestion, goals, and sleep tools.
+
+## [0.1.0-alpha.2] - 2026-09-27
+
+### Added
+
+- Bounded image input: `inputs.put` (JPEG/PNG, at most 4 MiB, 2048 px, 4 per turn, 8 per session) and optional `turns.start` `inputs`. Image turns are rejected with `CAPABILITY_UNSUPPORTED` unless the model reports `input.image` and the adapter can carry images; images are never silently dropped.
+
+## [0.1.0-alpha.1] - 2026-09-27
+
+First developer alpha: native discovery and metadata, route-aware selection, granted sessions with streaming and cancellation, stdio / HTTP / broker / Native Messaging transports, TypeScript and Python SDKs, React hooks and selectors, and installable bundles.
+
+### Fixed
+
+- ACP authentication failures no longer forward provider text, which could contain login URLs or device codes.
+
+[Unreleased]: https://github.com/thomaslittle/local-ai-kit/compare/v0.1.0-alpha.15...HEAD
+[0.1.0-alpha.15]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.15
+[0.1.0-alpha.14]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.14
+[0.1.0-alpha.13]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.13
+[0.1.0-alpha.12]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.12
+[0.1.0-alpha.11]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.11
+[0.1.0-alpha.10]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.10
+[0.1.0-alpha.9]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.9
+[0.1.0-alpha.8]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.8
+[0.1.0-alpha.7]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.7
+[0.1.0-alpha.6]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.6
+[0.1.0-alpha.5]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.5
+[0.1.0-alpha.4]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.4
+[0.1.0-alpha.3]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.3
+[0.1.0-alpha.2]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.2
+[0.1.0-alpha.1]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.1

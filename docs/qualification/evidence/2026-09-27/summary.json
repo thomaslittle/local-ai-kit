@@ -44,6 +44,6 @@
     "liveAccountQualified": false,
     "run": 36302338910,
     "checkRun": 108572198918,
-    "blocker": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings"
+    "blocker": "GitHub-hosted jobs did not start (account-level runner restriction at the time); no steps executed"
   }
 }

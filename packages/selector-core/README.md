@@ -1,4 +1,6 @@
-# Selector core (implementation preview)
+# Selector core (`@local-ai-kit/selector-core`)
+
+> Alpha. Not yet published to npm.
 
 Pure TypeScript selection logic with no DOM, native modules, scans, network, credentials, persistence, or import-time side effects. This is not an execution authorization service.
 
@@ -6,8 +8,8 @@ Pure TypeScript selection logic with no DOM, native modules, scans, network, cre
 
 `eligible` means advisory UI eligibility against the supplied snapshot, never permission to execute. The native service must revalidate current identity, descriptor revision, grants, limits, and billing before a turn. Unknown critical evidence does not satisfy strict filters. Conditional capabilities require native-service qualification.
 
-The `*View` types are explicitly structural UI projections, not a replacement for generated Rust contracts. Generated full SDK domain types remain pending native schema qualification.
+The `*View` types are explicitly structural UI projections, not a replacement for generated Rust contracts.
 
-Development: Node >=22.16, TypeScript 5.8.3. Run `node --experimental-strip-types --test tests/*.test.mjs` then `tsc -p tsconfig.json`. Build emits dependency-free ESM and declarations in `dist/`. Package publication is disabled pending owner approval.
+Development: Node >=22.16, TypeScript 7. Run `node --experimental-strip-types --test tests/*.test.mjs` then `tsc -p tsconfig.json`. Build emits dependency-free ESM and declarations in `dist/`.
 
-The React controls and eight-selector demo are separate planned consumers; this package does not claim they are implemented.
+The React hooks ([`@local-ai-kit/react`](../react/)), the eight selector layouts ([`@local-ai-kit/ui-react`](../ui-react/)) and the [demo app](../../apps/demo/) are separate consumers of this package.

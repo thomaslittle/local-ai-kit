@@ -1,91 +1,68 @@
 # Local AI Kit
 
-**Discover, inspect, select, and use locally configured AI access through one integration.**
+**Discover, inspect, select, and use the AI access already configured on a user's computer, through one integration.**
 
-A Rust implementation with an embedded library, standalone native helper, authenticated local transports, TypeScript/Python SDKs, and optional React selectors. Applications do not need to reproduce client-specific paths, metadata parsers, or streaming protocols.
+[![CI](https://github.com/thomaslittle/local-ai-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/thomaslittle/local-ai-kit/actions/workflows/ci.yml)
+[![React Doctor](https://github.com/thomaslittle/local-ai-kit/actions/workflows/react-doctor.yml/badge.svg)](https://github.com/thomaslittle/local-ai-kit/actions/workflows/react-doctor.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)
 
-> **Unpublished developer alpha.** The native service, supported execution adapters, SDKs, reusable selectors, and installable bundles work. Provider coverage is operation-specific. Gemini CLI, Antigravity ACP, and Grok can be registered explicitly as native profiles and use the installed client's own ACP/login path; this does not imply universal subscription access, known quotas, or live-generation qualification. Read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) and [qualification records](docs/qualification/).
+Local AI Kit is a Rust toolkit with an embedded library, a standalone native helper, authenticated local transports, TypeScript and Python SDKs, and optional React selectors. Your application does not have to reproduce client-specific paths, metadata parsers, or streaming protocols for each AI client a user might have installed.
 
-## What is included
+> **Alpha.** The native service, supported execution adapters, SDKs, selectors, and installable bundles work, but the API can still change between `0.1.0-alpha.N` releases. Nothing is published to npm, PyPI, or crates.io yet; use [GitHub release bundles](https://github.com/thomaslittle/local-ai-kit/releases) or build from source. Provider coverage is operation-specific: read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) before relying on a provider.
 
-| Piece | Integration surface |
-|---|---|
-| Native engine | Passive discovery; account/plan/model/usage evidence; route-aware selection; granted sessions, streaming, approvals, cancellation, and scoped result artifacts. |
-| Rust facade | [`lai-kit`](crates/lai-kit/) embeds the same implementation without a separate process. |
-| TypeScript and Python | Thin clients for the actual native service, generated domain types, bounded streaming, cancellation, and verified bundle resolution. |
-| Local transports | Stdio JSON-RPC, paired HTTP/SSE, per-application Unix socket/Windows named-pipe broker, and opt-in browser Native Messaging. |
-| Optional UI | Framework-neutral selection plus React hooks and eight reusable selector layouts, with native model options. |
-| Developer tools | Real-data showroom, isolated test fixtures, generated OpenAPI/JSON Schema, contribution guidance, package smoke tests, and measured benchmarks. |
+## What it does
 
-Finding an installation does **not** establish an active subscription. Unknown plans, usage, capabilities, and billing remain unknown. The installed client owns its credentials; subscription tokens are never turned into generic API keys. Imports never scan, launch clients, contact providers, or generate output.
+- **Passive discovery.** Finds installed AI clients and profiles (Codex, Claude Code, Grok, Gemini CLI, Antigravity, OpenCode, Muse Code, Cursor, GitHub Copilot, Ollama, LM Studio, and API routes you configure) from metadata only. No scanning at import time, no secrets read, no network calls.
+- **Evidence-backed inventory.** Provider, installation, profile, account, connection, route, model, billing, and quota-pool identities stay distinct, with field-level evidence. *Unknown* and *unsupported* are different states, and unknowns are never filled in with guesses.
+- **Selection.** Route-aware, framework-neutral selection logic that keeps each provider's native model IDs and option descriptors. There are no hard-coded universal "Low/Medium/High" controls.
+- **Granted sessions.** Streaming text sessions, approvals, cancellation, image input, host MCP tools, resumable sessions, and scoped result artifacts, only after a host grants them explicitly.
+- **Thin SDKs.** Rust is the canonical implementation. The [TypeScript](packages/sdk-typescript/) and [Python](packages/sdk-python/) SDKs are typed protocol clients generated from the Rust contracts. The React [hooks](packages/react/) and [eight selector layouts](packages/ui-react/) are optional.
 
-## Build from source
+### Safety model
 
-Development requires the pinned Rust toolchain, Node 22.16+, and Python 3.11+.
+Finding an installation does **not** establish an active subscription, and a discovery signal is never permission to execute.
+
+- The installed client owns its credentials. Subscription tokens are never exported as API keys, browser cookies are never read, and nothing silently falls back to paid usage or rotates accounts to evade limits.
+- Metadata, execution, workspace access, tools, and paid options are separate, revocable, per-application grants.
+- Local transports are loopback/owner-scoped and authenticated; cancellation only touches processes the toolkit started.
+
+See the [threat model](docs/security/threat-model.md) and [SECURITY.md](SECURITY.md).
+
+## Quick start
+
+You need the pinned Rust toolchain (installed automatically by `rustup` from [`rust-toolchain.toml`](rust-toolchain.toml)), Node.js 22.16+, and Python 3.11+.
 
 ```sh
+git clone https://github.com/thomaslittle/local-ai-kit.git
+cd local-ai-kit
 npm ci --ignore-scripts
 npm run build
 cargo build --locked -p lai-cli
 ```
 
-The executable is `target/debug/local-ai-kit` (`.exe` on Windows). `scan --json` performs explicit metadata-only filesystem discovery. An empty or unverified account result is not replaced with sample data.
+The helper is `target/debug/local-ai-kit` (`.exe` on Windows). Run a metadata-only scan of this machine:
 
-## Run the showroom
+```sh
+target/debug/local-ai-kit scan --json
+```
 
-The demo runs the native local service and loads detected local installations after browser pairing. It does not insert sample accounts or models. Build tools and the native helper must be available. There is one command, and it serves the UI with hot module replacement:
+To see exactly what discovery finds without touching your real home directory, point it at an empty directory: `scan --json --home /absolute/empty/dir`.
+
+### Run the showcase
 
 ```sh
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/` and choose **Show current pairing code**. The browser reads the active one-use code from the same-origin local helper, fills it in, and leaves pairing as an explicit action. After refresh or expiry, the same button issues a replacement code. Hosts and SDK consumers can call `GET /runtime/pairing-code` / `getPairingCode({ baseUrl })`, or explicitly rotate with `POST /runtime/pairing-code` / `issuePairingCode({ baseUrl })`. Pairing triggers passive local discovery, then the browser checks metadata for profiles allowed by the host without sending model prompts. The demo grants supported text execution in an isolated temporary workspace, but a turn still requires account consent and an explicit **Run live turn** click. With no paired runtime the UI falls back to clearly labeled example data. See the [live demo guide](docs/integration/live-demo.md), the [pairing API](docs/integration/pairing.md) and [apps/demo](apps/demo/README.md) for the stack, routes, and tests.
+Open <http://127.0.0.1:5173/>, choose **Show current pairing code**, then **Pair**. The demo shows your real detected installations after an explicit browser pairing and never sends a prompt unless you grant a session and click **Run live turn**. With no paired runtime it falls back to clearly labeled example data. See the [live demo guide](docs/integration/live-demo.md) and [`apps/demo`](apps/demo/README.md).
 
-## Register an existing native AI client
-
-Native subscription-style integrations are explicit. A host-owned JSON file names the exact installed client/profile; it does not contain credentials:
-
-```json
-{
-  "profiles": [
-    {
-      "id": "grok-personal",
-      "label": "Grok personal",
-      "provider": "grok",
-      "executable": "C:\\Users\\you\\.grok\\bin\\grok.exe",
-      "profileHome": "C:\\Users\\you\\.grok",
-      "billing": "subscription"
-    }
-  ]
-}
-```
-
-Start the helper with `--native-profiles ABSOLUTE_JSON --allow-metadata grok` to inspect the registered native catalog. Text sessions additionally require `--allow-execution grok --workspace ABSOLUTE_DIRECTORY`. The installed client owns authentication; the toolkit sends no copied token/API key. Billing in this example is a host declaration and remains labeled user-supplied evidence.
-
-For connections that were discovered rather than registered (for example a default Grok install or a managed OpenCode server), whose provider leaves billing unknown, a host may pass `--billing-declarations ABSOLUTE_JSON`:
-
-```json
-{ "declarations": [{ "connectionId": "connection_...", "providerId": "grok", "billing": "subscription" }] }
-```
-
-A declaration only fills billing that is still unknown after a probe (including OpenCode gateway sub-routes), never replaces reported billing, must name the provider actually discovered on that connection, and is recorded as `userSupplied` evidence. `unknown`/`mixed` are rejected, as is `local` for account clients (Gemini CLI, Antigravity, Grok, Muse Code). A declared, discovered default-profile Grok may run text-only sessions; undeclared unknown billing stays refused, and metered/credit billing still requires paid consent.
-
-## Use the packages
-
-Hosts can also offer [ChatGPT managed sign-in](docs/integration/chatgpt-managed-auth.md)
-using `--chatgpt-app-name` and the separately granted `codex_managed` connection.
-The helper owns OAuth and protected credentials; the installed Codex login is
-kept separate. Add `--executable-only-provider codex` to keep only the private
-Codex executable candidate and omit legacy Codex profiles and routes from
-discovery; other providers keep their normal inventory.
-
-Building a prompt-driven application? Start with the [desktop app integration flow](docs/integration/prompt-app.md) for provider/model selection, grants, streaming, follow-up turns, and scene-output validation.
-
-The [distribution guide](docs/integration/distribution.md) shows how to build a checksummed native bundle and install its four npm tarballs or Python wheel. Registry publication and signing are separate, unperformed operations. The standalone native executables need neither Node nor Python.
+## Use it from your app
 
 ```ts
 import { createLocalAI } from '@local-ai-kit/sdk';
 import { openBundledTransport } from '@local-ai-kit/sdk/node';
+
 const transport = await openBundledTransport({
   bundleDirectory: '/absolute/path/to/extracted/bundle',
   args: ['serve', '--stdio', '--allow-passive-discovery'],
@@ -94,38 +71,69 @@ const ai = await createLocalAI({ transport });
 try {
   await ai.discovery.refresh({ level: 'passive' });
   console.log(await ai.connections.list());
-} finally { await ai.close(); }
+} finally {
+  await ai.close();
+}
 ```
 
-Python and Rust examples use the same normalized service. [C# HTTP](examples/dotnet-http/), [React](examples/react/), [Tauri](examples/tauri/), and [browser extension](examples/browser-extension/) examples show optional host integration; check each example's qualification, not just its source presence.
+| Integration | Where to start |
+|---|---|
+| Install a built bundle (helper, npm tarballs, Python wheel) | [Distribution](docs/integration/distribution.md) |
+| Native helper CLI, stdio / HTTP / broker transports | [Native helper](docs/integration/native-helper.md), [pairing](docs/integration/pairing.md), [shared broker](docs/integration/shared-broker.md) |
+| Prompt-driven desktop app (provider/model selection, grants, streaming) | [Prompt-app guide](docs/integration/prompt-app.md) |
+| Register Gemini CLI / Antigravity / Grok profiles; declare billing | [Native profiles](docs/integration/native-profiles.md) |
+| Rust embedding | [`lai-kit`](crates/lai-kit/) and its [examples](crates/lai-kit/examples/) |
+| Python | [`examples/python`](examples/python/), [Python SDK](packages/sdk-python/) |
+| React | [`examples/react`](examples/react/), [React hooks](packages/react/), [UI selectors](packages/ui-react/) |
+| C# over HTTP, Tauri, browser extension | [`examples/dotnet-http`](examples/dotnet-http/), [`examples/tauri`](examples/tauri/), [`examples/browser-extension`](examples/browser-extension/) |
+| Wire protocol, OpenAPI, JSON Schema | [Generated API](docs/integration/generated-api.md), [`protocol/`](protocol/) |
+| Add a provider adapter | [Adapter authoring guide](docs/adapters/AUTHORING.md) |
 
-The [React package](packages/react/) supplies hooks. The [UI package](packages/ui-react/) supplies provider rail, compact, command-palette, capability-first, comparison, allowance-aware, preset, and mobile selectors. Both are optional; the SDK and native core do not require React.
+## Repository layout
 
-## Verify and package
+| Path | Contents |
+|---|---|
+| `crates/lai-contracts`, `lai-core` | Canonical serializable contracts; selection and permission-scoped projections. No I/O. |
+| `crates/lai-discovery`, `lai-platform` | Explicit passive inventory; injected OS boundaries. |
+| `crates/lai-adapters`, `lai-chatgpt-auth` | Provider integrations (native clients, ACP, HTTP/API routes); host-owned ChatGPT sign-in. |
+| `crates/lai-runtime`, `lai-service`, `lai-transports` | Owner-scoped sessions; the shared native service; stdio, HTTP/SSE, broker, and Native Messaging transports. |
+| `crates/lai-kit`, `lai-cli` | The embeddable Rust facade; the `local-ai-kit` helper executable. |
+| `packages/` | `sdk-typescript`, `sdk-python`, `selector-core`, `react`, `ui-react`. |
+| `apps/demo` | The React showcase (uses only the public SDK). |
+| `protocol/` | Generated JSON Schema, OpenAPI, and method list. |
+| `docs/`, `examples/`, `scripts/` | Documentation, host-integration examples, build/verify/release tooling. |
 
-Install Python test/build dependencies in a project virtual environment using `scripts/requirements-build.txt`, and install Playwright Chromium with `npx --no-install playwright install chromium`.
+## Platform status
+
+| Platform | Status |
+|---|---|
+| Windows x64 | Verified; unsigned prerelease helper bundles are attached to [releases](https://github.com/thomaslittle/local-ai-kit/releases). |
+| Linux x64 | Verified on Ubuntu (WSL2) and exercised in CI; no release bundle yet. |
+| macOS | Built and tested in CI only; not manually qualified. |
+
+Status words in this repository are deliberate: **planned**, **implemented**, **fixture-tested**, **platform-executed**, and **live-qualified** mean different things. Most provider paths are fixture-tested; live qualification is called out per provider in the [support matrix](docs/adapters/SUPPORT-MATRIX.md) and in the [qualification records](docs/qualification/).
+
+## Verify
 
 ```sh
+python -m venv .venv-build            # then activate it with your shell
+python -m pip install -r scripts/requirements-build.txt
+npx --no-install playwright install chromium
 python scripts/verify.py --profile all
-python scripts/verify.py --profile release
 ```
 
-The release profile additionally requires a .NET 8 SDK for the plain HTTP example. It runs lint, adapter conformance, checksummed packaging, isolated tarball/wheel consumers, and a 60-second idle benchmark. Nothing publishes packages or spends an AI allowance. Results are saved in `.verification/` and bundles in `dist/release/`; manifests identify the exact source commit and any dirty working tree.
+`verify.py --profile all` runs the Rust workspace, SDK, generator, selector, browser, and accessibility checks against synthetic homes, fake clients, and mock servers. It never spends an AI allowance. `--profile release` additionally needs a .NET 8 SDK, builds a checksummed bundle, tests clean tarball and wheel consumers, and measures an idle baseline. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
 
-Automated browser checks cover interaction, live pairing, and common WCAG A/AA violations. They are not a complete manual accessibility certification. Platform and live-account qualification remain distinct from unit/fixture test results.
+## Documentation
 
-Current verified source, platform results, packages, and benchmarks are in the [September 27 readiness report](docs/qualification/2026-09-27-readiness.md).
+- [Documentation index](docs/README.md)
+- [Support matrix](docs/adapters/SUPPORT-MATRIX.md) and [adapter docs](docs/adapters/)
+- [Architecture specification](docs/design/architecture.md) and [threat model](docs/security/threat-model.md)
+- [Changelog](CHANGELOG.md) and [development log](docs/implementation/DEVELOPMENT-LOG.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
-## Documentation and limitations
+## Contributing, security, license
 
-Start with the [support matrix](docs/adapters/SUPPORT-MATRIX.md), [native helper](docs/integration/native-helper.md), [generated API](docs/integration/generated-api.md), [incremental metadata/refresh](docs/integration/incremental-metadata.md), [native resumption](docs/integration/native-session-resumption.md), [result artifacts](docs/integration/artifacts.md), [adapter authoring guide](docs/adapters/AUTHORING.md), and [Tokscale upstream discovery](docs/upstream/tokscale.md).
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
-Native Gemini CLI, Antigravity ACP, and Grok routes require explicit profile registration; passive detection alone never enables them. Grok metadata has been qualified without inference on one Windows client, while Gemini CLI/Antigravity live qualification remains unavailable on the current PC. Cursor exposes only separately authorized, stale non-secret cached metadata. Direct API routes never substitute for subscription access without explicit billing permission. ACP native routes now support capability-gated suspend/resume through owner-scoped opaque tokens while the local runtime remains alive; raw provider session IDs are never exposed. Tokens intentionally expire on revoke/runtime restart rather than pretending the toolkit owns durable provider history. Exhaustive provider quota metadata and macOS qualification are not claimed yet. Opt-in local metadata watching is implemented through `discovery.watch`; it invalidates evidence without auto-probing providers.
-
-The original [architecture](docs/superpowers/specs/2026-09-24-local-ai-kit-design.md) and [18-task plan](docs/superpowers/plans/2026-09-24-local-ai-kit-implementation.md) remain the full intended scope, not a checklist retrospectively declared complete. [RESUME.md](docs/handoffs/RESUME.md) and the [implementation ledger](docs/implementation/LEDGER.md) distinguish implemented work from unresolved scope.
-
-## License
-
-Original code uses [MIT](LICENSE). Preserve [third-party notices](THIRD_PARTY_NOTICES.md). The repository is private and the working package name is not an availability-cleared public brand. No registry release, notarization, signed binary, or hosted credential service is implied.
-
-This toolkit is independent of Maps and image enhancement. `HANDOFF-MANIFEST.json` records the historical planning bootstrap only; current distribution checksums live in each build's `manifest.json`.
+Local AI Kit is released under the [MIT License](LICENSE). It builds on and credits several open-source projects; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [source audit](docs/design/source-audit.md). Provider and product names are trademarks of their owners; their use here does not imply affiliation or endorsement.

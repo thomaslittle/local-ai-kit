@@ -1,6 +1,6 @@
 # Local AI Kit Implementation Plan
 
-> **For agentic workers:** Use `superpowers:executing-plans` for inline execution or `superpowers:subagent-driven-development` when independent workers are actually available. Implement task-by-task, with bounded commits and evidence-backed review. All boxes below are initially unchecked; this handoff is a plan, not completed software.
+> **Historical planning document.** This is the task plan the project was originally built from. Its checkboxes were never maintained as a status tracker and the file layout is illustrative. For what is implemented, see the [support matrix](../adapters/SUPPORT-MATRIX.md) and the [implementation ledger](../implementation/LEDGER.md).
 
 **Goal:** Build a standalone, cross-platform toolkit for local AI discovery, evidence-backed account/model/usage inspection, supported agent communication, language-neutral APIs/SDKs, and reusable provider/model selectors.
 
@@ -8,11 +8,11 @@
 
 **Tech Stack:** Rust/Tokio/Serde, typed schema/OpenAPI generation, TypeScript, React/Vite, optional shadcn-style UI, Python, Vitest/Playwright/pytest, native platform CI. Pin actual compatible dependency/toolchain versions during Task 1.
 
-**Spec:** `docs/superpowers/specs/2026-09-24-local-ai-kit-design.md`.
+**Spec:** [architecture specification](architecture.md).
 
 ## Global Constraints
 
-- New standalone project; no Maps, image-enhancement, full IDE, or mandatory hosted service.
+- Standalone project; no full IDE and no mandatory hosted service.
 - No changes to reference repositories. Preserve licenses/notices for reused code.
 - One Rust implementation of provider logic, language-neutral public contracts, optional UI/execution dependencies.
 - Importing a package has no filesystem, credential, process, network, download, or inference side effect.
@@ -293,7 +293,7 @@ The response is a grant-filtered snapshot. It must not trigger enrichment or con
 **Tests:** framing/message limits, unregistered extension rejection, large artifact chunking, local grants, host registration/unregistration, stopped WSL distro not started by scan.
 
 **Consumes:** service protocol and explicit per-client grants.
-**Produces:** generic transport/integration examples unrelated to the original Maps idea.
+**Produces:** generic transport/integration examples that are independent of any single host application.
 
 - [ ] Implement Native Messaging framing with the browser's documented size constraints. Stream large artifacts through bounded authorized chunks; never expose a general arbitrary-file-read endpoint.
 - [ ] Provide explicit host registration instructions/install action. Importing the JS package cannot silently install native hosts or obtain OS permissions.

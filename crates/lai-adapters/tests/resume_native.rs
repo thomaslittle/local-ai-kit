@@ -136,7 +136,7 @@ async fn codex_persistent_thread_suspends_to_its_native_id() {
 async fn managed_codex_rotated_token_restarts_and_resumes_same_thread() {
     let tmp = tempfile::tempdir().unwrap();
     let identity = lai_adapters::codex::ManagedIdentity {
-        app_name: "crntly".into(),
+        app_name: "example-app".into(),
         subject: "subject".into(),
         client_id: "oaiapp_client".into(),
         email: Some("person@example.test".into()),
@@ -204,7 +204,7 @@ async fn managed_codex_rotated_token_restarts_and_resumes_same_thread() {
 async fn managed_codex_changed_identity_rejects_turn_before_native_thread_start() {
     let tmp = tempfile::tempdir().unwrap();
     let identity = lai_adapters::codex::ManagedIdentity {
-        app_name: "crntly".into(),
+        app_name: "example-app".into(),
         subject: "subject".into(),
         client_id: "oaiapp_client".into(),
         email: None,

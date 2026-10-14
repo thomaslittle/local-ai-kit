@@ -26,7 +26,7 @@
         "node",
         "--experimental-strip-types",
         "--test",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/selector-core/tests/selection.test.mjs"
+        "<qualification-checkout>/packages/selector-core/tests/selection.test.mjs"
       ],
       "exitCode": 0,
       "seconds": 0.253
@@ -45,21 +45,21 @@
         "node",
         "--experimental-strip-types",
         "--test",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/artifacts.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/bundle.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/catalog.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/client-close.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/http.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/native.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/stdio.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/packages/sdk-typescript/tests/store.test.mjs"
+        "<qualification-checkout>/packages/sdk-typescript/tests/artifacts.test.mjs",
+        "<qualification-checkout>/packages/sdk-typescript/tests/bundle.test.mjs",
+        "<qualification-checkout>/packages/sdk-typescript/tests/catalog.test.mjs",
+        "<qualification-checkout>/packages/sdk-typescript/tests/client-close.test.mjs",
+        "<qualification-checkout>/packages/sdk-typescript/tests/http.test.mjs",
+        "<qualification-checkout>/packages/sdk-typescript/tests/native.test.mjs",
+        "<qualification-checkout>/packages/sdk-typescript/tests/stdio.test.mjs",
+        "<qualification-checkout>/packages/sdk-typescript/tests/store.test.mjs"
       ],
       "exitCode": 0,
       "seconds": 0.742
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "-m",
         "unittest",
         "discover",
@@ -72,7 +72,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "-m",
         "unittest",
         "discover",
@@ -85,7 +85,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/check_generated.py"
       ],
       "exitCode": 0,
@@ -120,7 +120,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/test_native_bridge.py"
       ],
       "exitCode": 0,
@@ -141,7 +141,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "-m",
         "unittest",
         "discover",
@@ -154,7 +154,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/check_project.py"
       ],
       "exitCode": 0,
@@ -200,15 +200,15 @@
       "command": [
         "node",
         "--test",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/apps/demo/tests/http.test.mjs",
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/apps/demo/tests/service.test.mjs"
+        "<qualification-checkout>/apps/demo/tests/http.test.mjs",
+        "<qualification-checkout>/apps/demo/tests/service.test.mjs"
       ],
       "exitCode": 0,
       "seconds": 0.602
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/test_demo.py"
       ],
       "exitCode": 0,
@@ -239,7 +239,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/test_dotnet.py"
       ],
       "exitCode": 0,
@@ -271,7 +271,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/adapter_conformance.py",
         "--all"
       ],
@@ -280,7 +280,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/build_release.py",
         "--profile",
         "release"
@@ -290,7 +290,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/package_smoke.py"
       ],
       "exitCode": 0,
@@ -298,7 +298,7 @@
     },
     {
       "command": [
-        "/home/tomlit/.cache/local-ai-kit-qual.OdnpD5/repo/.verification/build-tools/bin/python",
+        "<qualification-checkout>/.verification/build-tools/bin/python",
         "scripts/benchmark.py",
         "--idle-seconds",
         "60"

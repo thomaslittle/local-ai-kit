@@ -3,7 +3,7 @@
 @import "@fontsource-variable/outfit";
 @plugin "@tailwindcss/typography";
 
-/* Theme: the crntly-desktop design language — true-neutral surfaces, a crimson
+/* Theme: true-neutral surfaces, a crimson
    accent (hue 22.7), Outfit, shadcn base-mira, Phosphor icons. Tokens follow
    shadcn's Tailwind v4 convention: oklch variables mapped through `@theme inline`.
    `:root` is the light palette; `.dark` (set on <html>) is the default workspace. */
@@ -45,7 +45,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* crntly elevation ramp + accent tints. */
+  /* Elevation ramp + accent tints. */
   --color-surface-subtle: var(--surface-subtle);
   --color-surface: var(--surface);
   --color-raised: var(--raised);
@@ -148,7 +148,7 @@
 
 .dark {
   color-scheme: dark;
-  /* Background ≈ #0a0a0a, same as the crntly landing hero. */
+  /* Background ≈ #0a0a0a, matches the showcase hero. */
   --background: oklch(0.085 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.14 0 0);

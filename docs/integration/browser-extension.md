@@ -1,6 +1,6 @@
 # Browser extension and Native Messaging host
 
-The optional example is generic: it inspects connections/models and can run an explicitly permitted text session. It contains no Maps logic, page content scripts, cookie access, or provider credentials. It uses the public TypeScript client and `createNativeMessagingTransport`.
+The optional example is generic: it inspects connections/models and can run an explicitly permitted text session. It contains no page content scripts, cookie access, or provider credentials. It uses the public TypeScript client and `createNativeMessagingTransport`.
 
 Build the binaries and extension:
 

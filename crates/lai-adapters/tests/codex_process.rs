@@ -74,7 +74,7 @@ async fn managed_identity_fetches_catalog_without_native_account_or_usage() {
         "managed-connection",
         "managed-route",
         ManagedIdentity {
-            app_name: "crntly".into(),
+            app_name: "example-app".into(),
             subject: "subject-123".into(),
             client_id: "oaiapp_client".into(),
             email: Some("person@example.test".into()),
@@ -102,7 +102,7 @@ async fn managed_route_requires_codex_0157_or_newer() {
         "c",
         "r",
         ManagedIdentity {
-            app_name: "crntly".into(),
+            app_name: "example-app".into(),
             subject: "subject".into(),
             client_id: "oaiapp_id".into(),
             email: None,

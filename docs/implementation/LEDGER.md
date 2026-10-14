@@ -8,7 +8,7 @@ Ruling: retain distinct executable directories as separate installation routes, 
 
 The first manual paired browser run returned 130 model entries; after preserving distinct installations, the final clean-source run returned 137 from Codex, Claude Code, Grok, and OpenCode; no model turn was sent. UI regression coverage includes continuing a resumed session without calling sessions.create, token non-disclosure, all eight selectors, and real-data-only failure states. Added `docs/integration/prompt-app.md` for application integration boundaries.
 
-GitHub's exact pre-job blocker is now known from check annotations: recent account payments failed or the spending limit needs increasing. No billing changes made. WSL starts again; new qualification must be reported independently of September 25 evidence.
+The earlier GitHub-hosted runs failed before any step started because of an account-level runner restriction. WSL starts again; new qualification must be reported independently of September 25 evidence.
 
 Final clean implementation source `0c8213842be5b72ea7614b51028a24912b1bdabd` passed full and release profiles on Windows and Ubuntu/WSL2. Rust: 349 Windows / 351 Linux, zero failed/ignored; each platform: TypeScript SDK 63, Python SDK 26, selectors 28, React 13, browser 14, accessibility 32. Clean packages, actual helper consumers, C#, strict lint/conformance, checksums, and benchmarks passed. Linux found an inode-reuse rotation defect during qualification; bounded leading fingerprints and birth-time identity corrected it before these final runs. Separate review found no blocking issues in that fix. See [current readiness evidence](../qualification/2026-09-27-readiness.md).
 

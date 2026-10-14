@@ -1054,7 +1054,7 @@ mod tests {
         }
     }
     fn with_endpoints(root: PathBuf, endpoints: Endpoints) -> AuthManager {
-        let mut manager = AuthManager::new(root, "crntly".into()).unwrap();
+        let mut manager = AuthManager::new(root, "example-app".into()).unwrap();
         Arc::get_mut(&mut manager.inner).unwrap().endpoints = Some(endpoints);
         manager
     }
@@ -1102,7 +1102,7 @@ mod tests {
         file.epoch += 1;
         file.credential_active = false;
         store.save(&file).unwrap();
-        let fresh = AuthManager::new(dir.path().to_path_buf(), "crntly".into()).unwrap();
+        let fresh = AuthManager::new(dir.path().to_path_buf(), "example-app".into()).unwrap();
         assert_eq!(fresh.status().await.unwrap().state, AuthState::SignedOut);
         assert_eq!(fresh.credentials().await.unwrap_err().code, "NOT_CONNECTED");
         assert!(path.exists());
@@ -1121,7 +1121,7 @@ mod tests {
             .unwrap()
             .delete_credential()
             .unwrap();
-        let manager = AuthManager::new(dir.path().to_path_buf(), "crntly".into()).unwrap();
+        let manager = AuthManager::new(dir.path().to_path_buf(), "example-app".into()).unwrap();
         let status = manager.status().await.unwrap();
         assert_eq!(status.state, AuthState::Error);
         assert_eq!(status.error_code.as_deref(), Some("CREDENTIAL_UNUSABLE"));
@@ -1187,7 +1187,7 @@ mod tests {
     #[tokio::test]
     async fn direct_first_run_disconnect_is_idempotent() {
         let dir = tempfile::tempdir().unwrap();
-        let manager = AuthManager::new(dir.path().to_path_buf(), "crntly".into()).unwrap();
+        let manager = AuthManager::new(dir.path().to_path_buf(), "example-app".into()).unwrap();
         manager.disconnect().await.unwrap();
         assert_eq!(manager.status().await.unwrap().state, AuthState::SignedOut);
         let saved = Store::new(dir.path().to_path_buf()).load().unwrap();
@@ -1314,7 +1314,7 @@ mod tests {
         let params: std::collections::HashMap<_, _> =
             first_url.query_pairs().into_owned().collect();
         assert_eq!(params["client_id"], "dynamic_agent_client");
-        assert_eq!(params["agent_name_hint"], "crntly");
+        assert_eq!(params["agent_name_hint"], "example-app");
         assert_eq!(params["code_challenge_method"], "S256");
         assert_eq!(params["resource"], RESOURCE);
         assert!(params["redirect_uri"].starts_with("http://127.0.0.1:"));
