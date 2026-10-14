@@ -1,29 +1,30 @@
 // TEMPORARY diagnostic; removed before merge.
 #[cfg(unix)]
-#[test]
-fn probe_unix_socket_bind() {
+#[tokio::test]
+async fn probe_unix_socket_bind() {
     use interprocess::local_socket::{GenericFilePath, ListenerOptions, prelude::*};
-    let p = std::env::temp_dir().join("lai-probe-1.sock");
-    eprintln!("PROBE path={} len={}", p.display(), p.as_os_str().len());
-    match std::os::unix::net::UnixListener::bind(&p) {
-        Ok(_) => eprintln!("PROBE std bind ok"),
-        Err(e) => eprintln!("PROBE std bind err {e:?}"),
-    }
+    use interprocess::os::unix::local_socket::ListenerOptionsExt;
+    let dir = std::env::temp_dir();
+    let mk = |n: &str| dir.join(n);
+    let p = mk("lai-probe-mode.sock");
     let _ = std::fs::remove_file(&p);
     let name = p.to_str().unwrap().to_fs_name::<GenericFilePath>().unwrap();
-    match ListenerOptions::new().name(name).create_sync() {
-        Ok(_) => eprintln!("PROBE interprocess ok"),
-        Err(e) => eprintln!("PROBE interprocess err {e:?}"),
+    match ListenerOptions::new().name(name).mode(0o600).create_sync() {
+        Ok(_) => eprintln!("PROBE sync+mode ok"),
+        Err(e) => eprintln!("PROBE sync+mode err {e:?}"),
     }
+    let p = mk("lai-probe-tokio.sock");
     let _ = std::fs::remove_file(&p);
-    let short = std::path::PathBuf::from("/tmp/lai-probe-2.sock");
-    let name = short
-        .to_str()
-        .unwrap()
-        .to_fs_name::<GenericFilePath>()
-        .unwrap();
-    match ListenerOptions::new().name(name).create_sync() {
-        Ok(_) => eprintln!("PROBE interprocess /tmp ok"),
-        Err(e) => eprintln!("PROBE interprocess /tmp err {e:?}"),
+    let name = p.to_str().unwrap().to_fs_name::<GenericFilePath>().unwrap();
+    match ListenerOptions::new().name(name).create_tokio() {
+        Ok(_) => eprintln!("PROBE tokio ok"),
+        Err(e) => eprintln!("PROBE tokio err {e:?}"),
+    }
+    let p = mk("lai-probe-both.sock");
+    let _ = std::fs::remove_file(&p);
+    let name = p.to_str().unwrap().to_fs_name::<GenericFilePath>().unwrap();
+    match ListenerOptions::new().name(name).mode(0o600).create_tokio() {
+        Ok(_) => eprintln!("PROBE tokio+mode ok"),
+        Err(e) => eprintln!("PROBE tokio+mode err {e:?}"),
     }
 }
