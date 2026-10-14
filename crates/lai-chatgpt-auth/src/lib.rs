@@ -37,7 +37,8 @@ mod tests {
     async fn constructor_does_not_read_credential_storage() {
         let root = tempfile::tempdir().unwrap();
         std::fs::write(root.path().join("chatgpt-auth.json"), b"not-json").unwrap();
-        let manager = crate::AuthManager::new(root.path().to_path_buf(), "crntly".into()).unwrap();
+        let manager =
+            crate::AuthManager::new(root.path().to_path_buf(), "example-app".into()).unwrap();
         assert_eq!(
             manager.status().await.unwrap_err().code,
             "STORAGE_UNAVAILABLE"

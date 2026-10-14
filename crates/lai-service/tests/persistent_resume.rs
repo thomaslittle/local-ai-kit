@@ -124,7 +124,7 @@ fn helper(state: Option<&Path>, workspace: &Path, resumable: bool) -> Helper {
             )
             .unwrap();
     }
-    service.set_app_identity("conn-1", "crntly").unwrap();
+    service.set_app_identity("conn-1", "example-app").unwrap();
     service
         .set_app_identity("other-app", "someone-else")
         .unwrap();
@@ -461,7 +461,7 @@ async fn missing_native_history_is_resume_unavailable_not_a_new_chat() {
     broken
         .register_client("conn-9", ClientPolicy::passive())
         .unwrap();
-    broken.set_app_identity("conn-9", "crntly").unwrap();
+    broken.set_app_identity("conn-9", "example-app").unwrap();
     broken
         .register_execution(
             "conn-9",

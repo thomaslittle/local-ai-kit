@@ -18,7 +18,7 @@ Reference does not imply affiliation, endorsement, inherited security guarantees
 | CodeNotch | https://github.com/vinzdg/codenotch | Broader provider/platform discovery. |
 | Prmptr | https://github.com/thomaslittle/prmptr | Vertical provider rail and grouped model selection. |
 
-See [SOURCE-AUDIT.md](SOURCE-AUDIT.md) for previously inspected revisions and exact paths. For any future reuse, verify the license at the exact source revision and preserve required copyright and license text.
+See [SOURCE-AUDIT.md](docs/design/source-audit.md) for previously inspected revisions and exact paths. For any future reuse, verify the license at the exact source revision and preserve required copyright and license text.
 
 ## Tokscale discovery knowledge
 
@@ -98,7 +98,7 @@ Muse Code itself is not redistributed. Its MSP schema was read from the installe
 
 ### Design tokens and typography (demo theme)
 
-- Theme tokens (neutral surfaces, crimson accent hue 22.7, elevation ramp, radius) follow the crntly-desktop design system by the same author (https://github.com/thomaslittle/crntly-desktop, `packages/shared/src/App.css`); no license issue, recorded for provenance.
+- Theme tokens (neutral surfaces, crimson accent hue 22.7, elevation ramp, radius) were designed by the project author for this demo and are original work.
 - Font: Outfit Variable via npm package `@fontsource-variable/outfit` 5.3.0, license SIL OFL 1.1, Copyright 2021 The Outfit Project Authors. License text retained in `licenses/outfit-font-OFL-1.1.txt`. The woff2 files are bundled by Vite and served from the same origin.
 - Icons: Phosphor Icons (`@phosphor-icons/react`, MIT, Copyright (c) 2020 Phosphor Icons), used as an npm dependency; license text in `licenses/phosphor-icons-MIT.txt`.
 

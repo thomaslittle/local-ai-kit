@@ -1,6 +1,6 @@
 # Integrating a prompt-driven desktop app
 
-For an app such as crntly, use Local AI Kit to discover access, choose a route and model, and stream a text response. Keep scene specifications, layout validation, asset handling, and rendering in the application.
+For a prompt-driven desktop app, use Local AI Kit to discover access, choose a route and model, and stream a text response. Keep scene specifications, layout validation, asset handling, and rendering in the application.
 
 ## Host and renderer
 
@@ -40,4 +40,4 @@ Keep an open session for follow-up edits. Native suspend/resume is available onl
 
 ## Readiness boundary
 
-This is an unpublished developer alpha. Deterministic adapter and package tests establish mechanics, not a guarantee that every installed version or user's subscription accepts inference. Live metadata checks do not qualify generation. Before shipping crntly integration, qualify the app's actual host lifecycle, scene validation, cancellation, and the specific provider versions you intend to support. Platform and live-provider evidence is recorded in [release qualification](../qualification/RELEASE-CANDIDATE.md).
+This is an unpublished developer alpha. Deterministic adapter and package tests establish mechanics, not a guarantee that every installed version or user's subscription accepts inference. Live metadata checks do not qualify generation. Before shipping your integration, qualify the app's actual host lifecycle, scene validation, cancellation, and the specific provider versions you intend to support. Platform and live-provider evidence is recorded in [release qualification](../qualification/RELEASE-CANDIDATE.md).

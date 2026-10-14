@@ -490,12 +490,12 @@ mod additional_provider_tests {
             "--stdio",
             "--allow-passive-discovery",
             "--chatgpt-app-name",
-            "crntly",
+            "example-app",
             "--allow-metadata",
             "codex_managed",
         ])
         .unwrap();
-        assert_eq!(args.chatgpt_app_name.as_deref(), Some("crntly"));
+        assert_eq!(args.chatgpt_app_name.as_deref(), Some("example-app"));
         assert!(args.native_profiles.is_none());
         assert!(!args.allow_execution);
         assert!(parse(&["serve", "--stdio", "--chatgpt-app-name", "bad name"]).is_err());

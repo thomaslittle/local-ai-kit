@@ -4,7 +4,7 @@ Current implementation source: `0c8213842be5b72ea7614b51028a24912b1bdabd`. Windo
 
 ## Historical verified developer-alpha build
 
-September 27 review is recorded in [the current handoff](../handoffs/RESUME.md) and [implementation ledger](../implementation/LEDGER.md). The measurements below remain evidence for their named historical commits. GitHub run `36141317640` has no executed steps: its check annotations state that recent account payments failed or the spending limit needs increasing. This is an external CI blocker, not a macOS test result.
+September 27 review is recorded in [the current handoff](../implementation/DEVELOPMENT-LOG.md) and [implementation ledger](../implementation/LEDGER.md). The measurements below remain evidence for their named historical commits. GitHub run `36141317640` has no executed steps: its check annotations state that recent account payments failed or the spending limit needs increasing. This is an external CI blocker, not a macOS test result.
 
 **Verified source:** `991ec2bd827cf6e3b6bc884c453ba1ca44bb2b91` on `feature/initial-implementation`.
 
