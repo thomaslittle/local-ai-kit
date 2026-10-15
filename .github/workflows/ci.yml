@@ -22,7 +22,7 @@ jobs:
       CARGO_BUILD_JOBS: '2'
       PYTHONUTF8: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Free disk space (Linux runner)
         if: runner.os == 'Linux'
         run: |
