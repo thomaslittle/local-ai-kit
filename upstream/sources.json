@@ -23,6 +23,27 @@
       ]
     },
     {
+      "id": "t3code",
+      "status": "pinned",
+      "kind": "oss-provider",
+      "repository": "pingdotgg/t3code",
+      "license": "MIT",
+      "lock": "upstream/t3code/NOTICE.md",
+      "syncState": "UPSTREAM_T3CODE.md",
+      "consumes": [
+        "passive CLI locations for providers T3 Code actually scans",
+        "ChatGPT OAuth refresh and identity-token rules",
+        "the distinction between local model servers, cloud CLIs, and the T3 Connect relay"
+      ],
+      "doesNotConsume": [
+        "ACP Registry downloads",
+        "ChatGPT multi-account handoff",
+        "Codex shadow homes",
+        "the bundled Cursor SDK",
+        "T3 product UI, orchestration, and release signing"
+      ]
+    },
+    {
       "id": "openusage",
       "status": "planned",
       "kind": "oss-discovery",

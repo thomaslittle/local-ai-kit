@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 /// Audited Tokscale commit. Released builds do not fetch this revision.
 pub const TOKSCALE_REPOSITORY: &str = "junhoyeo/tokscale";
 pub const TOKSCALE_COMMIT: &str = "1d9a9395418efc6952944b794097935d7d6fa1e8";
+/// Audited T3 Code commit. Released builds do not fetch this revision.
+pub const T3CODE_REPOSITORY: &str = "pingdotgg/t3code";
+pub const T3CODE_COMMIT: &str = "42da166d131017335a1158d0b379dd68b8985796";
 
 /// Why a discovery rule is trusted. Higher ranks win when sources disagree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -56,6 +59,13 @@ fn tokscale(provider: &str, detail: &str) -> EvidenceSource {
         EvidenceKind::Derived,
         "upstream.tokscale",
         &format!("{TOKSCALE_REPOSITORY}@{TOKSCALE_COMMIT} {detail} ({provider})"),
+    )
+}
+fn t3code(detail: &str) -> EvidenceSource {
+    EvidenceSource::new(
+        EvidenceKind::Derived,
+        "upstream.t3code",
+        &format!("{T3CODE_REPOSITORY}@{T3CODE_COMMIT} {detail}"),
     )
 }
 fn local(provider: &str, detail: &str) -> EvidenceSource {
@@ -202,6 +212,24 @@ pub fn discovery_rules() -> Vec<DiscoveryRule> {
             evidence: tokscale("grok", "clients.rs Grok EnvVar GROK_HOME"),
         },
         DiscoveryRule {
+            id: "pi-agent",
+            provider_id: "pi",
+            role: RuleRole::EnvOverride,
+            basis: RuleBasis::UpstreamOss,
+            summary: "PI_CODING_AGENT_DIR, otherwise ~/.pi/agent. PI_CODING_AGENT_SESSION_DIR is a session directory, not an installation.",
+            evidence: t3code("packages/provider-pi/src/server/usage.ts piUsageReader.directories"),
+        },
+        DiscoveryRule {
+            id: "opencode-native-bin",
+            provider_id: "opencode",
+            role: RuleRole::ProfileHome,
+            basis: RuleBasis::UpstreamOss,
+            summary: "~/.opencode/bin is searched for the opencode executable",
+            evidence: t3code(
+                "packages/provider-opencode/src/server/driver.ts isOpenCodeNativeCommandPath",
+            ),
+        },
+        DiscoveryRule {
             id: "ollama-home",
             provider_id: "ollama",
             role: RuleRole::ProfileHome,
@@ -275,6 +303,9 @@ pub fn profile_roots(provider_id: &str, env: &ScanEnvironment) -> Vec<PathBuf> {
             HostPlatform::Linux => join_relative(&env.config_home, "Cursor"),
         }],
         "github_copilot" => vec![join_relative(&env.home, ".copilot")],
+        "pi" => overridden(env, &["PI_CODING_AGENT_DIR"], || {
+            vec![join_relative(&env.home, ".pi/agent")]
+        }),
         "ollama" => vec![join_relative(&env.home, ".ollama")],
         "lmstudio" => overridden(env, &["LM_STUDIO_HOME"], || {
             vec![join_relative(&env.home, ".lmstudio")]
@@ -290,6 +321,7 @@ pub fn has_profile_override(provider_id: &str, env: &ScanEnvironment) -> bool {
         "gemini_cli" | "antigravity" => &["GEMINI_CLI_HOME"],
         "grok" => &["GROK_HOME"],
         "opencode" => &["OPENCODE_CONFIG_DIR"],
+        "pi" => &["PI_CODING_AGENT_DIR"],
         "lmstudio" => &["LM_STUDIO_HOME"],
         _ => &[],
     };
@@ -307,6 +339,7 @@ pub fn session_stores(provider_id: &str, profile: &Path) -> Vec<PathBuf> {
         "grok" => &["sessions", "logs/unified.jsonl"],
         "opencode" => &["storage/message"],
         "github_copilot" => &["session-store.db", "otel", "data.db"],
+        "pi" => &["sessions"],
         "lmstudio" => &["server-logs"],
         _ => &[],
     };

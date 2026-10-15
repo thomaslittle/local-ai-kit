@@ -19,7 +19,7 @@ upstream knowledge sources
 
 Released builds do not clone, download, or execute an upstream project, and they do not follow an upstream `main` branch. A source is useful only after its discovery-relevant changes have been normalized, tested, and given provenance.
 
-The manifest of sources is [sources.json](sources.json). Tokscale is the first pinned source; see [tokscale/NOTICE.md](tokscale/NOTICE.md) and [the upstream guide](../docs/upstream/tokscale.md).
+The manifest of sources is [sources.json](sources.json). Tokscale is the first pinned discovery source; see [tokscale/NOTICE.md](tokscale/NOTICE.md) and [the upstream guide](../docs/upstream/tokscale.md). T3 Code is pinned for provider detection and ChatGPT sign-in; see [t3code/NOTICE.md](t3code/NOTICE.md), [UPSTREAM_T3CODE.md](../UPSTREAM_T3CODE.md), and [the T3 Code guide](../docs/upstream/t3code.md).
 
 Authority, when sources disagree:
 

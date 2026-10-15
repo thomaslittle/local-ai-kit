@@ -14,6 +14,7 @@ pub const DISCOVERY_OVERRIDE_KEYS: &[&str] = &[
     "GEMINI_CLI_HOME",
     "GROK_HOME",
     "LM_STUDIO_HOME",
+    "PI_CODING_AGENT_DIR",
     crate::MUSE_BINARY_OVERRIDE,
 ];
 const LOCATION_KEYS: &[&str] = &[

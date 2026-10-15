@@ -40,6 +40,22 @@ See [SOURCE-AUDIT.md](docs/design/source-audit.md) for previously inspected revi
 
 See [upstream/tokscale/NOTICE.md](upstream/tokscale/NOTICE.md).
 
+## T3 Code provider sync (2026-10-15)
+
+| Field | Value |
+| --- | --- |
+| Source | https://github.com/pingdotgg/t3code at `42da166d131017335a1158d0b379dd68b8985796` |
+| Nightly tag at pin time | `v0.0.46-nightly.20261015.3158` (`e6bbfdb9ffe8334bed1c9b992f828f04d30db7ea`) |
+| Stable tag at pin time | `v0.0.45` (`6c8fed35dded9ff71c5b46807125457acbb76be6`) |
+| Referenced paths | `packages/provider-pi/src/server/usage.ts`, `packages/provider-opencode/src/server/driver.ts`, `apps/server/src/provider/CodexChatGptAuth.ts` |
+| Copied files | None for this pin. Behavior was reimplemented. |
+| License | MIT |
+| Copyright | Copyright (c) 2026 T3 Tools Inc. The license text is reproduced in the Muse section below and applies to this reuse as well. |
+| What was reused | Pi's profile and session location, OpenCode's `~/.opencode/bin` native install path, and ChatGPT token-refresh rules (`earliest_refresh_at`, ES256 identity tokens, consent retry when plan sharing was omitted). |
+| What was not reused | ACP Registry downloads, multi-account ChatGPT handoff, Codex shadow homes, the Cursor SDK, T3 Connect, and any Ollama, LM Studio, or llama.cpp integration (those providers are absent at this commit). |
+
+See [UPSTREAM_T3CODE.md](UPSTREAM_T3CODE.md) and [upstream/t3code/NOTICE.md](upstream/t3code/NOTICE.md).
+
 ## Muse Code adapter (T3 Code port)
 
 The Muse Code adapter (`crates/lai-adapters/src/muse/`) ports the behaviour of T3 Code's Muse provider to Rust. No TypeScript was copied; the protocol subset, approval-choice mapping, launcher handling, item presentation (web search hits, workflow children, subagents) and documented limits follow it. Recorded protocol transcripts were copied unchanged.

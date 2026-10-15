@@ -12,6 +12,10 @@ pub(crate) struct TokenRecord {
     pub refresh_token: String,
     pub id_token: String,
     pub expires_at: u64,
+    /// Unix seconds from the token response `earliest_refresh_at`. Absent means
+    /// the provider did not ask us to wait.
+    #[serde(default)]
+    pub earliest_refresh_at: Option<u64>,
     pub scopes: Vec<String>,
 }
 impl std::fmt::Debug for TokenRecord {
@@ -27,6 +31,10 @@ pub(crate) struct Registration {
     pub client_id: String,
     pub subject: String,
     pub email: Option<String>,
+    /// `Some(false)` means the last sign-in omitted `chatgpt.tokens.use.direct`.
+    /// The next attempt asks for consent again. Older files leave this unset.
+    #[serde(default)]
+    pub sharing_enabled: Option<bool>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct StateFile {

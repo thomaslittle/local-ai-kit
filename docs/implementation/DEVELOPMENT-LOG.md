@@ -2,6 +2,18 @@
 
 A reverse-chronological engineering log of what was implemented, how it was verified, and what is deliberately still unclaimed. It records source commits and verification results at the time of each entry; entries are not rewritten when later work supersedes them. For release-level summaries see the [changelog](../../CHANGELOG.md); for operation-level provider status see the [support matrix](../adapters/SUPPORT-MATRIX.md).
 
+## October 15 T3 Code provider sync (alpha.16)
+
+Pinned [T3 Code](https://github.com/pingdotgg/t3code) `main` at `42da166d131017335a1158d0b379dd68b8985796`. There is no `nightly` branch. The nightly tag at review time was `v0.0.46-nightly.20261015.3158` (`e6bbfdb9ffe8334bed1c9b992f828f04d30db7ea`). The stable tag was `v0.0.45` (`6c8fed35dded9ff71c5b46807125457acbb76be6`). The pin is one OTLP-label commit ahead of that nightly and that commit is outside the provider surface. See [UPSTREAM_T3CODE.md](../../UPSTREAM_T3CODE.md).
+
+T3 Code's cloud model access is the signed-in CLI (Codex, Claude Code, Grok, OpenCode, Pi, Antigravity, Muse, Cursor, and ACP Registry agents such as Gemini CLI). It has no Ollama, LM Studio, or llama.cpp provider. `apps/server/src/cloud` is the T3 Connect relay, not an LLM API. ChatGPT sign-in lives in `CodexChatGptAuth.ts`.
+
+Ported, and reimplemented in Rust rather than copied: passive Pi inventory (`pi`, `PI_CODING_AGENT_DIR` or `~/.pi/agent`, sessions under `sessions/`, no execution); OpenCode's installer directory `~/.opencode/bin`; ChatGPT `earliest_refresh_at`, RS256 or P-256 ES256 identity tokens with five seconds of clock skew, and `prompt=consent` after a sign-in that omitted `chatgpt.tokens.use.direct`. Existing Codex, Claude, Gemini CLI, Grok, Cursor, Copilot, and Antigravity inventory stayed in place. `CLAUDE_SECURESTORAGE_CONFIG_DIR` still outranks `CLAUDE_CONFIG_DIR`.
+
+Reviewed and not adopted: ACP Registry downloads, Gemini CLI installation, Codex release downloads, Windows `claude.cmd` shim rewriting, multi-account ChatGPT handoff, Codex shadow homes, and the bundled Cursor SDK.
+
+**Fixture-tested** on Linux, 2026-10-15: `python scripts/verify.py --profile all` exited 0 (559 Rust tests in 103 suites, 0 failed, 0 ignored, plus the SDK, generation, React, demo, and accessibility checks in that profile). `cargo fmt --all --check` and `cargo clippy --workspace --all-targets --all-features --locked -- -D warnings` exited 0. `python scripts/test_upstream_t3code.py` exited 0. A dirty-tree `python scripts/build_release.py --profile release` and `python scripts/package_smoke.py` also exited 0; that archive is stamped with the pre-commit HEAD and is not the release asset. No .NET SDK was installed, so `scripts/test_dotnet.py` did not run. No live provider account was used and no inference was sent. This entry is not live-qualified and not platform-executed on Windows or macOS.
+
 ## October 13 merge into `main` and alpha.15
 
 `main` now carries every branch with unmerged product work: `feature/muse-provider` (the whole alpha.9-alpha.14 line, including `codex/chatgpt-managed-auth`), `fix/opencode-protocol-compatibility` (dormant OpenCode v2 adapter; automatic launch stays disabled) and the committed `grok-tokscale-upstream-discovery` commits up to `22f4423` (Tokscale discovery knowledge; the Muse override and profile root were carried into its `knowledge::profile_roots` design). `feat/demo-react-vite` was already in `main` as #1. The demo app's workspace pins moved off alpha.8. `verify.py --profile all` passed on Windows on the merged tree: 555 Rust tests in 102 suites, 190 Node tests, 75 Python tests, React Doctor clean. Released from merged `main` as `v0.1.0-alpha.15` (GitHub prerelease); the release manifest holds the source commit and asset hashes.
