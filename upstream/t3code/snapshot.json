@@ -2,14 +2,14 @@
   "source": {
     "repository": "pingdotgg/t3code",
     "url": "https://github.com/pingdotgg/t3code",
-    "commit": "42da166d131017335a1158d0b379dd68b8985796",
-    "commitSubject": "fix(server): OTLP exports say which machine and build they came from (#19370)",
+    "commit": "cfafb4bb54d244e4612f5681aad3832ea64cb0fb",
+    "commitSubject": "fix(codex): a slow but healthy Codex no longer shows as Unavailable (#15945)",
     "branch": "main",
     "nightlyBranch": null,
-    "nightlyTag": "v0.0.46-nightly.20261015.3158",
-    "nightlyCommit": "e6bbfdb9ffe8334bed1c9b992f828f04d30db7ea",
-    "stableTag": "v0.0.45",
-    "stableCommit": "6c8fed35dded9ff71c5b46807125457acbb76be6",
+    "nightlyTag": "v0.1.1-nightly.20261016.3203",
+    "nightlyCommit": "e3b35d1b2440b104f0bc2e357377c348121234dd",
+    "stableTag": "v0.1.0",
+    "stableCommit": "81493efb71e8e8244f95d3e9f71d8369654ab151",
     "license": "MIT",
     "licenseCopyright": "Copyright (c) 2026 T3 Tools Inc."
   },
@@ -27,6 +27,20 @@
       "relative": ".opencode/bin",
       "command": "opencode",
       "source": "packages/provider-opencode/src/server/driver.ts"
+    },
+    "grokProbe": {
+      "env": "GROK_DISABLE_AUTOUPDATER",
+      "value": "1",
+      "appliesTo": ["grok models", "acp initialize"],
+      "textSessions": false,
+      "source": "packages/provider-grok/src/server/probeEnvironment.ts",
+      "commit": "2a7bd1673c7bdad4304b7771944e73c29ecd3c01"
+    },
+    "codexProbeTimeoutMs": {
+      "value": 20000,
+      "source": "apps/server/src/provider/CodexProvider.ts",
+      "commit": "cfafb4bb54d244e4612f5681aad3832ea64cb0fb",
+      "local": "crates/lai-adapters/src/codex/launch.rs already waited 20 seconds"
     },
     "chatgpt": {
       "issuer": "https://auth.openai.com",
@@ -55,7 +69,7 @@
     },
     {
       "area": "acp-registry-install",
-      "finding": "The ACP Registry driver downloads third-party agents into a T3-owned tools directory. Local AI Kit does not download executables from a remote manifest. User-configured local ACP commands stay on the existing explicit native-profile path."
+      "finding": "The ACP Registry driver downloads third-party agents into a T3-owned tools directory. At cfafb4bb, Windows on ARM falls back to a windows-x86_64 archive when the agent publishes no windows-aarch64 binary (76cb251d). Local AI Kit does not download executables from a remote manifest. User-configured local ACP commands stay on the existing explicit native-profile path."
     },
     {
       "area": "chatgpt-multi-account",
@@ -67,11 +81,11 @@
     },
     {
       "area": "cursor-sdk",
-      "finding": "T3 Code's current Cursor driver uses the bundled Cursor SDK and hides the CLI path. Local AI Kit still only inventories cursor-agent and does not execute Cursor."
+      "finding": "T3 Code's current Cursor driver uses the bundled Cursor SDK and hides the CLI path. At cfafb4bb, Auto threads use Cursor's Auto-review (2d943723). Local AI Kit still only inventories cursor-agent and does not execute Cursor."
     },
     {
       "area": "codex-managed-download",
-      "finding": "CodexInstallation.ts downloads a pinned Codex release archive into a T3-owned tools directory. Local AI Kit inventories a Codex binary that is already installed and does not download executables."
+      "finding": "CodexInstallation.ts downloads a pinned Codex release archive into a T3-owned tools directory. At cfafb4bb, Windows extraction uses the system tar and retries a rename while Defender holds the new binary (364f5084). Local AI Kit inventories a Codex binary that is already installed and does not download executables."
     },
     {
       "area": "gemini-cli",
@@ -84,6 +98,14 @@
     {
       "area": "claude-managed-mcp",
       "finding": "ClaudeHome.ts notices an administrator managed-mcp.json so a session can drop --strict-mcp-config. That is execution isolation, not a discovery root."
+    },
+    {
+      "area": "antigravity-managed-install",
+      "finding": "AntigravityInstallation.ts installs a managed Antigravity build. At cfafb4bb, Windows ARM validation kills the PyInstaller tree before deleting the temp profile (895354e9). Local AI Kit inventories an already installed antigravity or agy binary and does not install one."
+    },
+    {
+      "area": "acp-malformed-session-update",
+      "finding": "effect-acp drops one schema-invalid session notification instead of ending the connection (559c4b1f). Local AI Kit's ACP client already continues on an unrecognized sessionUpdate and does not fail a turn when usage_update omits used. A notification with no sessionUpdate still ends the turn."
     }
   ],
   "watchedPaths": [
@@ -93,6 +115,7 @@
     "apps/server/src/provider/CodexChatGptHandoff.ts",
     "apps/server/src/provider/CodexChatGptSessionLock.ts",
     "apps/server/src/provider/CodexInstallation.ts",
+    "apps/server/src/provider/CodexProvider.ts",
     "apps/server/src/provider/AntigravityInstallation.ts",
     "apps/server/src/provider/Drivers",
     "apps/server/src/provider/Drivers/ClaudeHome.ts",

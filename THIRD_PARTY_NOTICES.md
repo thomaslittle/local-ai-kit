@@ -40,6 +40,21 @@ See [SOURCE-AUDIT.md](docs/design/source-audit.md) for previously inspected revi
 
 See [upstream/tokscale/NOTICE.md](upstream/tokscale/NOTICE.md).
 
+## T3 Code provider sync (2026-10-16)
+
+| Field | Value |
+| --- | --- |
+| Source | https://github.com/pingdotgg/t3code at `cfafb4bb54d244e4612f5681aad3832ea64cb0fb` |
+| Nightly tag at pin time | `v0.1.1-nightly.20261016.3203` (`e3b35d1b2440b104f0bc2e357377c348121234dd`) |
+| Stable tag at pin time | `v0.1.0` (`81493efb71e8e8244f95d3e9f71d8369654ab151`) |
+| Referenced paths | `packages/provider-grok/src/server/probeEnvironment.ts`, `apps/server/src/provider/CodexProvider.ts` |
+| Upstream commits | [2a7bd167](https://github.com/pingdotgg/t3code/commit/2a7bd1673c7bdad4304b7771944e73c29ecd3c01) (Grok probe environment), [cfafb4bb](https://github.com/pingdotgg/t3code/commit/cfafb4bb54d244e4612f5681aad3832ea64cb0fb) (Codex probe timeout, already matched) |
+| Copied files | None. Behavior was reimplemented. |
+| License | MIT |
+| Copyright | Copyright (c) 2026 T3 Tools Inc. The license text is reproduced in the Muse section below and applies to this reuse as well. |
+| What was reused | Metadata probes set `GROK_DISABLE_AUTOUPDATER=1`. Text sessions do not. |
+| What was not reused | ACP Registry downloads, including the Windows ARM `windows-x86_64` fallback ([76cb251d](https://github.com/pingdotgg/t3code/commit/76cb251da129579d13be333ffe89a8767f7a257a)); Codex release downloads ([364f5084](https://github.com/pingdotgg/t3code/commit/364f5084d7418e1605220b09de5aaebd46305a73)); managed Antigravity installs ([895354e9](https://github.com/pingdotgg/t3code/commit/895354e9fbf5be90cda4fdcd710dac96496181c4)); the Cursor SDK and Auto-review ([2d943723](https://github.com/pingdotgg/t3code/commit/2d943723769da0b675b56168d764d1ad96fc8d28)). |
+
 ## T3 Code provider sync (2026-10-15)
 
 | Field | Value |
