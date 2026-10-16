@@ -62,7 +62,14 @@ absolute workspace. The adapter keeps the existing tool, host MCP, image,
 cancellation and resume policies. Only the child process receives `ACCESS_TOKEN`;
 Codex uses an isolated `chatgpt-codex-home` and the documented Responses provider
 at `https://api.openai.com/v1`. Before each turn, the adapter renews credentials
-when needed. A replacement access token starts a new app-server and resumes the
+when the access token is inside 60 seconds of expiry. A token response field
+`earliest_refresh_at` (unix seconds, or an RFC3339 timestamp) holds that
+renewal back: a still-valid access token is reused, and an already-expired
+token fails with `REFRESH_DEFERRED` instead of racing the provider. ID tokens
+may use RS256 or P-256 ES256, with five seconds of clock skew. If sign-in
+returns tokens without `chatgpt.tokens.use.direct`, the registration is kept
+and the next attempt sends `prompt=consent`. A different account on the same
+registration is still rejected. A replacement access token starts a new app-server and resumes the
 same native thread. An uncertain turn is never automatically replayed.
 
 OAuth and execution tests use synthetic signed-token and native-peer fixtures.

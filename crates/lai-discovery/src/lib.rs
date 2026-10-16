@@ -6,8 +6,8 @@ mod registry;
 mod scanner;
 pub use environment::{HostPlatform, ScanEnvironment, join_relative};
 pub use knowledge::{
-    DiscoveryRule, RuleBasis, RuleRole, TOKSCALE_COMMIT, TOKSCALE_REPOSITORY, discovery_rules,
-    has_profile_override, profile_roots, session_stores,
+    DiscoveryRule, RuleBasis, RuleRole, T3CODE_COMMIT, T3CODE_REPOSITORY, TOKSCALE_COMMIT,
+    TOKSCALE_REPOSITORY, discovery_rules, has_profile_override, profile_roots, session_stores,
 };
 use lai_contracts::Snapshot;
 use lai_platform::LocalFilesystem;

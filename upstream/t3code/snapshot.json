@@ -1,0 +1,113 @@
+{
+  "source": {
+    "repository": "pingdotgg/t3code",
+    "url": "https://github.com/pingdotgg/t3code",
+    "commit": "42da166d131017335a1158d0b379dd68b8985796",
+    "commitSubject": "fix(server): OTLP exports say which machine and build they came from (#19370)",
+    "branch": "main",
+    "nightlyBranch": null,
+    "nightlyTag": "v0.0.46-nightly.20261015.3158",
+    "nightlyCommit": "e6bbfdb9ffe8334bed1c9b992f828f04d30db7ea",
+    "stableTag": "v0.0.45",
+    "stableCommit": "6c8fed35dded9ff71c5b46807125457acbb76be6",
+    "license": "MIT",
+    "licenseCopyright": "Copyright (c) 2026 T3 Tools Inc."
+  },
+  "adopted": {
+    "pi": {
+      "commands": ["pi"],
+      "profileRelative": ".pi/agent",
+      "env": "PI_CODING_AGENT_DIR",
+      "sessionRelative": "sessions",
+      "sessionDirEnv": "PI_CODING_AGENT_SESSION_DIR",
+      "execution": false,
+      "source": "packages/provider-pi/src/server/usage.ts"
+    },
+    "opencodeNativeBin": {
+      "relative": ".opencode/bin",
+      "command": "opencode",
+      "source": "packages/provider-opencode/src/server/driver.ts"
+    },
+    "chatgpt": {
+      "issuer": "https://auth.openai.com",
+      "authorizationEndpoint": "https://auth.openai.com/api/accounts/authorize",
+      "tokenEndpoint": "https://auth.openai.com/api/accounts/oauth/token",
+      "revocationEndpoint": "https://auth.openai.com/api/accounts/oauth/revoke",
+      "resource": "https://api.openai.com/v1",
+      "scopes": "openid profile email offline_access resource.invoke chatgpt.tokens.use.direct",
+      "requiredScope": "chatgpt.tokens.use.direct",
+      "algorithms": ["RS256", "ES256"],
+      "clockToleranceSeconds": 5,
+      "refreshSkewSeconds": 60,
+      "earliestRefreshAt": true,
+      "consentPromptWhenSharingDisabled": true,
+      "source": "apps/server/src/provider/CodexChatGptAuth.ts"
+    }
+  },
+  "reviewedNotAdopted": [
+    {
+      "area": "local-model-runtimes",
+      "finding": "T3 Code main at this pin has no Ollama, LM Studio, or llama.cpp provider. OpenAI-compatible local endpoints appear only as configuration inside OpenCode or Pi, not as a scanner."
+    },
+    {
+      "area": "cloud-llm-apis",
+      "finding": "T3 Code does not ship first-class OpenAI, Anthropic, Gemini, or xAI HTTP adapters. Cloud model access is the signed-in CLI (ChatGPT plan, Claude, Grok, Cursor, OpenCode, Pi, Antigravity, ACP). apps/server/src/cloud is the T3 Connect relay, not an LLM provider."
+    },
+    {
+      "area": "acp-registry-install",
+      "finding": "The ACP Registry driver downloads third-party agents into a T3-owned tools directory. Local AI Kit does not download executables from a remote manifest. User-configured local ACP commands stay on the existing explicit native-profile path."
+    },
+    {
+      "area": "chatgpt-multi-account",
+      "finding": "T3 Code keeps many ChatGPT registrations and a primary-to-remote handoff. Local AI Kit keeps one managed registration per state directory and still rejects an identity change. Remote refresh-token transfer was not ported."
+    },
+    {
+      "area": "codex-shadow-home",
+      "finding": "T3 Code can link a shared CODEX_HOME into a shadow home so two accounts continue the same threads. That layout is a T3 session feature, not passive discovery."
+    },
+    {
+      "area": "cursor-sdk",
+      "finding": "T3 Code's current Cursor driver uses the bundled Cursor SDK and hides the CLI path. Local AI Kit still only inventories cursor-agent and does not execute Cursor."
+    },
+    {
+      "area": "codex-managed-download",
+      "finding": "CodexInstallation.ts downloads a pinned Codex release archive into a T3-owned tools directory. Local AI Kit inventories a Codex binary that is already installed and does not download executables."
+    },
+    {
+      "area": "gemini-cli",
+      "finding": "Gemini CLI is not a built-in T3 driver. The ACP Registry can install @google/gemini-cli. Local AI Kit already inventories gemini from PATH and GEMINI_CLI_HOME and does not download it."
+    },
+    {
+      "area": "claude-windows-shim",
+      "finding": "ClaudeExecutable.ts follows a Windows npm .cmd/.bat/.ps1 launcher to @anthropic-ai/claude-code bin/claude.exe or cli.js so the Claude Agent SDK can spawn it. Local AI Kit inventories the claude command and does not rewrite launcher shims."
+    },
+    {
+      "area": "claude-managed-mcp",
+      "finding": "ClaudeHome.ts notices an administrator managed-mcp.json so a session can drop --strict-mcp-config. That is execution isolation, not a discovery root."
+    }
+  ],
+  "watchedPaths": [
+    "apps/server/src/provider/builtInDrivers.ts",
+    "apps/server/src/provider/builtInProviderCatalog.ts",
+    "apps/server/src/provider/CodexChatGptAuth.ts",
+    "apps/server/src/provider/CodexChatGptHandoff.ts",
+    "apps/server/src/provider/CodexChatGptSessionLock.ts",
+    "apps/server/src/provider/CodexInstallation.ts",
+    "apps/server/src/provider/AntigravityInstallation.ts",
+    "apps/server/src/provider/Drivers",
+    "apps/server/src/provider/Drivers/ClaudeHome.ts",
+    "apps/server/src/provider/Drivers/ClaudeExecutable.ts",
+    "apps/server/src/provider/providerInstallation.ts",
+    "apps/server/src/cloud",
+    "packages/provider-pi/src/server/usage.ts",
+    "packages/provider-pi/src/settings.ts",
+    "packages/provider-opencode/src/server/driver.ts",
+    "packages/provider-cursor/src/settings.ts",
+    "packages/provider-grok/src/server",
+    "packages/provider-muse/src/server",
+    "packages/provider-acp-registry/src/server",
+    "docs/internals/providers.md",
+    "docs/operations/release.md",
+    ".github/workflows/release.yml"
+  ]
+}

@@ -67,6 +67,12 @@ pub fn definitions() -> &'static [ProviderDefinition] {
             profile_prefix: None,
         },
         ProviderDefinition {
+            id: "pi",
+            name: "Pi",
+            commands: &["pi"],
+            profile_prefix: None,
+        },
+        ProviderDefinition {
             id: "ollama",
             name: "Ollama",
             commands: &["ollama"],
@@ -89,6 +95,9 @@ impl ProviderDefinition {
         match (self.id, env.platform) {
             // The official Muse Code installer's per-user location.
             ("muse", HostPlatform::Windows) => vec![env.local_app_data.join("Programs/muse")],
+            // OpenCode's own installer places the binary here even when it is
+            // not on PATH. T3 Code treats this path as a native install.
+            ("opencode", _) => vec![crate::join_relative(&env.home, ".opencode/bin")],
             _ => vec![],
         }
     }

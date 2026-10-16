@@ -4,6 +4,14 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [0.1.0-alpha.16] - 2026-10-15
+
+### Added
+
+- Passive Pi inventory (`pi` on `PATH`, `PI_CODING_AGENT_DIR` or `~/.pi/agent`). Execution stays unsupported. OpenCode's installer binary at `~/.opencode/bin/opencode` is found when it is not on `PATH`.
+- ChatGPT managed sign-in follows the pinned T3 Code rules for `earliest_refresh_at`, RS256 and ES256 identity tokens, and `prompt=consent` after a sign-in that omitted plan sharing.
+- [UPSTREAM_T3CODE.md](UPSTREAM_T3CODE.md) records the T3 Code commit, nightly tag, and stable tag. The daily upstream watch diffs local model providers, cloud CLI providers, installed CLI detection, and ChatGPT OAuth.
+
 ### Changed
 
 - Prepared the repository for public release: rewrote the README, contributing guide, security policy, and agent guide; added a code of conduct, issue and pull-request templates, and dependency update configuration; moved historical planning material under `docs/design/`.
@@ -119,7 +127,8 @@ First developer alpha: native discovery and metadata, route-aware selection, gra
 
 - ACP authentication failures no longer forward provider text, which could contain login URLs or device codes.
 
-[Unreleased]: https://github.com/thomaslittle/local-ai-kit/compare/v0.1.0-alpha.15...HEAD
+[Unreleased]: https://github.com/thomaslittle/local-ai-kit/compare/v0.1.0-alpha.16...HEAD
+[0.1.0-alpha.16]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.16
 [0.1.0-alpha.15]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.15
 [0.1.0-alpha.14]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.14
 [0.1.0-alpha.13]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.13

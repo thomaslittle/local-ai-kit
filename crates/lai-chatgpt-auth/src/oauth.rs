@@ -1,7 +1,10 @@
 use crate::store::{Registration, StateFile, Store, TokenRecord};
 use crate::{Result, error, has_plan_scope};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
+use jsonwebtoken::{
+    Algorithm, DecodingKey, Validation, decode, decode_header,
+    jwk::{AlgorithmParameters, EllipticCurve, JwkSet},
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -26,6 +29,11 @@ const ISSUER: &str = "https://auth.openai.com";
 const RESOURCE: &str = "https://api.openai.com/v1";
 const SCOPES: &str =
     "openid profile email offline_access resource.invoke chatgpt.tokens.use.direct";
+/// ID tokens from the pinned T3 Code ChatGPT flow (`CodexChatGptAuth.ts`).
+const IDENTITY_ALGS: &[&str] = &["RS256", "ES256"];
+const IDENTITY_LEEWAY_SECONDS: u64 = 5;
+/// Refresh when the access token is inside this many seconds of expiry.
+const REFRESH_SKEW_SECONDS: u64 = 60;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -406,6 +414,12 @@ impl AuthManager {
                 if let Some(email) = &r.email {
                     q.append_pair("login_hint", email);
                 }
+                // A previous grant without plan sharing will not show the
+                // consent screen again unless we ask. T3 Code does the same
+                // when `sharingEnabled` is false.
+                if r.sharing_enabled == Some(false) {
+                    q.append_pair("prompt", "consent");
+                }
             }
             q.append_pair("response_type", "code");
             q.append_pair("redirect_uri", &redirect_uri);
@@ -580,7 +594,23 @@ impl AuthManager {
                 .ok_or_else(|| error("NOT_CONNECTED", "ChatGPT account is not connected"))?;
             (tokens, reg, state.file.host_id.clone(), state.generation)
         };
-        let tokens = if tokens.expires_at <= now().saturating_add(60) {
+        let tokens = if tokens.expires_at > now().saturating_add(REFRESH_SKEW_SECONDS) {
+            tokens
+        } else if tokens
+            .earliest_refresh_at
+            .is_some_and(|earliest| earliest > now())
+        {
+            // The provider asked us not to rotate yet. A still-valid access
+            // token is reused; an expired one waits instead of racing refresh.
+            if tokens.expires_at > now() {
+                tokens
+            } else {
+                return Err(error(
+                    "REFRESH_DEFERRED",
+                    "ChatGPT cannot renew this connection yet",
+                ));
+            }
+        } else {
             let endpoints = self.endpoints().await?;
             let reply = self
                 .inner
@@ -620,8 +650,6 @@ impl AuthManager {
                 .save_tokens(&mut state.file, Some(replacement.0.clone()))?;
             state.tokens = Some(replacement.0.clone());
             replacement.0
-        } else {
-            tokens
         };
         Ok(Credentials {
             access_token: tokens.access_token,
@@ -679,6 +707,69 @@ struct TokenResponse {
     expires_in: u64,
     scope: Option<String>,
     token_type: Option<String>,
+    /// Seconds since epoch, or an RFC3339 timestamp. Unparseable values are ignored.
+    #[serde(default)]
+    earliest_refresh_at: Option<serde_json::Value>,
+}
+fn parse_earliest(value: Option<&serde_json::Value>) -> Option<u64> {
+    let value = value?;
+    let seconds = match value {
+        serde_json::Value::Number(number) => number.as_u64(),
+        serde_json::Value::String(text) => text
+            .parse::<u64>()
+            .ok()
+            .or_else(|| parse_rfc3339_seconds(text)),
+        _ => None,
+    };
+    seconds.filter(|seconds| *seconds > 0)
+}
+fn parse_rfc3339_seconds(text: &str) -> Option<u64> {
+    let (date, rest) = text.split_once('T')?;
+    let mut dates = date.split('-');
+    let year: i32 = dates.next()?.parse().ok()?;
+    let month: u32 = dates.next()?.parse().ok()?;
+    let day: u32 = dates.next()?.parse().ok()?;
+    if dates.next().is_some() || !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    let (time, offset_seconds) = if let Some(time) = rest.strip_suffix('Z') {
+        (time, 0i32)
+    } else {
+        let split_at = rest.rfind(['+', '-'])?;
+        let (time, marked) = rest.split_at(split_at);
+        let sign = if marked.starts_with('+') { 1 } else { -1 };
+        let mut offset_parts = marked[1..].split(':');
+        let offset_hour: i32 = offset_parts.next()?.parse().ok()?;
+        let offset_minute: i32 = offset_parts.next()?.parse().ok()?;
+        if offset_parts.next().is_some() || offset_hour > 23 || offset_minute > 59 {
+            return None;
+        }
+        (time, sign * (offset_hour * 3_600 + offset_minute * 60))
+    };
+    let mut times = time.split(':');
+    let hour: u32 = times.next()?.parse().ok()?;
+    let minute: u32 = times.next()?.parse().ok()?;
+    let second_text = times.next()?;
+    if times.next().is_some() || hour > 23 || minute > 59 {
+        return None;
+    }
+    let second: u32 = second_text.split('.').next()?.parse().ok()?;
+    if second > 60 {
+        return None;
+    }
+    let days = days_from_civil(year, month, day)?;
+    let unix = days * 86_400 + i64::from(hour) * 3_600 + i64::from(minute) * 60 + i64::from(second)
+        - i64::from(offset_seconds);
+    u64::try_from(unix).ok()
+}
+fn days_from_civil(year: i32, month: u32, day: u32) -> Option<i64> {
+    let y = if month <= 2 { year - 1 } else { year } as i64;
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = u64::try_from(y - era * 400).ok()?;
+    let shifted = if month > 2 { month - 3 } else { month + 9 };
+    let doy = (153 * shifted as u64 + 2) / 5 + day as u64 - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    Some(era * 146_097 + i64::try_from(doe).ok()? - 719_468)
 }
 fn token_record(
     response: TokenResponse,
@@ -723,6 +814,7 @@ fn token_record(
             refresh_token,
             id_token,
             expires_at: now().saturating_add(response.expires_in),
+            earliest_refresh_at: parse_earliest(response.earliest_refresh_at.as_ref()),
             scopes: scope.split_ascii_whitespace().map(str::to_owned).collect(),
         },
         new_id,
@@ -743,12 +835,6 @@ async fn validate_id(
 ) -> Result<Identity> {
     let header = decode_header(id)
         .map_err(|_| error("IDENTITY_INVALID", "ChatGPT identity token is invalid"))?;
-    if header.alg != Algorithm::RS256 {
-        return Err(error(
-            "IDENTITY_INVALID",
-            "ChatGPT identity signature algorithm is unsupported",
-        ));
-    }
     let kid = header
         .kid
         .ok_or_else(|| error("IDENTITY_INVALID", "ChatGPT identity key is missing"))?;
@@ -766,14 +852,30 @@ async fn validate_id(
             "ChatGPT identity signing key is unknown",
         )
     })?;
+    let algorithm = match (header.alg, &key.algorithm) {
+        (Algorithm::RS256, AlgorithmParameters::RSA(_)) if IDENTITY_ALGS.contains(&"RS256") => {
+            Algorithm::RS256
+        }
+        (Algorithm::ES256, AlgorithmParameters::EllipticCurve(curve))
+            if IDENTITY_ALGS.contains(&"ES256") && curve.curve == EllipticCurve::P256 =>
+        {
+            Algorithm::ES256
+        }
+        _ => {
+            return Err(error(
+                "IDENTITY_INVALID",
+                "ChatGPT identity signature algorithm is unsupported",
+            ));
+        }
+    };
     let decoding = DecodingKey::from_jwk(key).map_err(|_| {
         error(
             "IDENTITY_INVALID",
             "ChatGPT identity signing key is invalid",
         )
     })?;
-    let mut validation = Validation::new(Algorithm::RS256);
-    validation.leeway = 0;
+    let mut validation = Validation::new(algorithm);
+    validation.leeway = IDENTITY_LEEWAY_SECONDS;
     validation.set_issuer(&[&endpoints.issuer]);
     validation.set_audience(&[client_id]);
     let claims = decode::<Identity>(id, &decoding, &validation)
@@ -916,7 +1018,78 @@ fn parse_callback(request: &str) -> Option<Callback> {
         error,
     })
 }
+struct SharingAttempt<'a> {
+    client_id: &'a str,
+    nonce: &'a str,
+    prior_subject: Option<&'a str>,
+    generation: u64,
+    epoch: u64,
+}
 impl AuthManager {
+    /// Persist the client registration after a sign-in that omitted plan sharing,
+    /// without storing tokens. The next `start` sends `prompt=consent`.
+    async fn remember_sharing_disabled(
+        &self,
+        response: &TokenResponse,
+        endpoints: &Endpoints,
+        attempt: SharingAttempt<'_>,
+    ) -> Result<()> {
+        if !response
+            .token_type
+            .as_deref()
+            .is_some_and(|kind| kind.eq_ignore_ascii_case("bearer"))
+        {
+            return Err(error("TOKEN_INVALID", "ChatGPT token response is invalid"));
+        }
+        let id = response
+            .id_token
+            .as_deref()
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| error("TOKEN_INVALID", "ChatGPT identity token is missing"))?;
+        let identity = validate_id(
+            &self.inner.http,
+            endpoints,
+            id,
+            attempt.client_id,
+            Some(attempt.nonce),
+        )
+        .await?;
+        if attempt
+            .prior_subject
+            .is_some_and(|prior| prior != identity.sub)
+        {
+            return Err(error(
+                "IDENTITY_CHANGED",
+                "ChatGPT account identity changed",
+            ));
+        }
+        let _file_lock = self.inner.store.lock_refresh().await?;
+        let mut state = self.inner.state.lock().await;
+        if state.generation != attempt.generation
+            || state
+                .pending
+                .as_ref()
+                .is_none_or(|pending| pending.generation != attempt.generation)
+        {
+            return Err(error("LOGIN_CANCELLED", "ChatGPT sign-in was cancelled"));
+        }
+        let latest = self.inner.store.load()?;
+        if latest.epoch != attempt.epoch
+            || latest.host_id != state.file.host_id
+            || latest.registration != state.file.registration
+        {
+            return Err(error("LOGIN_CANCELLED", "ChatGPT sign-in was cancelled"));
+        }
+        state.file = latest;
+        state.file.registration = Some(Registration {
+            client_id: attempt.client_id.to_owned(),
+            subject: identity.sub,
+            email: identity.email,
+            sharing_enabled: Some(false),
+        });
+        self.inner.store.save(&state.file)?;
+        Ok(())
+    }
     async fn complete(
         &self,
         callback: Callback,
@@ -987,6 +1160,25 @@ impl AuthManager {
         let response: TokenResponse = bounded_json(reply, 64 * 1024)
             .await
             .map_err(|_| error("EXCHANGE_FAILED", "ChatGPT token response is invalid"))?;
+        let scope_text = response.scope.clone().unwrap_or_default();
+        if !has_plan_scope(&scope_text) {
+            self.remember_sharing_disabled(
+                &response,
+                &endpoints,
+                SharingAttempt {
+                    client_id: &client_id,
+                    nonce: &nonce,
+                    prior_subject: prior_subject.as_deref(),
+                    generation,
+                    epoch: pending_epoch,
+                },
+            )
+            .await?;
+            return Err(error(
+                "PLAN_SCOPE_MISSING",
+                "ChatGPT plan permission was not granted",
+            ));
+        }
         let (tokens, id) = token_record(response, None)?;
         let identity = validate_id(
             &self.inner.http,
@@ -1027,6 +1219,7 @@ impl AuthManager {
             client_id,
             subject: identity.sub,
             email: identity.email,
+            sharing_enabled: Some(true),
         });
         self.inner
             .store
@@ -1066,6 +1259,7 @@ mod tests {
             client_id: "oaiapp_synthetic".into(),
             subject: "synthetic-sub".into(),
             email: Some("synthetic@example.test".into()),
+            sharing_enabled: Some(true),
         });
         store
             .save_tokens(
@@ -1075,6 +1269,7 @@ mod tests {
                     refresh_token: "synthetic-refresh".into(),
                     id_token: "synthetic-id".into(),
                     expires_at: now() + 3600,
+                    earliest_refresh_at: None,
                     scopes: SCOPES.split_ascii_whitespace().map(str::to_owned).collect(),
                 }),
             )
@@ -1255,6 +1450,7 @@ mod tests {
             refresh_token: "old-refresh".into(),
             id_token: "id".into(),
             expires_at: 0,
+            earliest_refresh_at: Some(10),
             scopes: vec!["chatgpt.tokens.use.direct".into()],
         };
         let response = TokenResponse {
@@ -1264,6 +1460,7 @@ mod tests {
             expires_in: 3600,
             scope: Some("openid chatgpt.tokens.use.direct".into()),
             token_type: Some("Bearer".into()),
+            earliest_refresh_at: Some(serde_json::json!(1_800_000_000)),
         };
         let (next, new_id) = token_record(response, Some(&old)).unwrap();
         assert_eq!(next.access_token, "new-access");
@@ -1271,6 +1468,39 @@ mod tests {
         assert_eq!(next.id_token, "id");
         assert!(new_id.is_none());
         assert!(next.expires_at > now());
+        assert_eq!(next.earliest_refresh_at, Some(1_800_000_000));
+        let dated = TokenResponse {
+            access_token: "new-access".into(),
+            refresh_token: Some("new-refresh".into()),
+            id_token: None,
+            expires_in: 3600,
+            scope: Some("openid chatgpt.tokens.use.direct".into()),
+            token_type: Some("Bearer".into()),
+            earliest_refresh_at: Some(serde_json::json!("2026-10-15T00:00:00Z")),
+        };
+        assert_eq!(
+            token_record(dated, Some(&old))
+                .unwrap()
+                .0
+                .earliest_refresh_at,
+            Some(1_792_022_400)
+        );
+        let ignored = TokenResponse {
+            access_token: "new-access".into(),
+            refresh_token: Some("new-refresh".into()),
+            id_token: None,
+            expires_in: 3600,
+            scope: Some("openid chatgpt.tokens.use.direct".into()),
+            token_type: Some("Bearer".into()),
+            earliest_refresh_at: Some(serde_json::json!("not-a-time")),
+        };
+        assert_eq!(
+            token_record(ignored, Some(&old))
+                .unwrap()
+                .0
+                .earliest_refresh_at,
+            None
+        );
         let missing = TokenResponse {
             access_token: "x".into(),
             refresh_token: Some("r".into()),
@@ -1278,6 +1508,7 @@ mod tests {
             expires_in: 1,
             scope: Some("openid".into()),
             token_type: Some("Bearer".into()),
+            earliest_refresh_at: None,
         };
         assert_eq!(
             token_record(missing, None).unwrap_err().code,
@@ -1406,11 +1637,20 @@ mod tests {
                 .sub,
             "sub-1"
         );
+        let skewed = signed(&endpoints.issuer, "oaiapp_test", "nonce-1", now() - 3);
+        assert_eq!(
+            validate_id(&http, &endpoints, &skewed, "oaiapp_test", Some("nonce-1"))
+                .await
+                .unwrap()
+                .sub,
+            "sub-1"
+        );
         for bad in [
             signed(&endpoints.issuer, "other", "nonce-1", now() + 3600),
             signed("https://evil.test", "oaiapp_test", "nonce-1", now() + 3600),
             signed(&endpoints.issuer, "oaiapp_test", "other", now() + 3600),
             signed(&endpoints.issuer, "oaiapp_test", "nonce-1", now() - 10),
+            signed(&endpoints.issuer, "oaiapp_test", "nonce-1", now() - 30),
         ] {
             assert_eq!(
                 validate_id(&http, &endpoints, &bad, "oaiapp_test", Some("nonce-1"))
@@ -1704,6 +1944,7 @@ mod tests {
                 client_id: "oaiapp_test".into(),
                 subject: "sub-1".into(),
                 email: None,
+                sharing_enabled: Some(true),
             });
             manager.inner.store.save(&state.file).unwrap();
         }
@@ -1724,5 +1965,182 @@ mod tests {
             "CLIENT_MISMATCH"
         );
         manager.cancel(&returning.login_id).await.unwrap();
+    }
+    fn seed_registration(
+        root: &std::path::Path,
+        sharing: Option<bool>,
+        tokens: Option<TokenRecord>,
+    ) {
+        let store = Store::new(root.to_path_buf());
+        let mut file = StateFile::fresh();
+        file.registration = Some(Registration {
+            client_id: "oaiapp_synthetic".into(),
+            subject: "synthetic-sub".into(),
+            email: Some("one@example.test".into()),
+            sharing_enabled: sharing,
+        });
+        store.save_tokens(&mut file, tokens).unwrap();
+    }
+    #[tokio::test]
+    async fn earliest_refresh_at_does_not_race_a_deferred_renewal() {
+        let dir = tempfile::tempdir().unwrap();
+        seed_registration(
+            dir.path(),
+            Some(true),
+            Some(TokenRecord {
+                access_token: "still-good".into(),
+                refresh_token: "refresh".into(),
+                id_token: "id".into(),
+                expires_at: now() + 20,
+                earliest_refresh_at: Some(now() + 600),
+                scopes: vec!["chatgpt.tokens.use.direct".into()],
+            }),
+        );
+        let manager = with_endpoints(dir.path().to_path_buf(), fake_endpoints(9));
+        let current = manager.credentials().await.unwrap();
+        assert_eq!(current.access_token, "still-good");
+        seed_registration(
+            dir.path(),
+            Some(true),
+            Some(TokenRecord {
+                access_token: "expired".into(),
+                refresh_token: "refresh".into(),
+                id_token: "id".into(),
+                expires_at: now().saturating_sub(5),
+                earliest_refresh_at: Some(now() + 600),
+                scopes: vec!["chatgpt.tokens.use.direct".into()],
+            }),
+        );
+        let waiting = with_endpoints(dir.path().to_path_buf(), fake_endpoints(9));
+        assert_eq!(
+            waiting.credentials().await.unwrap_err().code,
+            "REFRESH_DEFERRED"
+        );
+    }
+    #[tokio::test]
+    async fn disabled_plan_sharing_asks_for_consent_on_the_next_attempt() {
+        let dir = tempfile::tempdir().unwrap();
+        seed_registration(dir.path(), Some(false), None);
+        let manager = with_endpoints(dir.path().to_path_buf(), fake_endpoints(9));
+        let start = manager.start().await.unwrap();
+        let query: std::collections::HashMap<_, _> = Url::parse(&start.auth_url)
+            .unwrap()
+            .query_pairs()
+            .into_owned()
+            .collect();
+        assert_eq!(query.get("prompt").map(String::as_str), Some("consent"));
+        assert_eq!(
+            query.get("login_hint").map(String::as_str),
+            Some("one@example.test")
+        );
+        manager.cancel(&start.login_id).await.unwrap();
+    }
+    #[tokio::test]
+    async fn es256_identity_tokens_match_the_jwk_curve() {
+        use ring::signature::KeyPair;
+        let rng = ring::rand::SystemRandom::new();
+        let pkcs8 = ring::signature::EcdsaKeyPair::generate_pkcs8(
+            &ring::signature::ECDSA_P256_SHA256_FIXED_SIGNING,
+            &rng,
+        )
+        .unwrap();
+        let pair = ring::signature::EcdsaKeyPair::from_pkcs8(
+            &ring::signature::ECDSA_P256_SHA256_FIXED_SIGNING,
+            pkcs8.as_ref(),
+            &rng,
+        )
+        .unwrap();
+        let public = pair.public_key().as_ref();
+        assert_eq!(public.first().copied(), Some(0x04));
+        assert_eq!(public.len(), 65);
+        let x = URL_SAFE_NO_PAD.encode(&public[1..33]);
+        let y = URL_SAFE_NO_PAD.encode(&public[33..65]);
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let endpoints = fake_endpoints(port);
+        let jwks = json!({"keys":[{"kty":"EC","crv":"P-256","kid":"ec","use":"sig","alg":"ES256","x":x,"y":y}]});
+        tokio::spawn(async move {
+            while let Ok((mut socket, _)) = listener.accept().await {
+                let mut request = [0u8; 2048];
+                let _ = socket.read(&mut request).await;
+                let body = jwks.to_string();
+                let message = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                let _ = socket.write_all(message.as_bytes()).await;
+            }
+        });
+        let mut header = Header::new(Algorithm::ES256);
+        header.kid = Some("ec".into());
+        let key = EncodingKey::from_ec_der(pkcs8.as_ref());
+        let token = encode(
+            &header,
+            &json!({"iss":endpoints.issuer,"aud":"oaiapp_test","sub":"sub-ec","nonce":"nonce-ec","exp":now()+3600}),
+            &key,
+        )
+        .unwrap();
+        let http = reqwest::Client::new();
+        assert_eq!(
+            validate_id(&http, &endpoints, &token, "oaiapp_test", Some("nonce-ec"))
+                .await
+                .unwrap()
+                .sub,
+            "sub-ec"
+        );
+        let mut rsa_header = Header::new(Algorithm::RS256);
+        rsa_header.kid = Some("ec".into());
+        let rsa =
+            EncodingKey::from_rsa_pem(include_bytes!("../tests/fixtures/test-rsa.pem")).unwrap();
+        let confused = encode(
+            &rsa_header,
+            &json!({"iss":endpoints.issuer,"aud":"oaiapp_test","sub":"sub-ec","nonce":"nonce-ec","exp":now()+3600}),
+            &rsa,
+        )
+        .unwrap();
+        assert_eq!(
+            validate_id(
+                &http,
+                &endpoints,
+                &confused,
+                "oaiapp_test",
+                Some("nonce-ec")
+            )
+            .await
+            .unwrap_err()
+            .code,
+            "IDENTITY_INVALID"
+        );
+    }
+    #[test]
+    fn pinned_chatgpt_oauth_surface_matches_the_t3code_snapshot() {
+        let path =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../upstream/t3code/snapshot.json");
+        let snapshot: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let oauth = &snapshot["adopted"]["chatgpt"];
+        assert_eq!(oauth["issuer"], ISSUER);
+        assert_eq!(oauth["resource"], RESOURCE);
+        assert_eq!(oauth["scopes"], SCOPES);
+        assert_eq!(oauth["requiredScope"], "chatgpt.tokens.use.direct");
+        assert_eq!(oauth["clockToleranceSeconds"], IDENTITY_LEEWAY_SECONDS);
+        assert_eq!(oauth["refreshSkewSeconds"], REFRESH_SKEW_SECONDS);
+        assert_eq!(
+            oauth["algorithms"].as_array().unwrap().len(),
+            IDENTITY_ALGS.len()
+        );
+        for alg in IDENTITY_ALGS {
+            assert!(
+                oauth["algorithms"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|item| item == alg)
+            );
+        }
+        assert_eq!(
+            snapshot["source"]["commit"],
+            "42da166d131017335a1158d0b379dd68b8985796"
+        );
     }
 }

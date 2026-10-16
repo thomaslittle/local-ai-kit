@@ -308,6 +308,7 @@ fn windows_discovery_paths_keep_native_separators() {
         "ollama",
         "grok",
         "lmstudio",
+        "pi",
     ] {
         for root in profile_roots(provider, &env) {
             let text = root.to_string_lossy();

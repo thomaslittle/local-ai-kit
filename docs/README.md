@@ -22,7 +22,7 @@ New here? Start with the [root README](../README.md), then the [prompt-app guide
 - [Support matrix](adapters/SUPPORT-MATRIX.md): what each provider supports, with its evidence level.
 - Per-provider notes: [Codex](adapters/codex.md), [Claude Code](adapters/claude-code.md), [ACP (Gemini CLI, Antigravity, Grok)](adapters/acp.md), [Grok/Google status](adapters/native-google-grok-status.md), [OpenCode](adapters/opencode.md), [Muse Code](adapters/muse.md), [Cursor](adapters/cursor.md), [HTTP providers](adapters/http-providers.md), [passive inventory](adapters/passive-inventory.md).
 - Writing an adapter: [AUTHORING.md](adapters/AUTHORING.md) and [VERSIONING.md](adapters/VERSIONING.md).
-- Upstream discovery knowledge: [Tokscale](upstream/tokscale.md).
+- Upstream discovery knowledge: [Tokscale](upstream/tokscale.md). Provider and ChatGPT sign-in knowledge: [T3 Code](upstream/t3code.md).
 
 ## Design and security
 
