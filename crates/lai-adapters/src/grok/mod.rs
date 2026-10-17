@@ -5,7 +5,7 @@ use crate::{
 };
 use lai_contracts::*;
 use lai_discovery::LocatedClient;
-use std::{collections::BTreeMap, path::PathBuf, time::Duration};
+use std::{collections::BTreeMap, ffi::OsString, path::PathBuf, time::Duration};
 pub fn parse_status(output: &str) -> (Observation<AuthState>, Observation<BillingMode>) {
     let source = EvidenceSource::new(
         EvidenceKind::OfficialProtocol,
@@ -34,6 +34,15 @@ fn invalid() -> DomainError {
         "Grok requires its supported native executable and default local profile",
     )
 }
+/// Environment for `grok models` and the ACP initialize that follows it.
+///
+/// Both are health probes. They set `GROK_DISABLE_AUTOUPDATER=1` so the check
+/// does not start Grok's updater. Text sessions do not use this environment.
+pub fn probe_environment() -> BTreeMap<OsString, OsString> {
+    let mut env = BTreeMap::new();
+    crate::native_clients::launch::apply_grok_probe_environment(&mut env);
+    env
+}
 /// The supported Grok executable for the default local profile, or an error.
 pub fn supported_executable(located: &LocatedClient) -> Result<PathBuf> {
     let home = std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
@@ -59,12 +68,13 @@ pub async fn probe(
 ) -> Result<ConnectionMetadata> {
     let executable = supported_executable(&located)?;
     let temp = tempfile::tempdir().map_err(|_| invalid())?;
+    let env = probe_environment();
     let output = capture(
         LaunchSpec {
             executable: executable.clone(),
             args: vec!["models".into()],
             cwd: temp.path().into(),
-            env: BTreeMap::new(),
+            env: env.clone(),
         },
         Duration::from_secs(8),
     )
@@ -100,7 +110,7 @@ pub async fn probe(
             ])
             .collect(),
         cwd: temp.path().into(),
-        env: BTreeMap::new(),
+        env,
     };
     metadata::probe(
         spec,

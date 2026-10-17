@@ -14,6 +14,14 @@ pub const GROK_TEXT_ONLY_ARGS: [&str; 4] = [
     "--permission-mode=dontAsk",
     "--no-subagents",
 ];
+/// Process-scoped switch Grok documents for suppressing its CLI updater.
+///
+/// Reimplemented from T3 Code `packages/provider-grok/src/server/probeEnvironment.ts`
+/// at <https://github.com/pingdotgg/t3code/commit/2a7bd1673c7bdad4304b7771944e73c29ecd3c01>
+/// (MIT, Copyright (c) 2026 T3 Tools Inc.). No upstream source is copied.
+pub fn apply_grok_probe_environment(env: &mut BTreeMap<OsString, OsString>) {
+    env.insert("GROK_DISABLE_AUTOUPDATER".into(), "1".into());
+}
 pub struct PreparedLaunch {
     pub spec: LaunchSpec,
     pub scratch: tempfile::TempDir,
@@ -151,19 +159,20 @@ pub fn prepare(
     workspace: &Path,
     browser: Option<&Path>,
 ) -> Result<PreparedLaunch> {
-    prepare_for(profile, workspace, browser)
+    prepare_for(profile, workspace, browser, true)
 }
 pub fn prepare_execution(
     profile: &NativeProfile,
     workspace: &Path,
     browser: Option<&Path>,
 ) -> Result<PreparedLaunch> {
-    prepare_for(profile, workspace, browser)
+    prepare_for(profile, workspace, browser, false)
 }
 fn prepare_for(
     profile: &NativeProfile,
     workspace: &Path,
     browser: Option<&Path>,
+    metadata_probe: bool,
 ) -> Result<PreparedLaunch> {
     if !local_path(&profile.executable)
         || !local_path(&profile.profile_home)
@@ -270,6 +279,11 @@ fn prepare_for(
             // the model's text; Grok's own tools must never run.
             args.extend(GROK_TEXT_ONLY_ARGS.iter().map(OsString::from));
             args.extend(["agent".into(), "stdio".into()]);
+            // Health probes must not start Grok's updater. Text sessions leave
+            // the variable unset so an update still follows the user's configuration.
+            if metadata_probe {
+                apply_grok_probe_environment(&mut env);
+            }
             (profile.executable.clone(), args)
         }
     };

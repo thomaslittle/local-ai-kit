@@ -1,4 +1,7 @@
-use lai_adapters::native_clients::{config::*, launch::prepare};
+use lai_adapters::native_clients::{
+    config::*,
+    launch::{prepare, prepare_execution},
+};
 use lai_contracts::*;
 use std::{fs, path::Path};
 fn file(path: &Path) {
@@ -126,6 +129,36 @@ fn grok_custom_profile_is_not_silently_replaced_with_another_account() {
     assert_eq!(
         prepare(&p, root.path(), None).err().unwrap().code,
         ErrorCode::IntegrationRestricted
+    );
+}
+#[test]
+fn grok_metadata_probes_disable_the_updater_and_text_sessions_do_not() {
+    let home = std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
+        .map(std::path::PathBuf::from)
+        .expect("home");
+    let root = tempfile::tempdir().unwrap();
+    let mut p = profile(
+        root.path(),
+        NativeProvider::Grok,
+        if cfg!(windows) { "grok.exe" } else { "grok" },
+    );
+    p.profile_home = home.join(".grok");
+    file(&p.executable);
+    let probe = prepare(&p, root.path(), None).unwrap();
+    assert_eq!(
+        probe
+            .spec
+            .env
+            .get(std::ffi::OsStr::new("GROK_DISABLE_AUTOUPDATER"))
+            .and_then(|value| value.to_str()),
+        Some("1")
+    );
+    let session = prepare_execution(&p, root.path(), None).unwrap();
+    assert!(
+        !session
+            .spec
+            .env
+            .contains_key(std::ffi::OsStr::new("GROK_DISABLE_AUTOUPDATER"))
     );
 }
 #[test]

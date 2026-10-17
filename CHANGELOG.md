@@ -4,6 +4,13 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [0.1.0-alpha.17] - 2026-10-16
+
+### Changed
+
+- Grok metadata probes set `GROK_DISABLE_AUTOUPDATER=1` so a health check does not start Grok's updater. Text sessions leave that variable unset. Reimplemented from T3 Code [2a7bd167](https://github.com/pingdotgg/t3code/commit/2a7bd1673c7bdad4304b7771944e73c29ecd3c01).
+- The T3 Code pin moved to `cfafb4bb54d244e4612f5681aad3832ea64cb0fb` (`main`), nightly `v0.1.1-nightly.20261016.3203`, stable `v0.1.0`. Codex's new 20-second status probe already matched the local metadata probe. Registry downloads, Codex and Antigravity installs, and the Cursor SDK were reviewed and not adopted.
+
 ## [0.1.0-alpha.16] - 2026-10-15
 
 ### Added
@@ -127,7 +134,8 @@ First developer alpha: native discovery and metadata, route-aware selection, gra
 
 - ACP authentication failures no longer forward provider text, which could contain login URLs or device codes.
 
-[Unreleased]: https://github.com/thomaslittle/local-ai-kit/compare/v0.1.0-alpha.16...HEAD
+[Unreleased]: https://github.com/thomaslittle/local-ai-kit/compare/v0.1.0-alpha.17...HEAD
+[0.1.0-alpha.17]: https://github.com/thomaslittle/local-ai-kit/compare/v0.1.0-alpha.16...v0.1.0-alpha.17
 [0.1.0-alpha.16]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.16
 [0.1.0-alpha.15]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.15
 [0.1.0-alpha.14]: https://github.com/thomaslittle/local-ai-kit/releases/tag/v0.1.0-alpha.14
