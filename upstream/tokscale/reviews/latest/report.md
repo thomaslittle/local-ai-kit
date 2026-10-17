@@ -1,6 +1,6 @@
 Tokscale upstream discovery changes
 
-Tokscale revision: 1d9a9395418efc6952944b794097935d7d6fa1e8 -> ba1d32801e385f8e19830cc430e9c6d84344a3e2
+Tokscale revision: 1d9a9395418efc6952944b794097935d7d6fa1e8 -> 0fe83c34dd2d67ad2915bf8231c02742cb736b1d
 Local parity: PASS
 
 Provider: amp
@@ -53,8 +53,8 @@ Environment variables:
   removed: XDG_CONFIG_HOME
 
 Path literals:
-  added: .aside/u, .json.tmp, .omo/agent/sessions, .vibe, AppData/Roaming/Block/goose/data/sessions/sessions.db, Block/goose/data/sessions/sessions.db, amp-cache/threads, logs/session
-  removed: {xdg_config_home}/tokscale
+  added: .aside/u, .json.tmp, .omo/agent/sessions, .vibe, .vscode-server/data, AppData/Roaming/Block/goose/data/sessions/sessions.db, AppData/Roaming/Code, Block/goose/data/sessions/sessions.db, Library/Application Support/Code, User/globalStorage/{extension_id}/tasks, amp-cache/threads, logs/session
+  removed: .vscode-server/data/User/globalStorage/saoudrizwan.claude-dev/tasks, AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev/tasks, Code/User/globalStorage/saoudrizwan.claude-dev/tasks, Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/tasks, {xdg_config_home}/tokscale, {}/.vscode-server/data/User/globalStorage/kilocode.kilo-code/tasks, {}/.vscode-server/data/User/globalStorage/rooveterinaryinc.roo-cline/tasks
 
 Parity check:
 running 5 tests
@@ -72,63 +72,63 @@ info: latest update on 2026-07-16 for version 1.97.1 (8bab26f4f 2026-07-14)
 info: downloading 2 components
     Updating crates.io index
  Downloading crates ...
-  Downloaded cfg-if v1.0.5
   Downloaded autocfg v1.5.1
-  Downloaded bitflags v2.13.2
   Downloaded block-buffer v0.10.4
-  Downloaded bigdecimal v0.4.10
-  Downloaded errno v0.3.14
-  Downloaded ref-cast-impl v1.0.27
-  Downloaded crypto-common v0.1.7
-  Downloaded same-file v1.0.6
-  Downloaded cpufeatures v0.2.17
-  Downloaded ref-cast v1.0.27
-  Downloaded inotify-sys v0.1.8
-  Downloaded file-id v0.2.3
-  Downloaded dyn-clone v1.0.20
-  Downloaded version_check v0.9.5
-  Downloaded generic-array v0.14.7
-  Downloaded fastrand v2.5.0
-  Downloaded num-integer v0.1.47
-  Downloaded walkdir v2.5.0
-  Downloaded zmij v1.0.23
-  Downloaded inotify v0.11.5
-  Downloaded thiserror v2.0.21
-  Downloaded notify-types v2.1.0
-  Downloaded sha2 v0.10.9
+  Downloaded cfg-if v1.0.5
+  Downloaded bitflags v2.13.2
   Downloaded digest v0.10.7
-  Downloaded itoa v1.0.18
+  Downloaded memchr v2.8.3
+  Downloaded ref-cast v1.0.27
   Downloaded serde_derive_internals v0.30.0
-  Downloaded thiserror-impl v2.0.21
-  Downloaded quote v1.0.47
-  Downloaded tempfile v3.27.0
-  Downloaded schemars_derive v1.2.2
+  Downloaded bigdecimal v0.4.10
   Downloaded once_cell v1.21.4
-  Downloaded iana-time-zone v0.1.65
-  Downloaded unicode-ident v1.0.26
-  Downloaded getrandom v0.4.3
   Downloaded notify v8.2.0
   Downloaded num-traits v0.2.19
+  Downloaded num-bigint v0.4.8
+  Downloaded num-integer v0.1.47
+  Downloaded walkdir v2.5.0
+  Downloaded notify-types v2.1.0
+  Downloaded unicode-ident v1.0.26
   Downloaded serde_derive v1.0.229
-  Downloaded proc-macro2 v1.0.107
+  Downloaded tempfile v3.27.0
+  Downloaded version_check v0.9.5
+  Downloaded crypto-common v0.1.7
+  Downloaded inotify-sys v0.1.8
+  Downloaded itoa v1.0.18
+  Downloaded cpufeatures v0.2.17
+  Downloaded ref-cast-impl v1.0.27
+  Downloaded same-file v1.0.6
+  Downloaded dyn-clone v1.0.20
+  Downloaded file-id v0.2.3
+  Downloaded zmij v1.0.23
+  Downloaded fastrand v2.5.0
+  Downloaded generic-array v0.14.7
+  Downloaded quote v1.0.47
+  Downloaded inotify v0.11.5
+  Downloaded schemars_derive v1.2.2
+  Downloaded errno v0.3.14
+  Downloaded thiserror v2.0.21
+  Downloaded thiserror-impl v2.0.21
+  Downloaded serde_core v1.0.229
+  Downloaded iana-time-zone v0.1.65
   Downloaded log v0.4.34
+  Downloaded getrandom v0.4.3
+  Downloaded sha2 v0.10.9
+  Downloaded proc-macro2 v1.0.107
   Downloaded serde v1.0.229
   Downloaded schemars v1.2.2
-  Downloaded serde_core v1.0.229
   Downloaded typenum v1.20.1
-  Downloaded memchr v2.8.3
   Downloaded mio v1.2.3
-  Downloaded num-bigint v0.4.8
-  Downloaded libm v0.2.16
   Downloaded serde_json v1.0.151
+  Downloaded libm v0.2.16
   Downloaded chrono v0.4.45
-  Downloaded syn v3.0.6
   Downloaded rustix v1.1.5
+  Downloaded syn v3.0.6
   Downloaded libc v0.2.189
   Downloaded linux-raw-sys v0.12.1
    Compiling proc-macro2 v1.0.107
-   Compiling quote v1.0.47
    Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
    Compiling autocfg v1.5.1
    Compiling version_check v0.9.5
    Compiling libc v0.2.189
@@ -137,52 +137,52 @@ info: downloading 2 components
    Compiling serde_core v1.0.229
    Compiling typenum v1.20.1
    Compiling syn v3.0.6
-   Compiling serde v1.0.229
    Compiling zmij v1.0.23
    Compiling bitflags v2.13.2
+   Compiling serde v1.0.229
    Compiling libm v0.2.16
-   Compiling cfg-if v1.0.5
    Compiling inotify-sys v0.1.8
+   Compiling cfg-if v1.0.5
    Compiling ref-cast v1.0.27
    Compiling serde_json v1.0.151
    Compiling serde_derive_internals v0.30.0
    Compiling num-integer v0.1.47
-   Compiling crypto-common v0.1.7
    Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
    Compiling bigdecimal v0.4.10
-   Compiling thiserror v2.0.21
    Compiling itoa v1.0.18
-   Compiling memchr v2.8.3
    Compiling serde_derive v1.0.229
    Compiling ref-cast-impl v1.0.27
-   Compiling thiserror-impl v2.0.21
+   Compiling memchr v2.8.3
+   Compiling thiserror v2.0.21
    Compiling schemars_derive v1.2.2
+   Compiling thiserror-impl v2.0.21
    Compiling digest v0.10.7
    Compiling num-bigint v0.4.8
+   Compiling dyn-clone v1.0.20
+   Compiling cpufeatures v0.2.17
    Compiling log v0.4.34
    Compiling same-file v1.0.6
-   Compiling cpufeatures v0.2.17
    Compiling iana-time-zone v0.1.65
-   Compiling dyn-clone v1.0.20
-   Compiling sha2 v0.10.9
    Compiling walkdir v2.5.0
    Compiling mio v1.2.3
-   Compiling inotify v0.11.5
+   Compiling sha2 v0.10.9
    Compiling schemars v1.2.2
    Compiling chrono v0.4.45
+   Compiling inotify v0.11.5
    Compiling notify-types v2.1.0
-   Compiling rustix v1.1.5
    Compiling getrandom v0.4.3
+   Compiling rustix v1.1.5
    Compiling notify v8.2.0
+   Compiling lai-contracts v0.1.0-alpha.17 (/home/runner/work/local-ai-kit/local-ai-kit/crates/lai-contracts)
    Compiling file-id v0.2.3
    Compiling linux-raw-sys v0.12.1
-   Compiling lai-contracts v0.1.0-alpha.16 (/home/runner/work/local-ai-kit/local-ai-kit/crates/lai-contracts)
    Compiling once_cell v1.21.4
    Compiling fastrand v2.5.0
    Compiling tempfile v3.27.0
-   Compiling lai-platform v0.1.0-alpha.16 (/home/runner/work/local-ai-kit/local-ai-kit/crates/lai-platform)
-   Compiling lai-discovery v0.1.0-alpha.16 (/home/runner/work/local-ai-kit/local-ai-kit/crates/lai-discovery)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.04s
-     Running tests/upstream_parity.rs (target/debug/deps/upstream_parity-95fe10a7c38df14f)
+   Compiling lai-platform v0.1.0-alpha.17 (/home/runner/work/local-ai-kit/local-ai-kit/crates/lai-platform)
+   Compiling lai-discovery v0.1.0-alpha.17 (/home/runner/work/local-ai-kit/local-ai-kit/crates/lai-discovery)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 13.17s
+     Running tests/upstream_parity.rs (target/debug/deps/upstream_parity-ca6da7c31c4ed94c)
 
 This report does not change Local AI Kit discovery. Review the diff, update the pin and adapters deliberately, and do not merge it automatically.
