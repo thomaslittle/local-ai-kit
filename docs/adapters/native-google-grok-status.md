@@ -8,6 +8,8 @@ The shared ACP engine negotiates native model catalogs/options, provider-owned a
 
 The execution and metadata route is registered only for explicitly configured Grok connections. Passive discovery by itself does not enable execution. On Windows, the launcher requires the actual `grok.exe`, the default `~/.grok` profile, and an isolated leader socket owned by the toolkit. ACP permissions are denied unless the host explicitly enables review and approves the individual request.
 
+Metadata probes (`grok models`, and the ACP initialize that follows a logged-in status, including an explicitly registered native profile) set `GROK_DISABLE_AUTOUPDATER=1`. That is the process-scoped switch Grok documents so a background health check does not start the CLI updater. Text sessions leave the variable unset. The behavior is a Rust reimplementation of T3 Code `packages/provider-grok/src/server/probeEnvironment.ts` at [2a7bd167](https://github.com/pingdotgg/t3code/commit/2a7bd1673c7bdad4304b7771944e73c29ecd3c01). No T3 Code source is copied.
+
 Metadata-only qualification on September 25, 2026 used Grok CLI **1.0.41 (4220f3b224a6)** on Windows x64. It reused the existing native login and returned an authenticated ACP session, **Grok 4.7** and a native `reasoning_effort` option. No prompt/model turn was sent. Plan and quota remained unknown; the test profile's `subscription` billing value remained explicitly user-supplied evidence. This is not paid-generation qualification.
 
 ## Gemini CLI

@@ -10,18 +10,18 @@ Released Local AI Kit builds do not clone or execute T3 Code.
 | --- | --- |
 | Repository | https://github.com/pingdotgg/t3code |
 | License | MIT, Copyright (c) 2026 T3 Tools Inc. |
-| Synced commit | `42da166d131017335a1158d0b379dd68b8985796` |
+| Synced commit | `cfafb4bb54d244e4612f5681aad3832ea64cb0fb` |
 | Branch | `main` |
-| Commit subject | `fix(server): OTLP exports say which machine and build they came from (#19370)` |
+| Commit subject | `fix(codex): a slow but healthy Codex no longer shows as Unavailable (#15945)` |
 | Nightly branch | none |
-| Latest nightly tag | `v0.0.46-nightly.20261015.3158` |
-| Nightly commit | `e6bbfdb9ffe8334bed1c9b992f828f04d30db7ea` |
-| Latest stable tag | `v0.0.45` |
-| Stable commit | `6c8fed35dded9ff71c5b46807125457acbb76be6` |
-| Synced on | 2026-10-15 |
+| Latest nightly tag | `v0.1.1-nightly.20261016.3203` |
+| Nightly commit | `e3b35d1b2440b104f0bc2e357377c348121234dd` |
+| Latest stable tag | `v0.1.0` |
+| Stable commit | `81493efb71e8e8244f95d3e9f71d8369654ab151` |
+| Synced on | 2026-10-16 |
 | Extract | [upstream/t3code/snapshot.json](upstream/t3code/snapshot.json) |
 
-`main` at the pin is one commit ahead of that nightly tag. The extra commit is an OTLP label change and is outside the watched provider surface. Nightly builds are scheduled prereleases from `main` (`.github/workflows/release.yml` every 30 minutes, or a manual `channel=nightly` dispatch). A manual stable release builds the latest nightly commit, not whatever `main` has moved to since. Preview tags are maintainer test builds and are not a sync source.
+`main` at the pin is one commit ahead of that nightly tag. The extra commit raises Codex's status-probe budget from 10 seconds to 20 seconds ([cfafb4bb](https://github.com/pingdotgg/t3code/commit/cfafb4bb54d244e4612f5681aad3832ea64cb0fb)). Local AI Kit's Codex metadata probe already waits 20 seconds, so no timeout change was required. `v0.1.0` is the stable tag and points at the same commit as `v0.0.46-nightly.20261015.3176`. Nightly builds are still scheduled prereleases from `main` (`.github/workflows/release.yml` every 30 minutes, or a manual `channel=nightly` dispatch). A manual stable release builds the latest nightly commit, not whatever `main` has moved to since. Preview tags are maintainer test builds and are not a sync source. The CLI npm publish in that workflow now ships a launcher instead of per-platform packages; Local AI Kit does not publish to npm from this workflow.
 
 ## Areas a daily pass must diff
 
@@ -47,7 +47,7 @@ Cloud model access is the signed-in CLI or agent (ChatGPT plan, Claude, Grok, Cu
 | Claude | `claude`, `CLAUDE_CONFIG_DIR` or `~/.claude` | `claude`, secure-storage dir then `CLAUDE_CONFIG_DIR`. |
 | Gemini CLI | no built-in driver; ACP Registry can install `@google/gemini-cli` | `gemini` and `GEMINI_CLI_HOME` or `~/.gemini`. The installer is not adopted. |
 | Antigravity | `antigravity` / ACP registry entry `antigravity-acp` | `antigravity` and `agy`, plus explicit ACP profile registration. |
-| Grok | `grok`, `GROK_HOME` or `~/.grok` | same homes. |
+| Grok | `grok`, `GROK_HOME` or `~/.grok` | same homes. Metadata probes (`grok models` and ACP initialize) set `GROK_DISABLE_AUTOUPDATER=1`. Text sessions do not. |
 | OpenCode | `opencode`, native path `~/.opencode/bin/opencode` | PATH plus that installer directory. |
 | Muse | `muse` | PATH, Windows install dir, `LOCAL_AI_KIT_MUSE_BINARY`. |
 | Pi | `pi`, `PI_CODING_AGENT_DIR` or `~/.pi/agent` | passive inventory only. No Pi execution. |
@@ -73,6 +73,13 @@ Not adopted:
 - Replacing a `localhost` redirect registration. This helper has always used `127.0.0.1`.
 - Codex release downloads in `CodexInstallation.ts`.
 - Following a Windows `claude.cmd` shim into the npm package so the Claude Agent SDK can spawn it.
+- Windows ARM fallback to a `windows-x86_64` ACP Registry archive ([76cb251d](https://github.com/pingdotgg/t3code/commit/76cb251da129579d13be333ffe89a8767f7a257a)). Local AI Kit does not download registry agents.
+- Windows Codex install extraction via system `tar` and a retried rename ([364f5084](https://github.com/pingdotgg/t3code/commit/364f5084d7418e1605220b09de5aaebd46305a73)). Local AI Kit does not download Codex.
+- Managed Antigravity install validation on Windows ARM ([895354e9](https://github.com/pingdotgg/t3code/commit/895354e9fbf5be90cda4fdcd710dac96496181c4)). Local AI Kit does not install Antigravity.
+- Cursor Auto threads using Cursor's Auto-review ([2d943723](https://github.com/pingdotgg/t3code/commit/2d943723769da0b675b56168d764d1ad96fc8d28)). The bundled Cursor SDK stays unadopted.
+- Ending an ACP session on one schema-invalid notification ([559c4b1f](https://github.com/pingdotgg/t3code/commit/559c4b1f2192a17060c698f014074a223cbcf7bd)). An unrecognized `sessionUpdate` is already omitted here, and a `usage_update` that omits `used` does not end the turn.
+
+Adopted from this pin, in addition to the ChatGPT, Pi, and OpenCode facts above: Grok metadata probes set `GROK_DISABLE_AUTOUPDATER=1` ([2a7bd167](https://github.com/pingdotgg/t3code/commit/2a7bd1673c7bdad4304b7771944e73c29ecd3c01)). Text sessions leave the variable unset.
 
 One managed registration per state directory still rejects a changed subject. Claude config resolution keeps `CLAUDE_SECURESTORAGE_CONFIG_DIR` ahead of `CLAUDE_CONFIG_DIR`.
 
@@ -90,13 +97,14 @@ The same comparison by hand:
 
 ```sh
 git fetch https://github.com/pingdotgg/t3code.git main
-git diff 42da166d131017335a1158d0b379dd68b8985796..FETCH_HEAD -- \
+git diff cfafb4bb54d244e4612f5681aad3832ea64cb0fb..FETCH_HEAD -- \
   apps/server/src/provider/builtInDrivers.ts \
   apps/server/src/provider/builtInProviderCatalog.ts \
   apps/server/src/provider/CodexChatGptAuth.ts \
   apps/server/src/provider/CodexChatGptHandoff.ts \
   apps/server/src/provider/CodexChatGptSessionLock.ts \
   apps/server/src/provider/CodexInstallation.ts \
+  apps/server/src/provider/CodexProvider.ts \
   apps/server/src/provider/AntigravityInstallation.ts \
   apps/server/src/provider/Drivers \
   apps/server/src/cloud \
@@ -111,4 +119,4 @@ git diff 42da166d131017335a1158d0b379dd68b8985796..FETCH_HEAD -- \
   .github/workflows/release.yml
 ```
 
-Also compare the newest `v*-nightly*` tag with `v0.0.46-nightly.20261015.3158`. If the watched paths are unchanged, leave this pin in place and record that the check found nothing to adopt.
+Also compare the newest `v*-nightly*` tag with `v0.1.1-nightly.20261016.3203`. If the watched paths are unchanged, leave this pin in place and record that the check found nothing to adopt.

@@ -20,9 +20,10 @@ class UpstreamT3CodeTests(unittest.TestCase):
             "v0.0.46-nightly.20261015.1",
             "v0.0.46-nightly.20261015.3158",
             "v0.0.99-nightly.20261001.9",
+            "v0.1.1-nightly.20261016.3203",
             "v0.0.46",
         ]
-        self.assertEqual(sync.newest_nightly(tags), "v0.0.46-nightly.20261015.3158")
+        self.assertEqual(sync.newest_nightly(tags), "v0.1.1-nightly.20261016.3203")
         self.assertIsNone(sync.nightly_sort_key("v0.0.45"))
 
     def test_empty_diff_is_not_a_provider_change(self):
