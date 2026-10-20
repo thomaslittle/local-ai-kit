@@ -370,6 +370,7 @@ fn build_execution(
                                 model: input.model, connection: input.connection_id,
                                 route: input.route_id, writable: input.writable,
                                 review_requests: input.review_requests,
+                                native_policy: input.native_policy,
                                 host_mcp_servers: input.host_mcp_servers,
                                 persistent: input.persistent, resume_thread: input.native_resume,
                             },
@@ -525,20 +526,23 @@ fn build_execution(
                                 "This Claude adapter exposes text-only execution",
                             ));
                         }
-                        let mut launch = claude::launch::launch_with_host_mcp(
+                        let mut launch = claude::launch::launch_with_host_mcp_policy(
                             &input.located,
                             input.workspace,
                             &input.host_mcp_servers,
+                            input.native_policy,
                         )?;
                         let host =
                             lai_adapters::host_mcp::HostTools::new(&input.host_mcp_servers);
                         if !input.persistent {
-                            return Ok(claude::client::host_executor(
+                            return Ok(claude::client::host_executor_policy(
                                 launch,
                                 host,
                                 input.model,
                                 input.connection_id,
                                 input.route_id,
+                                input.native_policy,
+                                input.review_requests,
                             ));
                         }
                         let resumed = input.native_resume.is_some();
@@ -558,7 +562,7 @@ fn build_execution(
                             None => claude::launch::new_session_id()?,
                         };
                         claude::launch::persist(&mut launch.spec, &session_id, resumed)?;
-                        return Ok(claude::client::persistent_executor(
+                        return Ok(claude::client::persistent_executor_policy(
                             launch,
                             host,
                             input.model,
@@ -566,6 +570,8 @@ fn build_execution(
                             input.route_id,
                             session_id,
                             resumed,
+                            input.native_policy,
+                            input.review_requests,
                         ));
                     }
                     if input.located.provider_id != "codex" {
@@ -584,10 +590,12 @@ fn build_execution(
                         "plugins",
                         "remote_plugin",
                         "apps",
-                        "code_mode_host",
                         "shell_snapshot",
                     ] {
                         args.extend(["--disable".into(), feature.into()]);
+                    }
+                    if !input.native_policy {
+                        args.extend(["--disable".into(), "code_mode_host".into()]);
                     }
                     let spec = LaunchSpec {
                         executable,
@@ -606,6 +614,7 @@ fn build_execution(
                             route: input.route_id,
                             writable: input.writable,
                             review_requests: input.review_requests,
+                            native_policy: input.native_policy,
                             host_mcp_servers: input.host_mcp_servers,
                             persistent: input.persistent,
                             resume_thread: input.native_resume,

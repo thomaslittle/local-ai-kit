@@ -321,6 +321,7 @@ fn codex_config(review: bool) -> CodexExecution {
         route: "r".into(),
         writable: false,
         review_requests: review,
+        native_policy: false,
         host_mcp_servers: servers(),
         persistent: false,
         resume_thread: None,

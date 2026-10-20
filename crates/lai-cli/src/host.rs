@@ -43,6 +43,7 @@ pub fn execution_grant(args: &Args) -> Option<ExecutionGrant> {
         allow_paid: args.allow_paid,
         allow_writes: args.allow_writes,
         review_native: args.review_requests,
+        allow_native_policy: args.allow_native_policy,
         ..Default::default()
     })
 }

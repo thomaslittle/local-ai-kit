@@ -136,7 +136,9 @@ pub struct SessionCreateParams {
     #[serde(default)]
     pub allow_paid: bool,
     /// Host-owned loopback MCP servers attached to a native-client session.
-    /// The agent may call only the listed tools; its own tools stay disabled.
+    /// In the default read-only mode, only these listed tools may be called.
+    /// The separately granted `native_policy` mode also enables the native
+    /// client's own tools and policy.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub host_mcp_servers: Vec<HostMcpServer>,
     /// Keep the native conversation in the client's own history so a
