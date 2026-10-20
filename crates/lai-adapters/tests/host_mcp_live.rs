@@ -241,7 +241,7 @@ async fn live_codex_native_tools_and_host_mcp_share_a_session() {
         executable,
         args,
         cwd: workspace.path().canonicalize().unwrap(),
-        env: std::collections::BTreeMap::from([("CODEX_HOME".into(), home.into())]),
+        env: std::collections::BTreeMap::from([("CODEX_HOME".into(), home)]),
     };
     let agent = open_codex(
         spec,

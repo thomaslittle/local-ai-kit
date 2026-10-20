@@ -218,6 +218,9 @@ pub fn persistent_executor(
         launch, host, model, connection, route, session_id, resumed, false, false,
     )
 }
+// Keep this policy-aware factory aligned with `host_executor_policy` and the
+// persisted-session inputs; these distinct values are part of the adapter API.
+#[allow(clippy::too_many_arguments)]
 pub fn persistent_executor_policy(
     launch: super::launch::HostMcpLaunch,
     host: HostTools,
