@@ -20,7 +20,7 @@ Usage:
   local-ai-kit serve --http --port 4499 --assets ABSOLUTE_DIST_DIRECTORY
       [--allow-passive-discovery] [--allow-codex-metadata]
       [--allow-codex-execution --workspace ABSOLUTE_DIRECTORY]
-      [--allow-writes] [--review-native-requests] [--allow-paid-options]
+      [--allow-writes] [--allow-native-policy] [--review-native-requests] [--allow-paid-options]
       [--warm-metadata] [--no-metadata-cache]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
   --executable-only-provider PROVIDER may repeat for known discovery providers; retains private executable candidates without publishing their profiles or routes.
@@ -44,8 +44,10 @@ authorizes metadata-only scans requested by the owning SDK. No credentials or in
 through the installed Codex client. This may read its login and contact its
 account/catalog/usage services, but never starts threads or model generation.
 --allow-codex-execution authorizes explicit session/turn requests, never generation
-at startup. A --workspace is required; its public name is default. Writes, native
-approval review, and paid options each require their own flag. HTTP is loopback-only
+at startup. A --workspace is required; its public name is default. Writes, native-policy
+tool access, native approval review, and paid options each require their own flag.
+Native policy delegates tool and filesystem/network limits to the installed client;
+it is not a Kit sandbox. HTTP is loopback-only
 and requires explicit single-use browser pairing. No tokens are printed.
 --home isolates all discovery roots and excludes the inherited PATH/overrides.";
 

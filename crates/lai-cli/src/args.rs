@@ -27,6 +27,7 @@ pub struct Args {
     pub workspace: Option<PathBuf>,
     pub allow_writes: bool,
     pub review_requests: bool,
+    pub allow_native_policy: bool,
     pub allow_paid: bool,
     pub metadata_providers: BTreeSet<String>,
     pub execution_providers: BTreeSet<String>,
@@ -85,6 +86,7 @@ impl Args {
             workspace: None,
             allow_writes: false,
             review_requests: false,
+            allow_native_policy: false,
             allow_paid: false,
             metadata_providers: BTreeSet::new(),
             execution_providers: BTreeSet::new(),
@@ -226,6 +228,9 @@ impl Args {
                 "--review-native-requests" if matches!(args.action, Action::Serve) => {
                     args.review_requests = true
                 }
+                "--allow-native-policy" if matches!(args.action, Action::Serve) => {
+                    args.allow_native_policy = true
+                }
                 "--allow-paid-options" if matches!(args.action, Action::Serve) => {
                     args.allow_paid = true
                 }
@@ -273,6 +278,7 @@ impl Args {
             || (!args.allow_execution
                 && (args.allow_writes
                     || args.review_requests
+                    || args.allow_native_policy
                     || args.allow_paid
                     || args.workspace.is_some()))
         {
@@ -378,6 +384,7 @@ mod tests {
             vec!["serve", "--http", "--stdio"],
             vec!["serve", "--http", "--port", "99999"],
             vec!["serve", "--stdio", "--allow-writes"],
+            vec!["serve", "--stdio", "--allow-native-policy"],
             vec!["serve", "--http", "--host", "0.0.0.0"],
         ] {
             assert!(parse(&args).is_err());

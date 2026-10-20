@@ -1,9 +1,10 @@
-//! Host-provided MCP servers: the only tools a native session may call.
+//! Host-provided MCP servers attached to a native session.
 //!
 //! A host runs a loopback MCP server and names the tools the agent may use.
 //! Adapters attach it through each client's own MCP configuration, keep the
-//! client's built-in tools disabled, and use [`HostTools`] to tell a host tool
-//! call (allowed) from any other tool call (fails the turn).
+//! client's built-in tools disabled by default, and use [`HostTools`] to tell
+//! an allowed host tool call from any other tool call. Explicit native-policy
+//! sessions may also use their native client's built-in tools.
 use lai_contracts::{DomainError, ErrorCode, HostMcpServer};
 use std::collections::{BTreeMap, BTreeSet};
 

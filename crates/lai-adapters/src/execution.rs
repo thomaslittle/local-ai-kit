@@ -20,6 +20,8 @@ pub struct CodexExecution {
     pub route: String,
     pub writable: bool,
     pub review_requests: bool,
+    /// Preserve Codex's normal full native permission policy when explicitly granted.
+    pub native_policy: bool,
     /// Validated host MCP servers attached to the thread.
     pub host_mcp_servers: Vec<HostMcpServer>,
     /// Non-ephemeral thread that `thread/resume` can reattach later.

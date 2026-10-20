@@ -112,9 +112,39 @@ pub fn launch_with_host_mcp(
     cwd: PathBuf,
     servers: &[HostMcpServer],
 ) -> Result<HostMcpLaunch> {
+    launch_with_host_mcp_policy(located, cwd, servers, false)
+}
+/// Host MCP attachment with optional provider-native tools. Native tools are
+/// exposed only when the host has granted `native_policy` for this session.
+pub fn launch_with_host_mcp_policy(
+    located: &LocatedClient,
+    cwd: PathBuf,
+    servers: &[HostMcpServer],
+    native_policy: bool,
+) -> Result<HostMcpLaunch> {
     let mut spec = launch(located, cwd)?;
-    if !servers.is_empty() {
+    if !servers.is_empty() || native_policy {
         spec.args.retain(|arg| arg != "--safe-mode");
+    }
+    if native_policy {
+        spec.args.retain(|arg| {
+            !matches!(
+                arg.to_str(),
+                Some(
+                    "--restricted"
+                        | "--tools"
+                        | ""
+                        | "--permission-mode"
+                        | "dontAsk"
+                        | "--permission-prompts"
+                        | "none"
+                )
+            )
+        });
+        // Route print/SDK permission requests through the stream-json control
+        // protocol so the host can mediate the native client's policy.
+        spec.args.push("--permission-prompt-tool".into());
+        spec.args.push("stdio".into());
     }
     if servers.is_empty() {
         return Ok(HostMcpLaunch {

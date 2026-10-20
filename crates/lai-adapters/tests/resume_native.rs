@@ -112,6 +112,7 @@ fn codex_config(persistent: bool, resume: Option<&str>) -> CodexExecution {
         route: "r".into(),
         writable: false,
         review_requests: false,
+        native_policy: false,
         host_mcp_servers: vec![],
         persistent,
         resume_thread: resume.map(str::to_owned),

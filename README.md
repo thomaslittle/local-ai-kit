@@ -17,6 +17,7 @@ Local AI Kit is a Rust toolkit with an embedded library, a standalone native hel
 - **Evidence-backed inventory.** Provider, installation, profile, account, connection, route, model, billing, and quota-pool identities stay distinct, with field-level evidence. *Unknown* and *unsupported* are different states, and unknowns are never filled in with guesses.
 - **Selection.** Route-aware, framework-neutral selection logic that keeps each provider's native model IDs and option descriptors. There are no hard-coded universal "Low/Medium/High" controls.
 - **Granted sessions.** Streaming text sessions, approvals, cancellation, image input, host MCP tools, resumable sessions, and scoped result artifacts, only after a host grants them explicitly.
+- **Explicit native-tool sessions.** Host MCP defaults to read-only, host-tools-only behavior. An operator may separately grant native CLI shell, file, web, and build tools with `native_policy`; see the [host MCP contract and provider details](docs/integration/host-mcp.md).
 - **Thin SDKs.** Rust is the canonical implementation. The [TypeScript](packages/sdk-typescript/) and [Python](packages/sdk-python/) SDKs are typed protocol clients generated from the Rust contracts. The React [hooks](packages/react/) and [eight selector layouts](packages/ui-react/) are optional.
 
 ### Safety model
