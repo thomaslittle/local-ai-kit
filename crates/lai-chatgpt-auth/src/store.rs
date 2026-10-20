@@ -1,10 +1,22 @@
 use crate::{Result, error};
 use serde::{Deserialize, Serialize};
+#[cfg(all(test, windows))]
+use std::sync::{Mutex, MutexGuard};
 use std::{
     fs,
     io::Write,
     path::{Path, PathBuf},
 };
+
+#[cfg(all(test, windows))]
+static WINDOWS_KEYRING_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+#[cfg(all(test, windows))]
+pub(crate) fn lock_keyring_for_test() -> MutexGuard<'static, ()> {
+    WINDOWS_KEYRING_TEST_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct TokenRecord {
@@ -163,6 +175,8 @@ impl Store {
     }
     #[cfg(windows)]
     pub fn load_tokens(&self, state: &StateFile) -> Result<Option<TokenRecord>> {
+        #[cfg(test)]
+        let _keyring_guard = lock_keyring_for_test();
         let Some(reg) = &state.registration else {
             return Ok(None);
         };
@@ -205,6 +219,8 @@ impl Store {
     }
     #[cfg(windows)]
     pub fn save_tokens(&self, state: &mut StateFile, tokens: Option<TokenRecord>) -> Result<()> {
+        #[cfg(test)]
+        let _keyring_guard = lock_keyring_for_test();
         let Some(reg) = state.registration.clone() else {
             if tokens.is_some() {
                 return Err(storage_error());
