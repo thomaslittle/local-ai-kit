@@ -520,7 +520,7 @@ fn build_execution(
                         .await;
                     }
                     if input.located.provider_id == "claude_code" {
-                        if input.writable || input.review_requests {
+                        if input.writable || (input.review_requests && !input.native_policy) {
                             return Err(DomainError::new(
                                 ErrorCode::IntegrationRestricted,
                                 "This Claude adapter exposes text-only execution",

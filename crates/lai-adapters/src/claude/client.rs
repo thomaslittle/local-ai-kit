@@ -52,6 +52,34 @@ async fn initialize_policy(peer: &mut Peer, native_policy: bool) -> Result<Value
     }
     Ok(value)
 }
+fn native_approval_detail(request: &Value) -> String {
+    let tool = request["tool_name"]
+        .as_str()
+        .filter(|name| !name.is_empty() && name.len() <= 256)
+        .unwrap_or("Native client operation");
+    let input = &request["input"];
+    let context = if matches!(
+        tool,
+        "Read" | "Write" | "Edit" | "MultiEdit" | "NotebookEdit"
+    ) {
+        input["file_path"]
+            .as_str()
+            .or_else(|| input["path"].as_str())
+            .map(|path| format!(" {path}"))
+    } else if tool.eq_ignore_ascii_case("Bash") || tool.eq_ignore_ascii_case("PowerShell") {
+        input["command"]
+            .as_str()
+            .or_else(|| request["command"].as_str())
+            .map(|command| format!(" {command}"))
+    } else {
+        None
+    };
+    let detail = format!("{tool}{}", context.unwrap_or_default());
+    lai_contracts::redact_diagnostic_detail(&detail)
+        .chars()
+        .take(1024)
+        .collect()
+}
 /// Waits until every host MCP server reports `connected` via the
 /// `mcp_status` control request (no user turn, no inference). A server that
 /// fails, needs auth, or stays pending fails the session typed.
@@ -341,18 +369,10 @@ impl ClaudeAgent {
                         .filter(|s| s.len() <= 256)
                         .ok_or_else(invalid)?;
                     let request = &response["request"];
-                    let detail = request["tool_name"]
-                        .as_str()
-                        .or_else(|| request["command"].as_str())
-                        .unwrap_or("Native client operation");
+                    let detail = native_approval_detail(request);
                     let allowed = self.native_policy
                         && self.review_requests
-                        && cx
-                            .approve(
-                                "Review native operation".into(),
-                                detail.chars().take(8192).collect(),
-                            )
-                            .await?;
+                        && cx.approve("Review native operation".into(), detail).await?;
                     let decision = if allowed {
                         json!({"behavior":"allow","updatedInput":request["input"],"interrupt":false})
                     } else {
