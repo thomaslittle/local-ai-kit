@@ -335,7 +335,11 @@ impl NativeService {
         if self.execution_state.source.is_none() {
             vec![]
         } else {
-            let mut capabilities = vec!["turn.input.image", "session.host_mcp"];
+            let mut capabilities = vec![
+                "turn.input.image",
+                "session.host_mcp",
+                "session.host_mcp.native_tools",
+            ];
             if self.execution_state.persistent.store.is_some() {
                 capabilities.push(PERSISTENT_RESUME);
             }
@@ -449,14 +453,12 @@ impl NativeService {
             Some("native_policy") if grant.allow_native_policy => false,
             _ => return Err(denied()),
         };
-        // Host tools are the only tools such a session may use: the native
-        // client's own shell/file/web tools stay disabled.
-        if !request.host_mcp_servers.is_empty()
-            && (writable || request.permission_mode.as_deref() == Some("native_policy"))
-        {
+        // Helper-controlled workspace-write is separate from the provider's
+        // explicitly granted native policy. Host MCP may accompany the latter.
+        if !request.host_mcp_servers.is_empty() && writable {
             return Err(DomainError::new(
                 ErrorCode::IntegrationRestricted,
-                "Host MCP servers require a read-only session",
+                "Host MCP servers cannot be combined with workspace_write",
             ));
         }
         if (request.allow_paid && !grant.allow_paid)

@@ -42,10 +42,15 @@ pub(super) struct ManagedRuntime {
 /// only MCP tools the agent sees.
 pub(crate) fn thread_config(
     writable: bool,
+    native_policy: bool,
     host_mcp_servers: &[HostMcpServer],
     other_mcp_servers: &[String],
 ) -> Result<Value> {
-    let mut config = json!({"features.apps":false,"features.plugins":false,"features.hooks":false,"features.multi_agent":false,"features.browser_use":false,"features.computer_use":false,"web_search":"disabled"});
+    let mut config = json!({"features.apps":false,"features.plugins":false,"features.hooks":false,"features.multi_agent":false,"features.computer_use":false});
+    if !native_policy {
+        config["features.browser_use"] = Value::Bool(false);
+        config["web_search"] = Value::String("disabled".into());
+    }
     if !host_mcp_servers.is_empty() {
         // These are host-owned MCP calls, so expose them directly even for
         // models that otherwise defer tools to the disabled code-mode host.
@@ -156,7 +161,7 @@ impl CodexAgent {
     }
     /// Read-only, unreviewed sessions allow no client tool but the host's.
     fn text_only(&self) -> bool {
-        !self.config.writable && !self.config.review_requests
+        !self.config.writable && !self.config.review_requests && !self.config.native_policy
     }
     /// Names of MCP servers configured for this Codex home (none started).
     /// Only read for host-MCP sessions; a configured server with a host
@@ -210,17 +215,24 @@ impl CodexAgent {
         let others = self.configured_mcp_servers().await?;
         // Codex 0.157+ takes the thread sandbox mode in kebab case and reports
         // it back in camel case.
-        let (mode, reported) = if self.config.writable {
+        let (mode, reported) = if self.config.native_policy {
+            ("danger-full-access", "dangerFullAccess")
+        } else if self.config.writable {
             ("workspace-write", "workspaceWrite")
         } else {
             ("read-only", "readOnly")
         };
-        let approval = if self.config.review_requests {
-            "onRequest"
+        let approval = if self.config.review_requests || self.config.native_policy {
+            "on-request"
         } else {
             "never"
         };
-        let config = thread_config(self.config.writable, &self.config.host_mcp_servers, &others)?;
+        let config = thread_config(
+            self.config.writable || self.config.native_policy,
+            self.config.native_policy,
+            &self.config.host_mcp_servers,
+            &others,
+        )?;
         let (method, params) = match &self.config.resume_thread {
             // Reattach a persisted thread with the same policy it was started with.
             Some(thread) => (
@@ -289,12 +301,14 @@ impl CodexAgent {
         let thread = self.ensure_thread().await?;
         // Codex 0.157+ rejects per-turn read access (`readOnly.access`,
         // `readOnlyAccess`); read scope now comes from permission profiles.
-        let sandbox = if self.config.writable {
+        let sandbox = if self.config.native_policy {
+            json!({"type":"dangerFullAccess"})
+        } else if self.config.writable {
             json!({"type":"workspaceWrite","writableRoots":[self.workspace],"networkAccess":false})
         } else {
             json!({"type":"readOnly"})
         };
-        let params = json!({"threadId":thread,"model":self.config.model.native_id,"input":turn_input(&prompt, cx.images()),"effort":options.get("reasoningEffort"),"serviceTier":options.get("serviceTier").cloned().unwrap_or(json!("default")),"sandboxPolicy":sandbox,"approvalPolicy":if self.config.review_requests{"onRequest"}else{"never"}});
+        let params = json!({"threadId":thread,"model":self.config.model.native_id,"input":turn_input(&prompt, cx.images()),"effort":options.get("reasoningEffort"),"serviceTier":options.get("serviceTier").cloned().unwrap_or(json!("default")),"sandboxPolicy":sandbox,"approvalPolicy":if self.config.review_requests || self.config.native_policy {"on-request"}else{"never"}});
         self.peer.sequence += 1;
         let request = self.peer.sequence;
         self.peer
@@ -391,7 +405,7 @@ impl CodexAgent {
                         detail.chars().take(8192).collect(),
                     )
                     .await?
-                        && self.config.writable
+                        && (self.config.writable || self.config.native_policy)
                 } else {
                     false
                 };
@@ -606,7 +620,7 @@ mod direct_namespace_tests {
             allowed_tools: vec!["echo".into()],
         };
         assert!(server.validate());
-        let config = thread_config(false, std::slice::from_ref(&server), &[]).unwrap();
+        let config = thread_config(false, false, std::slice::from_ref(&server), &[]).unwrap();
         assert_eq!(config["features.non_prefixed_mcp_tool_names"], false);
         assert_eq!(
             config["features.code_mode.direct_only_tool_namespaces"],
@@ -618,18 +632,18 @@ mod direct_namespace_tests {
             name: "mcp__functions".into(),
             ..server.clone()
         };
-        let config = thread_config(false, std::slice::from_ref(&prefixed), &[]).unwrap();
+        let config = thread_config(false, false, std::slice::from_ref(&prefixed), &[]).unwrap();
         assert_eq!(
             config["features.code_mode.direct_only_tool_namespaces"],
             json!(["mcp__functions"])
         );
         assert_eq!(
-            thread_config(false, &[server, prefixed], &[])
+            thread_config(false, false, &[server, prefixed], &[])
                 .unwrap_err()
                 .code,
             ErrorCode::IntegrationRestricted
         );
-        let plain = thread_config(false, &[], &[]).unwrap();
+        let plain = thread_config(false, false, &[], &[]).unwrap();
         assert!(
             plain
                 .get("features.code_mode.direct_only_tool_namespaces")

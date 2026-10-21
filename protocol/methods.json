@@ -2666,7 +2666,7 @@
           "type": "boolean"
         },
         "hostMcpServers": {
-          "description": "Host-owned loopback MCP servers attached to a native-client session.\nThe agent may call only the listed tools; its own tools stay disabled.",
+          "description": "Host-owned loopback MCP servers attached to a native-client session.\nIn the default read-only mode, only these listed tools may be called.\nThe separately granted `native_policy` mode also enables the native\nclient's own tools and policy.",
           "items": {
             "$ref": "#/$defs/HostMcpServer"
           },
