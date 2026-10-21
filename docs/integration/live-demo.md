@@ -18,7 +18,7 @@ The pair code expires after five minutes and allows ten failed attempts. Bearer 
 
 ## Explicit execution
 
-Add `--allow-codex-execution --workspace ABSOLUTE_DIRECTORY` to authorize native sessions in the named `default` workspace. This does not start inference. A user must choose a model and explicitly start a turn in Playground. The demo requests read-only execution. Optional CLI flags `--allow-writes`, `--review-native-requests`, and `--allow-paid-options` only raise the host's maximum permission; a request must also select/authorize the corresponding behavior. No metered fallback is automatic.
+Add `--allow-codex-execution --workspace ABSOLUTE_DIRECTORY` to authorize native sessions in the named `default` workspace. This does not start inference. A user must choose a model and explicitly start a turn in Playground. The demo requests read-only execution. Optional CLI flags `--allow-writes`, `--allow-native-policy`, `--review-native-requests`, and `--allow-paid-options` only raise the host's maximum permission; a request must also select the corresponding behavior. `native_policy` delegates tool and filesystem/network limits to the installed native client; it is not a Kit sandbox. No metered fallback is automatic.
 
 The HTTP API binds 127.0.0.1 only. Host and Origin are checked, pairing is single-use, API methods require a bearer and protocol handshake, and caller permissions are enforced by the same Rust service used by stdio. Native apps without a browser Origin can use the explicit bearer flow. A page served from another origin is not implicitly trusted.
 

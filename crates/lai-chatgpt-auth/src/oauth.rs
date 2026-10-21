@@ -1286,12 +1286,15 @@ mod tests {
         let reg = file.registration.clone().unwrap();
         let path = credential_path(dir.path(), &file.host_id, &reg);
         assert!(path.exists());
-        assert!(
-            keyring_entry(&file.host_id, &reg)
-                .unwrap()
-                .get_password()
-                .is_ok()
-        );
+        {
+            let _keyring_guard = crate::store::lock_keyring_for_test();
+            assert!(
+                keyring_entry(&file.host_id, &reg)
+                    .unwrap()
+                    .get_password()
+                    .is_ok()
+            );
+        }
         // Exact crash boundary: disconnect persisted the tombstone, but the
         // process stopped before it removed the old file and key.
         file.epoch += 1;
@@ -1312,10 +1315,13 @@ mod tests {
         let (store, file) = seeded_credentials(dir.path());
         let reg = file.registration.clone().unwrap();
         let path = credential_path(dir.path(), &file.host_id, &reg);
-        keyring_entry(&file.host_id, &reg)
-            .unwrap()
-            .delete_credential()
-            .unwrap();
+        {
+            let _keyring_guard = crate::store::lock_keyring_for_test();
+            keyring_entry(&file.host_id, &reg)
+                .unwrap()
+                .delete_credential()
+                .unwrap();
+        }
         let manager = AuthManager::new(dir.path().to_path_buf(), "example-app".into()).unwrap();
         let status = manager.status().await.unwrap();
         assert_eq!(status.state, AuthState::Error);
@@ -1338,10 +1344,13 @@ mod tests {
         let (store, file) = seeded_credentials(dir.path());
         let reg = file.registration.clone().unwrap();
         let path = credential_path(dir.path(), &file.host_id, &reg);
-        keyring_entry(&file.host_id, &reg)
-            .unwrap()
-            .set_password("corrupt-key")
-            .unwrap();
+        {
+            let _keyring_guard = crate::store::lock_keyring_for_test();
+            keyring_entry(&file.host_id, &reg)
+                .unwrap()
+                .set_password("corrupt-key")
+                .unwrap();
+        }
         let manager = with_endpoints(dir.path().to_path_buf(), fake_endpoints(1234));
         assert_eq!(manager.status().await.unwrap().state, AuthState::Error);
         let start = manager.start().await.unwrap();

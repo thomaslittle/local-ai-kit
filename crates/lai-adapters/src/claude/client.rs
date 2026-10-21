@@ -32,14 +32,18 @@ async fn control(peer: &mut Peer, request: Value) -> Result<Value> {
     Err(invalid())
 }
 async fn initialize(peer: &mut Peer) -> Result<Value> {
+    initialize_policy(peer, false).await
+}
+async fn initialize_policy(peer: &mut Peer, native_policy: bool) -> Result<Value> {
     let value = control(
         peer,
         json!({"subtype":"initialize","hooks":null,"skills":[]}),
     )
     .await?;
-    if value["current_permission_mode"]
-        .as_str()
-        .is_some_and(|p| p != "dontAsk" && p != "plan")
+    if !native_policy
+        && value["current_permission_mode"]
+            .as_str()
+            .is_some_and(|p| p != "dontAsk" && p != "plan")
     {
         return Err(DomainError::new(
             ErrorCode::IntegrationRestricted,
@@ -47,6 +51,34 @@ async fn initialize(peer: &mut Peer) -> Result<Value> {
         ));
     }
     Ok(value)
+}
+fn native_approval_detail(request: &Value) -> String {
+    let tool = request["tool_name"]
+        .as_str()
+        .filter(|name| !name.is_empty() && name.len() <= 256)
+        .unwrap_or("Native client operation");
+    let input = &request["input"];
+    let context = if matches!(
+        tool,
+        "Read" | "Write" | "Edit" | "MultiEdit" | "NotebookEdit"
+    ) {
+        input["file_path"]
+            .as_str()
+            .or_else(|| input["path"].as_str())
+            .map(|path| format!(" {path}"))
+    } else if tool.eq_ignore_ascii_case("Bash") || tool.eq_ignore_ascii_case("PowerShell") {
+        input["command"]
+            .as_str()
+            .or_else(|| request["command"].as_str())
+            .map(|command| format!(" {command}"))
+    } else {
+        None
+    };
+    let detail = format!("{tool}{}", context.unwrap_or_default());
+    lai_contracts::redact_diagnostic_detail(&detail)
+        .chars()
+        .take(1024)
+        .collect()
 }
 /// Waits until every host MCP server reports `connected` via the
 /// `mcp_status` control request (no user turn, no inference). A server that
@@ -85,9 +117,16 @@ async fn wait_host_mcp(peer: &mut Peer, host: &HostTools) -> Result<()> {
 /// Starts the client with host MCP servers attached and confirms they connect,
 /// without sending a prompt. Lets a host verify wiring before any turn.
 pub async fn probe_host_mcp(spec: LaunchSpec, host: &HostTools) -> Result<()> {
+    probe_host_mcp_policy(spec, host, false).await
+}
+pub async fn probe_host_mcp_policy(
+    spec: LaunchSpec,
+    host: &HostTools,
+    native_policy: bool,
+) -> Result<()> {
     let mut peer = Peer::spawn(spec).await?;
     let outcome = tokio::time::timeout(Duration::from_secs(30), async {
-        initialize(&mut peer).await?;
+        initialize_policy(&mut peer, native_policy).await?;
         wait_host_mcp(&mut peer, host).await
     })
     .await
@@ -147,7 +186,21 @@ pub fn host_executor(
     connection: String,
     route: String,
 ) -> Box<dyn Agent> {
-    Box::new(agent(launch, host, model, connection, route))
+    host_executor_policy(launch, host, model, connection, route, false, false)
+}
+pub fn host_executor_policy(
+    launch: super::launch::HostMcpLaunch,
+    host: HostTools,
+    model: Model,
+    connection: String,
+    route: String,
+    native_policy: bool,
+    review_requests: bool,
+) -> Box<dyn Agent> {
+    let mut result = agent(launch, host, model, connection, route);
+    result.native_policy = native_policy;
+    result.review_requests = review_requests;
+    Box::new(result)
 }
 /// A persisted conversation. `launch.spec` must already carry
 /// [`super::launch::persist`] for `session_id`; `resumed` marks a reattached
@@ -161,7 +214,27 @@ pub fn persistent_executor(
     session_id: String,
     resumed: bool,
 ) -> Box<dyn Agent> {
+    persistent_executor_policy(
+        launch, host, model, connection, route, session_id, resumed, false, false,
+    )
+}
+// Keep this policy-aware factory aligned with `host_executor_policy` and the
+// persisted-session inputs; these distinct values are part of the adapter API.
+#[allow(clippy::too_many_arguments)]
+pub fn persistent_executor_policy(
+    launch: super::launch::HostMcpLaunch,
+    host: HostTools,
+    model: Model,
+    connection: String,
+    route: String,
+    session_id: String,
+    resumed: bool,
+    native_policy: bool,
+    review_requests: bool,
+) -> Box<dyn Agent> {
     let mut agent = agent(launch, host, model, connection, route);
+    agent.native_policy = native_policy;
+    agent.review_requests = review_requests;
     agent.session = Some(session_id);
     agent.persistent = true;
     agent.resumable = resumed;
@@ -178,6 +251,8 @@ fn agent(
         spec: Some(launch.spec),
         mcp_config: launch.config_dir,
         host,
+        native_policy: false,
+        review_requests: false,
         tool_uses: BTreeMap::new(),
         peer: None,
         model,
@@ -194,6 +269,8 @@ struct ClaudeAgent {
     /// Private directory holding the per-session MCP config; deleted on close.
     mcp_config: Option<tempfile::TempDir>,
     host: HostTools,
+    native_policy: bool,
+    review_requests: bool,
     /// Host tool_use ids of the current turn, for completion events.
     tool_uses: BTreeMap<String, String>,
     peer: Option<Peer>,
@@ -238,11 +315,14 @@ impl ClaudeAgent {
                 spec.args.push(format!("--effort={effort}").into());
             }
             let mut peer = Peer::spawn(spec).await?;
-            let init = tokio::time::timeout(Duration::from_secs(20), initialize(&mut peer))
-                .await
-                .map_err(|_| {
-                    DomainError::new(ErrorCode::Timeout, "Claude initialization timed out")
-                })??;
+            let init = tokio::time::timeout(
+                Duration::from_secs(20),
+                initialize_policy(&mut peer, self.native_policy),
+            )
+            .await
+            .map_err(|_| {
+                DomainError::new(ErrorCode::Timeout, "Claude initialization timed out")
+            })??;
             let metadata = parse_metadata(&self.connection, &self.route, &init, None)?;
             tokio::time::timeout(
                 Duration::from_secs(15),
@@ -291,14 +371,27 @@ impl ClaudeAgent {
                         .as_str()
                         .filter(|s| s.len() <= 256)
                         .ok_or_else(invalid)?;
-                    peer.send(json!({"type":"control_response","response":{"subtype":"success","request_id":id,"response":{"behavior":"deny","message":"Toolkit text-only mode does not authorize tools","interrupt":true}}})).await?;
-                    return Err(DomainError::new(
-                        ErrorCode::IntegrationRestricted,
-                        "Unexpected native tool request",
-                    ));
+                    let request = &response["request"];
+                    let detail = native_approval_detail(request);
+                    let allowed = self.native_policy
+                        && self.review_requests
+                        && cx.approve("Review native operation".into(), detail).await?;
+                    let decision = if allowed {
+                        json!({"behavior":"allow","updatedInput":request["input"],"interrupt":false})
+                    } else {
+                        json!({"behavior":"deny","decisionReason":"Native operation was not approved by the host","interrupt":true})
+                    };
+                    peer.send(json!({"type":"control_response","response":{"subtype":"success","request_id":id,"response":decision}})).await?;
+                    if !allowed {
+                        return Err(DomainError::new(
+                            ErrorCode::IntegrationRestricted,
+                            "Native operation was not approved",
+                        ));
+                    }
                 }
                 Some("system") => {
-                    if response["subtype"] == "init"
+                    if !self.native_policy
+                        && response["subtype"] == "init"
                         && !advertised_tools_allowed(&self.host, &response["tools"])
                     {
                         return Err(DomainError::new(
@@ -310,7 +403,20 @@ impl ClaudeAgent {
                 Some("stream_event") => {
                     let event = &response["event"];
                     if event["type"] == "content_block_start" {
-                        check_block_start(&self.host, &event["content_block"])?;
+                        let block = &event["content_block"];
+                        if self.native_policy
+                            && matches!(block["type"].as_str(), Some("tool_use" | "mcp_tool_use"))
+                        {
+                            if block["name"]
+                                .as_str()
+                                .filter(|name| !name.is_empty() && name.len() <= 256)
+                                .is_none()
+                            {
+                                return Err(native_tool_refused());
+                            }
+                        } else {
+                            check_block_start(&self.host, block)?;
+                        }
                     }
                     if event["type"] == "content_block_delta" {
                         let delta = &event["delta"];
@@ -336,12 +442,33 @@ impl ClaudeAgent {
                                 }
                                 Some("thinking" | "redacted_thinking") => {}
                                 _ => {
-                                    let id = host_tool_use(&self.host, part)?;
+                                    let is_host = part["name"]
+                                        .as_str()
+                                        .is_some_and(|name| self.host.allows_qualified(name));
+                                    let id = if is_host {
+                                        host_tool_use(&self.host, part)?
+                                    } else if self.native_policy
+                                        && matches!(
+                                            part["type"].as_str(),
+                                            Some("tool_use" | "mcp_tool_use")
+                                        )
+                                    {
+                                        part["id"]
+                                            .as_str()
+                                            .filter(|id| !id.is_empty() && id.len() <= 256)
+                                            .ok_or_else(invalid)?
+                                            .to_owned()
+                                    } else {
+                                        return Err(native_tool_refused());
+                                    };
                                     if self.tool_uses.len() >= 1024 {
                                         return Err(invalid());
                                     }
                                     let name = part["name"].as_str().unwrap_or("").to_owned();
                                     self.tool_uses.insert(id, name.clone());
+                                    if !is_host && !self.native_policy {
+                                        return Err(native_tool_refused());
+                                    }
                                     cx.emit(EventPayload::Tool {
                                         name,
                                         status: "started".into(),

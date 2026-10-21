@@ -237,7 +237,7 @@ async fn invalid_host_servers_are_refused_before_any_launch() {
     assert!(seen.lock().unwrap().is_empty());
 }
 #[tokio::test]
-async fn host_servers_require_the_execution_grant_and_a_read_only_session() {
+async fn host_servers_require_the_execution_grant_and_reject_workspace_write() {
     let (service, seen) = setup(true).await;
     let ungranted = service
         .handle("ungranted", "sessions.create", create(json!([server()])))

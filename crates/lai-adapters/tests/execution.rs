@@ -12,6 +12,7 @@ fn config() -> CodexExecution {
         route: "r".into(),
         writable: false,
         review_requests: true,
+        native_policy: false,
         host_mcp_servers: vec![],
         persistent: false,
         resume_thread: None,

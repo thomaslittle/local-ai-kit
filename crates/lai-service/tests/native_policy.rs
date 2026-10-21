@@ -80,7 +80,7 @@ async fn native_client_policy_needs_separate_host_authorization() {
 async fn explicit_native_policy_is_preserved_for_the_provider_not_claimed_readonly() {
     let (s, c) = setup(true);
     s.handle("a", "discovery.refresh", json!({})).await.unwrap();
-    let v=s.handle("a","sessions.create",json!({"selection":common::selection(),"workspaceId":"safe","permissionMode":"native_policy"})).await.unwrap();
+    let v=s.handle("a","sessions.create",json!({"selection":common::selection(),"workspaceId":"safe","permissionMode":"native_policy","hostMcpServers":[{"name":"design","url":"http://127.0.0.1:48123/mcp","bearerToken":"host-secret-token-0123456789abcdef","allowedTools":["echo_color"]}]})).await.unwrap();
     assert!(v["id"].is_string());
     assert_eq!(c.load(Ordering::SeqCst), 1);
 }

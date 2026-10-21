@@ -4,6 +4,10 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Added
+
+- Host MCP sessions can opt into the installed Codex or Claude Code native tools with `permissionMode: "native_policy"` plus the separately granted `--allow-native-policy`. `--review-native-requests` remains an independent once-only approval grant; the read-only host-tools-only default is unchanged.
+
 ## [0.1.0-alpha.17] - 2026-10-16
 
 ### Changed
