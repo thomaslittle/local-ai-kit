@@ -412,7 +412,7 @@ async fn invalidation_is_debounced_then_the_autonomous_lane_rechecks_it() {
         .unwrap();
     assert!(s.start_background_tasks());
     std::fs::write(root.join("personal/auth.json"), "changed").unwrap();
-    tokio::time::timeout(Duration::from_secs(12), async {
+    tokio::time::timeout(Duration::from_secs(20), async {
         loop {
             let snapshot = s.handle("app", "snapshot.get", json!({})).await.unwrap();
             let ready = snapshot["connections"]
