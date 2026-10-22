@@ -1,13 +1,13 @@
 # Shared runtime acceptance ledger — 2026-10-22
 
 - **Repository:** local-ai-kit (`C:\Users\User\Sites\local-ai-kit`)
-- **Branch:** `feat/shared-runtime`. Implementation head `eb00aee07178133d0ca0eef65a9a1727b5250083`
-  (per-app grants + OpenCode Go billing); later docs-only commits may follow.
+- **Branch:** `feat/shared-runtime`. Code head `db240c00342274a68c554edc2e3192a40ed5de59`
+  (per-app grants, OpenCode Go billing, opt-in notification sink); later docs-only commits may follow.
 - **Pull requests:** local-ai-kit [#28](https://github.com/thomaslittle/local-ai-kit/pull/28);
   Remotif [#36](https://github.com/thomaslittle/remotif/pull/36);
   Crntly [#117](https://github.com/thomaslittle/crntly-desktop/pull/117).
 - **Consumer heads:** Remotif `026ee01187cb84a0034c76fda3e2352c02ccde96`
-  (`feat/shared-local-ai-runtime`); Crntly `c2bf8b6d5014e05ff22abf316232fbdd1829877d`
+  (`feat/shared-local-ai-runtime`); Crntly `18f6dc52da9768c6d279708809c6b66abc8e2f4c`
   (`feat/shared-local-ai-runtime`, based on
   `origin/feature/gpui-native-rust-studio`).
 - **Status vocabulary:** planned / implemented / fixture-tested /
@@ -35,12 +35,12 @@
 | Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (4 tests) |
 | T3/Tokscale watcher parsing, classification, coverage report | implemented, fixture-tested | `python -m unittest scripts.test_upstream_sync scripts.test_upstream_t3code` (11 tests) |
 | Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` - 611 passed, 0 failed (122 suites) at the notification/control-center commit |
-| Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39767444742](https://github.com/thomaslittle/local-ai-kit/actions/runs/39767444742) at `eb00aee`: Ubuntu 14m44s, macOS 14m19s, Windows 18m21s, all success (full deterministic verification incl. new per-app grant and Go billing tests) |
+| Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39775047109](https://github.com/thomaslittle/local-ai-kit/actions/runs/39775047109) at code head `db240c0`: Ubuntu, macOS, Windows all success (full deterministic verification incl. per-app grants, Go billing, notification sink, control-center tests) |
 | Rust lint/format | passing | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
 | Remotif shared runtime | implemented, **platform-executed on Windows** | `cargo test -p remotif-kit` (6) with real broker/token; isolated native model-picker run with a distinct app token |
-| Remotif phone bridge shared mode | implemented, **not re-run as a phone/HTTP E2E this session** | the bridge uses the same `connect_client`; its shared-broker unit test passed, but no browser/phone session was driven |
+| Remotif phone bridge shared mode | implemented, **platform-executed on Windows (loopback HTTP only)** | isolated `remotifd --demo --bind 127.0.0.1`, unique port, child PID listener ownership, `/api/v1/motif/models?refresh=true`: Go eligible/`declared:false`/`paid:false`, PAYG consent, cached state, updated model, synthetic 503 notice, recovery; no LAN bind, firewall change, TV, or inference |
 | Notification coordinator vs OS delivery | coordinator implemented; **optional OS sink implemented behind `os-notifications`/`--os-notifications`; not enabled in qualification** | injected sink test proves due decisions reach a host sink and duplicate polls do not; no real desktop notification was emitted; OS toast delivery is not claimed in the default build |
 | Control-center usability | public-API E2E and issue-rendering view passed; **no interactive usability review** | `lai-control --test e2e`, `issue_view_exposes_actionable_remediation_without_connection_secrets`; keyboard/visual review remains unclaimed |
 | GUI lifecycle: first-app close/reopen, disconnect/reconnect, revoke | **partial** | broker lifecycle tests cover consumer disconnect, duplicate launch, idle shutdown, app revoke; Remotif picker proves discovery/refresh/error/recovery; Crntly GUI blocked; dual-app close/reopen not run |
