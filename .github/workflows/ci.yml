@@ -22,18 +22,18 @@ jobs:
       CARGO_BUILD_JOBS: '2'
       PYTHONUTF8: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Free disk space (Linux runner)
         if: runner.os == 'Linux'
         run: |
           # The debug test build plus the release bundle exceed the default runner disk.
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/swift /opt/hostedtoolcache/CodeQL
           df -h /
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22.20.0'
           cache: npm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - uses: actions/setup-dotnet@v4
@@ -60,7 +60,7 @@ jobs:
           python scripts/package_smoke.py
       - name: Preserve actual evidence and artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verification-${{ matrix.os }}
           path: |
