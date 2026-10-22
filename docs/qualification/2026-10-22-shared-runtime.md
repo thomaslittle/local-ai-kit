@@ -37,7 +37,7 @@
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
 | Remotif shared runtime | implemented, **platform-executed on Windows** | `cargo test -p remotif-kit --test shared_broker` with a real broker and token file |
-| Crntly shared helper | implemented, **platform-executed on Windows** | `cargo test -p crntly-core --no-default-features ai_assistant` (89); opt-in `shared_broker_helper_authenticates_and_reads_a_snapshot` with a real broker |
+| Crntly shared helper | implemented, **platform-executed on Windows** | `cargo test -p crntly-core --no-default-features ai_assistant` (90); opt-in `shared_broker_helper_authenticates_and_reads_a_snapshot` with a real broker; shared health/issues added to the snapshot DTO and generated bindings |
 | Full Crntly GUI against one broker | **not run** | environment/authorization blocker; do not claim it |
 | Live provider inference/account checks | **not run** | no account consumption is authorized by this task; no claim |
 
