@@ -6,13 +6,15 @@ an earlier artifact.
 
 ## Retained
 
-- `100x30-before-retention-rule`: the first passing 100x30 run before the final
-  prompt, footer, selection-reset, and scroll fixes.
+- `100x30-before-retention-rule`: the first passing 100x30 run after the
+  selection-reset, scrolling, and footer fixes, but before `y/n` was moved to
+  the front of the confirmation prompt.
 - `80x24-prompt-clipped`: retained failure. The confirmation prompt was
   truncated before `y/n` at 80 columns, so the required confirmation keys were
   not visible.
-- `80x24-final`: passing run after the fixes, including scrolling Diagnostics.
-- `100x30-final`: passing run after the fixes.
+- `80x24-final`: passing run after the prompt fix, including scrolling
+  Diagnostics.
+- `100x30-final`: passing run after the prompt fix.
 
 ## Lost before the retention rule was imposed
 

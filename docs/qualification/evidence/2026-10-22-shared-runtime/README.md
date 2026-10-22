@@ -12,7 +12,8 @@ LAN listener, desktop notification, or global keyboard/mouse input was used.
   Windows ConPTY. `80x24-prompt-clipped` is a retained failure; the final 80x24
   and 100x30 runs pass. `ATTEMPTS.md` discloses earlier artifacts that were
   overwritten before the unique-directory rule was imposed; those are not
-  claimed as retained.
+  claimed as retained. The harness used `pywinpty 3.1.0` installed under
+  `%TEMP%` only; it is not a product dependency.
 - `bridge/`: Remotif cross-process tests. One retained log is an opt-in skip
   (no test binary configured); the other is the real broker run proving app
   scope, revocation, peer survival, broker-kill failure, and restart recovery.
