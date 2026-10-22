@@ -472,7 +472,7 @@ impl NativeService {
                 "Persistent sessions need a kit state directory",
             ));
         }
-        let located = self.cache.probe_input(&connection.id)?.0;
+        let located = self.cache.probe_input(&connection.id)?.located;
         let input = ExecutionInput {
             located,
             connection_id: connection.id.clone(),

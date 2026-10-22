@@ -16,6 +16,10 @@ pub struct ClientPolicy {
     pub probe_connection_ids: BTreeSet<String>,
     #[serde(default)]
     pub probe_provider_ids: BTreeSet<String>,
+    /// Host-only administrative surface (list/revoke application clients).
+    /// Never granted by a protocol request.
+    #[serde(default)]
+    pub admin: bool,
 }
 impl Default for ClientPolicy {
     fn default() -> Self {
@@ -25,6 +29,7 @@ impl Default for ClientPolicy {
             reveal_identity: false,
             probe_connection_ids: BTreeSet::new(),
             probe_provider_ids: BTreeSet::new(),
+            admin: false,
         }
     }
 }

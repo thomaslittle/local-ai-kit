@@ -13,8 +13,10 @@ lai-core = { path = "../lai-core" }
 lai-discovery = { path = "../lai-discovery" }
 lai-platform = { path = "../lai-platform" }
 lai-chatgpt-auth = { path = "../lai-chatgpt-auth" }
+lai-store = { path = "../lai-store" }
 serde.workspace = true
 serde_json.workspace = true
+chrono.workspace = true
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
 getrandom = "0.3"
 base64 = "0.22"

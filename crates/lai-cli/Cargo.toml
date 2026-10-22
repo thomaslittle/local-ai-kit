@@ -22,7 +22,7 @@ lai-transports = { path = "../lai-transports" }
 lai-chatgpt-auth = { path = "../lai-chatgpt-auth" }
 serde.workspace = true
 serde_json.workspace = true
-tokio = { version = "1", features = ["rt-multi-thread", "io-std", "signal", "macros", "time"] }
+tokio = { version = "1", features = ["rt-multi-thread", "io-std", "io-util", "signal", "macros", "time"] }
 
 [dev-dependencies]
 tempfile = "3"

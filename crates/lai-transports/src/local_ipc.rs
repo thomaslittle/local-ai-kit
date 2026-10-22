@@ -14,7 +14,10 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
     time::{Duration, Instant},
 };
 use tokio::{
@@ -22,14 +25,30 @@ use tokio::{
     sync::{Semaphore, oneshot},
     task::JoinSet,
 };
+/// Public stream type for SDK/control consumers that implement the local
+/// connector themselves. It carries the same authenticated framing.
+pub type IpcStream = Stream;
+#[derive(Clone)]
 struct Grant {
     policy: ClientPolicy,
     execution: Option<ExecutionGrant>,
     created: Instant,
+    /// An independent broker may reuse an owner-scoped app credential so the
+    /// same application can open a new connection after a restart. Parent
+    /// bootstraps remain one-use.
+    reusable: bool,
+}
+#[derive(Clone, Copy, Default)]
+pub struct BrokerOptions {
+    /// Stop after this long with no connected clients. None means run until an
+    /// explicit shutdown or parent control-channel close.
+    pub idle_timeout: Option<Duration>,
 }
 struct Shared {
     service: Arc<NativeService>,
     pending: Mutex<BTreeMap<[u8; 32], Grant>>,
+    active: AtomicUsize,
+    idle_since: Mutex<Option<Instant>>,
 }
 pub struct Broker {
     shared: Arc<Shared>,
@@ -93,6 +112,19 @@ fn restrict_endpoint(address: &str) -> Result<()> {
 }
 impl Broker {
     pub async fn start(service: Arc<NativeService>, address: &str) -> Result<Self> {
+        Self::start_with(service, address, BrokerOptions::default()).await
+    }
+    pub async fn start_with(
+        service: Arc<NativeService>,
+        address: &str,
+        broker_options: BrokerOptions,
+    ) -> Result<Self> {
+        if broker_options
+            .idle_timeout
+            .is_some_and(|timeout| timeout.is_zero() || timeout > Duration::from_secs(86_400))
+        {
+            return Err(fail(ErrorCode::InvalidRequest));
+        }
         let options = ListenerOptions::new().name(name(address)?);
         #[cfg(windows)]
         let options = {
@@ -119,15 +151,25 @@ impl Broker {
         let shared = Arc::new(Shared {
             service,
             pending: Mutex::new(BTreeMap::new()),
+            active: AtomicUsize::new(0),
+            idle_since: Mutex::new(Some(Instant::now())),
         });
         let state = shared.clone();
         let (stop, mut stopped) = oneshot::channel();
         let task = tokio::spawn(async move {
             let permits = Arc::new(Semaphore::new(32));
             let mut jobs = JoinSet::new();
+            let mut idle = tokio::time::interval(Duration::from_secs(1));
+            idle.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tokio::select! {
                  _=&mut stopped=>break,
+                 _=idle.tick(),if broker_options.idle_timeout.is_some()=>{
+                     if state.active.load(Ordering::SeqCst)==0
+                        && state.idle_since.lock().ok().and_then(|since| *since).is_some_and(|since| since.elapsed()>=broker_options.idle_timeout.unwrap_or_default()) {
+                         break;
+                     }
+                 },
                  _=jobs.join_next(),if !jobs.is_empty()=>{},
                  incoming=listener.accept()=>match incoming{
                   Ok(stream)=>{if let Ok(permit)=permits.clone().try_acquire_owned(){let state=state.clone();jobs.spawn(async move{let _p=permit;let _=serve_connection(stream,state).await;});}},
@@ -150,13 +192,30 @@ impl Broker {
         policy: ClientPolicy,
         execution: Option<ExecutionGrant>,
     ) -> Result<String> {
+        self.insert_grant(policy, execution, false)
+    }
+    /// Owner-scoped credential for an independent broker's token file. It can
+    /// open more than one connection; the OS file permissions are the boundary.
+    pub fn authorize_shared(
+        &self,
+        policy: ClientPolicy,
+        execution: Option<ExecutionGrant>,
+    ) -> Result<String> {
+        self.insert_grant(policy, execution, true)
+    }
+    fn insert_grant(
+        &self,
+        policy: ClientPolicy,
+        execution: Option<ExecutionGrant>,
+        reusable: bool,
+    ) -> Result<String> {
         let token = key()?;
         let mut map = self
             .shared
             .pending
             .lock()
             .map_err(|_| fail(ErrorCode::ProviderUnavailable))?;
-        map.retain(|_, g| g.created.elapsed() < Duration::from_secs(300));
+        map.retain(|_, grant| grant.reusable || grant.created.elapsed() < Duration::from_secs(300));
         if map.len() >= 64 {
             return Err(fail(ErrorCode::RateLimited));
         }
@@ -166,6 +225,7 @@ impl Broker {
                 policy,
                 execution,
                 created: Instant::now(),
+                reusable,
             },
         );
         Ok(token)
@@ -177,6 +237,9 @@ impl Broker {
         if let Some(task) = self.task.take() {
             let _ = task.await;
         }
+    }
+    pub fn active_connections(&self) -> usize {
+        self.shared.active.load(Ordering::SeqCst)
     }
 }
 impl Drop for Broker {
@@ -193,6 +256,27 @@ struct Owner {
 impl Drop for Owner {
     fn drop(&mut self) {
         self.service.unregister_client(&self.client);
+    }
+}
+struct ActiveConnection {
+    shared: Arc<Shared>,
+}
+impl ActiveConnection {
+    fn new(shared: Arc<Shared>) -> Self {
+        shared.active.fetch_add(1, Ordering::SeqCst);
+        if let Ok(mut idle) = shared.idle_since.lock() {
+            *idle = None;
+        }
+        Self { shared }
+    }
+}
+impl Drop for ActiveConnection {
+    fn drop(&mut self) {
+        if self.shared.active.fetch_sub(1, Ordering::SeqCst) == 1 {
+            if let Ok(mut idle) = self.shared.idle_since.lock() {
+                *idle = Some(Instant::now());
+            }
+        }
     }
 }
 async fn serve_connection(stream: Stream, state: Arc<Shared>) -> Result<()> {
@@ -217,10 +301,17 @@ async fn serve_connection(stream: Stream, state: Arc<Shared>) -> Result<()> {
         })
         .and_then(|r| r.params["token"].as_str())
         .filter(|s| s.len() == 64 && s.bytes().all(|b| b.is_ascii_hexdigit()));
-    let grant = token
-        .and_then(|token| state.pending.lock().ok()?.remove(&hash(token)))
-        .filter(|g| g.created.elapsed() < Duration::from_secs(300));
-    let Some(grant) = grant else {
+    let grant = token.and_then(|token| {
+        let mut pending = state.pending.lock().ok()?;
+        let grant = pending.get(&hash(token)).cloned()?;
+        if !grant.reusable {
+            pending.remove(&hash(token));
+        }
+        Some(grant)
+    });
+    let Some(grant) =
+        grant.filter(|grant| grant.reusable || grant.created.elapsed() < Duration::from_secs(300))
+    else {
         let value = crate::wire::reply(id, Err(fail(ErrorCode::LocalAccessDenied)));
         let _ = stream
             .get_mut()
@@ -238,6 +329,7 @@ async fn serve_connection(stream: Stream, state: Arc<Shared>) -> Result<()> {
         service: state.service.clone(),
         client: client.clone(),
     };
+    let _active = ActiveConnection::new(state.clone());
     if let Some(grant) = grant.execution {
         state.service.register_execution(&client, grant)?;
     }

@@ -6,8 +6,10 @@ pub use execution::{
 };
 mod cache;
 mod catalog;
+mod health;
 mod metadata;
 mod methods;
+mod notifications;
 mod params;
 mod resume_token;
 use cache::InventoryCache;
@@ -15,11 +17,11 @@ use lai_chatgpt_auth::AuthManager;
 use lai_contracts::{DomainError, ErrorCode, MAX_TURN_START_PARAMS_BYTES, Result, Snapshot};
 use lai_core::{ClientPolicy, project_snapshot};
 use lai_discovery::ScanResult;
-use lai_platform::watcher::MetadataWatcher;
+use lai_platform::watcher::DebouncedMetadataWatcher;
 pub use metadata::{MetadataFuture, MetadataSource};
 use serde_json::Value;
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     sync::{Arc, RwLock, atomic::AtomicBool},
     time::Duration,
 };
@@ -32,7 +34,10 @@ pub struct NativeService {
     cache: Arc<InventoryCache>,
     metadata_source: Option<MetadataSource>,
     metadata_locks: std::sync::Mutex<BTreeMap<String, Arc<tokio::sync::Mutex<()>>>>,
-    watchers: std::sync::Mutex<BTreeMap<String, MetadataWatcher>>,
+    watchers: std::sync::Mutex<BTreeMap<String, DebouncedMetadataWatcher>>,
+    /// Providers whose metadata the host authorized for the autonomous lane.
+    refresh_providers: RwLock<BTreeSet<String>>,
+    background: std::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
     /// Stable application identity per connection, for durable resume tokens.
     app_identities: RwLock<BTreeMap<String, String>>,
     chatgpt_auth: Option<Arc<AuthManager>>,
@@ -48,16 +53,67 @@ impl NativeService {
             metadata_source: None,
             metadata_locks: std::sync::Mutex::new(BTreeMap::new()),
             watchers: std::sync::Mutex::new(BTreeMap::new()),
+            refresh_providers: RwLock::new(BTreeSet::new()),
+            background: std::sync::Mutex::new(None),
             app_identities: RwLock::new(BTreeMap::new()),
             chatgpt_auth: None,
             chatgpt_lifecycle: tokio::sync::Mutex::new(()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
         }
     }
+    /// Open the broker-owned SQLite state and hydrate the cached snapshot
+    /// before the server starts accepting clients.
+    pub fn enable_state_store(&self, path: std::path::PathBuf) -> Result<()> {
+        self.cache.enable_store(path)
+    }
+    /// Host-only: providers for the autonomous metadata lane. The lane uses the
+    /// same grants the host already declared; it does not invent new ones.
+    pub fn enable_autonomous_refresh(&self, providers: BTreeSet<String>) {
+        if let Ok(mut current) = self.refresh_providers.write() {
+            *current = providers;
+        }
+    }
+    /// Starts the background reconciliation lane. Safe to call once; a second
+    /// call returns false rather than creating another loop.
+    pub fn start_background_tasks(self: &Arc<Self>) -> bool {
+        let providers = self
+            .refresh_providers
+            .read()
+            .map(|providers| providers.clone())
+            .unwrap_or_default();
+        if providers.is_empty() || self.metadata_source.is_none() {
+            return false;
+        }
+        let Ok(mut slot) = self.background.lock() else {
+            return false;
+        };
+        if slot.as_ref().is_some_and(|handle| !handle.is_finished()) {
+            return false;
+        }
+        let providers_for_loop = providers.clone();
+        let service = self.clone();
+        let handle = tokio::spawn(async move {
+            let mut tick = tokio::time::interval(Duration::from_secs(5));
+            tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            loop {
+                tick.tick().await;
+                let _ = service.refresh_due_metadata(&providers_for_loop, 2).await;
+            }
+        });
+        *slot = Some(handle);
+        true
+    }
+    pub fn stop_background_tasks(&self) {
+        if let Ok(mut slot) = self.background.lock() {
+            if let Some(handle) = slot.take() {
+                handle.abort();
+            }
+        }
+    }
     /// Host-only: persist the last metadata observations at `path` (identity excluded) and reload
     /// them after a restart, so status is shown immediately and refreshed in the background.
     pub fn enable_metadata_cache(&self, path: std::path::PathBuf) {
-        self.cache.enable_persistence(path);
+        let _ = self.cache.enable_store(path);
     }
     pub fn with_adapters(mut self, adapters: Vec<lai_contracts::AdapterDescriptor>) -> Self {
         self.adapters = adapters;
@@ -142,6 +198,25 @@ impl NativeService {
             .cloned()
             .ok_or_else(denied)
     }
+    fn update_visible_issue(
+        &self,
+        client: &str,
+        params: &Value,
+        action: impl FnOnce(&mut lai_contracts::Issue) -> Result<()>,
+    ) -> Result<lai_contracts::Issue> {
+        let id = params::text(params, "issueId")?.ok_or_else(params::invalid)?;
+        // Filtering happens before mutation, so an inaccessible issue cannot be
+        // probed for existence or changed through this endpoint.
+        let visible = self
+            .projected(client)?
+            .issues
+            .iter()
+            .any(|issue| issue.id == id);
+        if !visible {
+            return Err(denied());
+        }
+        self.cache.update_issue(id, action)
+    }
     fn projected(&self, id: &str) -> Result<Snapshot> {
         // Acquire policy after loading data; never reuse a policy from before an await.
         let snapshot = self.cache.snapshot()?;
@@ -174,8 +249,9 @@ impl NativeService {
             ));
         }
         let cache = self.cache.clone();
-        let watcher = MetadataWatcher::start(
+        let watcher = DebouncedMetadataWatcher::start(
             roots,
+            Duration::from_millis(750),
             Arc::new(move |ids| {
                 let _ = cache.invalidate_metadata(&ids);
             }),
@@ -280,6 +356,96 @@ impl NativeService {
         }
         if method == "connections.probe" {
             return self.probe_connection(client, &params).await;
+        }
+        if method == "events.read" && params::text(&params, "scope")? == Some("inventory") {
+            params::allow(&params, &["scope", "after"])?;
+            let snapshot = self.projected(client)?;
+            let after = params::text(&params, "after")?
+                .map(str::to_owned)
+                .unwrap_or_else(|| snapshot.cursor.clone());
+            let page = self.cache.inventory_page(&after)?;
+            return serde_json::to_value(page).map_err(|_| params::invalid());
+        }
+        if method == "health.get" {
+            params::allow(&params, &[])?;
+            let snapshot = self.projected(client)?;
+            return Ok(serde_json::json!({
+                "summary": snapshot.health,
+                "issues": snapshot.issues,
+            }));
+        }
+        if method == "issues.list" {
+            params::allow(&params, &[])?;
+            return serde_json::to_value(self.projected(client)?.issues)
+                .map_err(|_| params::invalid());
+        }
+        if method == "issues.acknowledge" {
+            params::allow(&params, &["issueId", "until"])?;
+            let issue = self.update_visible_issue(client, &params, |issue| {
+                issue.state = lai_contracts::IssueState::Acknowledged;
+                issue.snoozed_until = None;
+                Ok(())
+            })?;
+            return Ok(serde_json::json!({"issue": issue}));
+        }
+        if method == "issues.snooze" {
+            params::allow(&params, &["issueId", "until"])?;
+            let until = match params::text(&params, "until")? {
+                Some(value) => lai_contracts::Timestamp::try_from(value.to_owned())
+                    .map_err(|_| params::invalid())?,
+                None => {
+                    let future = chrono::Utc::now() + chrono::Duration::hours(24);
+                    lai_contracts::Timestamp::try_from(
+                        future.to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
+                    )
+                    .map_err(|_| params::invalid())?
+                }
+            };
+            let issue = self.update_visible_issue(client, &params, |issue| {
+                issue.state = lai_contracts::IssueState::Snoozed;
+                issue.snoozed_until = Some(until.clone());
+                Ok(())
+            })?;
+            return Ok(serde_json::json!({"issue": issue}));
+        }
+        if method == "notifications.poll" {
+            params::allow(&params, &[])?;
+            let snapshot = self.projected(client)?;
+            let decisions = self.cache.poll_notifications(&snapshot.issues)?;
+            return serde_json::to_value(decisions).map_err(|_| params::invalid());
+        }
+        if method == "notifications.configure" {
+            params::allow(
+                &params,
+                &[
+                    "enabled",
+                    "minimumSeverity",
+                    "quietHoursStartMinute",
+                    "quietHoursEndMinute",
+                    "reminderAfterSeconds",
+                    "privateContent",
+                ],
+            )?;
+            let preferences: lai_contracts::NotificationPreferences =
+                params::decode(params.clone())?;
+            if preferences
+                .quiet_hours_start_minute
+                .is_some_and(|minute| minute >= 1440)
+                || preferences
+                    .quiet_hours_end_minute
+                    .is_some_and(|minute| minute >= 1440)
+            {
+                return Err(params::invalid());
+            }
+            self.cache
+                .set_notification_preferences(preferences.clone())?;
+            return serde_json::to_value(preferences).map_err(|_| params::invalid());
+        }
+        if method == "notifications.ack" {
+            params::allow(&params, &["issueId", "dedupeKey"])?;
+            let _ = params::text(&params, "issueId")?.ok_or_else(params::invalid)?;
+            let _ = params::text(&params, "dedupeKey")?.ok_or_else(params::invalid)?;
+            return Ok(serde_json::json!({"acknowledged": true}));
         }
         if method == "grants.revoke" {
             let value = self.dispatch(client, method, &params)?;

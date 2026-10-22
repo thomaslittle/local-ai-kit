@@ -5,6 +5,27 @@ use std::collections::BTreeSet;
 pub fn project_snapshot(source: &Snapshot, policy: &ClientPolicy) -> Snapshot {
     let mut snapshot = source.clone();
     snapshot.connections.retain(|c| policy.allows(&c.id));
+    let visible_connections: BTreeSet<_> =
+        snapshot.connections.iter().map(|c| c.id.clone()).collect();
+    snapshot.issues.retain(|issue| {
+        issue
+            .connection_id
+            .as_ref()
+            .is_none_or(|id| visible_connections.contains(id))
+    });
+    let open: Vec<&Issue> = snapshot
+        .issues
+        .iter()
+        .filter(|issue| issue.state != IssueState::Resolved)
+        .collect();
+    snapshot.health.open_issues = u32::try_from(open.len()).unwrap_or(u32::MAX);
+    snapshot.health.worst_severity = open.iter().map(|issue| issue.severity).max();
+    snapshot.health.status = match snapshot.health.worst_severity {
+        Some(IssueSeverity::Critical)
+        | Some(IssueSeverity::Error)
+        | Some(IssueSeverity::Warning) => HealthStatus::Degraded,
+        Some(IssueSeverity::Info) | None => HealthStatus::Healthy,
+    };
     let connections: BTreeSet<_> = snapshot.connections.iter().map(|c| c.id.clone()).collect();
     let profiles: BTreeSet<_> = snapshot
         .connections
@@ -60,15 +81,21 @@ pub fn project_snapshot(source: &Snapshot, policy: &ClientPolicy) -> Snapshot {
     }
     // Global diagnostic strings may reference a provider invisible to this client.
     snapshot.diagnostics.clear();
+    snapshot.cursor = source.cursor.clone();
     snapshot.revision = stable_id(
         "projection",
-        &[&serde_json::to_string(&(
-            &snapshot.connections,
-            &snapshot.routes,
-            &snapshot.models,
-            &snapshot.quota_pools,
-        ))
-        .unwrap_or_default()],
+        &[
+            &source.revision,
+            &serde_json::to_string(&(
+                &snapshot.connections,
+                &snapshot.routes,
+                &snapshot.models,
+                &snapshot.quota_pools,
+                &snapshot.issues,
+                &snapshot.health,
+            ))
+            .unwrap_or_default(),
+        ],
     );
     snapshot
 }

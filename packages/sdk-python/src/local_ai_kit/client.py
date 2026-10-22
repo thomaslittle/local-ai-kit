@@ -10,8 +10,9 @@ FAMILIES = {
     'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list','page'),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
     'grants': ('request','list','revoke'), 'sessions': ('create','get','suspend','resume','updateOptions','close'),
+    'health': ('get',), 'issues': ('list','acknowledge','snooze'), 'notifications': ('poll','configure','ack'), 'apps': ('list','revoke'),
     'inputs': ('put',), 'turns': ('start','cancel'), 'approvals': ('respond',), 'artifacts': ('read',),
-    'diagnostics': ('report',), 'adapters': ('list',), 'events': ('subscribe',),
+    'diagnostics': ('report',), 'adapters': ('list',), 'events': ('subscribe',), 'inventory': ('subscribe',),
 }
 
 
@@ -24,6 +25,8 @@ class _Namespace:
             raise AttributeError(name)
         if self._name == 'events' and name == 'subscribe':
             return self._client.subscribe
+        if self._name == 'inventory' and name == 'subscribe':
+            return self._client.subscribe_inventory
         def call(params=None, **options):
             return self._client.request(f'{self._name}.{name}', params, **options)
         return call
@@ -86,6 +89,14 @@ class AsyncClient:
         async for event in self._transport.subscribe(query):
             yield event
 
+    async def subscribe_inventory(self, after=None):
+        self._check('events.subscribe')
+        query = {'scope': 'inventory'}
+        if after is not None:
+            query['after'] = after
+        async for event in self._transport.subscribe(query):
+            yield event
+
     async def close(self):
         if not self._closed:
             self._closed = True
@@ -142,6 +153,20 @@ class Client:
         if self._closed:
             raise LocalAIError('CLOSED')
         iterator = self._client.subscribe(query)
+        try:
+            while not self._closed:
+                try:
+                    yield self._runner.run(anext(iterator))
+                except StopAsyncIteration:
+                    break
+        finally:
+            if not self._closed:
+                self._runner.run(iterator.aclose())
+
+    def subscribe_inventory(self, after=None):
+        if self._closed:
+            raise LocalAIError('CLOSED')
+        iterator = self._client.subscribe_inventory(after)
         try:
             while not self._closed:
                 try:

@@ -20,6 +20,7 @@ pub enum ErrorCode {
     SessionRouteMismatch,
     EventGap,
     ProviderUnavailable,
+    StorageUnavailable,
     Timeout,
     Cancelled,
     Conflict,

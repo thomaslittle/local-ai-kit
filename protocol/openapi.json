@@ -54,6 +54,14 @@
           },
           "providerId": {
             "type": "string"
+          },
+          "scopes": {
+            "default": [],
+            "description": "Organization/project/region scope. Accounts with different verified\nscopes are never merged, pooled, or silently switched between.",
+            "items": {
+              "$ref": "#/components/schemas/AccountScope"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -61,6 +69,27 @@
           "providerId",
           "displayLabel",
           "identitySource"
+        ],
+        "type": "object"
+      },
+      "AccountScope": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Observation"
+          },
+          "kind": {
+            "description": "`organization`, `workspace`, `project`, `region`, or a provider-native kind.",
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Observation"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label"
         ],
         "type": "object"
       },
@@ -117,6 +146,18 @@
           "persistentResumption",
           "qualification",
           "limitations"
+        ],
+        "type": "object"
+      },
+      "AppRevokeParams": {
+        "additionalProperties": false,
+        "properties": {
+          "clientId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientId"
         ],
         "type": "object"
       },
@@ -631,6 +672,7 @@
               "SESSION_ROUTE_MISMATCH",
               "EVENT_GAP",
               "PROVIDER_UNAVAILABLE",
+              "STORAGE_UNAVAILABLE",
               "TIMEOUT",
               "CANCELLED",
               "CONFLICT",
@@ -1099,6 +1141,76 @@
         ],
         "type": "object"
       },
+      "HealthStatus": {
+        "enum": [
+          "healthy",
+          "degraded",
+          "unavailable",
+          "unknown"
+        ],
+        "type": "string"
+      },
+      "HealthSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hydrated": {
+            "description": "True when the summary is built from persisted state that has not yet been reverified.",
+            "type": "boolean"
+          },
+          "openIssues": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/HealthStatus"
+          },
+          "worstSeverity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IssueSeverity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "openIssues",
+          "hydrated"
+        ],
+        "type": "object"
+      },
+      "HealthView": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/HealthSummary"
+          }
+        },
+        "required": [
+          "summary",
+          "issues"
+        ],
+        "type": "object"
+      },
       "HostMcpServer": {
         "additionalProperties": false,
         "description": "A loopback streamable-HTTP MCP server run by the host application.\n\n`url` must be `http://127.0.0.1:<port>/...` or `http://[::1]:<port>/...`.\nThe bearer token is a host secret: it is never logged, echoed, or placed on\na command line, and `Debug` redacts it.",
@@ -1222,6 +1334,327 @@
         ],
         "type": "object"
       },
+      "InventoryChange": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceChange"
+            },
+            "type": "array"
+          },
+          "cursor": {
+            "type": "string"
+          },
+          "issuesChanged": {
+            "description": "True when the affected issues changed. Issue text is available from\n`issues.list`, which applies the caller's permission projection.",
+            "type": "boolean"
+          },
+          "observedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "previousRevision": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sequence",
+          "cursor",
+          "revision",
+          "previousRevision",
+          "observedAt",
+          "reason",
+          "changes",
+          "issuesChanged"
+        ],
+        "type": "object"
+      },
+      "Issue": {
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "connectionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/IssueEvidence"
+            },
+            "type": "array"
+          },
+          "fingerprint": {
+            "description": "Additional non-secret grouping material. Never a provider token or email.",
+            "type": "string"
+          },
+          "firstSeenAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "id": {
+            "description": "Stable across restarts for the same resource and cause.",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/IssueKind"
+          },
+          "lastObservation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Observation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last known observation while a person decides what to do. Display-only."
+          },
+          "lastSeenAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "occurrences": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "poolId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "providerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "remediation": {
+            "items": {
+              "$ref": "#/components/schemas/Remediation"
+            },
+            "type": "array"
+          },
+          "resolvedAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routeId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "severity": {
+            "$ref": "#/components/schemas/IssueSeverity"
+          },
+          "snoozedUntil": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/IssueState"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "windowId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "fingerprint",
+          "kind",
+          "severity",
+          "state",
+          "title",
+          "summary",
+          "firstSeenAt",
+          "lastSeenAt",
+          "occurrences",
+          "evidence",
+          "remediation"
+        ],
+        "type": "object"
+      },
+      "IssueEvidence": {
+        "additionalProperties": false,
+        "description": "A bounded, sanitized fact supporting an issue. It never contains credentials.",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "freshness": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Freshness"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "observedAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Verification"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "IssueKind": {
+        "enum": [
+          "auth_required",
+          "auth_expired",
+          "keyring_locked",
+          "unsupported_client",
+          "usage_unavailable",
+          "quota_exhausted",
+          "rate_limited",
+          "adapter_failure",
+          "storage_unavailable",
+          "permission_denied",
+          "service_unavailable",
+          "configuration_invalid",
+          "unknown"
+        ],
+        "type": "string"
+      },
+      "IssueSeverity": {
+        "enum": [
+          "info",
+          "warning",
+          "error",
+          "critical"
+        ],
+        "type": "string"
+      },
+      "IssueState": {
+        "oneOf": [
+          {
+            "const": "open",
+            "description": "Still observed or not yet verified as recovered.",
+            "type": "string"
+          },
+          {
+            "const": "acknowledged",
+            "description": "The user has seen it; it is still unhealthy.",
+            "type": "string"
+          },
+          {
+            "const": "snoozed",
+            "description": "Notifications are suppressed until this time. The issue is still open.",
+            "type": "string"
+          },
+          {
+            "const": "resolved",
+            "description": "A later observation verified recovery. Dismissal alone never sets this.",
+            "type": "string"
+          }
+        ]
+      },
+      "IssueUpdateParams": {
+        "additionalProperties": false,
+        "properties": {
+          "issueId": {
+            "type": "string"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "ISO-8601 time until which notifications are suppressed. Only for `snooze`."
+          }
+        },
+        "required": [
+          "issueId"
+        ],
+        "type": "object"
+      },
+      "IssueUpdateResult": {
+        "additionalProperties": false,
+        "properties": {
+          "issue": {
+            "$ref": "#/components/schemas/Issue"
+          }
+        },
+        "required": [
+          "issue"
+        ],
+        "type": "object"
+      },
       "MethodInputs": {
         "additionalProperties": false,
         "description": "This is the superset of compiled public methods, not a grant or an assertion of live provider support.",
@@ -1231,6 +1664,12 @@
           },
           "approvals.respond": {
             "$ref": "#/components/schemas/ApprovalParams"
+          },
+          "apps.list": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
+          "apps.revoke": {
+            "$ref": "#/components/schemas/AppRevokeParams"
           },
           "artifacts.read": {
             "$ref": "#/components/schemas/ArtifactReadParams"
@@ -1283,14 +1722,35 @@
           "grants.revoke": {
             "$ref": "#/components/schemas/EmptyParams"
           },
+          "health.get": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
           "inputs.put": {
             "$ref": "#/components/schemas/InputPutParams"
+          },
+          "issues.acknowledge": {
+            "$ref": "#/components/schemas/IssueUpdateParams"
+          },
+          "issues.list": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
+          "issues.snooze": {
+            "$ref": "#/components/schemas/IssueUpdateParams"
           },
           "models.list": {
             "$ref": "#/components/schemas/ModelsParams"
           },
           "models.page": {
             "$ref": "#/components/schemas/ModelPageParams"
+          },
+          "notifications.ack": {
+            "$ref": "#/components/schemas/NotificationAckParams"
+          },
+          "notifications.configure": {
+            "$ref": "#/components/schemas/NotificationPreferences"
+          },
+          "notifications.poll": {
+            "$ref": "#/components/schemas/EmptyParams"
           },
           "runtime.closeClient": {
             "$ref": "#/components/schemas/EmptyParams"
@@ -1375,7 +1835,16 @@
           "events.subscribe",
           "events.unsubscribe",
           "adapters.list",
-          "diagnostics.report"
+          "diagnostics.report",
+          "health.get",
+          "issues.list",
+          "issues.acknowledge",
+          "issues.snooze",
+          "notifications.poll",
+          "notifications.configure",
+          "notifications.ack",
+          "apps.list",
+          "apps.revoke"
         ],
         "type": "object"
       },
@@ -1389,6 +1858,8 @@
             "type": "array"
           },
           "approvals.respond": true,
+          "apps.list": true,
+          "apps.revoke": true,
           "artifacts.read": {
             "$ref": "#/components/schemas/ArtifactChunk"
           },
@@ -1426,8 +1897,23 @@
           "grants.list": true,
           "grants.request": true,
           "grants.revoke": true,
+          "health.get": {
+            "$ref": "#/components/schemas/HealthView"
+          },
           "inputs.put": {
             "$ref": "#/components/schemas/InputPutResult"
+          },
+          "issues.acknowledge": {
+            "$ref": "#/components/schemas/IssueUpdateResult"
+          },
+          "issues.list": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array"
+          },
+          "issues.snooze": {
+            "$ref": "#/components/schemas/IssueUpdateResult"
           },
           "models.list": {
             "items": {
@@ -1437,6 +1923,16 @@
           },
           "models.page": {
             "$ref": "#/components/schemas/ModelPage"
+          },
+          "notifications.ack": true,
+          "notifications.configure": {
+            "$ref": "#/components/schemas/NotificationPreferences"
+          },
+          "notifications.poll": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationDecision"
+            },
+            "type": "array"
           },
           "runtime.closeClient": true,
           "runtime.handshake": {
@@ -1521,7 +2017,16 @@
           "events.subscribe",
           "events.unsubscribe",
           "adapters.list",
-          "diagnostics.report"
+          "diagnostics.report",
+          "health.get",
+          "issues.list",
+          "issues.acknowledge",
+          "issues.snooze",
+          "notifications.poll",
+          "notifications.configure",
+          "notifications.ack",
+          "apps.list",
+          "apps.revoke"
         ],
         "type": "object"
       },
@@ -1653,6 +2158,105 @@
             ]
           }
         },
+        "type": "object"
+      },
+      "NotificationAckParams": {
+        "additionalProperties": false,
+        "properties": {
+          "dedupeKey": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issueId",
+          "dedupeKey"
+        ],
+        "type": "object"
+      },
+      "NotificationDecision": {
+        "additionalProperties": false,
+        "description": "A deduplicated OS-notification decision. Delivery state is persisted by the\nbroker so multiple consumers do not each emit the same alert.",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "dedupeKey": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/IssueSeverity"
+          },
+          "shouldNotify": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issueId",
+          "severity",
+          "title",
+          "body",
+          "shouldNotify",
+          "reason",
+          "dedupeKey"
+        ],
+        "type": "object"
+      },
+      "NotificationPreferences": {
+        "additionalProperties": false,
+        "description": "Per-install notification preference. Quiet hours use local wall-clock\nminutes since midnight and never contain a provider identity.",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "minimumSeverity": {
+            "$ref": "#/components/schemas/IssueSeverity"
+          },
+          "privateContent": {
+            "description": "Suppress issue text in the OS notification; consumers show it inline.",
+            "type": "boolean"
+          },
+          "quietHoursEndMinute": {
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "quietHoursStartMinute": {
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reminderAfterSeconds": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "minimumSeverity",
+          "reminderAfterSeconds",
+          "privateContent"
+        ],
         "type": "object"
       },
       "Observation": {
@@ -2528,6 +3132,46 @@
         ],
         "type": "object"
       },
+      "Remediation": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RemediationKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "requiresUserAction": {
+            "description": "True when the runtime cannot safely perform this action on the user's behalf.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "description",
+          "requiresUserAction"
+        ],
+        "type": "object"
+      },
+      "RemediationKind": {
+        "enum": [
+          "refresh",
+          "sign_in",
+          "unlock_keyring",
+          "update_client",
+          "open_settings",
+          "retry_later",
+          "restart_service",
+          "free_storage",
+          "contact_support",
+          "none"
+        ],
+        "type": "string"
+      },
       "Requirements": {
         "additionalProperties": false,
         "properties": {
@@ -2562,6 +3206,42 @@
           }
         },
         "type": "object"
+      },
+      "ResourceChange": {
+        "additionalProperties": false,
+        "description": "A bounded description of what changed. The full authoritative state remains\n`snapshot.get`; consumers that cannot replay must resynchronize.",
+        "properties": {
+          "change": {
+            "$ref": "#/components/schemas/ResourceChangeKind"
+          },
+          "id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resource": {
+            "description": "`connection`, `route`, `model`, `quota_pool`, `account`, `issue`, or `health`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource",
+          "id",
+          "change"
+        ],
+        "type": "object"
+      },
+      "ResourceChangeKind": {
+        "enum": [
+          "added",
+          "updated",
+          "removed"
+        ],
+        "type": "string"
       },
       "RuntimeHealth": {
         "properties": {
@@ -2789,15 +3469,35 @@
             },
             "type": "array"
           },
+          "cursor": {
+            "default": "",
+            "description": "Opaque journal cursor at the committed revision. Subscribe with this\nvalue to obtain every inventory change committed after the snapshot.",
+            "type": "string"
+          },
           "diagnostics": {
             "items": {
               "type": "string"
             },
             "type": "array"
           },
+          "health": {
+            "$ref": "#/components/schemas/HealthSummary",
+            "default": {
+              "hydrated": false,
+              "openIssues": 0,
+              "status": "unknown"
+            }
+          },
           "installations": {
             "items": {
               "$ref": "#/components/schemas/Installation"
+            },
+            "type": "array"
+          },
+          "issues": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Issue"
             },
             "type": "array"
           },
@@ -3446,6 +4146,58 @@
                         "const": "2.0"
                       },
                       "method": {
+                        "const": "apps.list"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "apps.revoke"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/AppRevokeParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
                         "const": "artifacts.read"
                       },
                       "params": {
@@ -3888,10 +4640,114 @@
                         "const": "2.0"
                       },
                       "method": {
+                        "const": "health.get"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
                         "const": "inputs.put"
                       },
                       "params": {
                         "$ref": "#/components/schemas/InputPutParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "issues.acknowledge"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/IssueUpdateParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "issues.list"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "issues.snooze"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/IssueUpdateParams"
                       }
                     },
                     "required": [
@@ -3944,6 +4800,84 @@
                       },
                       "params": {
                         "$ref": "#/components/schemas/ModelPageParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "notifications.ack"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/NotificationAckParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "notifications.configure"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/NotificationPreferences"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "notifications.poll"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
                       }
                     },
                     "required": [

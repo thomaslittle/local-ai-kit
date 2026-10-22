@@ -80,6 +80,7 @@ pub fn parse_metadata(
                 "Connection-scoped native initialization; no cross-client linking".into(),
                 source.clone(),
             ),
+            scopes: vec![],
         });
     }
     if let Some(models) = init.get("models") {

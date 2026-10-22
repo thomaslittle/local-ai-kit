@@ -513,7 +513,13 @@ async fn explicit_watch_invalidates_changed_metadata_without_running_a_probe() {
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
             let snapshot = s.handle("app", "snapshot.get", json!({})).await.unwrap();
-            if snapshot["models"].as_array().unwrap().is_empty() {
+            let stale = snapshot["connections"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|connection| connection["id"] == "personal")
+                .is_some_and(|connection| connection["status"] == "metadata_stale");
+            if stale {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(10)).await;
@@ -521,7 +527,16 @@ async fn explicit_watch_invalidates_changed_metadata_without_running_a_probe() {
     })
     .await
     .unwrap();
+    // Invalidation publishes staleness immediately; it does not invent a
+    // logout, and this test did not start the autonomous lane.
     assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        s.handle("app", "snapshot.get", json!({})).await.unwrap()["models"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
 }
 #[tokio::test]
 async fn watching_needs_discovery_permission_and_can_be_stopped() {
@@ -573,7 +588,7 @@ async fn watching_needs_discovery_permission_and_can_be_stopped() {
 #[tokio::test]
 async fn observations_survive_a_restart_as_stale_while_revalidate_data_without_identity() {
     let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("metadata-cache.json");
+    let path = directory.path().join("state.db");
     let first = service(Arc::new(AtomicUsize::new(0)), Duration::ZERO);
     first.enable_metadata_cache(path.clone());
     first.register_client("app", probe_policy()).unwrap();
@@ -589,13 +604,23 @@ async fn observations_survive_a_restart_as_stale_while_revalidate_data_without_i
         )
         .await
         .unwrap();
-    let written = std::fs::read_to_string(&path).unwrap();
-    assert!(written.contains("synthetic-plan"));
+    let mut written = std::fs::read(&path).unwrap();
+    if let Ok(wal) = std::fs::read(directory.path().join("state.db-wal")) {
+        written.extend_from_slice(&wal);
+    }
     assert!(
-        !written.contains("personal@example.test"),
+        written
+            .windows(b"synthetic-plan".len())
+            .any(|window| window == b"synthetic-plan")
+    );
+    assert!(
+        !written
+            .windows(b"personal@example.test".len())
+            .any(|window| window == b"personal@example.test"),
         "account identity must not be written to disk"
     );
-    // A new process: no probe runs, yet the earlier observation is there right after discovery.
+    // A new process: no probe runs, yet the earlier observation is there right
+    // after hydration/discovery and is labeled stale rather than current.
     let probes = Arc::new(AtomicUsize::new(0));
     let second = service(probes.clone(), Duration::ZERO);
     second.enable_metadata_cache(path);
@@ -616,15 +641,24 @@ async fn observations_survive_a_restart_as_stale_while_revalidate_data_without_i
             .unwrap()
             .iter()
             .find(|c| c["id"] == "personal")
+            .unwrap()["status"],
+        "metadata_stale"
+    );
+    assert_eq!(
+        snapshot["connections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["id"] == "personal")
             .unwrap()["plan"]["value"]["nativeId"],
         "synthetic-plan"
     );
 }
 #[tokio::test]
-async fn a_corrupt_or_foreign_cache_file_is_ignored() {
+async fn a_corrupt_or_foreign_cache_file_is_preserved_and_rebuilt() {
     let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("metadata-cache.json");
-    std::fs::write(&path, b"{ not json").unwrap();
+    let path = directory.path().join("state.db");
+    std::fs::write(&path, b"{ not sqlite").unwrap();
     let s = service(Arc::new(AtomicUsize::new(0)), Duration::ZERO);
     s.enable_metadata_cache(path.clone());
     s.register_client("app", probe_policy()).unwrap();
@@ -633,6 +667,12 @@ async fn a_corrupt_or_foreign_cache_file_is_ignored() {
         .unwrap();
     let snapshot = s.handle("app", "snapshot.get", json!({})).await.unwrap();
     assert_eq!(snapshot["models"].as_array().unwrap().len(), 0);
-    std::fs::write(&path, br#"{"version":99,"entries":[]}"#).unwrap();
-    s.enable_metadata_cache(path);
+    assert!(
+        directory
+            .path()
+            .read_dir()
+            .unwrap()
+            .flatten()
+            .any(|entry| entry.file_name().to_string_lossy().contains("corrupt"))
+    );
 }

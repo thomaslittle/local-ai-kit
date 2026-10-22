@@ -25,6 +25,7 @@ pub fn fixture() -> Snapshot {
             provider_id: "test".into(),
             display_label: Observation::reported(format!("{label}@example.test"), evidence.clone()),
             identity_source: Observation::reported(format!("private-{label}"), evidence.clone()),
+            scopes: vec![],
         });
         s.connections.push(Connection {
             id: label.into(),

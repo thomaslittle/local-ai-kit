@@ -10,6 +10,7 @@ mod errors;
 pub use artifacts::*;
 mod events;
 mod evidence;
+mod health;
 mod identity;
 mod metadata;
 mod options;
@@ -17,6 +18,7 @@ mod usage;
 pub use errors::*;
 pub use events::*;
 pub use evidence::*;
+pub use health::*;
 pub use identity::*;
 pub use metadata::*;
 pub use options::*;
@@ -39,6 +41,9 @@ pub struct PublicContracts {
     method_inputs: MethodInputs,
     method_outputs: MethodOutputs,
     metadata: ConnectionMetadata,
+    issue: Issue,
+    health: HealthSummary,
+    inventory_change: InventoryChange,
 }
 pub fn schema_document() -> Value {
     serde_json::to_value(schemars::schema_for!(PublicContracts)).expect("schema serialization")

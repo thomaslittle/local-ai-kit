@@ -6,6 +6,19 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ### Added
 
+- Shared per-user runtime with an explicit independent lifetime, owner-only token descriptor, race-free single-instance binding, idle shutdown, and on-demand SDK startup. Consumers can share one discovery/metadata/usage/session runtime without a parent-owned process dying with the first app.
+- Broker-owned SQLite persistence (`lai-store`) with an atomically committed ready snapshot, monotonic revisions, epoch-bound bounded journal, sanitized metadata, issues, and notification delivery state. Warm startup hydrates the snapshot as stale and reverifies it.
+- Inventory change events (`events.read` with `scope: "inventory"`), journal cursor/gap recovery, TypeScript inventory/live-store helpers, and Python inventory subscription.
+- Persistent actionable health (`Issue`, `HealthSummary`), issue acknowledge/snooze, projected issue permissions, and one notification coordinator with quiet hours, privacy, reminders, and durable deduplication.
+- Native Rust control center (`local-ai-kit-control`) over the public authenticated API: overview, accounts, models, usage, issues, apps, diagnostics, refresh, probe, revoke, and redacted export.
+- `lai-update`: Ed25519 publisher verification over canonical JSON, platform/protocol/version/checksum checks, staged installation, session lease, atomic activation, and rollback. The release build emits an unsigned manifest; signing and publication remain approval gates.
+- `apps.list` / `apps.revoke` administrative methods for active-connection revocation, and `STORAGE_UNAVAILABLE` for typed storage failures.
+- T3 upstream coverage for shell resolution paths, classification of provider vs orchestration noise, missing-watched-path detection, unwatched provider-shaped candidates, durable reports, report-only CI mode, and explicit PR-permission remediation.
+
+### Changed
+
+- `serve --ipc` remains parent-owned by default; `--independent` is a separate, explicit lifetime. The SDK does not silently start a full scanner when a configured broker is unreachable.
+- Metadata invalidation now publishes a stale transition, advances the revision, and schedules an autonomous debounced re-read. A failed provider does not erase last-known observations.
 - Host MCP sessions can opt into the installed Codex or Claude Code native tools with `permissionMode: "native_policy"` plus the separately granted `--allow-native-policy`. `--review-native-requests` remains an independent once-only approval grant; the read-only host-tools-only default is unchanged.
 
 ## [0.1.0-alpha.17] - 2026-10-16

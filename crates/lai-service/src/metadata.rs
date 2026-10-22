@@ -71,12 +71,12 @@ impl NativeService {
         {
             return;
         }
-        let Ok((located, route, base)) = self.cache.probe_input(&id) else {
+        let Ok(target) = self.cache.probe_input(&id) else {
             return;
         };
         let result = tokio::time::timeout(
             Duration::from_secs(25),
-            source(located, id.clone(), route.clone()),
+            source(target.located, id.clone(), target.route_id.clone()),
         )
         .await
         .unwrap_or_else(|_| {
@@ -85,9 +85,11 @@ impl NativeService {
                 "Metadata probe timed out",
             ))
         });
-        match result.and_then(|report| validate_report(&report, &id, &route).map(|()| report)) {
+        match result
+            .and_then(|report| validate_report(&report, &id, &target.route_id).map(|()| report))
+        {
             Ok(report) => {
-                let _ = self.cache.publish_metadata(&base, report);
+                let _ = self.cache.publish_metadata(&target.base, report);
             }
             Err(error) => {
                 let mut safe =
@@ -112,8 +114,8 @@ impl NativeService {
         if !self.policy(client)?.allows(id) {
             return Err(denied());
         }
-        let (located, _, _) = self.cache.probe_input(id)?;
-        self.ensure_probe_permission(client, id, &located.provider_id)?;
+        let target = self.cache.probe_input(id)?;
+        self.ensure_probe_permission(client, id, &target.located.provider_id)?;
         let lock = {
             let mut locks = self.metadata_locks.lock().map_err(|_| denied())?;
             locks.retain(|_, lock| Arc::strong_count(lock) > 1);
@@ -129,8 +131,8 @@ impl NativeService {
                 .clone()
         };
         let _guard = lock.lock().await;
-        let (located, route, base) = self.cache.probe_input(id)?;
-        self.ensure_probe_permission(client, id, &located.provider_id)?;
+        let target = self.cache.probe_input(id)?;
+        self.ensure_probe_permission(client, id, &target.located.provider_id)?;
         if let Some(error) = self.cache.metadata_failure(id)? {
             return Err(error);
         }
@@ -139,7 +141,7 @@ impl NativeService {
         }
         let result = tokio::time::timeout(
             Duration::from_secs(25),
-            source(located.clone(), id.into(), route.clone()),
+            source(target.located.clone(), id.into(), target.route_id.clone()),
         )
         .await
         .unwrap_or_else(|_| {
@@ -148,7 +150,7 @@ impl NativeService {
                 "Metadata probe timed out",
             ))
         });
-        self.ensure_probe_permission(client, id, &located.provider_id)?;
+        self.ensure_probe_permission(client, id, &target.located.provider_id)?;
         let report = match result {
             Ok(report) => report,
             Err(error) => {
@@ -166,9 +168,93 @@ impl NativeService {
                 return Err(self.cache.metadata_failure(id)?.unwrap_or(safe));
             }
         };
-        validate_report(&report, id, &route)?;
-        self.cache.publish_metadata(&base, report)?;
+        validate_report(&report, id, &target.route_id)?;
+        self.cache.publish_metadata(&target.base, report)?;
         Ok(json!({"status":"updated","connectionId":id}))
+    }
+
+    /// Autonomous metadata lane. It re-reads invalidated/expired connections
+    /// for providers the host already authorized. No caller grant is invented
+    /// and no full inventory scan is repeated for a UI interaction.
+    pub(crate) async fn refresh_due_metadata(
+        &self,
+        providers: &BTreeSet<String>,
+        limit: usize,
+    ) -> usize {
+        let Some(source) = self.metadata_source.as_ref() else {
+            return 0;
+        };
+        let Ok(targets) = self.cache.due_probes(providers, limit) else {
+            return 0;
+        };
+        let mut refreshed = 0;
+        for target in targets {
+            if self
+                .cache
+                .has_fresh_metadata(&target.connection_id)
+                .unwrap_or(false)
+                || self
+                    .cache
+                    .metadata_failure(&target.connection_id)
+                    .ok()
+                    .flatten()
+                    .is_some()
+            {
+                continue;
+            }
+            let lock = {
+                let Ok(mut locks) = self.metadata_locks.lock() else {
+                    return refreshed;
+                };
+                locks.retain(|_, lock| Arc::strong_count(lock) > 1);
+                if locks.len() >= 64 {
+                    return refreshed;
+                }
+                locks
+                    .entry(target.connection_id.clone())
+                    .or_insert_with(|| Arc::new(tokio::sync::Mutex::new(())))
+                    .clone()
+            };
+            let _guard = lock.lock().await;
+            let result = tokio::time::timeout(
+                Duration::from_secs(25),
+                source(
+                    target.located.clone(),
+                    target.connection_id.clone(),
+                    target.route_id.clone(),
+                ),
+            )
+            .await
+            .unwrap_or_else(|_| {
+                Err(DomainError::new(
+                    ErrorCode::Timeout,
+                    "Metadata probe timed out",
+                ))
+            });
+            match result.and_then(|report| {
+                validate_report(&report, &target.connection_id, &target.route_id).map(|()| report)
+            }) {
+                Ok(report) => {
+                    if self.cache.publish_metadata(&target.base, report).is_ok() {
+                        refreshed += 1;
+                    }
+                }
+                Err(error) => {
+                    let mut safe =
+                        DomainError::new(error.code.clone(), "Client metadata is unavailable");
+                    safe.retryable = error.retryable
+                        || matches!(
+                            error.code,
+                            ErrorCode::RateLimited
+                                | ErrorCode::ProviderUnavailable
+                                | ErrorCode::Timeout
+                        );
+                    safe.retry_after_ms = error.retry_after_ms;
+                    let _ = self.cache.fail_metadata(&target.connection_id, safe);
+                }
+            }
+        }
+        refreshed
     }
 }
 fn validate_report(report: &ConnectionMetadata, connection: &str, route: &str) -> Result<()> {

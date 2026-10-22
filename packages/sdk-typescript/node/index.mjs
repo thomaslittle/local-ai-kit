@@ -143,6 +143,60 @@ export async function openBrokerTransport(options){
  catch(error){await transport.close();throw error;}
 }
 
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+function validTokenFile(value,address){
+ return value&&typeof value==='object'&&value.protocolVersion==='1.0'&&value.address===address&&typeof value.token==='string'&&/^[0-9a-f]{64}$/.test(value.token);
+}
+/**
+ * Connect to an independent per-user broker, starting it only if no live
+ * instance is reachable. The broker owns its lifetime; closing this transport
+ * does not stop another application's work. Returns the same Transport shape as
+ * openBrokerTransport and never starts a separate full scanner.
+ */
+export async function openSharedBrokerTransport(options){
+ if(typeof options.executable!=='string'||!isAbsolute(options.executable)||/\.(cmd|bat|ps1)$/i.test(options.executable))throw failCode('INVALID_EXECUTABLE');
+ if(typeof options.address!=='string'||!options.address||options.address.length>200||options.address.includes('\0'))throw failCode('INVALID_REQUEST');
+ if(typeof options.tokenFile!=='string'||!isAbsolute(options.tokenFile)||options.tokenFile.includes('\0'))throw failCode('INVALID_REQUEST');
+ const startArgs=options.startArgs??[];
+ if(!Array.isArray(startArgs)||startArgs.length>64||startArgs.some(arg=>typeof arg!=='string'||arg.includes('\0')||arg.length>32768))throw failCode('INVALID_REQUEST');
+ const {readFile,stat,lstat}=await import('node:fs/promises');
+ const attempt=async()=>{
+  try{
+   const link=await lstat(options.tokenFile);
+   if(link.isSymbolicLink())return null;
+   const info=await stat(options.tokenFile);
+   if(!info.isFile())return null;
+   if(process.platform!=='win32'&&(info.mode&0o077)!==0)return null;
+   const parsed=JSON.parse(await readFile(options.tokenFile,'utf8'));
+   if(!validTokenFile(parsed,options.address))return null;
+   return await openBrokerTransport({...options,address:options.address,token:parsed.token});
+  }catch{return null;}
+ };
+ const existing=await attempt();
+ if(existing)return existing;
+ const child=spawn(options.executable,['serve','--ipc',options.address,'--independent','--token-file',options.tokenFile,...startArgs],{
+  cwd:options.cwd??tmpdir(),shell:false,windowsHide:true,stdio:['pipe','pipe','pipe'],env:options.env?{...process.env,...options.env}:process.env,
+ });
+ child.stderr.on('data',()=>{});
+ child.stdin.on('error',()=>{});
+ child.once('error',()=>{});
+ child.unref();
+ const deadline=Date.now()+(options.waitMs??8000);
+ let opened=null;
+ while(Date.now()<deadline){
+  opened=await attempt();
+  if(opened)break;
+  await sleep(100);
+ }
+ if(opened){
+  // The broker is independent: releasing our pipes must not terminate it.
+  try{child.stdout.destroy();child.stderr.destroy();child.stdin.end();}catch{}
+  return opened;
+ }
+ try{child.kill();}catch{}
+ throw failCode('RUNTIME_MISSING');
+}
+
 export {resolveBundledBinary} from './bundle.mjs';
 /** Explicitly verify and launch an extracted local release bundle. No download occurs. */
 export async function openBundledTransport({bundleDirectory,...options}) {

@@ -115,6 +115,7 @@ pub fn parse_metadata(
             "Connection-scoped Muse account/read label; no cross-client linking".into(),
             account_source.clone(),
         ),
+        scopes: vec![],
     });
     let identity = account_record
         .as_ref()

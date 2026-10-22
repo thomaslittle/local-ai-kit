@@ -52,7 +52,7 @@ def build(profile):
         target_dir=pathlib.Path(os.environ.get('CARGO_TARGET_DIR',ROOT/'target'))
         if not target_dir.is_absolute():target_dir=ROOT/target_dir
         binaries=target_dir/('release' if profile=='release' else 'debug');(stage/'bin').mkdir()
-        for binary in ('local-ai-kit','local-ai-kit-native-host','local-ai-kit-auth-blocker'):
+        for binary in ('local-ai-kit','local-ai-kit-native-host','local-ai-kit-auth-blocker','local-ai-kit-control'):
             filename=binary+('.exe' if os.name=='nt' else '');shutil.copy2(binaries/filename,stage/'bin'/filename)
         shutil.copytree(ROOT/'apps/demo/dist',stage/'demo');shutil.copytree(ROOT/'dist/browser-extension',stage/'browser-extension')
         for path in ('LICENSE','THIRD_PARTY_NOTICES.md','SECURITY.md'):shutil.copy2(ROOT/path,stage/path)
@@ -77,8 +77,24 @@ def build(profile):
         stage.rename(final)
     archive=out/(name+'.zip');create_archive(final,archive)
     (out/(name+'.sha256')).write_text(sha256(archive)+'  '+archive.name+'\n',encoding='utf-8')
-    write(out/'latest.json',{'directory':str(final.relative_to(ROOT)),'archive':str(archive.relative_to(ROOT)),'sha256':sha256(archive),'sourceCommit':head,'workingTreeDirty':dirty})
-    print(json.dumps({'bundle':str(final),'archive':str(archive),'profile':profile,'dirty':dirty}))
+    update_manifest={
+        'schemaVersion':1,
+        'version':version,
+        'channel':'alpha',
+        'platform':target,
+        'protocolVersion':'1.0',
+        'archive':archive.name,
+        'archiveBytes':archive.stat().st_size,
+        'archiveSha256':sha256(archive),
+        'publishedAt':__import__('datetime').datetime.now(__import__('datetime').timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'notesUrl':None,
+        'signature':'',
+        'signed':False,
+        'status':'unsigned; activation requires an external Ed25519 signature',
+    }
+    write(out/'update-manifest.unsigned.json',update_manifest)
+    write(out/'latest.json',{'directory':str(final.relative_to(ROOT)),'archive':str(archive.relative_to(ROOT)),'sha256':sha256(archive),'sourceCommit':head,'workingTreeDirty':dirty,'updateManifest':str((out/'update-manifest.unsigned.json').relative_to(ROOT))})
+    print(json.dumps({'bundle':str(final),'archive':str(archive),'profile':profile,'dirty':dirty,'updateManifest':str(out/'update-manifest.unsigned.json')}))
     return final
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--profile',choices=['debug','release'],default='release');args=p.parse_args()

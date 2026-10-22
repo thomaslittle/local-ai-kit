@@ -5,7 +5,7 @@ use interprocess::local_socket::{
 use lai_contracts::*;
 use lai_core::ClientPolicy;
 use lai_service::NativeService;
-use lai_transports::local_ipc::Broker;
+use lai_transports::local_ipc::{Broker, BrokerOptions};
 use serde_json::{Value, json};
 use std::{
     sync::{
@@ -197,4 +197,37 @@ async fn endpoint_is_owner_only() {
     let mode = std::fs::metadata(&name).unwrap().permissions().mode() & 0o777;
     assert_eq!(mode, 0o600, "broker endpoint must be owner-only");
     b.close().await;
+}
+
+#[tokio::test]
+async fn an_independent_owner_credential_can_open_more_than_one_connection() {
+    let (s, _) = service();
+    let name = endpoint();
+    let b = Broker::start(s, &name).await.unwrap();
+    let token = b.authorize_shared(ClientPolicy::passive(), None).unwrap();
+    let _first = auth(&name, token.clone()).await;
+    let _second = auth(&name, token).await;
+    assert_eq!(b.active_connections(), 2);
+    b.close().await;
+}
+
+#[tokio::test]
+async fn an_idle_independent_broker_releases_its_endpoint() {
+    let (s, _) = service();
+    let name = endpoint();
+    let b = Broker::start_with(
+        s.clone(),
+        &name,
+        BrokerOptions {
+            idle_timeout: Some(Duration::from_millis(300)),
+        },
+    )
+    .await
+    .unwrap();
+    tokio::time::sleep(Duration::from_millis(900)).await;
+    assert_eq!(b.active_connections(), 0);
+    b.close().await;
+    let second = Broker::start(s, &name).await;
+    assert!(second.is_ok());
+    second.unwrap().close().await;
 }

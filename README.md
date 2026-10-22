@@ -50,6 +50,24 @@ target/debug/local-ai-kit scan --json
 
 To see exactly what discovery finds without touching your real home directory, point it at an empty directory: `scan --json --home /absolute/empty/dir`.
 
+### One shared runtime and the control center
+
+```sh
+target/debug/local-ai-kit serve --ipc local-ai-kit-user --independent \
+  --token-file "$HOME/.local-ai-kit/broker-token.json" \
+  --allow-passive-discovery --idle-timeout 900
+target/debug/local-ai-kit-control \
+  --token-file "$HOME/.local-ai-kit/broker-token.json"
+```
+
+The broker owns its lifetime; closing a consumer does not stop it. The control
+center is a native Rust terminal UI over the public authenticated API, with
+Overview, accounts, models, usage, issues, applications, diagnostics, safe
+refresh, issue snooze/acknowledge, app revocation, and redacted export. It never
+opens SQLite or calls a provider. See the
+[shared broker guide](docs/integration/shared-broker.md) and the
+[decision record](docs/design/ADR-001-shared-runtime.md).
+
 ### Run the showcase
 
 ```sh
@@ -98,6 +116,9 @@ try {
 | `crates/lai-discovery`, `lai-platform` | Explicit passive inventory; injected OS boundaries. |
 | `crates/lai-adapters`, `lai-chatgpt-auth` | Provider integrations (native clients, ACP, HTTP/API routes); host-owned ChatGPT sign-in. |
 | `crates/lai-runtime`, `lai-service`, `lai-transports` | Owner-scoped sessions; the shared native service; stdio, HTTP/SSE, broker, and Native Messaging transports. |
+| `crates/lai-store` | Broker-owned SQLite snapshot, metadata, bounded journal, issues, and notification delivery state. |
+| `crates/lai-control` | Optional native Rust terminal control center over the public broker API. |
+| `crates/lai-update` | Ed25519 update verification, staging, active-session lease, activation, and rollback. |
 | `crates/lai-kit`, `lai-cli` | The embeddable Rust facade; the `local-ai-kit` helper executable. |
 | `packages/` | `sdk-typescript`, `sdk-python`, `selector-core`, `react`, `ui-react`. |
 | `apps/demo` | The React showcase (uses only the public SDK). |
