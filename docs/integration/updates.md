@@ -17,8 +17,12 @@ downloads an update.
    replacement passes.
 4. **Release preparation.** `python scripts/build_release.py --profile release`
    creates a checksummed bundle, `manifest.json`, `update-manifest.unsigned.json`,
-   and `latest.json`. `python scripts/prepare_update.py ARCHIVE --version ...`
-   can prepare a manifest for an existing archive.
+   and `latest.json`. The update manifest points at a separate single helper
+   executable (`local-ai-kit-<version>-<platform>[.exe]`), not the full bundle
+   archive; a future extractor can stage more complex payloads, but the current
+   verifier/activation contract is intentionally a single executable.
+   `python scripts/prepare_update.py ARCHIVE --version ...` can prepare a
+   manifest for an existing single-executable archive.
 5. **Approval and signing.** An approved external signer signs the canonical
    manifest. Signing credentials are not created or stored by this repository.
 6. **Installation.** `lai-update` verifies the signature, platform, protocol
