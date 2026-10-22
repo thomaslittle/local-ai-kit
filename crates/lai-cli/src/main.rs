@@ -15,7 +15,7 @@ const HELP: &str = "Local AI Kit - native discovery and SDK helper
 Usage:
   local-ai-kit serve --ipc LOCAL_ADDRESS [--allow-passive-discovery]
   local-ai-kit serve --ipc LOCAL_ADDRESS --independent --token-file ABSOLUTE_PATH
-      [--idle-timeout SECONDS] [--allow-passive-discovery]
+      [--admin-token-file ABSOLUTE_PATH] [--idle-timeout SECONDS] [--allow-passive-discovery]
   local-ai-kit connect --ipc LOCAL_ADDRESS
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
@@ -194,6 +194,7 @@ async fn execute(args: Args) -> Result<()> {
                     token_file: args.token_file.clone().ok_or_else(|| {
                         DomainError::new(ErrorCode::InvalidRequest, "Token file is required")
                     })?,
+                    admin_token_file: args.admin_token_file.clone(),
                     idle_timeout: args.idle_timeout_seconds.map(Duration::from_secs),
                 }
             } else {

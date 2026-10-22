@@ -21,6 +21,7 @@ pub enum Lifetime {
     /// terminating it, and a second launch converges on the existing listener.
     Independent {
         token_file: std::path::PathBuf,
+        admin_token_file: Option<std::path::PathBuf>,
         idle_timeout: Option<Duration>,
     },
 }
@@ -142,6 +143,7 @@ pub async fn serve(
         Lifetime::Parent => serve_parent(service, address, policy, execution).await,
         Lifetime::Independent {
             token_file,
+            admin_token_file,
             idle_timeout,
         } => {
             serve_independent(
@@ -150,6 +152,7 @@ pub async fn serve(
                 policy,
                 execution,
                 token_file,
+                admin_token_file,
                 idle_timeout,
             )
             .await
@@ -205,6 +208,7 @@ async fn serve_independent(
     policy: ClientPolicy,
     execution: Option<ExecutionGrant>,
     token_file: std::path::PathBuf,
+    admin_token_file: Option<std::path::PathBuf>,
     idle_timeout: Option<Duration>,
 ) -> Result<()> {
     if idle_timeout.is_some_and(|timeout| timeout < Duration::from_secs(5)) {
@@ -213,13 +217,36 @@ async fn serve_independent(
             "Idle timeout must be at least five seconds",
         ));
     }
+    if admin_token_file
+        .as_ref()
+        .is_some_and(|admin| admin == &token_file)
+    {
+        return Err(DomainError::new(
+            ErrorCode::InvalidRequest,
+            "Admin and application token files must be different",
+        ));
+    }
     // Endpoint binding is the race-free single-instance boundary. A second
     // launch gets Conflict and must connect to the existing service instead of
     // replacing it.
     let broker = Broker::start_with(service, address, BrokerOptions { idle_timeout: None }).await?;
-    let value = descriptor(&broker, address, policy, execution, true)?;
+    let admin_policy = admin_token_file.as_ref().map(|_| {
+        let mut policy = policy.clone();
+        policy.admin = true;
+        policy
+    });
+    let value = descriptor(&broker, address, policy, execution.clone(), true)?;
     let bytes = serde_json::to_vec(&value).map_err(|_| err())?;
     private_write(&token_file, &bytes)?;
+    if let (Some(admin_file), Some(admin_policy)) = (&admin_token_file, admin_policy) {
+        let admin_value = descriptor(&broker, address, admin_policy, execution, true)?;
+        let admin_bytes = serde_json::to_vec(&admin_value).map_err(|_| err())?;
+        if let Err(error) = private_write(admin_file, &admin_bytes) {
+            let _ = std::fs::remove_file(&token_file);
+            broker.close().await;
+            return Err(error);
+        }
+    }
     println!("{value}");
     let started = std::time::Instant::now();
     let mut idle_since = std::time::Instant::now();
@@ -245,5 +272,8 @@ async fn serve_independent(
     }
     broker.close().await;
     let _ = std::fs::remove_file(&token_file);
+    if let Some(admin_file) = &admin_token_file {
+        let _ = std::fs::remove_file(admin_file);
+    }
     Ok(())
 }

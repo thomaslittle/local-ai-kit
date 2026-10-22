@@ -23,6 +23,7 @@ pub struct Args {
     pub ipc: Option<String>,
     pub independent: bool,
     pub token_file: Option<PathBuf>,
+    pub admin_token_file: Option<PathBuf>,
     pub idle_timeout_seconds: Option<u64>,
     pub port: u16,
     pub assets: Option<PathBuf>,
@@ -85,6 +86,7 @@ impl Args {
             ipc: None,
             independent: false,
             token_file: None,
+            admin_token_file: None,
             idle_timeout_seconds: None,
             port: 4499,
             assets: None,
@@ -154,6 +156,9 @@ impl Args {
                 "--independent" if matches!(args.action, Action::Serve) => args.independent = true,
                 "--token-file" if matches!(args.action, Action::Serve) => {
                     args.token_file = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--admin-token-file" if matches!(args.action, Action::Serve) => {
+                    args.admin_token_file = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
                 "--idle-timeout" if matches!(args.action, Action::Serve) => {
                     let seconds = input
@@ -304,6 +309,7 @@ impl Args {
                     || args.allow_paid
                     || args.workspace.is_some()))
             || (args.independent && (args.ipc.is_none() || args.token_file.is_none()))
+            || (!args.independent && args.admin_token_file.is_some())
             || (!args.independent
                 && (args.token_file.is_some() || args.idle_timeout_seconds.is_some()))
             || (args.independent && (args.http || stdio))

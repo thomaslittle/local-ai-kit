@@ -55,10 +55,15 @@ To see exactly what discovery finds without touching your real home directory, p
 ```sh
 target/debug/local-ai-kit serve --ipc local-ai-kit-user --independent \
   --token-file "$HOME/.local-ai-kit/broker-token.json" \
+  --admin-token-file "$HOME/.local-ai-kit/broker-admin-token.json" \
   --allow-passive-discovery --idle-timeout 900
 target/debug/local-ai-kit-control \
-  --token-file "$HOME/.local-ai-kit/broker-token.json"
+  --token-file "$HOME/.local-ai-kit/broker-admin-token.json"
 ```
+
+Ordinary applications receive the normal token; the admin token is only for
+the control center because it can list and revoke connected apps. Omitting
+`--admin-token-file` leaves that management surface unavailable.
 
 The broker owns its lifetime; closing a consumer does not stop it. The control
 center is a native Rust terminal UI over the public authenticated API, with

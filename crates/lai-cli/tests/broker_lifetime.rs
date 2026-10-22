@@ -87,6 +87,7 @@ async fn an_independent_broker_survives_consumer_disconnects_and_converges() {
     let home = directory.path().to_path_buf();
     let address = endpoint();
     let token_file = directory.path().join("broker-token.json");
+    let admin_token_file = directory.path().join("broker-admin-token.json");
     let mut child = Command::new(env!("CARGO_BIN_EXE_local-ai-kit"))
         .args([
             "serve",
@@ -95,6 +96,8 @@ async fn an_independent_broker_survives_consumer_disconnects_and_converges() {
             "--independent",
             "--token-file",
             token_file.to_str().unwrap(),
+            "--admin-token-file",
+            admin_token_file.to_str().unwrap(),
             "--allow-passive-discovery",
             "--idle-timeout",
             "5",
@@ -142,6 +145,24 @@ async fn an_independent_broker_survives_consumer_disconnects_and_converges() {
             .is_some()
     );
     drop(second);
+
+    let admin_deadline = Instant::now() + Duration::from_secs(10);
+    while !admin_token_file.exists() {
+        assert!(
+            Instant::now() < admin_deadline,
+            "admin token was not published"
+        );
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    let admin: Value = serde_json::from_slice(&std::fs::read(&admin_token_file).unwrap()).unwrap();
+    let admin_token = admin["token"].as_str().unwrap();
+    let mut admin_client = authenticated(&address, admin_token).await;
+    let apps = call(&mut admin_client, 3, "apps.list", json!({})).await;
+    assert!(
+        apps["result"].as_array().is_some(),
+        "admin can list applications"
+    );
+    drop(admin_client);
 
     // A concurrent launch must fail to take over the live endpoint.
     let mut duplicate = Command::new(env!("CARGO_BIN_EXE_local-ai-kit"))

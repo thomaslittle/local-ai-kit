@@ -45,7 +45,13 @@ async fn the_control_center_uses_only_the_public_authenticated_api() {
     ));
     let broker = Broker::start(service, &address).await.unwrap();
     let token = broker
-        .authorize_shared(ClientPolicy::passive(), None)
+        .authorize_shared(
+            ClientPolicy {
+                admin: true,
+                ..ClientPolicy::passive()
+            },
+            None,
+        )
         .unwrap();
     let token_file = directory.path().join("broker-token.json");
     let descriptor = serde_json::json!({
