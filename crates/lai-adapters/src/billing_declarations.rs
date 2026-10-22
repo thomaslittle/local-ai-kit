@@ -121,14 +121,23 @@ impl BillingDeclarations {
                 ),
             )
         };
+        let mut applied = false;
         if report.billing.value().is_none() {
             report.billing = declared();
+            applied = true;
         }
         for route in &mut report.additional_routes {
             if route.connection_id == report.connection_id && route.billing.value().is_none() {
                 route.billing = declared();
+                applied = true;
             }
         }
-        report.diagnostics.push("BILLING_DECLARED_BY_HOST".into());
+        // Do not mark the connection "declared" when provider evidence already
+        // classified every route (for example OpenCode Go). The diagnostic is
+        // about an observation that the host supplied, not the presence of a
+        // matching declaration entry.
+        if applied {
+            report.diagnostics.push("BILLING_DECLARED_BY_HOST".into());
+        }
     }
 }

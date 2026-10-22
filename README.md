@@ -63,7 +63,10 @@ target/debug/local-ai-kit-control \
 
 Ordinary applications receive the normal token; the admin token is only for
 the control center because it can list and revoke connected apps. Omitting
-`--admin-token-file` leaves that management surface unavailable.
+`--admin-token-file` leaves that management surface unavailable. For multiple
+apps, replace `--token-file` with `--grants-file` (see
+[the shared-broker guide](docs/integration/shared-broker.md)); each app then
+gets a distinct token and identity, and revocation is app-scoped.
 
 The broker owns its lifetime; closing a consumer does not stop it. The control
 center is a native Rust terminal UI over the public authenticated API, with

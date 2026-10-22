@@ -58,11 +58,17 @@ but unreachable, consumers must report that failure; they must not silently
 start a managed full scanner. Embedded and managed-helper modes remain for
 compatibility.
 
-Independent mode uses an owner-scoped reusable credential file because there is
-no trusted parent process to issue one-use grants. Per-application grants and
-revocation remain available in embedded/parent mode and through the host
-`apps.list` / `apps.revoke` administrative surface. The owner token file is not
-a per-app boundary; the directory and pipe ACLs are the boundary.
+Independent mode has two credential shapes. A legacy owner-scoped reusable
+`--token-file` is the single-application compatibility boundary. For multiple
+applications, `--grants-file` names each app id, its scoped policy/execution
+grant, and its own owner-only token file; the broker mints a distinct reusable
+credential per app and records the app identity on the connection. The optional
+admin credential's `apps.revoke` removes that app's grant and every live
+connection with that identity, so a token cannot reconnect. Token files remain
+the OS-account boundary: any process that can read an app's file can use that
+app's grant. Cross-app identity, account projection, and revocation are enforced
+by the broker, not by a shared owner token. See
+[shared-broker.md](../integration/shared-broker.md) for the manifest shape.
 
 ### D3. Revisions, epochs, and a bounded journal
 
@@ -139,9 +145,9 @@ credentials, publication, and installation are separate approval gates.
 - Consumers get a fast cached snapshot immediately, then a small change signal,
   then a full snapshot only when they choose or when a cursor gap requires it.
 - A database migration is now a release concern; schema versions fail closed.
-- Independent mode's reusable owner token is weaker than per-app grants; hosts
-  that need per-app isolation should use the parent/embedded broker. This is
-  documented, not hidden.
+- Independent mode's legacy owner token is weaker than per-app grants; hosts
+  that need distinct identities should use `--grants-file` in independent mode
+  or the parent/embedded broker. This is documented, not hidden.
 - The control center is intentionally small. A richer native UI can be added
   later without changing the broker contract.
 - Live provider qualification is still separate from fixture tests and platform

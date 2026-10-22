@@ -14,7 +14,7 @@ use std::{sync::Arc, time::Duration};
 const HELP: &str = "Local AI Kit - native discovery and SDK helper
 Usage:
   local-ai-kit serve --ipc LOCAL_ADDRESS [--allow-passive-discovery]
-  local-ai-kit serve --ipc LOCAL_ADDRESS --independent --token-file ABSOLUTE_PATH
+  local-ai-kit serve --ipc LOCAL_ADDRESS --independent (--token-file ABSOLUTE_PATH | --grants-file ABSOLUTE_PATH)
       [--admin-token-file ABSOLUTE_PATH] [--idle-timeout SECONDS] [--allow-passive-discovery]
   local-ai-kit connect --ipc LOCAL_ADDRESS
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
@@ -39,7 +39,10 @@ reloaded after a restart as stale-while-revalidate data; --no-metadata-cache
 turns that off. A parent-owned broker stops when its trusted control input
 closes. An --independent broker owns its lifetime, publishes a reusable
 owner-only token file for approved applications, and can stop after an idle
-timeout. It never silently replaces a live listener.
+timeout. --grants-file instead mints a distinct reusable credential and stable
+app identity for each manifest entry, so ordinary applications never share the
+owner credential or each other's account scope; an administrator can revoke one
+application and its grant live. It never silently replaces a live listener.
 Serving never scans on startup unless the host passes --warm-metadata (HTTP only,
 with --allow-passive-discovery and a metadata provider grant): the helper then runs
 one passive scan and the already-permitted metadata checks in the background, so
@@ -191,10 +194,9 @@ async fn execute(args: Args) -> Result<()> {
         Action::Serve if args.ipc.is_some() => {
             let lifetime = if args.independent {
                 broker_cli::Lifetime::Independent {
-                    token_file: args.token_file.clone().ok_or_else(|| {
-                        DomainError::new(ErrorCode::InvalidRequest, "Token file is required")
-                    })?,
+                    token_file: args.token_file.clone(),
                     admin_token_file: args.admin_token_file.clone(),
+                    grants_file: args.grants_file.clone(),
                     idle_timeout: args.idle_timeout_seconds.map(Duration::from_secs),
                 }
             } else {

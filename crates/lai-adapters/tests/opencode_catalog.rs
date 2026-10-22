@@ -70,6 +70,77 @@ fn variants_and_context_are_native_and_unknown_quota_is_not_zero() {
     assert!(m.plan.value().is_none());
 }
 #[test]
+fn opencode_go_is_a_subscription_route_without_a_billing_declaration() {
+    let raw = json!({
+        "connected":["opencode-go","opencode"],
+        "default":{},
+        "all":[
+            {"id":"opencode-go","name":"OpenCode Go","models":{
+                "go-model":{"id":"go-model","providerID":"opencode-go","name":"Go model","capabilities":{"output":{"text":true}},"limit":{}}
+            }},
+            {"id":"opencode","name":"OpenCode","models":{
+                "payg-model":{"id":"payg-model","providerID":"opencode","name":"PAYG model","capabilities":{"output":{"text":true}},"limit":{}}
+            }}
+        ]
+    });
+    // Even a broad connection-level host declaration must not re-label Go as
+    // user-supplied; provider identity already classifies it as subscription.
+    let declared = BTreeMap::from([("opencode-go".into(), BillingMode::ApiMetered)]);
+    let metadata = catalog("c", "root", &raw, &declared).unwrap();
+    let go = metadata
+        .additional_routes
+        .iter()
+        .find(|route| route.provider_id == "opencode-go")
+        .unwrap();
+    assert_eq!(go.billing.value(), Some(&BillingMode::Subscription));
+    assert!(matches!(
+        &go.billing,
+        Observation::Known {
+            source,
+            verification: Verification::Inferred,
+            ..
+        } if source.kind == EvidenceKind::Derived
+    ));
+    assert!(
+        !serde_json::to_string(&go.billing)
+            .unwrap()
+            .contains("user_supplied")
+    );
+    let payg = metadata
+        .additional_routes
+        .iter()
+        .find(|route| route.provider_id == "opencode")
+        .unwrap();
+    assert!(
+        payg.billing.value().is_none(),
+        "Console PAYG must not inherit Go's subscription class"
+    );
+    assert!(metadata.quota_pools.is_empty());
+    assert!(metadata.plan.value().is_none());
+}
+
+#[test]
+fn lookalike_provider_ids_do_not_receive_the_go_subscription_class() {
+    let raw = json!({
+        "connected":["opencode-go-extra","OpenCode-Go","opencode_go"],
+        "default":{},
+        "all":[
+            {"id":"opencode-go-extra","name":"Lookalike","models":{"m1":{"id":"m1","providerID":"opencode-go-extra","name":"M1","capabilities":{"output":{"text":true}},"limit":{}}}},
+            {"id":"OpenCode-Go","name":"Lookalike","models":{"m2":{"id":"m2","providerID":"OpenCode-Go","name":"M2","capabilities":{"output":{"text":true}},"limit":{}}}},
+            {"id":"opencode_go","name":"Lookalike","models":{"m3":{"id":"m3","providerID":"opencode_go","name":"M3","capabilities":{"output":{"text":true}},"limit":{}}}}
+        ]
+    });
+    let metadata = catalog("c", "root", &raw, &BTreeMap::new()).unwrap();
+    assert!(
+        metadata
+            .additional_routes
+            .iter()
+            .all(|route| route.billing.value().is_none()),
+        "only the exact official opencode-go id is a subscription route"
+    );
+}
+
+#[test]
 fn billing_declarations_are_per_provider_and_labeled_as_user_supplied() {
     let m = catalog(
         "c",

@@ -27,6 +27,7 @@ use std::{
 };
 
 pub type InventorySource = Arc<dyn Fn(&AtomicBool) -> Result<ScanResult> + Send + Sync>;
+pub type AppRevoker = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 pub struct NativeService {
     clients: Arc<RwLock<BTreeMap<String, ClientPolicy>>>,
     adapters: Vec<lai_contracts::AdapterDescriptor>,
@@ -40,6 +41,10 @@ pub struct NativeService {
     background: std::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
     /// Stable application identity per connection, for durable resume tokens.
     app_identities: RwLock<BTreeMap<String, String>>,
+    /// Broker-owned hook that removes a reusable application grant when an
+    /// administrator revokes the application. The service has no socket or
+    /// credential access of its own.
+    app_revoker: std::sync::Mutex<Option<AppRevoker>>,
     chatgpt_auth: Option<Arc<AuthManager>>,
     /// Serializes managed sign-out with session publication and turn enqueue.
     chatgpt_lifecycle: tokio::sync::Mutex<()>,
@@ -56,6 +61,7 @@ impl NativeService {
             refresh_providers: RwLock::new(BTreeSet::new()),
             background: std::sync::Mutex::new(None),
             app_identities: RwLock::new(BTreeMap::new()),
+            app_revoker: std::sync::Mutex::new(None),
             chatgpt_auth: None,
             chatgpt_lifecycle: tokio::sync::Mutex::new(()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
@@ -166,6 +172,38 @@ impl NativeService {
             .ok()
             .and_then(|ids| ids.get(client).cloned())
             .unwrap_or_else(|| client.to_owned())
+    }
+    /// Host-only: install the broker's grant-revocation hook. Calling it again
+    /// replaces the previous broker (tests start brokers sequentially).
+    pub fn set_app_revoker(&self, revoker: AppRevoker) {
+        if let Ok(mut slot) = self.app_revoker.lock() {
+            *slot = Some(revoker);
+        }
+    }
+    fn revoke_app_grant(&self, app: &str) -> bool {
+        self.app_revoker
+            .lock()
+            .ok()
+            .and_then(|slot| slot.clone())
+            .is_some_and(|revoker| revoker(app))
+    }
+    /// Host-only cleanup for every live connection owned by one application.
+    /// A scoped grant has one app identity even when it opened several sockets.
+    pub fn unregister_app(&self, app: &str) -> usize {
+        let clients: Vec<String> = self
+            .app_identities
+            .read()
+            .map(|ids| {
+                ids.iter()
+                    .filter(|(_, identity)| identity.as_str() == app)
+                    .map(|(client, _)| client.clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+        for client in &clients {
+            self.unregister_client(client);
+        }
+        clients.len()
     }
     /// Host-only cleanup for an application connection; other clients remain live.
     pub fn unregister_client(&self, id: &str) {

@@ -148,10 +148,21 @@ impl NativeService {
                         "Application is unavailable",
                     ));
                 }
-                // Revocation applies to the active connection: the next request
-                // fails because its policy is gone, and its sessions are swept.
-                self.unregister_client(target);
-                Ok(json!({"revoked":true,"clientId":target}))
+                // Revocation is live and application-scoped: the broker grant is
+                // removed first, so the credential cannot reconnect, and every
+                // live connection with the same application identity is swept.
+                // The legacy owner credential keeps per-connection semantics.
+                let app = self.app_identity(target);
+                if app == "ipc-host" {
+                    self.unregister_client(target);
+                    Ok(json!({"revoked":true,"clientId":target,"app":app,"grantsRevoked":false}))
+                } else {
+                    let grants_revoked = self.revoke_app_grant(&app);
+                    let connections = self.unregister_app(&app);
+                    Ok(
+                        json!({"revoked":true,"clientId":target,"app":app,"connections":connections,"grantsRevoked":grants_revoked}),
+                    )
+                }
             }
             "adapters.list" => {
                 params::allow(p, &[])?;

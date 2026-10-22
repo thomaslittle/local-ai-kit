@@ -210,18 +210,21 @@ pub fn catalog(
             connection_id: connection.into(),
             provider_id: provider.clone(),
             display_name: format!("OpenCode / {name}"),
-            billing: billing
-                .get(&provider)
-                .filter(|mode| **mode != BillingMode::Unknown)
-                .map(|mode| {
-                    Observation::reported(
-                        mode.clone(),
-                        EvidenceSource::new(
-                            EvidenceKind::UserSupplied,
-                            "opencode",
-                            "Explicit providerBilling declaration; not authentication evidence",
-                        ),
-                    )
+            billing: super::inferred_gateway_billing(&provider)
+                .or_else(|| {
+                    billing
+                        .get(&provider)
+                        .filter(|mode| **mode != BillingMode::Unknown)
+                        .map(|mode| {
+                            Observation::reported(
+                                mode.clone(),
+                                EvidenceSource::new(
+                                    EvidenceKind::UserSupplied,
+                                    "opencode",
+                                    "Explicit providerBilling declaration; not authentication evidence",
+                                ),
+                            )
+                        })
                 })
                 .unwrap_or_else(|| Observation::unknown("UPSTREAM_BILLING_NOT_REPORTED")),
             capabilities: vec![],

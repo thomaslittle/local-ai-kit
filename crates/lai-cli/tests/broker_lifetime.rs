@@ -81,6 +81,139 @@ async fn authenticated(name: &str, token: &str) -> BufReader<lai_transports::loc
     stream
 }
 
+async fn wait_token(path: &std::path::Path, deadline: Instant) -> Value {
+    loop {
+        if let Ok(bytes) = std::fs::read(path) {
+            if let Ok(value) = serde_json::from_slice(&bytes) {
+                return value;
+            }
+        }
+        assert!(
+            Instant::now() < deadline,
+            "token file {} was not published",
+            path.display()
+        );
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn independently_scoped_app_grants_revoke_one_app_without_the_owner_credential() {
+    let directory = tempfile::tempdir().unwrap();
+    let home = directory.path().to_path_buf();
+    let address = endpoint();
+    let admin_file = directory.path().join("admin-token.json");
+    let app_a_file = directory.path().join("app-a-token.json");
+    let app_b_file = directory.path().join("app-b-token.json");
+    let grants_file = directory.path().join("grants.json");
+    std::fs::write(
+        &grants_file,
+        serde_json::to_vec(&json!({
+            "schemaVersion": 1,
+            "apps": [
+                {
+                    "id": "app-a",
+                    "tokenFile": app_a_file.to_str().unwrap(),
+                    "allowPassiveDiscovery": true,
+                    "connectionIds": ["personal"]
+                },
+                {
+                    "id": "app-b",
+                    "tokenFile": app_b_file.to_str().unwrap(),
+                    "allowPassiveDiscovery": true,
+                    "connectionIds": ["work"]
+                }
+            ]
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let mut child = Command::new(env!("CARGO_BIN_EXE_local-ai-kit"))
+        .args([
+            "serve",
+            "--ipc",
+            &address,
+            "--independent",
+            "--grants-file",
+            grants_file.to_str().unwrap(),
+            "--admin-token-file",
+            admin_file.to_str().unwrap(),
+            "--idle-timeout",
+            "30",
+            "--home",
+            home.to_str().unwrap(),
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(15);
+    let admin = wait_token(&admin_file, deadline).await;
+    let a = wait_token(&app_a_file, deadline).await;
+    let b = wait_token(&app_b_file, deadline).await;
+    assert_eq!(a["appId"], "app-a");
+    assert_eq!(b["appId"], "app-b");
+    assert_ne!(a["token"], b["token"]);
+    assert_eq!(admin["appId"], "kit-admin");
+
+    let mut admin_client = authenticated(&address, admin["token"].as_str().unwrap()).await;
+    let mut a_client = authenticated(&address, a["token"].as_str().unwrap()).await;
+    let mut b_client = authenticated(&address, b["token"].as_str().unwrap()).await;
+    let apps = call(&mut admin_client, 3, "apps.list", json!({})).await;
+    let apps = apps["result"].as_array().unwrap();
+    let a_id = apps
+        .iter()
+        .find(|app| app["app"] == "app-a")
+        .and_then(|app| app["id"].as_str())
+        .unwrap()
+        .to_owned();
+    let b_id = apps
+        .iter()
+        .find(|app| app["app"] == "app-b")
+        .and_then(|app| app["id"].as_str())
+        .unwrap()
+        .to_owned();
+    assert_ne!(a_id, b_id);
+
+    let revoked = call(
+        &mut admin_client,
+        4,
+        "apps.revoke",
+        json!({"targetClientId": a_id}),
+    )
+    .await;
+    assert_eq!(revoked["result"]["grantsRevoked"], true);
+    let a_health = call(&mut a_client, 5, "runtime.health", json!({})).await;
+    assert_eq!(a_health["error"]["data"]["code"], "LOCAL_ACCESS_DENIED");
+    let mut reconnect = connect(&address).await;
+    assert!(
+        call(
+            &mut reconnect,
+            1,
+            "broker.authenticate",
+            json!({"token":a["token"]})
+        )
+        .await
+        .get("error")
+        .is_some()
+    );
+    let b_health = call(&mut b_client, 5, "runtime.health", json!({})).await;
+    assert_eq!(b_health["result"]["status"], "ok");
+    let listed = call(&mut admin_client, 6, "apps.list", json!({})).await;
+    assert_eq!(
+        listed["result"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|app| app["app"] == "app-a")
+            .count(),
+        0
+    );
+    let _ = child.kill();
+    let _ = child.wait();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn an_independent_broker_survives_consumer_disconnects_and_converges() {
     let directory = tempfile::tempdir().unwrap();

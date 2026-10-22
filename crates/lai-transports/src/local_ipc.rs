@@ -33,10 +33,13 @@ struct Grant {
     policy: ClientPolicy,
     execution: Option<ExecutionGrant>,
     created: Instant,
-    /// An independent broker may reuse an owner-scoped app credential so the
-    /// same application can open a new connection after a restart. Parent
+    /// An independent broker may reuse an app credential so the same
+    /// application can open a new connection after a restart. Parent
     /// bootstraps remain one-use.
     reusable: bool,
+    /// Stable application identity for an independently scoped grant. The
+    /// administrator can revoke the credential and all of its live sockets.
+    app_id: Option<String>,
 }
 #[derive(Clone, Copy, Default)]
 pub struct BrokerOptions {
@@ -49,6 +52,18 @@ struct Shared {
     pending: Mutex<BTreeMap<[u8; 32], Grant>>,
     active: AtomicUsize,
     idle_since: Mutex<Option<Instant>>,
+}
+impl Shared {
+    /// Remove every reusable credential for one application. The caller also
+    /// sweeps live connections; this method is what prevents reconnection.
+    fn revoke_app(&self, app_id: &str) -> bool {
+        let Ok(mut pending) = self.pending.lock() else {
+            return false;
+        };
+        let before = pending.len();
+        pending.retain(|_, grant| grant.app_id.as_deref() != Some(app_id));
+        pending.len() != before
+    }
 }
 pub struct Broker {
     shared: Arc<Shared>,
@@ -182,6 +197,10 @@ impl Broker {
             active: AtomicUsize::new(0),
             idle_since: Mutex::new(Some(Instant::now())),
         });
+        let revoker_state = shared.clone();
+        shared
+            .service
+            .set_app_revoker(Arc::new(move |app_id| revoker_state.revoke_app(app_id)));
         let state = shared.clone();
         let (stop, mut stopped) = oneshot::channel();
         let task = tokio::spawn(async move {
@@ -220,7 +239,7 @@ impl Broker {
         policy: ClientPolicy,
         execution: Option<ExecutionGrant>,
     ) -> Result<String> {
-        self.insert_grant(policy, execution, false)
+        self.insert_grant(None, policy, execution, false)
     }
     /// Owner-scoped credential for an independent broker's token file. It can
     /// open more than one connection; the OS file permissions are the boundary.
@@ -229,10 +248,31 @@ impl Broker {
         policy: ClientPolicy,
         execution: Option<ExecutionGrant>,
     ) -> Result<String> {
-        self.insert_grant(policy, execution, true)
+        self.insert_grant(None, policy, execution, true)
+    }
+    /// Independently scoped credential for one application. The stable app id
+    /// is the revocation and account-isolation identity.
+    pub fn authorize_shared_for(
+        &self,
+        app_id: &str,
+        policy: ClientPolicy,
+        execution: Option<ExecutionGrant>,
+    ) -> Result<String> {
+        if app_id.is_empty()
+            || app_id.len() > 128
+            || app_id == "ipc-host"
+            || app_id.chars().any(char::is_control)
+            || !app_id
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
+        {
+            return Err(fail(ErrorCode::InvalidRequest));
+        }
+        self.insert_grant(Some(app_id.to_owned()), policy, execution, true)
     }
     fn insert_grant(
         &self,
+        app_id: Option<String>,
         policy: ClientPolicy,
         execution: Option<ExecutionGrant>,
         reusable: bool,
@@ -254,6 +294,7 @@ impl Broker {
                 execution,
                 created: Instant::now(),
                 reusable,
+                app_id,
             },
         );
         Ok(token)
@@ -352,7 +393,9 @@ async fn serve_connection(stream: Stream, state: Arc<Shared>) -> Result<()> {
     }
     let client = format!("ipc-{}", &key()?[..32]);
     state.service.register_client(&client, grant.policy)?;
-    state.service.set_app_identity(&client, "ipc-host")?;
+    state
+        .service
+        .set_app_identity(&client, grant.app_id.as_deref().unwrap_or("ipc-host"))?;
     let _owner = Owner {
         service: state.service.clone(),
         client: client.clone(),

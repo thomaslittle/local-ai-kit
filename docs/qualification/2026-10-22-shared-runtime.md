@@ -29,6 +29,10 @@
 | Warm SQLite hydration labeled stale | implemented, fixture-tested | `metadata::observations_survive_a_restart_as_stale_while_revalidate_data_without_identity` |
 | Independent broker survives consumer disconnect; duplicate converges; idle releases endpoint/token; admin token lists apps | implemented, **platform-executed on Windows** | `cargo test -p lai-cli --test broker_lifetime` |
 | Reusable owner credential | implemented, platform-executed on Windows | `lai-transports` local IPC test |
+| Independent per-app grants (distinct token, identity, account scope, grant removal) | implemented, **platform-executed on Windows** | `cargo test -p lai-transports --test local_ipc scoped_app_grants_isolate_accounts_and_revocation_removes_the_grant`; `cargo test -p lai-cli --test broker_lifetime independently_scoped_app_grants_revoke_one_app_without_the_owner_credential` |
+| OpenCode Go route class / no redundant declaration | implemented, **fixture-tested on Windows** | `opencode_catalog` (10), `opencode_v2_catalog` (5), `billing_declarations` (2), `lai-core` `opencode_go_billing` (3); Remotif isolated GUI run below |
+| Remotif native model picker against one shared broker | implemented, **platform-executed on Windows (guarded text input)** | isolated `APPDATA`, unique loopback `REMOTIF_E2E_ADDR`, child-PID listener check, Go eligible/`declared:false`/`paid:false`, Console PAYG `BILLING_CONSENT_REQUIRED`, refresh adds a Go model, synthetic 503 notice, recovery; evidence `%TEMP%\lai-go-ui-3c3399d750\remotif-evidence-27bddf4269\result.json` |
+| Crntly native Compose model picker against one shared broker | **not passed / cause unconfirmed** | candidate and clean baseline `c49686e` both hit `thread 'main' has overflowed its stack` when Compose setup runs with an installed helper; no speculative fix retained; exact latest command/binary hashes recorded in the handoff |
 | Control center public-API E2E | implemented, **platform-executed on Windows** | `cargo test -p lai-control --test e2e` |
 | Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (4 tests) |
 | T3/Tokscale watcher parsing, classification, coverage report | implemented, fixture-tested | `python -m unittest scripts.test_upstream_sync scripts.test_upstream_t3code` (11 tests) |
@@ -39,7 +43,7 @@
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
 | Remotif shared runtime | implemented, **platform-executed on Windows** | `cargo test -p remotif-kit --test shared_broker` with a real broker and token file |
 | Crntly shared helper | implemented, **platform-executed on Windows** | `cargo test -p crntly-core --no-default-features ai_assistant` (90); opt-in `shared_broker_helper_authenticates_and_reads_a_snapshot` with a real broker; shared health/issues added to the snapshot DTO and generated bindings |
-| Full Crntly GUI against one broker | **not run** | environment/authorization blocker; do not claim it |
+| Full Crntly GUI against one broker | **not passed / cause unconfirmed** | clean baseline and candidate both main-stack-overflow in Compose setup; retained as a blocker rather than claimed |
 | Live provider inference/account checks | **not run** | no account consumption is authorized by this task; no claim |
 
 ## Performance measurements
@@ -99,12 +103,15 @@ and the page is capped at 256 records (`journal_is_bounded_and_evicts_old_cursor
 
 ## Remaining blockers / unclaimed scope
 
-1. **Full Crntly GUI + Remotif GUI against one broker.** Targeted consumer
-   crates and real process/auth paths passed, but no authorized current GPUI
-   desktop launch was performed in this session. The Crntly protected checkout
-   was not touched; work is in `C:\Users\User\Sites\crntly-local-ai-runtime`
-   from `origin/feature/gpui-native-rust-studio`. The Remotif worktree is
-   `C:\Users\User\Sites\tvforge-local-ai-runtime` from local `main`.
+1. **Crntly native GUI against one broker.** Remotif's isolated native model
+   picker passed against a real independent broker with a distinct app token.
+   Crntly's native Compose panel did not reach acceptance: both the current
+   candidate and a clean exact-source `c49686e` baseline built in isolated
+   targets hit `thread 'main' has overflowed its stack` after Compose setup with
+   an installed helper. The cause is not confirmed. Removing broker environment
+   or citing an unrelated mixer stack report is not proof; no speculative stack
+   or polling fix is retained. The protected Crntly checkout was not touched.
+   The Remotif worktree is `C:\Users\User\Sites\tvforge-local-ai-runtime`.
 2. **GitHub PR creation for upstream reports.** The repository currently does
    not permit Actions to create/approve PRs. The workflow now runs report-only,
    uploads artifacts, and prints the exact minimum setting. Enabling PRs needs
@@ -118,9 +125,12 @@ and the page is capped at 256 records (`journal_is_bounded_and_evicts_old_cursor
    release-performance or manual GUI qualification is claimed for Linux/macOS.
 5. **Live accounts.** No live provider account or inference was used; provider
    support remains as documented in the support matrix.
-6. **Per-app grant semantics in independent mode.** The reusable owner token is
-   owner-scoped, not per-app. Hosts needing distinct app grants should use the
-   parent/embedded broker. This is documented in the ADR and security review.
+6. **Independent grant limits.** Per-app tokens, identities, scope projection,
+   and live revocation now exist. The token file remains readable by another
+   process running as the same OS user; it is not a defense against that user's
+   malware. Cross-platform app-grant tests and a real GUI dual-app run are still
+   open. Live OpenCode Go entitlement, quota, and Console Extra usage remain
+   unverified; the route class alone does not claim them.
 7. **Consumer UI release pins.** Remotif's managed helper remains available when
    no shared broker is configured. Crntly's managed component remains pinned to
    alpha.15; shared mode accepts protocol-compatible alpha.15+ runtimes. No

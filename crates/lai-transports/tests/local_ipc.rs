@@ -8,6 +8,7 @@ use lai_service::NativeService;
 use lai_transports::local_ipc::{Broker, BrokerOptions};
 use serde_json::{Value, json};
 use std::{
+    collections::BTreeSet,
     sync::{
         Arc,
         atomic::{AtomicUsize, Ordering},
@@ -60,6 +61,108 @@ fn service() -> (Arc<NativeService>, Arc<AtomicUsize>) {
         n,
     )
 }
+
+/// Two synthetic accounts in one provider, with a pool that spans both. The
+/// broker scopes below must never expose one account's connection or route to
+/// the other application.
+fn scoped_service() -> Arc<NativeService> {
+    let mut snapshot = Snapshot::empty(DataMode::Synthetic);
+    snapshot.providers.push(Provider {
+        id: "fixture".into(),
+        name: "Fixture".into(),
+        kind: "synthetic".into(),
+    });
+    let evidence = EvidenceSource::new(EvidenceKind::Synthetic, "fixture", "broker scope test");
+    for label in ["personal", "work"] {
+        snapshot.installations.push(Installation {
+            id: format!("install-{label}"),
+            provider_id: "fixture".into(),
+            environment_id: "synthetic".into(),
+            location_hint: "synthetic".into(),
+            version: Observation::unknown("NOT_PROBED"),
+        });
+        snapshot.profiles.push(Profile {
+            id: format!("profile-{label}"),
+            installation_id: format!("install-{label}"),
+            label: label.into(),
+        });
+        snapshot.accounts.push(Account {
+            id: format!("account-{label}"),
+            provider_id: "fixture".into(),
+            display_label: Observation::reported(format!("{label}@example.test"), evidence.clone()),
+            identity_source: Observation::reported(format!("private-{label}"), evidence.clone()),
+            scopes: vec![],
+        });
+        snapshot.connections.push(Connection {
+            id: label.into(),
+            provider_id: "fixture".into(),
+            installation_id: format!("install-{label}"),
+            profile_id: format!("profile-{label}"),
+            display_name: label.into(),
+            account_id: Some(format!("account-{label}")),
+            auth: Observation::reported(AuthState::Authenticated, evidence.clone()),
+            plan: Observation::unknown("NOT_REPORTED"),
+            status: "ok".into(),
+            diagnostics: vec![],
+        });
+        snapshot.routes.push(AccessRoute {
+            id: format!("route-{label}"),
+            connection_id: label.into(),
+            provider_id: "fixture".into(),
+            display_name: label.into(),
+            billing: Observation::reported(BillingMode::Subscription, evidence.clone()),
+            capabilities: vec![],
+            catalog_revision: "1".into(),
+        });
+        snapshot.models.push(Model {
+            id: format!("model-{label}"),
+            route_id: format!("route-{label}"),
+            native_id: "same-native-model".into(),
+            name: "Same native model".into(),
+            revision: "1".into(),
+            is_default: true,
+            capabilities: vec![],
+            options: vec![],
+            context_window: Observation::unknown("NOT_REPORTED"),
+        });
+    }
+    snapshot.quota_pools.push(QuotaPool {
+        id: "shared".into(),
+        account_id: None,
+        connection_ids: vec!["personal".into(), "work".into()],
+        route_ids: vec!["route-personal".into(), "route-work".into()],
+        sharing: "verified".into(),
+        windows: vec![],
+    });
+    Arc::new(NativeService::new(
+        Arc::new(move |_| {
+            Ok(lai_discovery::ScanResult {
+                snapshot: snapshot.clone(),
+                locations: Default::default(),
+                metadata_probes: 0,
+            })
+        }),
+        Duration::from_secs(60),
+    ))
+}
+
+fn scoped_policy(connection: &str) -> ClientPolicy {
+    ClientPolicy {
+        allow_passive_discovery: true,
+        connection_ids: Some(BTreeSet::from([connection.into()])),
+        ..ClientPolicy::default()
+    }
+}
+
+fn admin_policy() -> ClientPolicy {
+    ClientPolicy {
+        allow_passive_discovery: true,
+        connection_ids: None,
+        admin: true,
+        ..ClientPolicy::default()
+    }
+}
+
 async fn connect(name: &str) -> BufReader<Stream> {
     let name = if cfg!(windows) {
         name.to_ns_name::<GenericNamespaced>().unwrap()
@@ -212,6 +315,137 @@ async fn a_stale_unix_socket_is_reclaimed_but_a_live_one_is_not() {
     let broker = Broker::start(s, &name)
         .await
         .expect("stale socket is reclaimable");
+    broker.close().await;
+}
+
+#[tokio::test]
+async fn scoped_app_grants_isolate_accounts_and_revocation_removes_the_grant() {
+    let service = scoped_service();
+    let name = endpoint();
+    let broker = Broker::start(service, &name).await.unwrap();
+    let admin = broker
+        .authorize_shared_for("kit-admin", admin_policy(), None)
+        .unwrap();
+    let app_a = broker
+        .authorize_shared_for("app-a", scoped_policy("personal"), None)
+        .unwrap();
+    let app_b = broker
+        .authorize_shared_for("app-b", scoped_policy("work"), None)
+        .unwrap();
+    assert_eq!(app_a.len(), 64);
+    assert_ne!(app_a, app_b);
+    assert!(
+        broker
+            .authorize_shared_for("ipc-host", ClientPolicy::passive(), None)
+            .is_err(),
+        "the legacy owner identity cannot be used as an application identity"
+    );
+
+    let mut admin_client = auth(&name, admin).await;
+    let mut a = auth(&name, app_a.clone()).await;
+    let mut b = auth(&name, app_b.clone()).await;
+    let refresh = call(
+        &mut admin_client,
+        "discovery.refresh",
+        json!({"level":"passive"}),
+    )
+    .await;
+    assert!(refresh.get("result").is_some(), "refresh failed: {refresh}");
+
+    let snapshot = call(&mut a, "snapshot.get", json!({})).await;
+    let snapshot = &snapshot["result"];
+    assert_eq!(snapshot["connections"].as_array().unwrap().len(), 1);
+    assert_eq!(snapshot["connections"][0]["id"], "personal");
+    assert_eq!(snapshot["routes"][0]["id"], "route-personal");
+    assert_eq!(snapshot["models"][0]["id"], "model-personal");
+    assert_eq!(snapshot["accounts"][0]["id"], "account-personal");
+    assert_eq!(
+        snapshot["accounts"][0]["displayLabel"]["state"], "unknown",
+        "identity is not revealed without a host grant"
+    );
+    assert_eq!(
+        snapshot["quotaPools"][0]["connectionIds"],
+        json!(["personal"])
+    );
+    assert_eq!(
+        snapshot["quotaPools"][0]["routeIds"],
+        json!(["route-personal"])
+    );
+
+    let b_snapshot = call(&mut b, "snapshot.get", json!({})).await;
+    let b_snapshot = &b_snapshot["result"];
+    assert_eq!(b_snapshot["connections"][0]["id"], "work");
+    assert_eq!(b_snapshot["routes"][0]["id"], "route-work");
+    assert_eq!(b_snapshot["models"][0]["id"], "model-work");
+    assert_eq!(b_snapshot["accounts"][0]["id"], "account-work");
+    assert_eq!(
+        b_snapshot["quotaPools"][0]["connectionIds"],
+        json!(["work"])
+    );
+
+    let cross = call(&mut a, "models.list", json!({"routeId":"route-work"})).await;
+    assert_eq!(cross["result"], json!([]), "cross-account route leaked");
+    let denied = call(
+        &mut a,
+        "selection.validate",
+        json!({"routeId":"route-work","modelId":"model-work","revision":"1"}),
+    )
+    .await;
+    assert!(denied.get("error").is_some());
+
+    let apps = call(&mut admin_client, "apps.list", json!({})).await;
+    let apps = apps["result"].as_array().unwrap();
+    let identity = |app: &str| {
+        apps.iter()
+            .find(|entry| entry["app"] == app)
+            .unwrap_or_else(|| panic!("app {app} is missing from {apps:?}"))
+    };
+    let a_id = identity("app-a")["id"].as_str().unwrap().to_owned();
+    let b_id = identity("app-b")["id"].as_str().unwrap().to_owned();
+    assert_ne!(a_id, b_id);
+    assert_eq!(identity("app-a")["connectionIds"], json!(["personal"]));
+    assert_eq!(identity("app-b")["connectionIds"], json!(["work"]));
+
+    let revoked = call(
+        &mut admin_client,
+        "apps.revoke",
+        json!({"targetClientId":a_id}),
+    )
+    .await;
+    assert_eq!(revoked["result"]["revoked"], true);
+    assert_eq!(revoked["result"]["grantsRevoked"], true);
+    assert_eq!(revoked["result"]["app"], "app-a");
+
+    let denied = call(&mut a, "runtime.health", json!({})).await;
+    assert_eq!(denied["error"]["data"]["code"], "LOCAL_ACCESS_DENIED");
+    let mut reconnect = connect(&name).await;
+    let reused = call(
+        &mut reconnect,
+        "broker.authenticate",
+        json!({"token":app_a}),
+    )
+    .await;
+    assert!(
+        reused.get("error").is_some(),
+        "a revoked grant must not reconnect: {reused}"
+    );
+    drop(reconnect);
+
+    // The other application's credential and live connection survive.
+    assert_eq!(
+        call(&mut b, "runtime.health", json!({})).await["result"]["status"],
+        "ok"
+    );
+    let _b_again = auth(&name, app_b).await;
+    let apps = call(&mut admin_client, "apps.list", json!({})).await;
+    assert!(
+        apps["result"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|entry| entry["app"] != "app-a"),
+        "revoked app is still registered"
+    );
     broker.close().await;
 }
 

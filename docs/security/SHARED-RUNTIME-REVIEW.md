@@ -15,20 +15,23 @@
 | Inventory journal | Broker-owned SQLite | Same projection; cursor is opaque and epoch-bound |
 | Issue evidence | Broker-owned SQLite + projected snapshot | Sanitized; no raw provider bodies or credential material |
 | Notification delivery state | Broker-owned SQLite | Deduplicated; private-content mode omits issue text |
-| Broker token | Parent descriptor or owner-only independent token file | Not argv, not logs, not snapshots; independent mode is owner-scoped, not per-app |
-| Native endpoint | Windows pipe owner-only DACL / Unix socket 0600 | One-use grant in parent mode; owner token in independent mode |
+| Broker token | Parent descriptor, legacy owner token, or per-app grant manifest | Not argv, not logs, not snapshots; independent app tokens are app-scoped and broker-revocable |
+| Native endpoint | Windows pipe owner-only DACL / Unix socket 0600 | One-use grant in parent mode; per-app reusable grant in independent mode when a manifest is supplied |
+| Route billing | Adapter evidence + host declarations | OpenCode Go route class is derived/inferred, not user-supplied; entitlement, quota, and Console Extra usage remain separate unknowns |
 | Update manifest/archive | Release pipeline + host-pinned key | Ed25519 publisher signature plus checksum; checksum alone is insufficient |
 
 ## Findings and controls
 
-1. **Independent token file is not a per-app grant.** It is deliberately
-   reusable so a second application can connect after the first exits. Any
-   process running as the same OS user that can read the file can connect.
-   Mitigation: owner-only file permissions, endpoint permissions, explicit
-   configuration, and per-app grants remain available in parent/embedded mode.
-   This is documented in the ADR and broker docs. A future per-app secret
-   exchange should be added before claiming per-app revocation in independent
-   mode.
+1. **Independent mode supports two credential shapes.** The legacy owner token
+   is reusable and single-application; any process that can read the file can
+   connect. A `--grants-file` manifest instead mints a distinct reusable token
+   and stable identity per app, with per-app policy and execution scopes. The
+   broker records the app identity, projects accounts/routes for that grant, and
+   `apps.revoke` removes the app's grant and sweeps every live connection with
+   that identity; the old token cannot reconnect. This is app isolation, not a
+   defense against another process running as the same OS user that can read the
+   token file. The admin credential is separate and should be control-center
+   only.
 2. **Windows token-file ACLs.** The descriptor is created and then restricted
    with `icacls /inheritance:r /grant:r <current-user>:F`; if that fails, the
    file is removed and the broker fails closed. The native endpoint remains
@@ -47,19 +50,27 @@
    listing and mutation use the projected snapshot; error messages are stable
    and do not echo adapter/OS paths or raw provider strings.
 7. **Revocation.** `apps.revoke` checks the admin policy, refuses self-revoke,
-   removes the client policy, sweeps sessions/inputs/resume records, and
-   invalidates subsequent calls. Existing transports are not trusted to
-   re-authorize themselves.
-8. **Notification privacy.** Private-content mode replaces title/body; quiet
+   removes the broker grant first, sweeps every live app connection and its
+   sessions/inputs/resume records, and invalidates subsequent calls and token
+   reuse. Existing transports are not trusted to re-authorize themselves.
+8. **Billing classification is not entitlement.** The exact OpenCode `opencode-go`
+   route is classified as subscription with derived/inferred evidence because
+   the official provider id denotes Go; Console `opencode` and lookalikes remain
+   unknown. Quota, auth, and the Console Extra usage toggle stay separate. A Go
+   route does not need a redundant billing declaration or generic paid-API
+   opt-in, and unknown quota is not an access denial. Metered routes still
+   require explicit paid consent; unknown billing is never unlocked by paid
+   consent.
+9. **Notification privacy.** Private-content mode replaces title/body; quiet
    hours suppress delivery; snooze does not resolve; inline health remains.
-9. **Control center.** It uses only the authenticated JSON-RPC API and never
+10. **Control center.** It uses only the authenticated JSON-RPC API and never
    opens SQLite. Export redacts secret-shaped keys recursively, though the
    protocol already never returns provider tokens.
-10. **Update trust.** Signature verification is mandatory before staging.
+11. **Update trust.** Signature verification is mandatory before staging.
     Activation refuses while a session marker/lease is present, uses exclusive
     locks, backs up the current binary, and preserves the failed version.
     Signing/publication/installation remain approval gates.
-11. **Threat-model limits.** The runtime is not a defense against malware that
+12. **Threat-model limits.** The runtime is not a defense against malware that
     already controls the user's OS account. CORS is not authentication.
     Loopback HTTP still requires pairing and per-client grants.
 
@@ -67,11 +78,10 @@
 
 - Apply an explicit owner-only Windows DACL to the independent token file, or
   require a host-supplied credential with the same guarantee.
-- Add per-app credentials/revocation to independent mode if independent mode is
-  marketed as a multi-app security boundary.
-- Run the shared-runtime tests on Linux and macOS, including socket permissions,
-  file locking, and SQLite WAL behavior.
+- Cross-platform qualification of app-scoped grant revocation and route-billing
+  tests on Linux and macOS.
 - External security review of the update signer/publisher process and the
   independent token distribution.
 - Live-account qualification for each provider remains separate from this
-  review.
+  review. No Go subscription entitlement, quota, or Extra usage state was
+  verified with a live account.
