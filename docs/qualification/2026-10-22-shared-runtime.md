@@ -1,9 +1,15 @@
 # Shared runtime acceptance ledger — 2026-10-22
 
 - **Repository:** local-ai-kit (`C:\Users\User\Sites\local-ai-kit`)
-- **Branch during work:** `main` worktree, uncommitted implementation at the
-  time of measurement. Exact commit SHAs are recorded in the final handoff
-  below once committed.
+- **Branch:** `feat/shared-runtime`, head `9dd5e6b1b478d92f1d1ac82705380c25c2f3daa7`
+  (merge of `origin/main`; prior runtime commit `f98a8c6`).
+- **Pull requests:** local-ai-kit [#28](https://github.com/thomaslittle/local-ai-kit/pull/28);
+  Remotif [#36](https://github.com/thomaslittle/remotif/pull/36);
+  Crntly [#117](https://github.com/thomaslittle/crntly-desktop/pull/117).
+- **Consumer heads:** Remotif `f4329fe96546e38b218b4218b24f924f8808f75d`
+  (`feat/shared-local-ai-runtime`); Crntly `c335ddd39cbb0c477ad008bef8dd0ded4a885625`
+  (`feat/shared-local-ai-runtime`, based on
+  `origin/feature/gpui-native-rust-studio`).
 - **Status vocabulary:** planned / implemented / fixture-tested /
   platform-executed / live-qualified. A fixture or mock is not a live provider.
 
