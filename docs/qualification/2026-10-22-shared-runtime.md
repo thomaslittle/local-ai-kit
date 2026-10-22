@@ -1,7 +1,10 @@
 # Shared runtime acceptance ledger — 2026-10-22
 
 - **Repository:** local-ai-kit (`C:\Users\User\Sites\local-ai-kit`)
-- **Branch:** `feat/shared-runtime`, head `5c30a71` (runtime commit `f98a8c6`; merge of `origin/main` before the docs/runtime follow-ups).
+- **Branch:** `feat/shared-runtime`. Implementation head before the final
+  docs-only refresh: `c16696d12a8f1e39bafb996b33c9800cf87bd72d`; runtime commit
+  `f98a8c6`, merged with `origin/main` before the docs/runtime follow-ups. The
+  pull request contains the exact current head.
 - **Pull requests:** local-ai-kit [#28](https://github.com/thomaslittle/local-ai-kit/pull/28);
   Remotif [#36](https://github.com/thomaslittle/remotif/pull/36);
   Crntly [#117](https://github.com/thomaslittle/crntly-desktop/pull/117).
