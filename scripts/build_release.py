@@ -39,7 +39,7 @@ def dependency_inventory(stage):
     write(stage/'sbom.cdx.json',{'bomFormat':'CycloneDX','specVersion':'1.5','version':1,'components':sorted(components,key=lambda c:c['purl'])})
 
 def build(profile):
-    run(['cargo','build','--locked','-p','lai-cli',*(['--release'] if profile=='release' else [])])
+    run(['cargo','build','--locked','-p','lai-cli','-p','lai-control',*(['--release'] if profile=='release' else [])])
     run(['npm','run','build']);run(['node','scripts/build_demo.mjs']);run(['node','scripts/build_extension.mjs'])
     head=run(['git','rev-parse','HEAD']).strip();dirty=bool(run(['git','status','--porcelain']).strip())
     version=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']

@@ -344,6 +344,23 @@ fn session_markers(root: &Path) -> Vec<PathBuf> {
                 && entry.file_name().to_string_lossy().ends_with(".json")
         })
         .map(|entry| entry.path())
+        .filter_map(|path| {
+            let started = std::fs::read(&path)
+                .ok()
+                .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+                .and_then(|value| value["startedAt"].as_u64());
+            if started
+                .is_some_and(|started| unix_ms().saturating_sub(started) > 24 * 60 * 60 * 1000)
+            {
+                // A crashed consumer cannot release its marker. Preserve it as
+                // evidence but do not block updates forever.
+                let stale = path.with_extension("stale.json");
+                let _ = std::fs::rename(&path, stale);
+                None
+            } else {
+                Some(path)
+            }
+        })
         .collect()
 }
 
@@ -705,6 +722,48 @@ mod tests {
         assert_eq!(std::fs::read(&target).unwrap(), b"new-binary");
         rollback(&target, &activation.backup).unwrap();
         assert_eq!(std::fs::read(&target).unwrap(), b"old-binary");
+    }
+
+    #[test]
+    fn an_old_crash_marker_is_preserved_but_does_not_block_activation() {
+        let signed = signed("0.1.0-alpha.18");
+        let root = tempfile::tempdir().unwrap();
+        let staged = stage_update(
+            &signed.manifest,
+            &signed.archive,
+            &root.path().join("staged"),
+            &signed.public_key,
+            "0.1.0-alpha.17",
+            "1.0",
+        )
+        .unwrap();
+        let executable = staged.directory.join(if cfg!(windows) {
+            "local-ai-kit.exe"
+        } else {
+            "local-ai-kit"
+        });
+        std::fs::write(&executable, b"new-binary").unwrap();
+        let target = root.path().join("current");
+        std::fs::write(&target, b"old-binary").unwrap();
+        let marker = root.path().join("session-999.json");
+        std::fs::write(&marker, br#"{"pid":999,"startedAt":0}"#).unwrap();
+        activate(
+            root.path(),
+            &staged,
+            &signed.manifest,
+            &target,
+            &signed.public_key,
+        )
+        .unwrap();
+        assert_eq!(std::fs::read(&target).unwrap(), b"new-binary");
+        assert!(!marker.exists());
+        assert!(
+            root.path()
+                .read_dir()
+                .unwrap()
+                .flatten()
+                .any(|entry| entry.file_name().to_string_lossy().ends_with(".stale.json"))
+        );
     }
 
     #[test]

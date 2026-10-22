@@ -30,7 +30,9 @@ downloads an update.
    activation.
 7. **Activation and rollback.** Activation holds an exclusive session lease and
    an activation lock, backs up the previous executable, replaces atomically,
-   and keeps the backup for explicit rollback.
+   and keeps the backup for explicit rollback. A session marker older than 24
+   hours is treated as crash residue, renamed to `*.stale.json`, and no longer
+   blocks activation; the file is preserved as evidence.
 8. **Live refresh.** Provider data is refreshed by the new runtime; the update
    itself does not read credentials or run inference.
 
