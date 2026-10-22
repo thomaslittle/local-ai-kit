@@ -2217,16 +2217,20 @@
       "description": "Per-install notification preference. Quiet hours use local wall-clock\nminutes since midnight and never contain a provider identity.",
       "properties": {
         "enabled": {
+          "default": true,
           "type": "boolean"
         },
         "minimumSeverity": {
-          "$ref": "#/$defs/IssueSeverity"
+          "$ref": "#/$defs/IssueSeverity",
+          "default": "warning"
         },
         "privateContent": {
+          "default": false,
           "description": "Suppress issue text in the OS notification; consumers show it inline.",
           "type": "boolean"
         },
         "quietHoursEndMinute": {
+          "default": null,
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0,
@@ -2236,6 +2240,7 @@
           ]
         },
         "quietHoursStartMinute": {
+          "default": null,
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0,
@@ -2245,17 +2250,12 @@
           ]
         },
         "reminderAfterSeconds": {
+          "default": 86400,
           "format": "uint64",
           "minimum": 0,
           "type": "integer"
         }
       },
-      "required": [
-        "enabled",
-        "minimumSeverity",
-        "reminderAfterSeconds",
-        "privateContent"
-      ],
       "type": "object"
     },
     "Observation": {

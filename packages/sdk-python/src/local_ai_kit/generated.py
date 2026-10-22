@@ -155,7 +155,7 @@ NotificationAckParams = TypedDict('NotificationAckParams', {'dedupeKey': Require
 
 NotificationDecision = TypedDict('NotificationDecision', {'body': Required[str], 'dedupeKey': Required[str], 'issueId': Required[str], 'reason': Required[str], 'severity': Required['IssueSeverity'], 'shouldNotify': Required[bool], 'title': Required[str]}, total=False)
 
-NotificationPreferences = TypedDict('NotificationPreferences', {'enabled': Required[bool], 'minimumSeverity': Required['IssueSeverity'], 'privateContent': Required[bool], 'quietHoursEndMinute': NotRequired[Union[int, None]], 'quietHoursStartMinute': NotRequired[Union[int, None]], 'reminderAfterSeconds': Required[int]}, total=False)
+NotificationPreferences = TypedDict('NotificationPreferences', {'enabled': NotRequired[bool], 'minimumSeverity': NotRequired['IssueSeverity'], 'privateContent': NotRequired[bool], 'quietHoursEndMinute': NotRequired[Union[int, None]], 'quietHoursStartMinute': NotRequired[Union[int, None]], 'reminderAfterSeconds': NotRequired[int]}, total=False)
 
 Observation_Case0 = TypedDict('Observation_Case0', {'expiresAt': NotRequired[Union['Timestamp', None]], 'freshness': Required['Freshness'], 'observedAt': Required['Timestamp'], 'source': Required['EvidenceSource'], 'state': Required[Literal['known']], 'value': Required[str], 'verification': Required['Verification']}, total=False)
 

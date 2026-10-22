@@ -128,7 +128,7 @@ export type NotificationAckParams = { "dedupeKey": string; "issueId": string; };
 
 export type NotificationDecision = { "body": string; "dedupeKey": string; "issueId": string; "reason": string; "severity": IssueSeverity; "shouldNotify": boolean; "title": string; };
 
-export type NotificationPreferences = { "enabled": boolean; "minimumSeverity": IssueSeverity; "privateContent": boolean; "quietHoursEndMinute"?: number | null; "quietHoursStartMinute"?: number | null; "reminderAfterSeconds": number; };
+export type NotificationPreferences = { "enabled"?: boolean; "minimumSeverity"?: IssueSeverity; "privateContent"?: boolean; "quietHoursEndMinute"?: number | null; "quietHoursStartMinute"?: number | null; "reminderAfterSeconds"?: number; };
 
 export type Observation = { "expiresAt"?: Timestamp | null; "freshness": Freshness; "observedAt": Timestamp; "source": EvidenceSource; "state": "known"; "value": string; "verification": Verification; } | { "checkedAt"?: Timestamp | null; "reason": string; "state": "unknown"; } | { "checkedAt"?: Timestamp | null; "reason": string; "state": "unavailable"; };
 

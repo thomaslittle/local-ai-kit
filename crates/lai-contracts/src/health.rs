@@ -214,7 +214,7 @@ impl NotificationReason {
 /// Per-install notification preference. Quiet hours use local wall-clock
 /// minutes since midnight and never contain a provider identity.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields, default)]
 pub struct NotificationPreferences {
     pub enabled: bool,
     pub minimum_severity: IssueSeverity,
