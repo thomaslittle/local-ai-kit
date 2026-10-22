@@ -115,6 +115,8 @@
     "apps/server/src/provider/CodexChatGptHandoff.ts",
     "apps/server/src/provider/CodexChatGptSessionLock.ts",
     "apps/server/src/provider/CodexInstallation.ts",
+    "packages/shared/src/shell.ts",
+    "apps/desktop/src/shell/DesktopShellEnvironment.ts",
     "apps/server/src/provider/CodexProvider.ts",
     "apps/server/src/provider/AntigravityInstallation.ts",
     "apps/server/src/provider/Drivers",

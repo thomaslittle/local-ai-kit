@@ -406,13 +406,41 @@ def latest_release() -> tuple[str, str]:
 
 
 def run(command: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
+    completed = subprocess.run(
         command,
         cwd=cwd,
-        check=True,
+        check=False,
         text=True,
         capture_output=True,
     )
+    if completed.returncode:
+        detail = redact((completed.stderr or completed.stdout or "").strip())
+        raise RuntimeError(
+            f"command failed ({completed.returncode}): {command[0]}\n{detail[:4000]}"
+        )
+    return completed
+
+
+def run_gh(command: list[str]) -> subprocess.CompletedProcess[str]:
+    completed = subprocess.run(
+        command,
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode:
+        detail = redact((completed.stderr or completed.stdout or "").strip())
+        if "not permitted to create or approve pull requests" in detail.lower():
+            raise RuntimeError(
+                "GitHub Actions is not permitted to create pull requests. "
+                "The review branch and report were still produced. Minimum fix: "
+                "Settings > Actions > General > Workflow permissions > "
+                "'Allow GitHub Actions to create and approve pull requests'. "
+                f"gh said: {detail[:2000]}"
+            )
+        raise RuntimeError(f"gh command failed ({completed.returncode}):\n{detail[:4000]}")
+    return completed
 
 
 def materialize(commit: str, dest: Path) -> None:
@@ -479,7 +507,17 @@ def run_parity(snapshot: Path) -> tuple[str, str]:
     return "NEEDS REVIEW", output
 
 
-def open_review_pr(report: str, current_commit: str) -> str:
+def write_local_report(report: str, metadata: dict | None = None) -> None:
+    review = TOKSCALE_DIR / "reviews" / "latest"
+    review.mkdir(parents=True, exist_ok=True)
+    (review / "report.md").write_text(report, encoding="utf-8")
+    (review / "report.json").write_text(
+        json.dumps({"report": report, **(metadata or {})}, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def open_review_pr(report: str, current_commit: str, metadata: dict | None = None) -> str:
     branch = "upstream/tokscale-discovery-review"
     run(["git", "fetch", "origin", "main"])
     existing = subprocess.run(
@@ -497,12 +535,10 @@ def open_review_pr(report: str, current_commit: str) -> str:
             capture_output=True,
         )
         if merge.returncode != 0:
-            raise SystemExit(redact(merge.stderr or "could not update the review branch with main"))
+            raise RuntimeError(redact(merge.stderr or "could not update the review branch with main"))
     else:
         run(["git", "checkout", "-B", branch, "origin/main"])
-    review = TOKSCALE_DIR / "reviews" / "latest"
-    review.mkdir(parents=True, exist_ok=True)
-    (review / "report.md").write_text(report, encoding="utf-8")
+    write_local_report(report, metadata)
     run(["git", "add", "--", "upstream/tokscale/reviews/latest"])
     status = subprocess.run(
         ["git", "diff", "--cached", "--quiet"],
@@ -515,7 +551,7 @@ def open_review_pr(report: str, current_commit: str) -> str:
             f"Review {current_commit} against the pinned Local AI Kit discovery pin. "
             "This commit does not change runtime discovery."
         )
-        subprocess.run(["git", "commit", "-m", message], cwd=ROOT, check=True)
+        run(["git", "commit", "-m", message])
     run(["git", "push", "-u", "origin", branch])
     title = "Review Tokscale discovery changes"
     body = (
@@ -533,7 +569,7 @@ def open_review_pr(report: str, current_commit: str) -> str:
         "- [ ] Update `upstream/tokscale/lock.json` and `snapshot.json` only after the adapters change\n"
         "- [ ] Re-run `cargo test -p lai-discovery --test upstream_parity`\n"
     )
-    listed = subprocess.run(
+    listed = run_gh(
         [
             "gh",
             "pr",
@@ -544,26 +580,14 @@ def open_review_pr(report: str, current_commit: str) -> str:
             "number,url",
             "--jq",
             ".[0].url // \"\"",
-        ],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=True,
+        ]
     )
     url = listed.stdout.strip()
     if url:
-        subprocess.run(
-            ["gh", "pr", "edit", url, "--title", title, "--body", body],
-            cwd=ROOT,
-            check=True,
-        )
+        run_gh(["gh", "pr", "edit", url, "--title", title, "--body", body])
         return url
-    created = subprocess.run(
-        ["gh", "pr", "create", "--base", "main", "--head", branch, "--title", title, "--body", body],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=True,
+    created = run_gh(
+        ["gh", "pr", "create", "--base", "main", "--head", branch, "--title", title, "--body", body]
     )
     return created.stdout.strip()
 
@@ -608,7 +632,7 @@ def emit_snapshot(source: Path, destination: Path) -> None:
     print(f"Wrote {destination} from {commit} ({len(payload['clients'])} clients)")
 
 
-def compare_commits(previous: dict, current: dict, mappings: dict, open_pr: bool) -> int:
+def compare_commits(previous: dict, current: dict, mappings: dict, open_pr: bool, report_only: bool = False) -> int:
     changes = diff_indexes(previous, current)
     set_output("upstream_sha", current["commit"])
     if not diff_is_relevant(changes):
@@ -638,8 +662,35 @@ def compare_commits(previous: dict, current: dict, mappings: dict, open_pr: bool
     append_summary("```text\n" + report[:8000] + "\n```\n")
     set_output("relevant", "true")
     set_output("parity", parity_status.replace(" ", "_").lower())
+    if report_only:
+        write_local_report(
+            report,
+            {
+                "previous": previous["commit"],
+                "current": current["commit"],
+                "parity": parity_status,
+                "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            },
+        )
+        print("Report-only mode: branch and pull request were not modified.")
+        set_output("report_only", "true")
+        return 0
     if open_pr:
-        url = open_review_pr(report, current["commit"])
+        try:
+            url = open_review_pr(
+                report,
+                current["commit"],
+                {
+                    "previous": previous["commit"],
+                    "current": current["commit"],
+                    "parity": parity_status,
+                    "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                },
+            )
+        except RuntimeError as error:
+            set_output("reporting_failure", str(error).replace("\n", " ")[:1000])
+            print(f"UPSTREAM REPORTING FAILURE: {error}", file=sys.stderr)
+            return 2
         print(f"Review pull request: {url}")
         set_output("pull_request", url)
     return 0
@@ -658,6 +709,11 @@ def main(argv: list[str] | None = None) -> int:
         "--open-pr",
         action="store_true",
         help="when discovery changes exist, push a review branch and open or update a pull request",
+    )
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="produce the report and exit without changing a branch or pull request",
     )
     args = parser.parse_args(argv)
     if args.emit_snapshot:
@@ -686,7 +742,7 @@ def main(argv: list[str] | None = None) -> int:
             dest = Path(temporary) / "tokscale"
             materialize(commit, dest)
             current = extract(dest, commit)
-    return compare_commits(snapshot, current, mappings, args.open_pr)
+    return compare_commits(snapshot, current, mappings, args.open_pr and not args.report_only, args.report_only)
 
 
 def redact(text: str) -> str:
@@ -699,6 +755,6 @@ def redact(text: str) -> str:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except subprocess.CalledProcessError as error:
-        sys.stderr.write(redact(error.stderr or str(error)))
-        raise SystemExit(error.returncode or 1) from error
+    except (RuntimeError, subprocess.SubprocessError, OSError) as error:
+        sys.stderr.write("UPSTREAM WATCH FAILURE: " + redact(str(error)) + "\n")
+        raise SystemExit(1) from error

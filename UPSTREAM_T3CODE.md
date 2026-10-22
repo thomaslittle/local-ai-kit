@@ -55,6 +55,18 @@ Cloud model access is the signed-in CLI or agent (ChatGPT plan, Claude, Grok, Cu
 | Copilot | not a built-in driver; ACP registry can add it | passive `~/.copilot`. |
 | ACP local command | user-typed executable, no scan | not auto-discovered. |
 | Ollama / LM Studio / llama.cpp | not present | Ollama and LM Studio stay Local AI Kit's. |
+| Shell resolution | `packages/shared/src/shell.ts`, `apps/desktop/src/shell/DesktopShellEnvironment.ts` | Watched for executable/PATH/platform-environment changes; no shell profile is read during passive discovery. |
+
+The watcher also reports provider-shaped files that are not yet in `watchedPaths`
+and any watched path that disappeared at the tip. Those are review prompts, not
+automatic coverage claims. Release/relay/docs changes are classified separately
+and do not open a provider-review PR by themselves.
+
+The daily workflow runs in **report-only** mode when the repository does not
+permit GitHub Actions to create pull requests. The report and JSON metadata are
+always uploaded as artifacts. The minimum setting to enable PR creation is
+**Settings → Actions → General → Workflow permissions → Allow GitHub Actions to
+create and approve pull requests**; no personal token is substituted.
 
 ### ChatGPT OAuth
 
