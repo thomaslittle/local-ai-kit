@@ -2,6 +2,30 @@
 
 A reverse-chronological engineering log of what was implemented, how it was verified, and what is deliberately still unclaimed. It records source commits and verification results at the time of each entry; entries are not rewritten when later work supersedes them. For release-level summaries see the [changelog](../../CHANGELOG.md); for operation-level provider status see the [support matrix](../adapters/SUPPORT-MATRIX.md).
 
+## October 22 combined-client lifecycle gate and corrected denial assertions
+
+Crntly and Remotif were qualified together against one independent broker with
+distinct app identities. The accepted gate at Crntly `b05ebb30`, Remotif
+`fc4a99e`, local-ai-kit `eed3a2c`, and synthetic gateway fixture `2ddd0e2`
+proves a shared `GLM-5.3` catalog change in both clients, an actual Crntly
+process close/reopen, explicit outage states, broker restart, both clients live
+again after **both app process restarts**, fresh `Kimi K4` observed by both, and
+app-scoped revocation with the peer still usable.
+
+The first 1255 PASS was retained but is not accepted: its revoked-client wait
+was caught and only recorded, so a missing denial could still pass, and its peer
+check read unchanged cached rows. The corrected gate requires a fresh
+`The shared AI runtime rejected this application` denial with a null baseline,
+and drives Remotif to a changed post-revoke catalog (Kimi K4 removed) with
+`ready` status before accepting the run. Crntly's outage path now distinguishes
+transport loss (`The AI helper stopped`) from genuine protocol incompatibility.
+The earlier cached-model/missing-peer failure (1225) and restart-path failure
+(1245) remain retained. Recovery used manual app restarts; automatic reconnect
+is not implemented or qualified. Evidence is under
+`docs/developer/gpui-native-migration/evidence/2026-10-22-compose-stack/combined/`
+in the Crntly repository; no live provider account, inference, real
+notification, or paid fallback was used.
+
 ## October 22 mutation validation, bridge lifecycle, and control-center interaction
 
 Real patch-restored mutation validation replaced the earlier hypothetical
