@@ -63,6 +63,7 @@ struct App {
     adapters: Vec<Value>,
     tab: Tab,
     selected: usize,
+    scroll: usize,
     status: String,
     confirm_revoke: Option<String>,
     export_path: PathBuf,
@@ -181,6 +182,13 @@ fn selected_id(app: &App) -> Option<String> {
     }
 }
 
+fn switch(app: &mut App, tab: Tab) {
+    app.tab = tab;
+    app.selected = 0;
+    app.scroll = 0;
+    app.status.clear();
+}
+
 fn act(app: &mut App, key: KeyCode) {
     if let Some(target) = app.confirm_revoke.clone() {
         match key {
@@ -206,29 +214,35 @@ fn act(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Tab => {
             let next = (app.tab.index() + 1) % Tab::ALL.len();
-            app.tab = Tab::ALL[next];
-            app.selected = 0;
-            app.status.clear();
+            switch(app, Tab::ALL[next]);
         }
         KeyCode::BackTab => {
             let previous = (app.tab.index() + Tab::ALL.len() - 1) % Tab::ALL.len();
-            app.tab = Tab::ALL[previous];
-            app.selected = 0;
-            app.status.clear();
+            switch(app, Tab::ALL[previous]);
         }
         KeyCode::Down | KeyCode::Char('j') => {
             if current_len(app) > 0 {
                 app.selected = (app.selected + 1).min(current_len(app) - 1);
+            } else {
+                // Overview and Diagnostics are read-only reports without
+                // selectable rows; let the keyboard page through them.
+                app.scroll = app.scroll.saturating_add(1);
             }
         }
-        KeyCode::Up | KeyCode::Char('k') => app.selected = app.selected.saturating_sub(1),
-        KeyCode::Char('1') => app.tab = Tab::Overview,
-        KeyCode::Char('2') => app.tab = Tab::Accounts,
-        KeyCode::Char('3') => app.tab = Tab::Models,
-        KeyCode::Char('4') => app.tab = Tab::Usage,
-        KeyCode::Char('5') => app.tab = Tab::Issues,
-        KeyCode::Char('6') => app.tab = Tab::Apps,
-        KeyCode::Char('7') => app.tab = Tab::Diagnostics,
+        KeyCode::Up | KeyCode::Char('k') => {
+            if current_len(app) > 0 {
+                app.selected = app.selected.saturating_sub(1);
+            } else {
+                app.scroll = app.scroll.saturating_sub(1);
+            }
+        }
+        KeyCode::Char('1') => switch(app, Tab::Overview),
+        KeyCode::Char('2') => switch(app, Tab::Accounts),
+        KeyCode::Char('3') => switch(app, Tab::Models),
+        KeyCode::Char('4') => switch(app, Tab::Usage),
+        KeyCode::Char('5') => switch(app, Tab::Issues),
+        KeyCode::Char('6') => switch(app, Tab::Apps),
+        KeyCode::Char('7') => switch(app, Tab::Diagnostics),
         KeyCode::Char('r') => {
             app.status = "Refreshing discovery…".into();
             match app
@@ -316,7 +330,7 @@ fn draw(frame: &mut ratatui::Frame, app: &mut App) {
         .constraints([
             Constraint::Length(3),
             Constraint::Min(3),
-            Constraint::Length(2),
+            Constraint::Length(5),
         ])
         .split(frame.area());
     let titles: Vec<Line> = Tab::ALL.iter().map(|tab| Line::from(tab.title())).collect();
@@ -331,6 +345,7 @@ fn draw(frame: &mut ratatui::Frame, app: &mut App) {
     frame.render_widget(tabs, chunks[0]);
 
     let lines = lines_for(app);
+    let line_count = lines.len();
     let items: Vec<ListItem> = lines
         .into_iter()
         .enumerate()
@@ -364,19 +379,22 @@ fn draw(frame: &mut ratatui::Frame, app: &mut App) {
     let mut state = ListState::default();
     if current_len(app) > 0 {
         state.select(Some(app.selected.min(current_len(app).saturating_sub(1))));
+    } else {
+        let visible = usize::from(chunks[1].height.saturating_sub(2));
+        app.scroll = app.scroll.min(line_count.saturating_sub(visible));
+        *state.offset_mut() = app.scroll;
     }
     frame.render_stateful_widget(list, chunks[1], &mut state);
 
     let prompt = app
         .confirm_revoke
         .as_ref()
-        .map(|id| format!("Revoke {id}? Active grants and sessions end immediately. y/n"))
+        .map(|id| format!("Revoke {id}? y/n — active grants and sessions end immediately."))
         .unwrap_or_else(|| app.status.clone());
     let footer = Paragraph::new(vec![
         Line::from(prompt),
-        Line::from(
-            "Tab switch · ↑/↓ select · r refresh · p probe account · a acknowledge · s snooze · x revoke app · e export · q quit",
-        ),
+        Line::from("Tab switch · ↑/↓ select · r refresh · e export · q quit"),
+        Line::from("p probe account · a acknowledge · s snooze · x revoke app"),
     ])
     .block(Block::default().borders(Borders::ALL).title(" Status "));
     frame.render_widget(footer, chunks[2]);
@@ -457,6 +475,7 @@ fn main() -> std::process::ExitCode {
         adapters: Vec::new(),
         tab: Tab::Overview,
         selected: 0,
+        scroll: 0,
         status: String::new(),
         confirm_revoke: None,
         export_path,
@@ -495,7 +514,12 @@ fn main() -> std::process::ExitCode {
         match event::poll(timeout) {
             Ok(true) => match event::read() {
                 Ok(Event::Key(key)) if key.kind == KeyEventKind::Press => {
-                    if key.code == KeyCode::Char('q') || key.code == KeyCode::Esc {
+                    // While a destructive action is awaiting confirmation, Esc
+                    // must reach the confirmation handler and cancel it rather
+                    // than quitting the whole control center.
+                    if app.confirm_revoke.is_none()
+                        && (key.code == KeyCode::Char('q') || key.code == KeyCode::Esc)
+                    {
                         break;
                     }
                     act(&mut app, key.code);
