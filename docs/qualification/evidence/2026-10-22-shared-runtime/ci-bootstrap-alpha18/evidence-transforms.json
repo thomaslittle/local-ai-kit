@@ -1,0 +1,44 @@
+[
+  {
+    "path": "01-windows-delayed-red.txt",
+    "rawSha256": "b5c073a17e31337079e18d152e6ba9da464fdf5f0e48fc653271c8ba82defaac",
+    "publicSha256": "4515a3849a20e1c89db437dde1d556f3755e2b43c9c95a3c64c0ad8fdbecf1d4",
+    "transform": "Workspace path redaction, UTF-8 and trailing whitespace normalization; raw original retained ignored."
+  },
+  {
+    "path": "02-windows-delayed-green.txt",
+    "rawSha256": "d49c07c9585951701d495b9a14e8698caa7d5ff4993892430c623ab0415e84c9",
+    "publicSha256": "c441afdf265be9536b37c24642fc3e709b3966850f70fa0ae2971df7d0c7a782",
+    "transform": "Workspace path redaction, UTF-8 and trailing whitespace normalization; raw original retained ignored."
+  },
+  {
+    "path": "03-windows-native-bridge-green.txt",
+    "rawSha256": "4768e9619b58e7e1118bb34e06763bad53f101df4c28a5463823977e704fade6",
+    "publicSha256": "622fde0636ac1b339d141e421701d57b47ea7e5f557a4282af032c34a4878d81",
+    "transform": "Workspace path redaction, UTF-8 and trailing whitespace normalization; raw original retained ignored."
+  },
+  {
+    "path": "04-aeecd15-artifact-provenance.json",
+    "rawSha256": "981d558b094566c5e71c78e0d7233d208375d7345838ca5bd84b7fe5d8448b84",
+    "publicSha256": "fde2164fc91432a555fc2f83f834faf9a2294ae5c10f99e32502ef2fa1c0a524",
+    "transform": "Workspace path redaction, UTF-8 and trailing whitespace normalization; raw original retained ignored."
+  },
+  {
+    "path": "04-aeecd15-package-smoke.json",
+    "rawSha256": "ec113d15342e5618d7c138b3992371dc9ae1f74d2199b7884ae4a014dc522743",
+    "publicSha256": "58934ebba3cb690801bf50a87975ee55f2eef2472b55c3f130a73fd8ebce9a45",
+    "transform": "Workspace path redaction, UTF-8 and trailing whitespace normalization; raw original retained ignored."
+  },
+  {
+    "path": "04-aeecd15-performance.json",
+    "rawSha256": "1c86a58976f1310029a23fca1ef1024c8eb0f8229a35229c16b52792d23d9380",
+    "publicSha256": "bbca953540d9f12d1e7dfd0d0d4bede4e196148f62d905d7d506ee4ced2d3a36",
+    "transform": "Workspace path redaction, UTF-8 and trailing whitespace normalization; raw original retained ignored."
+  },
+  {
+    "path": "00-macos-failure-excerpt.txt",
+    "rawSha256": "31618ea31c6e1c9627ecf7c96080369ae346790f8c750ca87af9e3dcd1f0fc53",
+    "publicSha256": "be0472cfc390382998b36ab972f619ec55bdd02d0d61caa4c128e27312555fea",
+    "transform": "Workspace path redaction, UTF-8 and trailing whitespace normalization; raw original retained ignored."
+  }
+]

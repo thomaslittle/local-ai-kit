@@ -15,7 +15,14 @@ test('Node SDK to native Rust service: real scan, unchanged credentials, no fabr
  await mkdir(join(home,'.codex'));await writeFile(join(home,'.codex','auth.json'),'PRIVATE-SENTINEL');
  const ai=await connect(home);
  try{
-  assert.deepEqual((await ai.snapshot.get()).connections,[]);
+  // This host explicitly authorizes autonomous passive inventory. The first
+  // cached read may precede or follow that scan; it must never imply metadata
+  // permission or reveal the fixture's credential content in either ordering.
+  const initial=await ai.snapshot.get();
+  assert.equal(initial.mode,'live');
+  assert.ok(initial.connections.every(c=>c.auth.state==='unknown'));
+  assert.deepEqual(initial.models,[]);assert.deepEqual(initial.accounts,[]);
+  assert.ok(!JSON.stringify(initial).includes('PRIVATE-SENTINEL'));
   await ai.discovery.refresh({level:'passive'});
   const snapshot=await ai.snapshot.get();
   assert.equal(snapshot.mode,'live');assert.ok(snapshot.connections.some(c=>c.providerId==='codex'));

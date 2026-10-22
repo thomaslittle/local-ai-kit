@@ -1,0 +1,91 @@
+TAP version 13
+# Subtest: Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+not ok 1 - Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+  ---
+  duration_ms: 1128.8015
+  type: 'test'
+  location: '<workspace>\\tests\\integration\\sdk-native.test.mjs:13:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+
+    + [
+    +   {
+    +     accountId: null,
+    +     auth: {
+    +       reason: 'AUTH_NOT_CHECKED_PASSIVE_SCAN',
+    +       state: 'unknown'
+    +     },
+    +     diagnostics: [
+    +       'CONFIGURATION_DIRECTORY_PRESENT'
+    +     ],
+    +     displayName: 'Codex · Default profile',
+    +     id: 'connection_9935789dc08bf45e3bde9fd606bc74798e30f870ad9ee65e05e154ffb4a625f3',
+    +     installationId: 'installation_04f197068d8b57bbd0d46d6bfce7773e3c8312d7375711d618eb54ac2d37340a',
+    +     plan: {
+    +       reason: 'PLAN_NOT_REPORTED',
+    +       state: 'unknown'
+    +     },
+    +     profileId: 'profile_6a9754b955886461469d9494da594e4a7a9aa76ff4013879de54313c25d9758f',
+    +     providerId: 'codex',
+    +     status: 'configuration_only'
+    +   }
+    + ]
+    - []
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0:
+      accountId: ~
+      auth:
+        reason: 'AUTH_NOT_CHECKED_PASSIVE_SCAN'
+        state: 'unknown'
+      diagnostics:
+        0: 'CONFIGURATION_DIRECTORY_PRESENT'
+      displayName: 'Codex · Default profile'
+      id: 'connection_9935789dc08bf45e3bde9fd606bc74798e30f870ad9ee65e05e154ffb4a625f3'
+      installationId: 'installation_04f197068d8b57bbd0d46d6bfce7773e3c8312d7375711d618eb54ac2d37340a'
+      plan:
+        reason: 'PLAN_NOT_REPORTED'
+        state: 'unknown'
+      profileId: 'profile_6a9754b955886461469d9494da594e4a7a9aa76ff4013879de54313c25d9758f'
+      providerId: 'codex'
+      status: 'configuration_only'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///<workspace>/tests/integration/sdk-native.test.mjs:19:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: Node helper defaults to denied and cannot self-authorize over RPC
+ok 2 - Node helper defaults to denied and cannot self-authorize over RPC
+  ---
+  duration_ms: 89.8704
+  type: 'test'
+  ...
+# Subtest: Node empty-home scan stays empty in live mode
+ok 3 - Node empty-home scan stays empty in live mode
+  ---
+  duration_ms: 90.2663
+  type: 'test'
+  ...
+# Subtest: Node typed catalog pages are served by the actual native helper
+ok 4 - Node typed catalog pages are served by the actual native helper
+  ---
+  duration_ms: 50.1909
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1458.2713
+{"name": "bootstrap-node-red-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["node", "--test", "tests/integration/sdk-native.test.mjs"], "sourceCommit": "aeecd15f9a5a909452c11da0ae396c08cc2799c0", "exitCode": 1, "seconds": 3.252, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 8891724990, "finalActiveBytes": 8891724974, "cFreeBytes": 43757969408, "dFreeBytes": 605113905152, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

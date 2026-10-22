@@ -1,5 +1,21 @@
 # Execution ledger - Local AI Kit
 
+## October 22 native SDK bootstrap CI follow-up (release held)
+
+Clean source `aeecd15` passes Windows artifact provenance/licenses/SBOM,
+native/npm/Python/React consumers and all enforced 60-second performance targets.
+Latest-head Ubuntu and React Doctor CI passed; macOS executed and failed an
+SDK fixture that assumed the first cached snapshot preceded host-authorized
+background inventory. A delayed local fixture reproduces that failure.
+
+The test now accepts either valid startup ordering while requiring unknown
+auth, no models/accounts and no sentinel disclosure. Existing explicit refresh,
+credential equality, concurrent reads, revocation and default denial remain.
+After removing the diagnostic delay, Node 5/5 and Python 4/4 bridge checks pass.
+R8 accepts the sole source diff with no findings. Production/R6/R7 source hashes
+are unchanged. New source provenance and CI readiness remain gates; release is
+held. See [the receipts and limits](../qualification/evidence/2026-10-22-shared-runtime/ci-bootstrap-alpha18/README.md).
+
 ## October 22 alpha18 security follow-up (qualification in progress)
 
 After refresh source `cf34b3d` was pushed, default-branch dependency alerts

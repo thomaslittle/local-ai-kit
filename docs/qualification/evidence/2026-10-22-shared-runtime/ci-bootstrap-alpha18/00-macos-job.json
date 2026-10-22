@@ -1,0 +1,104 @@
+{
+  "id": 120092756667,
+  "run_id": 39855565654,
+  "head_sha": "aeecd15f9a5a909452c11da0ae396c08cc2799c0",
+  "name": "verify (macos-latest)",
+  "status": "completed",
+  "conclusion": "failure",
+  "started_at": "2026-10-22T21:14:08Z",
+  "completed_at": "2026-10-22T21:20:44Z",
+  "html_url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/39855565654/job/120092756667",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Free disk space (Linux runner)",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Run actions/setup-node@v7",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-python@v7",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-dotnet@v4",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install pinned Rust",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install build-only dependencies",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Full deterministic verification (no provider inference)",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Plain HTTP C# consumer",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Formatting and lint",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Build local artifacts and exercise clean consumers",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Preserve actual evidence and artifacts",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/setup-dotnet@v4",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Run actions/setup-python@v7",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Run actions/setup-node@v7",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "rawLogSha256": "c6afff2c3cac4244afc6d0d0e4ec7873469ca32f28fee7dbdff2d55dbd1ef706"
+}

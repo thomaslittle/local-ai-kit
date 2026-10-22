@@ -1,0 +1,46 @@
+{
+  "sourceCommit": "aeecd15f9a5a909452c11da0ae396c08cc2799c0",
+  "workingTreeDirty": false,
+  "binarySha256": "9b3f6d2ea14b259b449145e6c15732c714f45b708ccdc560c193172d06bf42a6",
+  "platform": "x86_64-pc-windows-msvc",
+  "hostOS": "Windows-11-10.0.26100-SP0",
+  "logicalCPUs": 16,
+  "fixture": {
+    "detectedProfiles": 10,
+    "registeredPassiveAdapters": 9,
+    "providerCalls": 0,
+    "inferenceRequests": 0
+  },
+  "coldProcessAndScanMs": {
+    "count": 20,
+    "min": 16.823100042529404,
+    "max": 33.72120001586154,
+    "mean": 23.402325005736202,
+    "p50": 22.931900050025433,
+    "p95": 29.328900040127337
+  },
+  "warmStdioSnapshotMs": {
+    "count": 200,
+    "min": 0.27459999546408653,
+    "max": 1.277300005313009,
+    "mean": 0.4973534995224327,
+    "p50": 0.4658999969251454,
+    "p95": 0.8774000452831388
+  },
+  "idle": {
+    "seconds": 60.51667539996561,
+    "oneCoreCPUPercent": 0.025819329790890792,
+    "peakRSSMiB": 11.35546875
+  },
+  "browserSDK": {
+    "rawBytes": 16811,
+    "gzipBytes": 6174
+  },
+  "targetsMet": {
+    "coldScanP95Below1s": true,
+    "warmIPCP95Below50ms": true,
+    "idleBelow50MiB": true,
+    "idleBelowOnePercent": true,
+    "browserSDKBelow25KiBGzip": true
+  }
+}
