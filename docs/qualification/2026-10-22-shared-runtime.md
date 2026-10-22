@@ -32,7 +32,7 @@
 | Control center public-API E2E | implemented, **platform-executed on Windows** | `cargo test -p lai-control --test e2e` |
 | Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (3 tests) |
 | T3/Tokscale watcher parsing, classification, coverage report | implemented, fixture-tested | `python -m unittest scripts.test_upstream_sync scripts.test_upstream_t3code` (11 tests) |
-| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` — 596 passed, 0 failed |
+| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` — 597 passed, 0 failed |
 | Rust lint/format | passing | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
