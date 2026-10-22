@@ -26,7 +26,9 @@ The adapter now classifies only the exact `opencode-go` route as subscription wi
 
 Independent mode now accepts `--grants-file` with up to 32 per-app entries. Each app gets a distinct reusable token, stable app identity, scoped policy/execution grant, and broker-level revocation; `apps.revoke` removes the grant before sweeping live app connections, so an old token cannot reconnect. The legacy owner token remains for single-app compatibility. Tests prove A/B account isolation, cross-account and lookalike denial, token reuse after revoke, and an unaffected peer. The existing owner-scoped credential is no longer the only independent shape; the file/ACL boundary still means another process running as the same OS user can read an app token.
 
-**Deliberately unclaimed:** live OpenCode Go entitlement/quota/Extra-usage verification; any inference; Crntly native GUI acceptance; signed updates and publication. See the [acceptance ledger](../qualification/2026-10-22-shared-runtime.md), [OpenCode adapter notes](../adapters/opencode.md), and [security review](../security/SHARED-RUNTIME-REVIEW.md).
+Notification delivery now has an injected `NotificationSink` API. The service computes and deduplicates decisions as before; a host must explicitly install a sink. An optional `os-notifications` feature (and `serve --os-notifications`) installs the cross-platform desktop notifier, but it is off by default and was not enabled for qualification. The injected-sink regression proves only due decisions are delivered and a second poll remains deduplicated; no real desktop notification was emitted.
+
+**Deliberately unclaimed:** live OpenCode Go entitlement/quota/Extra-usage verification; any inference; Crntly native GUI acceptance; a real OS notification emission; signed updates and publication. See the [acceptance ledger](../qualification/2026-10-22-shared-runtime.md), [OpenCode adapter notes](../adapters/opencode.md), and [security review](../security/SHARED-RUNTIME-REVIEW.md).
 
 ## October 16 T3 Code provider sync (alpha.17)
 

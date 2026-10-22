@@ -61,8 +61,13 @@
    opt-in, and unknown quota is not an access denial. Metered routes still
    require explicit paid consent; unknown billing is never unlocked by paid
    consent.
-9. **Notification privacy.** Private-content mode replaces title/body; quiet
-   hours suppress delivery; snooze does not resolve; inline health remains.
+9. **Notification delivery.** Deduplicated decisions are computed without any
+   desktop contact. A host must install a sink explicitly; the optional
+   `os-notifications` build plus `--os-notifications` is the only real delivery
+   path, and it was not enabled in qualification. Private-content preferences
+   are applied before a decision reaches a sink.
+10. **Notification privacy.** Private-content mode replaces title/body; quiet
+    hours suppress delivery; snooze does not resolve; inline health remains.
 10. **Control center.** It uses only the authenticated JSON-RPC API and never
    opens SQLite. Export redacts secret-shaped keys recursively, though the
    protocol already never returns provider tokens.

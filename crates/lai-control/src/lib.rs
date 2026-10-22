@@ -592,6 +592,45 @@ mod tests {
     }
 
     #[test]
+    fn issue_view_exposes_actionable_remediation_without_connection_secrets() {
+        let mut snapshot = fixture();
+        let now = Timestamp::now();
+        snapshot.issues.push(Issue {
+            id: "issue".into(),
+            fingerprint: "auth".into(),
+            kind: IssueKind::AuthExpired,
+            severity: IssueSeverity::Error,
+            state: IssueState::Open,
+            title: "Sign-in expired".into(),
+            summary: "The account needs a fresh sign-in.".into(),
+            provider_id: None,
+            connection_id: None,
+            account_id: None,
+            route_id: None,
+            pool_id: None,
+            window_id: None,
+            first_seen_at: now.clone(),
+            last_seen_at: now,
+            resolved_at: None,
+            snoozed_until: None,
+            occurrences: 1,
+            evidence: vec![],
+            remediation: vec![Remediation {
+                kind: RemediationKind::SignIn,
+                label: "Sign in".into(),
+                description: "Use the provider's own sign-in flow.".into(),
+                requires_user_action: true,
+            }],
+            last_observation: None,
+        });
+        let text = issue_lines(&snapshot).join("\n");
+        assert!(text.contains("Sign-in expired"));
+        assert!(text.contains("Use the provider's own sign-in flow."));
+        assert!(text.contains("[user]"));
+        assert!(!text.contains("token"));
+    }
+
+    #[test]
     fn diagnostics_document_carries_provenance_and_no_secrets() {
         let snapshot = fixture();
         let app = json!({"id":"app","token":"must-not-leak","revealIdentity":false});

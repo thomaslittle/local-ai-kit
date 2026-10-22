@@ -4,12 +4,12 @@ mod common;
 use lai_contracts::*;
 use lai_core::ClientPolicy;
 use lai_discovery::{LocatedClient, ScanResult};
-use lai_service::{MetadataSource, NativeService};
+use lai_service::{MetadataSource, NativeService, NotificationSink};
 use serde_json::json;
 use std::{
     collections::BTreeSet,
     sync::{
-        Arc,
+        Arc, Mutex,
         atomic::{AtomicUsize, Ordering},
     },
     time::Duration,
@@ -92,12 +92,12 @@ fn policy() -> ClientPolicy {
     }
 }
 
-fn service(
+fn service_builder(
     root: std::path::PathBuf,
     calls: Arc<AtomicUsize>,
     delay: Duration,
     auth: AuthState,
-) -> Arc<NativeService> {
+) -> NativeService {
     let source: MetadataSource = Arc::new(move |_, id, route| {
         let calls = calls.clone();
         let auth = auth.clone();
@@ -107,16 +107,23 @@ fn service(
             Ok(report(&id, &route, auth))
         })
     });
-    Arc::new(
-        NativeService::new(
-            Arc::new(move |_| {
-                let scan = inventory(root.clone());
-                Ok(scan)
-            }),
-            Duration::from_secs(0),
-        )
-        .with_metadata(source),
+    NativeService::new(
+        Arc::new(move |_| {
+            let scan = inventory(root.clone());
+            Ok(scan)
+        }),
+        Duration::from_secs(0),
     )
+    .with_metadata(source)
+}
+
+fn service(
+    root: std::path::PathBuf,
+    calls: Arc<AtomicUsize>,
+    delay: Duration,
+    auth: AuthState,
+) -> Arc<NativeService> {
+    Arc::new(service_builder(root, calls, delay, auth))
 }
 
 fn roots() -> (tempfile::TempDir, std::path::PathBuf) {
@@ -280,6 +287,67 @@ async fn expiry_creates_actionable_health_and_snooze_does_not_resolve_it() {
             decision["issueId"] != issue_id || decision["shouldNotify"] == false
         })
     );
+}
+
+#[derive(Default)]
+struct RecordingSink(Mutex<Vec<NotificationDecision>>);
+
+impl NotificationSink for RecordingSink {
+    fn deliver(&self, decision: &NotificationDecision) -> std::result::Result<(), String> {
+        self.0.lock().unwrap().push(decision.clone());
+        Ok(())
+    }
+}
+
+#[tokio::test]
+async fn an_installed_notification_sink_receives_only_due_decisions() {
+    let (_temp, root) = roots();
+    let sink = Arc::new(RecordingSink::default());
+    let s = Arc::new(
+        service_builder(
+            root,
+            Arc::new(AtomicUsize::new(0)),
+            Duration::ZERO,
+            AuthState::Unauthenticated,
+        )
+        .with_notification_sink(sink.clone()),
+    );
+    s.register_client("one", policy()).unwrap();
+    s.handle("one", "discovery.refresh", json!({}))
+        .await
+        .unwrap();
+    s.handle(
+        "one",
+        "connections.probe",
+        json!({"connectionId":"personal"}),
+    )
+    .await
+    .unwrap();
+    s.handle(
+        "one",
+        "notifications.configure",
+        json!({"enabled":true,"minimumSeverity":"warning","reminderAfterSeconds":3600,"privateContent":true}),
+    )
+    .await
+    .unwrap();
+    s.handle("one", "notifications.poll", json!({}))
+        .await
+        .unwrap();
+    let delivered = sink.0.lock().unwrap().clone();
+    assert!(!delivered.is_empty());
+    assert!(delivered.iter().all(|decision| decision.should_notify));
+    assert!(
+        delivered
+            .iter()
+            .all(|decision| decision.title == "Local AI Kit needs attention")
+    );
+
+    // The coordinator still deduplicates: a second poll delivers nothing.
+    let before = delivered.len();
+    s.handle("one", "notifications.poll", json!({}))
+        .await
+        .unwrap();
+    assert_eq!(sink.0.lock().unwrap().len(), before);
 }
 
 #[tokio::test]

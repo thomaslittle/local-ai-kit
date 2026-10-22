@@ -6,6 +6,8 @@ pub use execution::{
 };
 mod cache;
 mod catalog;
+mod delivery;
+pub use delivery::NotificationSink;
 mod health;
 mod metadata;
 mod methods;
@@ -45,6 +47,9 @@ pub struct NativeService {
     /// administrator revokes the application. The service has no socket or
     /// credential access of its own.
     app_revoker: std::sync::Mutex<Option<AppRevoker>>,
+    /// Host-installed notification delivery. Empty by default; the broker only
+    /// computes decisions until a host explicitly opts in.
+    notification_sink: std::sync::Mutex<Option<Arc<dyn delivery::NotificationSink>>>,
     chatgpt_auth: Option<Arc<AuthManager>>,
     /// Serializes managed sign-out with session publication and turn enqueue.
     chatgpt_lifecycle: tokio::sync::Mutex<()>,
@@ -62,6 +67,7 @@ impl NativeService {
             background: std::sync::Mutex::new(None),
             app_identities: RwLock::new(BTreeMap::new()),
             app_revoker: std::sync::Mutex::new(None),
+            notification_sink: std::sync::Mutex::new(None),
             chatgpt_auth: None,
             chatgpt_lifecycle: tokio::sync::Mutex::new(()),
             cache: Arc::new(InventoryCache::new(source, ttl)),
@@ -130,6 +136,42 @@ impl NativeService {
     pub fn with_chatgpt_auth(mut self, auth: Arc<AuthManager>) -> Self {
         self.chatgpt_auth = Some(auth);
         self
+    }
+    /// Host-only: install a delivery sink. Until this is called, the service
+    /// only computes deduplicated decisions and never contacts the desktop.
+    pub fn with_notification_sink(self, sink: Arc<dyn NotificationSink>) -> Self {
+        self.set_notification_sink(sink);
+        self
+    }
+    pub fn set_notification_sink(&self, sink: Arc<dyn NotificationSink>) {
+        if let Ok(mut slot) = self.notification_sink.lock() {
+            *slot = Some(sink);
+        }
+    }
+    /// Host-only build-time opt-in for the platform desktop notifier.
+    #[cfg(feature = "os-notifications")]
+    pub fn with_os_notifications(self) -> Self {
+        self.with_notification_sink(Arc::new(delivery::OsNotificationSink))
+    }
+    #[cfg(feature = "os-notifications")]
+    pub fn install_os_notifications(self: &Arc<Self>) {
+        self.set_notification_sink(Arc::new(delivery::OsNotificationSink));
+    }
+    pub(crate) fn deliver_notifications(&self, decisions: &[lai_contracts::NotificationDecision]) {
+        let sink = self
+            .notification_sink
+            .lock()
+            .ok()
+            .and_then(|slot| slot.clone());
+        let Some(sink) = sink else {
+            return;
+        };
+        for decision in decisions.iter().filter(|decision| decision.should_notify) {
+            // Delivery is best effort; dedupe state remains authoritative and
+            // the next poll can report a reminder. Never retry a notification
+            // inline, which could duplicate an alert.
+            let _ = sink.deliver(decision);
+        }
     }
     /// Host-only API. Duplicate registration cannot silently replace a grant.
     pub fn register_client(&self, id: &str, policy: ClientPolicy) -> Result<()> {
@@ -450,6 +492,7 @@ impl NativeService {
             params::allow(&params, &[])?;
             let snapshot = self.projected(client)?;
             let decisions = self.cache.poll_notifications(&snapshot.issues)?;
+            self.deliver_notifications(&decisions);
             return serde_json::to_value(decisions).map_err(|_| params::invalid());
         }
         if method == "notifications.configure" {

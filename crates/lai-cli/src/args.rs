@@ -26,6 +26,7 @@ pub struct Args {
     pub admin_token_file: Option<PathBuf>,
     pub grants_file: Option<PathBuf>,
     pub idle_timeout_seconds: Option<u64>,
+    pub os_notifications: bool,
     pub port: u16,
     pub assets: Option<PathBuf>,
     pub allow_execution: bool,
@@ -90,6 +91,7 @@ impl Args {
             admin_token_file: None,
             grants_file: None,
             idle_timeout_seconds: None,
+            os_notifications: false,
             port: 4499,
             assets: None,
             allow_execution: false,
@@ -164,6 +166,9 @@ impl Args {
                 }
                 "--grants-file" if matches!(args.action, Action::Serve) => {
                     args.grants_file = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--os-notifications" if matches!(args.action, Action::Serve) => {
+                    args.os_notifications = true
                 }
                 "--idle-timeout" if matches!(args.action, Action::Serve) => {
                     let seconds = input
@@ -321,6 +326,7 @@ impl Args {
             || (!args.independent
                 && (args.token_file.is_some() || args.idle_timeout_seconds.is_some()))
             || (args.independent && (args.http || stdio))
+            || (args.os_notifications && !cfg!(feature = "os-notifications"))
         {
             return Err(invalid());
         }

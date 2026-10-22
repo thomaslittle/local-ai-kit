@@ -16,6 +16,7 @@ Usage:
   local-ai-kit serve --ipc LOCAL_ADDRESS [--allow-passive-discovery]
   local-ai-kit serve --ipc LOCAL_ADDRESS --independent (--token-file ABSOLUTE_PATH | --grants-file ABSOLUTE_PATH)
       [--admin-token-file ABSOLUTE_PATH] [--idle-timeout SECONDS] [--allow-passive-discovery]
+      [--os-notifications (requires an os-notifications build)]
   local-ai-kit connect --ipc LOCAL_ADDRESS
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
@@ -160,6 +161,10 @@ async fn execute(args: Args) -> Result<()> {
         state_dir,
         chatgpt,
     );
+    #[cfg(feature = "os-notifications")]
+    if args.os_notifications {
+        service.install_os_notifications();
+    }
     service.enable_autonomous_refresh(args.metadata_providers.clone());
     if matches!(args.action, Action::Serve) && !args.no_metadata_cache {
         if let Some(directory) = host::default_state_dir(args.home.as_deref()) {

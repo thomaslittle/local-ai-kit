@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 
+[features]
+os-notifications = ["lai-service/os-notifications"]
+
 [[bin]]
 name = "local-ai-kit"
 path = "src/main.rs"

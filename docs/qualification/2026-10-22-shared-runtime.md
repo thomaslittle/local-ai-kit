@@ -34,15 +34,15 @@
 | Control center public-API E2E | implemented, **platform-executed on Windows** | `cargo test -p lai-control --test e2e` |
 | Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (4 tests) |
 | T3/Tokscale watcher parsing, classification, coverage report | implemented, fixture-tested | `python -m unittest scripts.test_upstream_sync scripts.test_upstream_t3code` (11 tests) |
-| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` - 608 passed, 0 failed (122 suites) at `eb00aee` |
+| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` - 611 passed, 0 failed (122 suites) at the notification/control-center commit |
 | Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39767444742](https://github.com/thomaslittle/local-ai-kit/actions/runs/39767444742) at `eb00aee`: Ubuntu 14m44s, macOS 14m19s, Windows 18m21s, all success (full deterministic verification incl. new per-app grant and Go billing tests) |
 | Rust lint/format | passing | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
 | Remotif shared runtime | implemented, **platform-executed on Windows** | `cargo test -p remotif-kit` (6) with real broker/token; isolated native model-picker run with a distinct app token |
 | Remotif phone bridge shared mode | implemented, **not re-run as a phone/HTTP E2E this session** | the bridge uses the same `connect_client`; its shared-broker unit test passed, but no browser/phone session was driven |
-| Notification coordinator vs OS delivery | coordinator implemented and fixture-tested; OS notification delivery **not implemented** | dedupe/privacy/quiet-hours tests; no daemon or OS toast delivery claim |
-| Control-center usability | public-API E2E passed; **no interactive usability review** | `lai-control --test e2e`; keyboard/visual review remains unclaimed |
+| Notification coordinator vs OS delivery | coordinator implemented; **optional OS sink implemented behind `os-notifications`/`--os-notifications`; not enabled in qualification** | injected sink test proves due decisions reach a host sink and duplicate polls do not; no real desktop notification was emitted; OS toast delivery is not claimed in the default build |
+| Control-center usability | public-API E2E and issue-rendering view passed; **no interactive usability review** | `lai-control --test e2e`, `issue_view_exposes_actionable_remediation_without_connection_secrets`; keyboard/visual review remains unclaimed |
 | GUI lifecycle: first-app close/reopen, disconnect/reconnect, revoke | **partial** | broker lifecycle tests cover consumer disconnect, duplicate launch, idle shutdown, app revoke; Remotif picker proves discovery/refresh/error/recovery; Crntly GUI blocked; dual-app close/reopen not run |
 | Failure injection | **partial** | synthetic gateway 503, broker grant revoke, auth/paid/unknown cases tested; full GUI error matrix and provider disconnects not run |
 | Crntly shared helper | implemented, **platform-executed on Windows** | `cargo test -p crntly-core --no-default-features ai_assistant` (90); opt-in `shared_broker_helper_authenticates_and_reads_a_snapshot` with a real broker; shared health/issues added to the snapshot DTO and generated bindings |
