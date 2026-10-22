@@ -30,9 +30,10 @@
 | Independent broker survives consumer disconnect; duplicate converges; idle releases endpoint/token; admin token lists apps | implemented, **platform-executed on Windows** | `cargo test -p lai-cli --test broker_lifetime` |
 | Reusable owner credential | implemented, platform-executed on Windows | `lai-transports` local IPC test |
 | Control center public-API E2E | implemented, **platform-executed on Windows** | `cargo test -p lai-control --test e2e` |
-| Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (3 tests) |
+| Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (4 tests) |
 | T3/Tokscale watcher parsing, classification, coverage report | implemented, fixture-tested | `python -m unittest scripts.test_upstream_sync scripts.test_upstream_t3code` (11 tests) |
-| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` — 597 passed, 0 failed |
+| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` — 598 passed, 0 failed |
+| Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39736523716](https://github.com/thomaslittle/local-ai-kit/actions/runs/39736523716) at code commit `e809afd`: Ubuntu 13m41s, macOS 13m10s, Windows 27m35s, all pass |
 | Rust lint/format | passing | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
@@ -111,9 +112,10 @@ and the page is capped at 256 records (`journal_is_bounded_and_evicts_old_cursor
 3. **Signing/publication/installation.** No signing credential, signature,
    registry publication, or live update endpoint was created. `lai-update` is
    fixture-tested; a real signed update was not installed.
-4. **Cross-platform qualification.** Shared-runtime tests ran on Windows. Linux
-   and macOS socket/file-lock/WAL behavior must be run on real runners before
-   claiming platform support.
+4. **Cross-platform qualification.** Shared-runtime tests and the full CI
+   verification passed on Windows, Ubuntu, and macOS in run `39736523716`.
+   Performance numbers in this ledger are still Windows debug-build values; no
+   release-performance or manual GUI qualification is claimed for Linux/macOS.
 5. **Live accounts.** No live provider account or inference was used; provider
    support remains as documented in the support matrix.
 6. **Per-app grant semantics in independent mode.** The reusable owner token is
