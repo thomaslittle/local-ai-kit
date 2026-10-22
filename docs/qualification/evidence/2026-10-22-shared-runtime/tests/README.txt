@@ -1,0 +1,3 @@
+The workspace run at 09:40 failed one loopback HTTP test because Windows reported insufficient socket buffer space while binding an ephemeral port. The failure log is retained unchanged. The same test passed when rerun directly, and the complete workspace was then rerun with 611 passed, 0 failed across 122 suites. This was a host socket-resource failure, not a code assertion; it is not presented as a product failure or as proven flakiness.
+
+`workspace-all-features-pass.txt` is the same full workspace shape with all features: 611 passed, 0 failed. `clippy-all-targets-all-features.txt` and `fmt-check.txt` are the final local lint/format runs at code head `eed3a2c`.

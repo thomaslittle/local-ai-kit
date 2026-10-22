@@ -1,0 +1,8 @@
+    Checking lai-store v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-store)
+    Checking lai-adapters v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-adapters)
+    Checking lai-service v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-service)
+    Checking lai-transports v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-transports)
+    Checking lai-kit v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-kit)
+    Checking lai-control v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-control)
+    Checking lai-cli v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.90s

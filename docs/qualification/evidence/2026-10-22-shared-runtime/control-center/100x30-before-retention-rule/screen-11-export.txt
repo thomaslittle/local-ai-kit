@@ -1,0 +1,30 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Diagnostics ─────────────────────────────────────────────────────────────────────────────────────┐
+│  ChatGPT plan (Codex) · native_client · metadata=true text=true qualification=Codex app-server 0.│
+│  Codex · native_client · metadata=true text=true qualification=See per-operation qualification re│
+│  Claude Code · native_client · metadata=true text=true qualification=See per-operation qualificat│
+│  Gemini CLI · native_client · metadata=true text=true qualification=See per-operation qualificati│
+│  Antigravity · native_client · metadata=true text=true qualification=See per-operation qualificat│
+│  Grok · native_client · metadata=true text=true qualification=See per-operation qualification rep│
+│  OpenCode · local_http · metadata=true text=true qualification=See per-operation qualification re│
+│  Muse Code · native_client · metadata=true text=true qualification=See per-operation qualificatio│
+│  Cursor · native_client · metadata=true text=false qualification=See per-operation qualification │
+│  GitHub Copilot · native_client · metadata=false text=false qualification=See per-operation quali│
+│  Pi · native_client · metadata=false text=false qualification=See per-operation qualification rep│
+│  Ollama · local_http · metadata=true text=true qualification=See per-operation qualification repo│
+│  LM Studio · local_http · metadata=true text=true qualification=See per-operation qualification r│
+│  openai_api · explicit_api · metadata=true text=true qualification=Local protocol fixtures; remot│
+│  anthropic_api · explicit_api · metadata=true text=true qualification=Local protocol fixtures; re│
+│  gemini_api · explicit_api · metadata=true text=true qualification=Local protocol fixtures; remot│
+│  xai_api · explicit_api · metadata=true text=true qualification=Local protocol fixtures; remote a│
+│  compatible_api · explicit_api · metadata=true text=true qualification=Local protocol fixtures; r│
+│                                                                                                  │
+│Diagnostics are contract-filtered and redacted. No provider token, cookie, or database file is rea│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────────────────────────┐
+│Redacted export written to C:\Users\User\AppData\Local\Temp\lai-control-conpty-evidence\run\diagno│
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                                           │
+│p probe account · a acknowledge · s snooze · x revoke app                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘

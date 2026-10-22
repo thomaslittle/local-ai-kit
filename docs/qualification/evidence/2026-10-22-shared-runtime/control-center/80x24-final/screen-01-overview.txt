@@ -1,0 +1,6 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics           │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Overview ────────────────────────────────────────────────────────────────────┐
+│Revision       projection_e4d2570565a4b9c75003db3e7698eca09ad8b04f7f2702f78dfd│
+│Journal cursor

@@ -1,0 +1,24 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics           │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Diagnostics ─────────────────────────────────────────────────────────────────┐
+│Export: C:\Users\User\AppData\Local\Temp\lai-control-conpty-20261022-091700-80│
+│Broker runtime: {  "autonomousRefresh": false,  "cursor": "8123a682a63970983c3│
+│                                                                              │
+│Adapters                                                                      │
+│  ChatGPT plan (Codex) · native_client · metadata=true text=true qualification│
+│  Codex · native_client · metadata=true text=true qualification=See per-operat│
+│  Claude Code · native_client · metadata=true text=true qualification=See per-│
+│  Gemini CLI · native_client · metadata=true text=true qualification=See per-o│
+│  Antigravity · native_client · metadata=true text=true qualification=See per-│
+│  Grok · native_client ·                                                      │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────┐
+│Revocation cancelled                                                          │
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                       │
+│p probe account · a acknowledge · s snooze · x revoke app                     │
+└──────────────────────────────────────────────────────────────────────────────┘

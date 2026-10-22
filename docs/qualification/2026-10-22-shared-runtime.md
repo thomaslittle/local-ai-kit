@@ -1,12 +1,13 @@
 # Shared runtime acceptance ledger — 2026-10-22
 
 - **Repository:** local-ai-kit (`C:\Users\User\Sites\local-ai-kit`)
-- **Branch:** `feat/shared-runtime`. Code head `db240c00342274a68c554edc2e3192a40ed5de59`
-  (per-app grants, OpenCode Go billing, opt-in notification sink); later docs-only commits may follow.
+- **Branch:** `feat/shared-runtime`. Code head `eed3a2c26d7c0930d7f6e6313eed29bb528e9df8`
+  (per-app grants, OpenCode Go billing, opt-in notification sink, interactive
+  control-center fixes); later docs/evidence commits may follow.
 - **Pull requests:** local-ai-kit [#28](https://github.com/thomaslittle/local-ai-kit/pull/28);
   Remotif [#36](https://github.com/thomaslittle/remotif/pull/36);
   Crntly [#117](https://github.com/thomaslittle/crntly-desktop/pull/117).
-- **Consumer heads:** Remotif `026ee01187cb84a0034c76fda3e2352c02ccde96`
+- **Consumer heads:** Remotif `fc4a99e81b4a0da8ada8101c7469c6c6d5104bc6`
   (`feat/shared-local-ai-runtime`); Crntly `18f6dc52da9768c6d279708809c6b66abc8e2f4c`
   (`feat/shared-local-ai-runtime`, based on
   `origin/feature/gpui-native-rust-studio`).
@@ -34,17 +35,19 @@
 | Control center public-API E2E | implemented, **platform-executed on Windows** | `cargo test -p lai-control --test e2e` |
 | Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (4 tests) |
 | T3/Tokscale watcher parsing, classification, coverage report | implemented, fixture-tested | `python -m unittest scripts.test_upstream_sync scripts.test_upstream_t3code` (11 tests) |
-| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` - 611 passed, 0 failed (122 suites) at the notification/control-center commit |
-| Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39775047109](https://github.com/thomaslittle/local-ai-kit/actions/runs/39775047109) at code head `db240c0`: Ubuntu, macOS, Windows all success (full deterministic verification incl. per-app grants, Go billing, notification sink, control-center tests) |
+| Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` - 611 passed, 0 failed (122 suites) at code head `eed3a2c`; a prior run hit a transitive Windows loopback socket-buffer error in one HTTP test, retained with the passing targeted retry and full rerun under `evidence/2026-10-22-shared-runtime/tests/` |
+| Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39775047109](https://github.com/thomaslittle/local-ai-kit/actions/runs/39775047109) at prior code head `db240c0`: Ubuntu, macOS, Windows all success; final `eed3a2c` VM verification is recorded in the PR checks, not claimed here until it completes |
 | Rust lint/format | passing | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
 | Remotif shared runtime | implemented, **platform-executed on Windows** | `cargo test -p remotif-kit` (6) with real broker/token; isolated native model-picker run with a distinct app token |
 | Remotif phone bridge shared mode | implemented, **platform-executed on Windows (loopback HTTP only)** | isolated `remotifd --demo --bind 127.0.0.1`, unique port, child PID listener ownership, `/api/v1/motif/models?refresh=true`: Go eligible/`declared:false`/`paid:false`, PAYG consent, cached state, updated model, synthetic 503 notice, recovery; no LAN bind, firewall change, TV, or inference |
+| Remotif bridge scope/revocation/recovery | implemented, **platform-executed on Windows (real broker, test-owned IPC)** | `cargo test -p remotifd --test shared_bridge` at Remotif `fc4a99e`: two app-scoped tokens see only their codex or claude connection; `apps.revoke` invalidates the app and its cached view; peer survives; broker kill returns explicit unavailable rather than stale catalog; restart/reconnect recovers; log retained under `evidence/2026-10-22-shared-runtime/bridge/` |
 | Notification coordinator vs OS delivery | coordinator implemented; **optional OS sink implemented behind `os-notifications`/`--os-notifications`; not enabled in qualification** | injected sink test proves due decisions reach a host sink and duplicate polls do not; no real desktop notification was emitted; OS toast delivery is not claimed in the default build |
-| Control-center usability | public-API E2E and issue-rendering view passed; **no interactive usability review** | `lai-control --test e2e`, `issue_view_exposes_actionable_remediation_without_connection_secrets`; keyboard/visual review remains unclaimed |
-| GUI lifecycle: first-app close/reopen, disconnect/reconnect, revoke | **partial** | broker lifecycle tests cover consumer disconnect, duplicate launch, idle shutdown, app revoke; Remotif picker proves discovery/refresh/error/recovery; Crntly GUI blocked; dual-app close/reopen not run |
-| Failure injection | **partial** | synthetic gateway 503, broker grant revoke, auth/paid/unknown cases tested; full GUI error matrix and provider disconnects not run |
+| Control-center usability | implemented, **platform-executed in a test-owned Windows ConPTY** | keyboard/visual pass at 100x30 and 80x24 through real TUI rendering, no `SendInput` or global input: tab switching, row selection, confirmation prompt and cancel, redacted export, diagnostics scrolling, clean exit; a retained 80x24 failure showed the old prompt clipping `y/n`; later fixes and lost-attempt disclosure are in `evidence/2026-10-22-shared-runtime/control-center/` |
+| GUI lifecycle: first-app close/reopen, disconnect/reconnect, revoke | **partial** | broker lifecycle tests cover consumer disconnect, duplicate launch, idle shutdown, app revoke; Remotif picker proves discovery/refresh/error/recovery; Remotif bridge proves broker kill/stale-cache refusal/restart; Crntly GUI blocked; dual-app close/reopen not run |
+| Mutation validation of critical guards | implemented, **platform-executed on Windows** | four real patch-restored faults: metadata base revision, journal retention, app-grant revocation, exact Go provider id; each selected test failed with a real panic (exit 101), source was restored byte-for-byte, same test passed (exit 0); logs and SHA-256 summary in `evidence/2026-10-22-shared-runtime/mutations/` |
+| GUI failure injection | **partial** | synthetic gateway 503, broker grant revoke, auth/paid/unknown cases tested; full GUI error matrix and provider failure matrix not run |
 | Crntly shared helper | implemented, **platform-executed on Windows** | `cargo test -p crntly-core --no-default-features ai_assistant` (90); opt-in `shared_broker_helper_authenticates_and_reads_a_snapshot` with a real broker; shared health/issues added to the snapshot DTO and generated bindings |
 | Full Crntly GUI against one broker | **not passed / cause unconfirmed** | clean baseline and candidate both main-stack-overflow in Compose setup; retained as a blocker rather than claimed |
 | Live provider inference/account checks | **not run** | no account consumption is authorized by this task; no claim |
@@ -92,17 +95,28 @@ and the page is capped at 256 records (`journal_is_bounded_and_evicts_old_cursor
   unwatched provider-shaped candidates are reported; PR permission denial is an
   explicit actionable failure, not “no changes.”
 
-## Deliberate fault checks
+## Deliberate fault validation
 
-- Disabled the metadata base-revision check mentally by reproducing the
-  out-of-order test; it fails without `SELECTION_STALE`.
-- The journal-bound test creates a cursor older than the retained window and
-  asserts `EVENT_GAP`; it would pass silently if the journal were unbounded or
-  gaps were treated as empty pages.
-- The update rollback test compares exact bytes before and after; it would fail
-  if activation merely re-copied a staged file or deleted the backup.
-- Notification tests poll twice and assert the second has zero new notifications;
-  they would fail if dedupe were only in-memory across the service call.
+This replaces the earlier hypothetical notes. A disposable patch-restored
+checkout at `76df73d` (`rustc 1.97.1`, Windows) changed one guard at a time,
+ran only the selected acceptance test, restored the exact original bytes, and
+ran the same test again. No faulty variant was committed or pushed. The
+repository was verified clean after every restore and at the end.
+
+| Fault introduced | Selected test | Observed failure | Restored result |
+|---|---|---|---|
+| `if false && revision != base` disables the metadata base-revision guard (`lai-service/src/cache.rs`) | `an_older_probe_cannot_overwrite_a_newer_revision` | panic at `runtime_sync.rs:226`: `unwrap_err()` on `Ok {"status":"updated"}`; exit 101 | 1 passed; exit 0 |
+| `MAX_JOURNAL_ROWS` raised from 2048 to 4096 (`lai-store/src/lib.rs`) | `journal_is_bounded_and_evicts_old_cursors_without_losing_the_snapshot` | assertion at `store.rs:105`: earliest cursor was replayed instead of `EventGap`; exit 101 | 1 passed; exit 0 |
+| `Shared::revoke_app` no longer removes the reusable grant (`lai-transports/src/local_ipc.rs`) | `scoped_app_grants_isolate_accounts_and_revocation_removes_the_grant` | panic at `local_ipc.rs:428`: revoked token authenticated again (`"authenticated":true`); exit 101 | 1 passed; exit 0 |
+| Exact `provider_id == "opencode-go"` changed to `starts_with` (`lai-adapters/src/opencode/mod.rs`) | `lookalike_provider_ids_do_not_receive_the_go_subscription_class` | assertion at `opencode_catalog.rs:134`: lookalike inherited Go subscription; exit 101 | 1 passed; exit 0 |
+
+Artifacts: [mutation summary](evidence/2026-10-22-shared-runtime/mutations/summary.json),
+the four `*-fault.log` and `*-restored.log` pairs in the same directory. Each
+summary entry records the source SHA-256 before and after, the exact command,
+exit codes, and the selected test name. The logs are sanitized of 64-hex values;
+the summary retains the source hashes. Tests not selected here, such as update
+rollback and notification dedupe, remain fixture coverage rather than mutation
+evidence.
 
 ## Remaining blockers / unclaimed scope
 

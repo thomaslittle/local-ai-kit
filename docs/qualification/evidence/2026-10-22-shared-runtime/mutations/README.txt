@@ -1,0 +1,1 @@
+Each *-fault.log is retained evidence that the selected acceptance test failed after one deliberate source mutation. Each *-restored.log is the same test passing after exact byte restoration. summary.json records source hashes, commands, exit codes, git head, and the clean-worktree checks. The faulty sources were never committed or pushed.

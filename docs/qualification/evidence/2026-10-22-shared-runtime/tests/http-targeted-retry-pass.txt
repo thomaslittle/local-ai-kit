@@ -1,0 +1,9 @@
+   Compiling lai-transports v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-transports)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.46s
+     Running tests\http.rs (target\debug\deps\http-b659b45097fe7ef6.exe)
+
+running 1 test
+test malformed_requests_and_body_limits_are_enforced ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.05s
+

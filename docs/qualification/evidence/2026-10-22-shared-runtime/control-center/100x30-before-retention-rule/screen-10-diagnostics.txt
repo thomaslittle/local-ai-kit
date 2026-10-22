@@ -1,0 +1,30 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Diagnostics ─────────────────────────────────────────────────────────────────────────────────────┐
+│Export: C:\Users\User\AppData\Local\Temp\lai-control-conpty-evidence\run\diagnostics.json         │
+│Broker runtime: {  "autonomousRefresh": false,  "cursor": "a7b3e5e4bc52e8393cedc60b5373fdc3:2",  "│
+│                                                                                                  │
+│Adapters                                                                                          │
+│  ChatGPT plan (Codex) · native_client · metadata=true text=true qualification=Codex app-server 0.│
+│  Codex · native_client · metadata=true text=true qualification=See per-operation qualification re│
+│  Claude Code · native_client · metadata=true text=true qualification=See per-operation qualificat│
+│  Gemini CLI · native_client · metadata=true text=true qualification=See per-operation qualificati│
+│  Antigravity ·                                                                                   │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────────────────────────┐
+│Revocation cancelled                                                                              │
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                                           │
+│p probe account · a acknowledge · s snooze · x revoke app                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘

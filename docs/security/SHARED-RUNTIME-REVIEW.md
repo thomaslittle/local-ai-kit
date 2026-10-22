@@ -53,6 +53,9 @@
    removes the broker grant first, sweeps every live app connection and its
    sessions/inputs/resume records, and invalidates subsequent calls and token
    reuse. Existing transports are not trusted to re-authorize themselves.
+   Remotif's bridge tracks whether its broker worker is still alive before it
+   serves a cached catalog; a revoked or disconnected app gets an explicit
+   failure, not its pre-revocation view.
 8. **Billing classification is not entitlement.** The exact OpenCode `opencode-go`
    route is classified as subscription with derived/inferred evidence because
    the official provider id denotes Go; Console `opencode` and lookalikes remain
@@ -68,23 +71,25 @@
    are applied before a decision reaches a sink.
 10. **Notification privacy.** Private-content mode replaces title/body; quiet
     hours suppress delivery; snooze does not resolve; inline health remains.
-10. **Control center.** It uses only the authenticated JSON-RPC API and never
-   opens SQLite. Export redacts secret-shaped keys recursively, though the
-   protocol already never returns provider tokens.
-11. **Update trust.** Signature verification is mandatory before staging.
+11. **Control center.** It uses only the authenticated JSON-RPC API and never
+    opens SQLite. Export redacts secret-shaped keys recursively, though the
+    protocol already never returns provider tokens. Keyboard confirmation keeps
+    `Esc` canceling a destructive prompt instead of quitting, digit tab changes
+    reset stale selections, and non-selectable reports can scroll.
+12. **Update trust.** Signature verification is mandatory before staging.
     Activation refuses while a session marker/lease is present, uses exclusive
     locks, backs up the current binary, and preserves the failed version.
     Signing/publication/installation remain approval gates.
-12. **Threat-model limits.** The runtime is not a defense against malware that
+13. **Threat-model limits.** The runtime is not a defense against malware that
     already controls the user's OS account. CORS is not authentication.
     Loopback HTTP still requires pairing and per-client grants.
 
 ## Required follow-ups before a production claim
 
-- Apply an explicit owner-only Windows DACL to the independent token file, or
-  require a host-supplied credential with the same guarantee.
-- Cross-platform qualification of app-scoped grant revocation and route-billing
-  tests on Linux and macOS.
+- Re-verify the owner-only Windows DACL on a second OS account and on a clean
+  machine; the current independent-broker test runs as one local user.
+- Cross-platform qualification of app-scoped grant revocation, stale-cache
+  refusal, and route-billing tests on Linux and macOS.
 - External security review of the update signer/publisher process and the
   independent token distribution.
 - Live-account qualification for each provider remains separate from this

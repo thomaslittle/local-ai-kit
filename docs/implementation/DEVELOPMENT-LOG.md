@@ -2,6 +2,42 @@
 
 A reverse-chronological engineering log of what was implemented, how it was verified, and what is deliberately still unclaimed. It records source commits and verification results at the time of each entry; entries are not rewritten when later work supersedes them. For release-level summaries see the [changelog](../../CHANGELOG.md); for operation-level provider status see the [support matrix](../adapters/SUPPORT-MATRIX.md).
 
+## October 22 mutation validation, bridge lifecycle, and control-center interaction
+
+Real patch-restored mutation validation replaced the earlier hypothetical
+fault notes. Four critical guards were exercised one at a time: the metadata
+base-revision check, journal retention bound, app-grant revocation, and exact
+OpenCode Go provider id. Each selected acceptance test failed with a real panic
+(exit 101), the source was restored byte-for-byte, and the same test passed
+(exit 0). Logs, source hashes, commands, and the clean-worktree checks are in
+`docs/qualification/evidence/2026-10-22-shared-runtime/mutations/`; no faulty
+variant was committed or pushed.
+
+The Remotif bridge now refuses to serve a cached catalog after its broker
+worker has exited, and a failed refresh clears the cache instead of presenting
+pre-revocation or pre-disconnect data as current. A new opt-in cross-process
+test (`remotifd/tests/shared_bridge.rs`, commit `fc4a99e`) proves app-scoped
+permission filtering, revocation of one app with a surviving peer, broker-kill
+failure, and restart/recovery using a real independent broker and only
+test-owned IPC. The control center was driven through a test-owned Windows
+ConPTY at 100x30 and 80x24 with no global input. It exposed and fixed stale
+selection after digit tab switches, `Esc`/`q` handling during revocation
+confirmation, clipped confirmation/help text, and non-scrollable Overview and
+Diagnostics reports. A retained 80x24 failure and the later passes are in
+`control-center/`; earlier artifacts that were deleted before the
+unique-evidence rule are disclosed in `control-center/ATTEMPTS.md` and are not
+claimed as retained.
+
+A full workspace run first hit a Windows ephemeral loopback socket-buffer
+failure in one HTTP test; that unchanged failure log is retained beside the
+passing targeted retry and the subsequent 611-passed, 0-failed full run under
+`tests/`. The failure is reported as a host socket-resource event, not as a
+product assertion or proven flakiness.
+
+**Deliberately unclaimed:** live OpenCode Go entitlement/quota/Extra-usage
+verification; any inference; Crntly native GUI acceptance; a real OS
+notification emission; signed updates and publication.
+
 ## October 22 shared runtime, health, control center, and update verification
 
 Implemented on branch `feat/shared-runtime` (runtime commit `f98a8c6`, docs head at the time of writing `a1d4d55`), from baseline `556e35e`. The branch was merged with `origin/main` after the dependency-maintenance PR; no force-push and no merge into `main` was performed. Pull request: [#28](https://github.com/thomaslittle/local-ai-kit/pull/28).

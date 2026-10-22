@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "input": "test-owned ConPTY only; no SendInput/global input",
+  "backend": "ConPTY",
+  "brokerPid": 50948,
+  "controlPid": 11220,
+  "selection_marker": true,
+  "exitCode": 0,
+  "frames": [
+    "screen-01-overview.txt",
+    "screen-01b-refreshed.txt",
+    "screen-02-accounts.txt",
+    "screen-03-account-selected.txt",
+    "screen-04-models.txt",
+    "screen-05-usage.txt",
+    "screen-06-issues.txt",
+    "screen-07-apps.txt",
+    "screen-08-revoke-confirm.txt",
+    "screen-09-revoke-cancelled.txt",
+    "screen-10-diagnostics.txt",
+    "screen-10b-diagnostics-scrolled.txt",
+    "screen-11-export.txt"
+  ],
+  "screenSize": "100x30",
+  "helpLines": []
+}

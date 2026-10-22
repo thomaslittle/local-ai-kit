@@ -1,0 +1,1 @@
+retained failure: at 80 columns the old confirmation prompt clipped the y/n instruction
