@@ -1,6 +1,14 @@
 # Release qualification
 
-Current implementation source: `0c8213842be5b72ea7614b51028a24912b1bdabd`. Windows and Ubuntu/WSL2 full/release verification, clean consumers, bundle checksums, and fresh benchmarks passed. macOS remains externally blocked before job execution. Read the [September 27 readiness report](2026-09-27-readiness.md) for current counts, artifacts, fixes, and limits.
+The current alpha18 shared-runtime candidate is on `feat/shared-runtime` after
+refresh source `cf34b3d`. Its claim/dependency security follow-up, independent
+reviews, bounded build ownership and retained failed runs are recorded in the
+[October 22 ledger](2026-10-22-shared-runtime.md) and
+[security evidence](evidence/2026-10-22-shared-runtime/release-security-alpha18/README.md).
+Release is held pending the final source gates and artifact qualification.
+Earlier platform results below apply only to their named source revisions.
+
+September 27 implementation source: `0c8213842be5b72ea7614b51028a24912b1bdabd`. Windows and Ubuntu/WSL2 full/release verification, clean consumers, bundle checksums, and fresh benchmarks passed. macOS was externally blocked before job execution. Read the [September 27 readiness report](2026-09-27-readiness.md) for those counts, artifacts, fixes, and limits.
 
 ## Historical verified developer-alpha build
 

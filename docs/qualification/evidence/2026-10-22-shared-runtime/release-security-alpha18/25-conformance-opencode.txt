@@ -1,0 +1,26 @@
+
+running 10 tests
+test an_opencode_gateway_without_connected_providers_is_not_authenticated ... ok
+test opencode_go_is_a_subscription_route_without_a_billing_declaration ... ok
+test variants_and_context_are_native_and_unknown_quota_is_not_zero ... ok
+test billing_declarations_are_per_provider_and_labeled_as_user_supplied ... ok
+test gateway_models_preserve_distinct_vendor_routes ... ok
+test large_official_provider_directory_can_still_filter_to_connected_accounts ... ok
+test mismatched_provider_ids_and_duplicate_sources_are_rejected ... ok
+test lookalike_provider_ids_do_not_receive_the_go_subscription_class ... ok
+test managed_server_runs_the_native_binary_never_the_npm_shell_shim ... ok
+test unchanged_gateway_catalog_keeps_model_revisions_across_probes ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+
+running 2 tests
+test permission_echo_is_required_before_any_generation ... ok
+test owns_one_native_session_streams_and_deletes_only_that_session ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+    Finished `test` profile [unoptimized] target(s) in 4.08s
+     Running tests\opencode_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_catalog-c7e44cd71461f754.exe)
+     Running tests\opencode_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_execution-07e844efac976e19.exe)

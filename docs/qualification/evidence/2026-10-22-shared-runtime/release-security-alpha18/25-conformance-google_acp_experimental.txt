@@ -1,0 +1,41 @@
+
+running 5 tests
+test explicit_advertised_auth_method_can_reuse_native_login_without_tokens ... ok
+test existing_clients_without_auth_negotiation_still_use_the_same_driver ... ok
+test auth_errors_are_sanitized_and_do_not_reveal_native_urls ... ok
+test unadvertised_authentication_methods_are_not_sent_to_the_client ... ok
+test missing_auth_is_not_treated_as_a_connected_subscription ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.85s
+
+
+running 8 tests
+test grok_sessions_launch_without_any_native_tool ... ok
+test grok_custom_profile_is_not_silently_replaced_with_another_account ... ok
+test unsupported_shell_wrappers_are_never_executed ... ok
+test ide_launcher_is_not_a_google_agent_runtime ... ok
+test clients_that_cannot_remove_their_tools_refuse_text_only_sessions ... ok
+test custom_auth_is_explicit_and_not_a_token_export ... ok
+test grok_metadata_probes_disable_the_updater_and_text_sessions_do_not ... ok
+test google_acp_requires_native_harness_and_blocked_interactive_browser ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 8 tests
+test native_billing_declaration_is_not_published_as_verified_access_during_inventory ... ok
+test another_connection_cannot_claim_a_configured_profile ... ok
+test stable_ids_include_native_profile_scope_and_executable ... ok
+test credentials_arbitrary_args_and_remote_paths_are_not_configuration_fields ... ok
+test managed_codex_is_inert_isolated_and_stable ... ok
+test malformed_profiles_and_unsupported_auth_switches_are_rejected ... ok
+test native_registration_is_inert_and_retains_distinct_google_clients ... ok
+test managed_codex_can_use_private_executable_only_inventory ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+    Finished `test` profile [unoptimized] target(s) in 2.46s
+     Running tests\acp_auth.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_auth-e82bb64cee1c07a8.exe)
+     Running tests\native_launch.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_launch-3ee9fc4c5e40f2fc.exe)
+     Running tests\native_profiles.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_profiles-3adbd0f93a62fa41.exe)

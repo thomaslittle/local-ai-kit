@@ -1,0 +1,48 @@
+
+running 8 tests
+test malformed_catalogs_are_protocol_errors ... ok
+test an_account_login_is_an_authenticated_subscription_with_native_efforts ... ok
+test unknown_and_future_efforts_are_not_invented ... ok
+test without_account_read_auth_stays_unknown_not_assumed ... ok
+test subscription_usage_becomes_plan_and_percent_windows ... ok
+test fake_and_foreign_catalogs_are_not_live_models ... ok
+test two_accounts_with_the_same_model_have_distinct_revisions ... ok
+test api_keys_are_metered_and_signed_out_muse_is_unauthenticated ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 26 tests
+test an_unknown_envelope_version_is_refused ... ok
+test a_read_only_turn_streams_text_and_usage_and_starts_a_denying_session ... ok
+test another_mcp_servers_tool_fails_the_turn ... ok
+test a_stream_that_ends_mid_reply_fails_the_turn ... ok
+test a_changed_catalog_revision_is_stale ... ok
+test cancellation_interrupts_the_owned_muse_turn ... ok
+test a_signed_out_turn_is_auth_required_without_leaking_login_codes ... ok
+test cancelling_during_a_subagent_interrupts_the_parent_turn ... ok
+test host_mcp_servers_attach_as_optional_session_servers ... ok
+test an_inaccessible_model_surfaces_muses_access_error ... ok
+test host_mcp_needs_the_session_mcp_capability ... ok
+test metadata_reports_account_lane_catalog_and_efforts_without_a_prompt ... ok
+test a_workflow_and_the_report_turn_muse_starts_for_it_are_one_kit_turn ... ok
+test effort_and_images_reach_turn_start ... ok
+test consecutive_turns_reuse_the_native_session ... ok
+test a_subagent_approval_is_reviewed_by_the_host ... ok
+test host_tool_calls_are_neutral_tool_events ... ok
+test native_subagents_are_reported_with_their_results ... ok
+test closing_one_session_leaves_another_running ... ok
+test web_hits_reasoning_summaries_todos_and_retries_are_presented ... ok
+test supervised_approvals_reach_the_host_and_map_to_once_choices ... ok
+test structured_questions_are_declined_and_the_turn_continues ... ok
+test logged_out_muse_is_unauthenticated_and_cannot_open_a_session ... ok
+test unreviewed_read_only_sessions_decline_requests_and_refuse_the_shell ... ok
+test read_only_sessions_allow_muse_read_tools_but_not_the_shell ... ok
+test persistent_sessions_resume_with_their_approval_mode ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.49s
+
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+    Finished `test` profile [unoptimized] target(s) in 3.53s
+     Running tests\muse_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_catalog-8fb7d663f4957d7d.exe)
+     Running tests\muse_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_process-ee3b7008936d573a.exe)

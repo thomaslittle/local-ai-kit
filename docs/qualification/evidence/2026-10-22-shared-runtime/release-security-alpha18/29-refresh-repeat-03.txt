@@ -1,0 +1,57 @@
+    Finished `test` profile [unoptimized] target(s) in 0.42s
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_service-26c44c0fa22d07cb.exe)
+
+running 25 tests
+test cache::backoff_tests::retry_jitter_never_exceeds_the_thirty_second_cap ... ok
+test cache::metadata_freshness_tests::a_recent_authentication_check_stays_fresh_while_the_user_checks_other_profiles ... ok
+test cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit ... ok
+test delivery::tests::injected_sink_receives_only_the_projected_decision ... ok
+test cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed ... ok
+test execution::lifecycle_tests::revoke_between_native_suspend_and_token_publication_cannot_revive_old_access ... ok
+test health::tests::unknown_is_not_reported_as_expired_and_duplicates_merge ... ok
+test cache::refresh_generation_tests::an_uncancelled_owned_timeout_still_publishes_an_honest_failure ... ok
+test inputs::tests::png_and_jpeg_dimensions_come_from_headers ... ok
+test health::tests::dismissal_is_not_resolution ... ok
+test cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout ... ok
+test health::tests::expired_auth_is_actionable_and_recovery_resolves ... ok
+test health::tests::a_missing_resource_does_not_prove_recovery_or_logout ... ok
+test cache::refresh_generation_tests::committed_reset_deadline_survives_forward_and_backward_wall_clock_jumps ... ok
+test inputs::tests::store_is_owner_and_session_scoped_bounded_and_consumed ... ok
+test notifications::tests::disabled_notifications_still_expose_inline_health_decisions ... ok
+test notifications::tests::private_content_hides_issue_text ... ok
+test notifications::tests::quiet_hours_suppress_without_marking_delivered ... ok
+test cache::refresh_generation_tests::immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds ... ok
+test resume_token::tests::tokens_round_trip_across_store_instances_and_hide_contents ... ok
+test resume_token::tests::tampered_or_foreign_tokens_are_unavailable ... ok
+test notifications::tests::duplicate_polls_do_not_emit_twice_and_reminders_are_bounded ... ok
+test cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work ... ok
+test inputs::tests::invalid_images_are_rejected_with_typed_errors ... ok
+test inputs::tests::owner_byte_budget_is_enforced ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running tests\refresh_lanes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\refresh_lanes-ddb0f22d85337088.exe)
+
+running 20 tests
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test stopping_background_inventory_does_not_cancel_a_foreground_joiners_shared_scan ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... ok
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+test explicit_probe_failure_from_before_a_scan_cannot_stale_the_new_generation ... ok
+test duplicate_routes_in_one_verified_quota_scope_share_one_probe_per_tick ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.82s

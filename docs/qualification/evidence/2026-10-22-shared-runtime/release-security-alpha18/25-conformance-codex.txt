@@ -1,0 +1,65 @@
+
+running 5 tests
+test arbitrary_wrapper_and_absent_binary_are_not_executed ... ok
+test direct_native_executable_is_preserved ... ok
+test managed_codex_launch_isolated_and_uses_responses_provider ... ok
+test known_windows_npm_wrapper_resolves_to_packaged_native_binary ... ok
+test extensionless_npm_shim_uses_the_native_package_not_a_shell ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 13 tests
+test no_account_does_not_claim_active_plan_or_model_access ... ok
+test malformed_native_records_fail_closed ... ok
+test absent_effort_and_context_are_not_invented ... ok
+test model_input_capability_is_not_image_generation ... ok
+test unavailable_usage_is_not_an_empty_remaining_allowance ... ok
+test duplicate_model_ids_do_not_create_ambiguous_routes ... ok
+test api_key_auth_is_not_a_chatgpt_subscription ... ok
+test multiple_clients_do_not_merge_accounts_based_on_same_email ... ok
+test changed_identity_changes_catalog_revision ... ok
+test actual_plan_and_native_effort_survive_without_model_name_rules ... ok
+test legacy_and_multi_bucket_views_are_not_double_counted ... ok
+test secrets_private_paths_and_unknown_fields_do_not_escape ... ok
+test unchanged_catalog_keeps_model_revisions_across_probes ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+
+running 12 tests
+test relative_executable_and_loader_hook_environment_are_rejected ... ok
+test account_change_after_initial_read_invalidates_catalog_probe ... ok
+test quota_endpoint_failure_keeps_account_catalog_and_redacts_error ... ok
+test repeated_pagination_cursor_fails_instead_of_looping ... ok
+test startup_account_notice_precedes_authoritative_account_read ... ok
+test managed_identity_fetches_catalog_without_native_account_or_usage ... ok
+test unauthenticated_client_does_not_fetch_model_or_usage_catalog ... ok
+test token_refresh_during_probe_keeps_the_same_account ... ok
+test native_protocol_reads_metadata_without_starting_threads_or_turns ... ok
+test managed_route_requires_codex_0157_or_newer ... ok
+test unsolicited_execution_request_fails_closed ... ok
+test malformed_oversized_and_timed_out_peers_are_bounded ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.06s
+
+
+running 9 tests
+test changed_model_catalog_cannot_start_generation ... ok
+test account_switch_aborts_without_retry ... ok
+test account_is_rechecked_before_submitting_each_turn ... ok
+test unsafe_sandbox_response_fails_before_turn ... ok
+test token_refresh_mid_turn_keeps_the_session ... ok
+test native_text_streams_including_events_before_ack ... ok
+test images_are_sent_as_app_server_image_items_after_the_text ... ok
+test native_cancel_interrupts_without_a_second_turn ... ok
+test native_approval_denial_reaches_client ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.34s
+
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+    Finished `test` profile [unoptimized] target(s) in 3.11s
+     Running tests\codex_launch.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_launch-68790059b2a28c63.exe)
+     Running tests\codex_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_metadata-8ed3d0471e8bc06a.exe)
+     Running tests\codex_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_process-7bbe09af1a47d83c.exe)
+     Running tests\execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\execution-19a644282130a6f0.exe)

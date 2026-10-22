@@ -20,6 +20,8 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ### Changed
 
+- Managed ChatGPT identity validation requires issuer, audience, expiry and subject claims; jsonwebtoken 10.3.0 uses AWS-LC, and the CSS build parsers use patched versions. Signed synthetic tokens cover missing and incorrectly typed standard claims.
+- Native verification harnesses accept an explicit helper path for isolated Cargo targets. CI disables dev/test symbols to bound generated output.
 - Inventory events now expose only scoped resource IDs or an anonymous resynchronization hint. Late probe failures have the same generation guards as successful reports, and stale quota warnings survive timer expiry until authoritative recovery.
 - `serve --ipc` remains parent-owned by default; `--independent` is a separate, explicit lifetime. The SDK does not silently start a full scanner when a configured broker is unreachable.
 - Metadata invalidation now publishes a stale transition, advances the revision, and schedules an autonomous debounced re-read. A failed provider does not erase last-known observations.

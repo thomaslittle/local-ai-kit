@@ -17,7 +17,7 @@ async function nav(page,name){
 }
 
 const root=resolve(import.meta.dirname,'..');
-const binary=resolve(root,'target/debug',process.platform==='win32'?'local-ai-kit.exe':'local-ai-kit');
+const binary=process.env.LAI_NATIVE_BINARY?resolve(root,process.env.LAI_NATIVE_BINARY):resolve(root,'target/debug',process.platform==='win32'?'local-ai-kit.exe':'local-ai-kit');
 test('live demo authorizes every supported provider in its isolated workspace without enabling paid use',()=>{
  const args=liveDemoExecutionArgs('C:\demo\workspace');
  for(const provider of ['codex','claude_code','opencode','ollama','lmstudio','openai_api','anthropic_api','gemini_api','xai_api','compatible_api'])assert.ok(args.includes(provider),provider);

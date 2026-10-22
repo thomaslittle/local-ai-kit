@@ -39,5 +39,9 @@
     "react-doctor": "0.9.14",
     "react-dom": "19.3.0",
     "typescript": "7.0.2"
+  },
+  "overrides": {
+    "postcss-selector-parser": "7.1.6",
+    "source-map-js": "1.2.2"
   }
 }

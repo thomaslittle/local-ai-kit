@@ -577,6 +577,8 @@ async fn inventory_retry_after_is_shared_by_background_and_explicit_refreshes() 
             if c.fetch_add(1, Ordering::SeqCst) == 0 {
                 return Ok(scan());
             }
+            // Make blocking-thread delivery independent of the runnable test.
+            std::thread::sleep(Duration::from_millis(50));
             let mut error = DomainError::new(ErrorCode::RateLimited, "private-path").retryable();
             error.retry_after_ms = Some(3_600_000);
             Err(error)
@@ -591,6 +593,30 @@ async fn inventory_retry_after_is_shared_by_background_and_explicit_refreshes() 
     tokio::time::pause();
     assert!(s.start_background_tasks());
     settle().await;
+    // Hold virtual time until the provider's failure is actually published.
+    // Advancing first can expire the five-second worker deadline while the
+    // blocking thread is still delivering RateLimited, testing timeout backoff
+    // instead of the authoritative Retry-After this fixture intends to cover.
+    // Release Tokio's rounded initial interval tick without expiring the scan.
+    tokio::time::advance(Duration::from_millis(1)).await;
+    let deadline = std::time::Instant::now() + Duration::from_secs(2);
+    loop {
+        let observed = snapshot(&s).await;
+        if observed["issues"].as_array().unwrap().iter().any(|issue| {
+            issue["evidence"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|evidence| evidence["code"] == "RateLimited")
+        }) {
+            break;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the authoritative inventory failure was not published: {observed}"
+        );
+        tokio::task::yield_now().await;
+    }
     advance(5).await;
     for _ in 0..7 {
         snapshot(&s).await;

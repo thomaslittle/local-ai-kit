@@ -1,0 +1,29 @@
+    Finished `test` profile [unoptimized] target(s) in 3.68s
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_chatgpt_auth-e9d97dbb51e9b110.exe)
+
+running 21 tests
+test oauth::tests::discovery_rejects_untrusted_endpoints ... ok
+test oauth::tests::callback_accepts_only_expected_path_and_requires_state ... ok
+test oauth::tests::pinned_chatgpt_oauth_surface_matches_the_t3code_snapshot ... ok
+test oauth::tests::token_response_requires_exact_scope_and_rotates_together ... ok
+test oauth::tests::malformed_registration_is_not_reset_by_auth_actions ... ok
+test tests::scope_gate_requires_exact_plan_permission ... ok
+test tests::constructor_does_not_read_credential_storage ... ok
+test oauth::tests::callback_waits_for_complete_bounded_headers ... ok
+test oauth::tests::es256_identity_tokens_match_the_jwk_curve ... ok
+test oauth::tests::signed_id_requires_issuer_audience_nonce_expiry_and_signature ... ok
+test oauth::tests::disabled_plan_sharing_asks_for_consent_on_the_next_attempt ... ok
+test oauth::tests::callback_rejects_missing_or_changed_client_and_cancelled_attempt ... ok
+test oauth::tests::corrupt_key_allows_fresh_sign_in_without_changing_registration ... ok
+test oauth::tests::changed_verified_registration_is_not_reset ... ok
+test oauth::tests::direct_first_run_disconnect_is_idempotent ... ok
+test oauth::tests::inactive_marker_survives_crash_before_ciphertext_deletion ... ok
+test oauth::tests::earliest_refresh_at_does_not_race_a_deferred_renewal ... ok
+test oauth::tests::missing_key_allows_disconnect_to_invalidate_and_clear_local_material ... ok
+test oauth::tests::status_invalidates_pending_after_another_manager_disconnects ... ok
+test oauth::tests::start_uses_stable_host_fresh_pkce_and_cancellation ... ok
+test oauth::tests::registration_refresh_disconnect_and_account_switch_rejection ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+
+{"name": "reviewer-r6-auth-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["cargo", "test", "--locked", "-p", "lai-chatgpt-auth", "--lib"], "sourceCommit": "cf34b3dc8c9daf9a9684da32c9d49b5ca8871a4e", "exitCode": 0, "seconds": 5.407, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 481505871, "finalActiveBytes": 481504793, "cFreeBytes": 63891103744, "dFreeBytes": 613996232704, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

@@ -1,0 +1,73 @@
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+    Finished `test` profile [unoptimized] target(s) in 5.93s
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_service-26c44c0fa22d07cb.exe)
+
+running 25 tests
+test cache::metadata_freshness_tests::a_recent_authentication_check_stays_fresh_while_the_user_checks_other_profiles ... ok
+test cache::backoff_tests::retry_jitter_never_exceeds_the_thirty_second_cap ... ok
+test delivery::tests::injected_sink_receives_only_the_projected_decision ... ok
+test health::tests::unknown_is_not_reported_as_expired_and_duplicates_merge ... ok
+test notifications::tests::disabled_notifications_still_expose_inline_health_decisions ... ok
+test health::tests::dismissal_is_not_resolution ... ok
+test health::tests::expired_auth_is_actionable_and_recovery_resolves ... ok
+test execution::lifecycle_tests::revoke_between_native_suspend_and_token_publication_cannot_revive_old_access ... ok
+test inputs::tests::png_and_jpeg_dimensions_come_from_headers ... ok
+test health::tests::a_missing_resource_does_not_prove_recovery_or_logout ... ok
+test notifications::tests::private_content_hides_issue_text ... ok
+test inputs::tests::store_is_owner_and_session_scoped_bounded_and_consumed ... ok
+test notifications::tests::quiet_hours_suppress_without_marking_delivered ... ok
+test cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout ... ok
+test cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit ... ok
+test cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed ... ok
+test cache::refresh_generation_tests::an_uncancelled_owned_timeout_still_publishes_an_honest_failure ... ok
+test cache::refresh_generation_tests::committed_reset_deadline_survives_forward_and_backward_wall_clock_jumps ... ok
+test cache::refresh_generation_tests::immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds ... ok
+test resume_token::tests::tokens_round_trip_across_store_instances_and_hide_contents ... ok
+test resume_token::tests::tampered_or_foreign_tokens_are_unavailable ... ok
+test cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work ... ok
+test notifications::tests::duplicate_polls_do_not_emit_twice_and_reminders_are_bounded ... ok
+test inputs::tests::owner_byte_budget_is_enforced ... ok
+test inputs::tests::invalid_images_are_rejected_with_typed_errors ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests\refresh_lanes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\refresh_lanes-ddb0f22d85337088.exe)
+
+running 20 tests
+test stopping_background_inventory_does_not_cancel_a_foreground_joiners_shared_scan ... ok
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test explicit_probe_failure_from_before_a_scan_cannot_stale_the_new_generation ... ok
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test duplicate_routes_in_one_verified_quota_scope_share_one_probe_per_tick ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... FAILED
+
+failures:
+
+---- inventory_retry_after_is_shared_by_background_and_explicit_refreshes stdout ----
+
+thread 'inventory_retry_after_is_shared_by_background_and_explicit_refreshes' (63680) panicked at crates\lai-service\tests\refresh_lanes.rs:612:9:
+the authoritative inventory failure was not published: {"accounts":[],"connections":[{"accountId":null,"auth":{"reason":"UNPROBED","state":"unknown"},"diagnostics":[],"displayName":"personal","id":"personal","installationId":"install-personal","plan":{"reason":"NOT_REPORTED","state":"unknown"},"profileId":"profile-personal","providerId":"test","status":"ok"},{"accountId":null,"auth":{"reason":"UNPROBED","state":"unknown"},"diagnostics":[],"displayName":"work","id":"work","installationId":"install-work","plan":{"reason":"NOT_REPORTED","state":"unknown"},"profileId":"profile-work","providerId":"test","status":"ok"}],"cursor":"local-f76107aa98af686d:1","diagnostics":[],"health":{"checkedAt":"2026-10-22T20:54:30.890Z","hydrated":false,"openIssues":0,"status":"healthy"},"installations":[{"environmentId":"synthetic","id":"install-personal","locationHint":"synthetic","providerId":"test","version":{"reason":"NOT_PROBED","state":"unknown"}},{"environmentId":"synthetic","id":"install-work","locationHint":"synthetic","providerId":"test","version":{"reason":"NOT_PROBED","state":"unknown"}}],"issues":[],"mode":"synthetic","models":[],"observedAt":"2026-10-22T20:54:30.890Z","profiles":[{"id":"profile-personal","installationId":"install-personal","label":"personal"},{"id":"profile-work","installationId":"install-work","label":"work"}],"protocolVersion":"1.0","providers":[{"id":"test","kind":"synthetic","name":"Test"}],"quotaPools":[],"revision":"projection_9470dd956292b2b04c1e86d5cd3b8a3cce4852cc280d50cf6e15828c4f0d2e2d","routes":[{"billing":{"freshness":"fresh","observedAt":"2026-10-22T20:54:30.890Z","source":{"adapterId":"synthetic","adapterVersion":"0.1.0-alpha.18","kind":"synthetic","reference":"core test"},"state":"known","value":"subscription","verification":"reported"},"capabilities":[],"catalogRevision":"1","connectionId":"personal","displayName":"personal","id":"route-personal","providerId":"test"},{"billing":{"freshness":"fresh","observedAt":"2026-10-22T20:54:30.890Z","source":{"adapterId":"synthetic","adapterVersion":"0.1.0-alpha.18","kind":"synthetic","reference":"core test"},"state":"known","value":"subscription","verification":"reported"},"capabilities":[],"catalogRevision":"1","connectionId":"work","displayName":"work","id":"route-work","providerId":"test"}]}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    inventory_retry_after_is_shared_by_background_and_explicit_refreshes
+
+test result: FAILED. 19 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`
+{"name": "retry-publication-green-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["cargo", "test", "--locked", "-p", "lai-service", "--lib", "--test", "refresh_lanes"], "sourceCommit": "cf34b3dc8c9daf9a9684da32c9d49b5ca8871a4e", "exitCode": 101, "seconds": 10.341, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 3342708108, "finalActiveBytes": 3319214966, "cFreeBytes": 44978356224, "dFreeBytes": 611296829440, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

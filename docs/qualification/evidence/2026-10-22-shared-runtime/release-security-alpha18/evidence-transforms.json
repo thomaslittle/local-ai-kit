@@ -1,0 +1,392 @@
+[
+  {
+    "path": "00-dependabot-alerts.json",
+    "rawSha256": "044b534f3d7343c0fdedb9bb87c581a8a842635580f7b80370d7e03f8f6f9712",
+    "publicSha256": "044b534f3d7343c0fdedb9bb87c581a8a842635580f7b80370d7e03f8f6f9712",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "01-claims-red.txt",
+    "rawSha256": "50e53eed21940e807ee08391a6171607ee898f4cd53d5dd1f5948e92372fd93c",
+    "publicSha256": "d13ba5eaf0c193faa515c98d56cd61d51654ef920ac5657bf34bae8e2599c50c",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "02-required-claims-green.txt",
+    "rawSha256": "a1f8925fdf11852e55b90bb2a8c8a8a101ecf6d8c332e231ba9f3f7dfb22da8a",
+    "publicSha256": "6b440f8d4886ff3698bd8429970393b42ab3611c3f45b7da0e2ed80efd154612",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "03-cargo-security-update.txt",
+    "rawSha256": "85f85fbccfe11ea1b9081486bf1eb5090136dd7b462885887a42f27ad419d627",
+    "publicSha256": "67b42704a52223cacf67fc7c6f49631fc0150219e0f11088c9d32ba43c91bebf",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "04-npm-security-lock.txt",
+    "rawSha256": "a66df0f3df3ea1acfa8a9022288355281f68f1832a84542105700a8520cd113a",
+    "publicSha256": "59985c0465f4c0e18cc0cfbb703902303f7fe3f69c7713b198996efd81f51587",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "05-npm-security-install.txt",
+    "rawSha256": "5aa1684d4a4187d4ecfe61ace9260b14a81700d3f97ad389ee7cb61f9f03f7e8",
+    "publicSha256": "8b9a636ddd39abcfb673fcb3499fb41e82964195e6cb59778b2d4ee1aa1dc31d",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "06-patched-jwt-auth-tests.txt",
+    "rawSha256": "292b15bdd83ea36f1cbf8f58629adc7a3b840c17d54af8ee5670b017d6d3ef31",
+    "publicSha256": "80968ab28a2fcc13d15f12fbad7b92813f064a4484371899b94272847b5824dc",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "07-windows-prebuilt-assembly-build.txt",
+    "rawSha256": "3ff9a72d415b385b1381f16d1917bf1f8a9a6f49c0524dcd90a43e5155384429",
+    "publicSha256": "7f75d2de9c726422373d7a0bc6765eb666c03392b5d63fdcba283d9566251e09",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "08-patched-jwt-auth-green.txt",
+    "rawSha256": "57ae07ce7d5b191eb6b275e2bcd156cb409d16bb742f655475a9165d66dbd101",
+    "publicSha256": "b6462def11a79db27afdcd43b87076f6d09d656587cac55218c4ca8d6ad70e2d",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "09-npm-audit.json",
+    "rawSha256": "8c79b4329eaf412f2c0bd177ef224d8a7e80ef55d30ce6faa9a3e513de16ab65",
+    "publicSha256": "345047a9e038dab89449dc4f0dcac243f0b6fa3f8ee7af414424cf801c7e789d",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "10-parser-lock-correction.txt",
+    "rawSha256": "9984d9e1f2ad8ca58f126608162e9cd0a7a3a3e34bb5551de1c5bd4816b68940",
+    "publicSha256": "b125771fda8addd462adfe7f7b03299feb35e28badbb2d16ae8589e371216f8f",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "11-guarded-auth-d-target.txt",
+    "rawSha256": "48af7ad9fdb7f08b2af8fef10f08592e8059b566944bbb560e1adec302751c0e",
+    "publicSha256": "6c56f04992f985916a131952af62fe70bfac10d52fa44f50155446aafe859ae5",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "12-final-node-security-install.txt",
+    "rawSha256": "a7e7284dc9b47e72d7be9a58e44e8902492bbe315f717792b87a097e82ddcc3f",
+    "publicSha256": "52d2f4c6cc93b7582bc02f86e90584f9650090a4bfbe2e300798586351ff0be3",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "13-final-node-audit.json",
+    "rawSha256": "7be7e082dbde8aa717ff15725eb5b1da53568b3c6fd1fd05347c2d87ab54053f",
+    "publicSha256": "a86bdc91e4283fe0f5b50749b7ef61afe8507445a9fc5b20868a7ad4805b00e1",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "14-full-profile-d-target.json",
+    "rawSha256": "cb39579d23b4fdf13f446f40fb5f5d41ead9af6ce3c241ac76078656261643c6",
+    "publicSha256": "3fe004cdb6f4943b6edec6357ab3a682492c2314dd354fdd0ff58459c7452d8a",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "14-full-profile-d-target.txt",
+    "rawSha256": "09137050a89a7bfc96f28d3b0639de2f6a1e9b5f7177ffb82cc3a10aba6f1023",
+    "publicSha256": "fcd094875402d440e747cd070eead94649b93c696233e0a0842d74d494fd0749",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "15-retry-diagnostic.txt",
+    "rawSha256": "e6acaaa661d45268d498c656cb0a5a1b7ebb8e0a03a93b1ba42411b183e93894",
+    "publicSha256": "c2536386bbf4615c76ac6b4a2bdd16af05ec4b66bd4afd9de915a8de6c4d9540",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "16-review6-auth.txt",
+    "rawSha256": "2a8ca2cbd079108ecc4336fa72e3f516928848fa517a246350acc52606f3bb20",
+    "publicSha256": "79ad2a0f0d38a8b56873d225fcd3e5a88c623a1c65e57aac567774e97f3374c1",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "16-review6-dependencies.json",
+    "rawSha256": "97e58829740bbd896d6d29681893713b194f287356787e5bddf33eb4f3c97f08",
+    "publicSha256": "931ed9b08bcef01728a225ed86013e87d4b4ad94cde94cedbbac366d6966b6ba",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "16-review6-guard.json",
+    "rawSha256": "76bf8ec3013558df576e3ef44a8d40161d1e49a7a1cfb95fc992f5c5c2c1ddbe",
+    "publicSha256": "90323b26b90a6736562da6cb86cd24b24dc579256a49d7397e0dcacbeea5b07e",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "16-review6-hashes.json",
+    "rawSha256": "26bb47eab8ba6a6483ea568d52a62f1e7d7d3134929c1a550acf419089e49414",
+    "publicSha256": "bfbf3b3ba1451642aef35775b32b3c9eacd204cb37dc0282f564a1545d2c1cf9",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "17-build-guard.py",
+    "rawSha256": "41ea6c564623912f30ba689471b5bf4ca7a7a25208dc0abbe8af55af5fe45463",
+    "publicSha256": "41ea6c564623912f30ba689471b5bf4ca7a7a25208dc0abbe8af55af5fe45463",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "18-retry-delayed-source-red.txt",
+    "rawSha256": "ec5da0c1d3a8ec0dd4dac7e188c859ed5dab061ae3b6ded458ecf0abe9fd5a62",
+    "publicSha256": "154fec27be2847fb5a8a2f15f93846b6ab824548c69d5162db367f1a3c2d502d",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "19-retry-publication-green.txt",
+    "rawSha256": "cb5807d75489f78d3ad9154b69a3c85e00bd21536ea8c90032be5cfa0e0b484a",
+    "publicSha256": "d94e9d37bf4d086052f05263cde006df0a8080c34ce0ac4bfa60e87b919440a7",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "20-retry-publication-green.txt",
+    "rawSha256": "470220d1c4630ec0247bb74c3fe7f8b9ae6f2228a1b4301dd6533232898fdc8a",
+    "publicSha256": "cb8b85079f729804d517f81e54970e4b32186183bde1f60cd80cbd77fc9b5208",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "21-full-profile-d-target.json",
+    "rawSha256": "6f33f8e9b4f831748f382592f98c2c1f4e1eb662bfd44360d5b4e780f5016356",
+    "publicSha256": "a08ec3e5ea9c3d2d3602219c71540f3cd64947e40584dcc5c2a441d47b6155fd",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "21-full-profile-d-target.txt",
+    "rawSha256": "9b5b2a9ced086d157021261e1e54e640c2831feecb84f480f506858d32d61c94",
+    "publicSha256": "e01444401139c6641ec9a2d95955d019ec051e5af661261669029673aa03bd9f",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "22-format.txt",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "publicSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "23-clippy.txt",
+    "rawSha256": "8aeeea5da8473f295083e664185fa1ab3203538933d4050f6db1b918d1224102",
+    "publicSha256": "16bea0be9fb30ba1b3eb7fdc8863e87ce48f5606bc6f48751a5b3be896c47e97",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "24-all-features.txt",
+    "rawSha256": "cc19b5282862b9b68495374b60798cf12671d75a0aeb66f38a7a70ee77714c32",
+    "publicSha256": "b6c40a69806b6aff51b77e0bde652d6951827121f34ad467deb1740a3f7d2ab9",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-claude_code.txt",
+    "rawSha256": "1074fc707c7b56aa592d2b67523aee4f487c3c7e92ff7b100a0e4f11893fc2c2",
+    "publicSha256": "3a78c21ecebd73feda6ccf46d33d73d4400f8b993810fe36479ec94d223c6992",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-codex.txt",
+    "rawSha256": "de325a3abbac53a6cdb4e7186c6e498d361c25385bc9c7d641c298c236987e64",
+    "publicSha256": "a3bc35d2bd442ba014af624690d87341be816088ca476fe3165afefa0f30fcd6",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-cursor.txt",
+    "rawSha256": "747eda29cb6b12be7bd05df26457c45a32456ca761f5861b8462b4f481a26180",
+    "publicSha256": "7ac853c855c4740b8cf0e8e8e7a2ed5c45ac5615f0e5987dcea0015aa6e3809b",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-google_acp_experimental.txt",
+    "rawSha256": "20b3cca35a7e2600136c2e940e18a2e47a3b368bf3be637597a7be6d749783d8",
+    "publicSha256": "7f8f22c4ba868d7eca9aad486b1c609ace8ac3c707be87bf87504be30f13c7f3",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-grok.txt",
+    "rawSha256": "e4f99bc741c3f706b9c0880bae879ebc66c2459dcaf9a5bbf9707e32042ce4f9",
+    "publicSha256": "1a343c71163b6ace659f180257f7288d83e075a9ec00dc077db665199b200e7d",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-http.txt",
+    "rawSha256": "7ae7cc2e7fbc9e29bc23cd7a06b178c203c62ec4efac8a587083e01da8d856ad",
+    "publicSha256": "9b4c8563e30feb8a432e77df345813a28101766b64309807743ba302579f6e92",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-muse.txt",
+    "rawSha256": "afbee4d18b024f14eca6d6c639d9755b10f61ce87be5cb6c3b9efd05d696694d",
+    "publicSha256": "04b1c15593d57d4c529b0f6f57434eb5a70fec6a1a22c31de5947d63f002c3d7",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance-opencode.txt",
+    "rawSha256": "332a1fe3e53e24ef08de8cc886e95f01397994ed1042364f16959f2cdbb6ed39",
+    "publicSha256": "c6f6966e85aa5ca82bea816a5add00827e2f9bb970212355ed51325617ccc1e8",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance.json",
+    "rawSha256": "c8135ed04bfd797899f2201ade7aae87ed76bb55d47883783140a8372560a3a4",
+    "publicSha256": "950a47cac95364db62cb5dc77f186e0495c4082b84ddc532307d8e1309f3779e",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "25-conformance.txt",
+    "rawSha256": "a9cdb13b06a6a764e65bee010c930950d35410e71783be18706029fe5e6bf439",
+    "publicSha256": "a217759d5af4a8dffd13af9cb1c36aa2088cf5d772258604aabfa67457bfd4b1",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "26-dotnet.txt",
+    "rawSha256": "ec323e95cfd281bf3845e0f1666ceb8299972a7beaa6ae84427b22cadbdf301e",
+    "publicSha256": "5f7aafa2b5e46ab912f9cf6694410b6dc6de69b99fdefd8b36eeb44b405b956a",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "27-supplemental-results.json",
+    "rawSha256": "aebe3a7632ed9ad0e080a0239563e33c19a1de52614a871c9829fa37816c3769",
+    "publicSha256": "9a1042acd79d1d34afd1fc96a5757b2ec8c4015bf3466194874d05301bda4814",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "28-inventory-retry-mutation.json",
+    "rawSha256": "01926b75e533c9c0199ac8da95200f0ee4e8748aa845a533842e7f6af96e0d4f",
+    "publicSha256": "5762108b007cb9ae9fdbd700e2a070896c722cda4648fbd862e03b51cd9d9840",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "28-inventory-retry-mutation.txt",
+    "rawSha256": "d3d8d92819a7ffe053b9a40ee1a66477c7dea97526025f56aaa14ac44b91c88a",
+    "publicSha256": "e5d45d0d5983f2ded24863bac6076c5acce312012694b1ec14905195f99f8920",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-01.txt",
+    "rawSha256": "42b1efd5db1925809fd5693cbf5cb1c0e75ac11e31999d908643f92edcdd288f",
+    "publicSha256": "cb477e5b8e46f7c994b6d0e9fa98ae18e61aabc9d8ae5e130a5a11a4ffe42924",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-02.txt",
+    "rawSha256": "3c456924a4681eeda90b76c82c860bc602cb5a5f3462fa36a99fa292c85b04fe",
+    "publicSha256": "9e1ee7744f6c5187507251180de733519b103c676d9d6e64306c0bc2d5f8d61e",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-03.txt",
+    "rawSha256": "b5ffc50e6cd24e7ae3c18ce740bb69d125a549b2b701c7d55af8a53e2f62c6d9",
+    "publicSha256": "326bd6f29b642adf143d98a5acf1846fcd394ed96d1f68daf38ea380a1c35302",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-04.txt",
+    "rawSha256": "c1184a4fcb41967cea72f98b174579eb574d7990b8f261610a2947215b0d6f23",
+    "publicSha256": "405f6a7e49af9d7944e9a9c9b4b2681962b954bd2e28b394d174b58f4c9f8efe",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-05.txt",
+    "rawSha256": "8a087b91d9559428648532de9b9dc791786b928fd064cd35d3b83f08f5a37576",
+    "publicSha256": "ca665872fff2c73848d203edd10c7a04e1725f6239182ea29f2c9276fba627bf",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-06.txt",
+    "rawSha256": "05a02116392b2e944a727bbe765a8c8bca2103726f966c642f3b0b7fdf0620fa",
+    "publicSha256": "df8d47226f21c2a6bb189183ef78ceaa9e790882ed9be78ef665504160be957c",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-07.txt",
+    "rawSha256": "6f4a69f367d13f49099850ac9528832863fcde3713f1f2bc8e69f60dc80b4ef2",
+    "publicSha256": "ed3a2a3b7ee9c17cc9c3c64ac776eba20e2b1f2f8351b85686eb41631b03b079",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-08.txt",
+    "rawSha256": "7ae913614e9642950d4484ad0889c630d18d29d8a7321928b889a3e5948c252d",
+    "publicSha256": "efcfca68358056246414ed77c4d7c901c5a93393120f6485e406d438ded1ccf2",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-09.txt",
+    "rawSha256": "084f7cb6b05d83903e28196b216830d67dbf10b83ff6ccc5b3ad140dc7365ddd",
+    "publicSha256": "c7e3c7827c78a7eb571cb2e5f11d8b7221df404a5c0f6489a47b10e1ed88e0d3",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-10.txt",
+    "rawSha256": "1129f6191efec268fe218e4f21e25f2ecf2c708248aba540959b0fa97076f6dd",
+    "publicSha256": "d9ebdf3adf3dbf0987a7cc64016356bfeccf900f38ab6573377a2ce7bf79db9b",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "29-refresh-repeat-results.json",
+    "rawSha256": "0db310a09d4d5e50e270b53e5d597672330e497639ee92514da0bb68bdcaf5c3",
+    "publicSha256": "c4f366668fbc236ae55b94c7ea213528c94e12502827d197ec08aa484743b4fa",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "30-independent-review-r7.md",
+    "rawSha256": "3d696f59fd6e457331ec4f5be630b61e52a3ccb9b9109125f50411866ccd15b4",
+    "publicSha256": "3d696f59fd6e457331ec4f5be630b61e52a3ccb9b9109125f50411866ccd15b4",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "31-pdb-relocation.json",
+    "rawSha256": "48185182bf0db32190061ec24568f1fe8d907c7888de97f8837c32afdd4eabce",
+    "publicSha256": "bd61dca80677a44b2b5fe38de0dc11634c1cb8c4cb32e623b45c5756cb0d8dd8",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "31-resource-ownership.json",
+    "rawSha256": "e90130a0235048585a7319b7673e4b98212338ce06fa7b142203d6fc2536a355",
+    "publicSha256": "8783f5a4aa4f57d8788a19fd00769007eac1308104774a031a5a1bc0c9e31f25",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "32-qualified-source-hashes.json",
+    "rawSha256": "f5942bc03d015135ec840b45551ae15db84b6bd8c7692358d88b156bc4f726e4",
+    "publicSha256": "486df98f303d95157608c19cacc98a7dbcafa9ba9cab2213de9ca454d4826e29",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "33-build-guard-receipts.json",
+    "rawSha256": "f48ec241760eee8ab72b1fb58ce881a06eed28ec1c0a70be98fd4660034a1937",
+    "publicSha256": "f913c6b7030b88bae870bbdfbee18c0b493ebefc3ed8a4feb304ccf1b3d65211",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "34-gitleaks-dispositions.json",
+    "rawSha256": "f65efc7ba1d2ed760c0ba7cba83f943eb2de0e5ae8ec51cf390c4e5b882b0042",
+    "publicSha256": "c6a136444fe6bf1078978dbe3b041c1e6844598e502705a20f64ba0fe06a2d6c",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "34-gitleaks-positive.txt",
+    "rawSha256": "afa0a9d6ecfb310273c12c46545443e4d3a62f6bc76e7115bf399db453b91f98",
+    "publicSha256": "afa0a9d6ecfb310273c12c46545443e4d3a62f6bc76e7115bf399db453b91f98",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "34-gitleaks-source.txt",
+    "rawSha256": "8bd354f5ee9ea3fa550db162f4b4ac419977c1896b9db3f6f87e0af1608f7747",
+    "publicSha256": "8bd354f5ee9ea3fa550db162f4b4ac419977c1896b9db3f6f87e0af1608f7747",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "34-gitleaks-summary.json",
+    "rawSha256": "9db65167cdde5afd362fb3167921cd10f78de9840f47c9445777b9e2373c7267",
+    "publicSha256": "c034aef6a4d4737434c4583ae86ab07a482893ad104593a7d23b962c63dff20a",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  },
+  {
+    "path": "35-local-qualification-summary.json",
+    "rawSha256": "d14ee3aca3c5e85726d70f1c6595142eb05c7ff932f3b2b66b30cd00b2201bf6",
+    "publicSha256": "b966386f600d7df33350d54a5c6f7c5d466e9cf6546da6b71c678c7d481bb839",
+    "transforms": "UTF-8; workspace/user-home path redaction; trailing-whitespace normalization. Raw original retained in ignored verification directory."
+  }
+]

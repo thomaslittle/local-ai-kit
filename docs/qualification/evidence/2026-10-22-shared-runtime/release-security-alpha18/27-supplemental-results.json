@@ -1,0 +1,62 @@
+[
+  {
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--check"
+    ],
+    "exitCode": 0,
+    "seconds": 1.192,
+    "log": "22-format.txt"
+  },
+  {
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--all-features",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exitCode": 0,
+    "seconds": 94.039,
+    "log": "23-clippy.txt"
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--all-features",
+      "--no-fail-fast"
+    ],
+    "exitCode": 0,
+    "seconds": 237.991,
+    "log": "24-all-features.txt"
+  },
+  {
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "scripts/adapter_conformance.py",
+      "--all"
+    ],
+    "exitCode": 0,
+    "seconds": 73.813,
+    "log": "25-conformance.txt"
+  },
+  {
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "scripts/test_dotnet.py"
+    ],
+    "exitCode": 0,
+    "seconds": 6.39,
+    "log": "26-dotnet.txt"
+  }
+]

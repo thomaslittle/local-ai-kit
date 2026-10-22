@@ -1,0 +1,88 @@
+[
+  {
+    "adapter": "claude_code",
+    "testSuites": [
+      "claude_metadata",
+      "claude_process"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  },
+  {
+    "adapter": "codex",
+    "testSuites": [
+      "codex_metadata",
+      "codex_process",
+      "codex_launch",
+      "execution"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  },
+  {
+    "adapter": "cursor",
+    "testSuites": [
+      "cursor_metadata"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  },
+  {
+    "adapter": "google_acp_experimental",
+    "testSuites": [
+      "acp_auth",
+      "native_profiles",
+      "native_launch"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  },
+  {
+    "adapter": "grok",
+    "testSuites": [
+      "grok",
+      "acp_catalog",
+      "acp_process"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  },
+  {
+    "adapter": "http",
+    "testSuites": [
+      "http",
+      "endpoint_config",
+      "http_catalogs",
+      "http_execution",
+      "http_frames"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  },
+  {
+    "adapter": "muse",
+    "testSuites": [
+      "muse_catalog",
+      "muse_process"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  },
+  {
+    "adapter": "opencode",
+    "testSuites": [
+      "opencode_catalog",
+      "opencode_execution"
+    ],
+    "exitCode": 0,
+    "executedPlatform": "Windows",
+    "liveInferenceQualified": false
+  }
+]

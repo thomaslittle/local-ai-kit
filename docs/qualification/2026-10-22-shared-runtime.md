@@ -1,5 +1,19 @@
 # Shared runtime acceptance ledger — 2026-10-22
 
+The current alpha18 follow-up after `cf34b3d` includes explicit required identity
+claims and patched JWT/CSS dependencies. R6 and R7 found no Critical or Important
+issue in their scoped reviews. The full Windows profile passes 638 Rust tests
+and all 24 commands; a controlled Retry-After mutation fails, restored source
+passes ten combined refresh suites (450 executions, no failures/retries), and
+the final npm audit has zero reported vulnerabilities. Formatting, strict Clippy,
+638 all-feature Rust tests, all adapter conformance groups and the real C# native
+consumer also pass on Windows. Read the
+[security/build evidence](evidence/2026-10-22-shared-runtime/release-security-alpha18/README.md)
+for retained failures, exact file hashes and bounded D: build ownership.
+Final artifacts and latest-source remote checks remain
+separate release gates. Earlier consumer lifecycle receipts below are preserved;
+no new GUI, live-account, OS-sleep or cross-connection quota claim is made.
+
 - **Repository:** local-ai-kit (`C:\Users\User\Sites\local-ai-kit`)
 - **Branch:** `feat/shared-runtime`. Historical consumer-qualification code head `eed3a2c26d7c0930d7f6e6313eed29bb528e9df8`
   (per-app grants, OpenCode Go billing, opt-in notification sink, interactive

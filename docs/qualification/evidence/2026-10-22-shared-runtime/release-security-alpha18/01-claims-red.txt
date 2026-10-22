@@ -1,0 +1,33 @@
+   Compiling tokio v1.53.3
+   Compiling serde_json v1.0.154
+   Compiling keyring v3.6.3
+   Compiling jsonwebtoken v9.3.1
+   Compiling hyper v1.11.1
+   Compiling tower v0.5.3
+   Compiling tokio-rustls v0.26.5
+   Compiling tower-http v0.6.11
+   Compiling hyper-util v0.1.20
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling lai-chatgpt-auth v0.1.0-alpha.18 (<workspace>\crates\lai-chatgpt-auth)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.71s
+     Running unittests src\lib.rs (target\debug\deps\lai_chatgpt_auth-404f42f8714c58da.exe)
+
+running 1 test
+test oauth::tests::signed_id_requires_issuer_audience_nonce_expiry_and_signature ... FAILED
+
+failures:
+
+---- oauth::tests::signed_id_requires_issuer_audience_nonce_expiry_and_signature stdout ----
+
+thread 'oauth::tests::signed_id_requires_issuer_audience_nonce_expiry_and_signature' (71456) panicked at crates\lai-chatgpt-auth\src\oauth.rs:1685:17:
+missing or invalid iss must fail identity validation
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    oauth::tests::signed_id_requires_issuer_audience_nonce_expiry_and_signature
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p lai-chatgpt-auth --lib`

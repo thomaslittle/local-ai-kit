@@ -1,0 +1,252 @@
+{
+  "exitCode": 0,
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--no-fail-fast"
+      ],
+      "exitCode": 0,
+      "seconds": 217.245
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "packages/selector-core/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 0.202
+    },
+    {
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "--test",
+        "<workspace>\\packages\\selector-core\\tests\\selection.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.306
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "packages/sdk-typescript/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 0.213
+    },
+    {
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "--test",
+        "<workspace>\\packages\\sdk-typescript\\tests\\artifacts.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\bundle.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\catalog.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\chatgpt-auth.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\client-close.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\http.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\native.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\stdio.test.mjs",
+        "<workspace>\\packages\\sdk-typescript\\tests\\store.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 1.206
+    },
+    {
+      "command": [
+        "<workspace>\\.venv-build\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "packages/sdk-python/tests",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 1.522
+    },
+    {
+      "command": [
+        "<workspace>\\.venv-build\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/generation",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 0.16
+    },
+    {
+      "command": [
+        "<workspace>\\.venv-build\\Scripts\\python.exe",
+        "scripts/check_generated.py"
+      ],
+      "exitCode": 0,
+      "seconds": 14.398
+    },
+    {
+      "command": [
+        "tsc",
+        "-p",
+        "tests/generation/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "seconds": 0.194
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 3.114
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:react"
+      ],
+      "exitCode": 0,
+      "seconds": 4.351
+    },
+    {
+      "command": [
+        "<workspace>\\.venv-build\\Scripts\\python.exe",
+        "scripts/test_native_bridge.py"
+      ],
+      "exitCode": 0,
+      "seconds": 34.635
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "lai-kit",
+        "--example",
+        "synthetic_adapter"
+      ],
+      "exitCode": 0,
+      "seconds": 27.679
+    },
+    {
+      "command": [
+        "<workspace>\\.venv-build\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/packaging",
+        "-v"
+      ],
+      "exitCode": 0,
+      "seconds": 0.45
+    },
+    {
+      "command": [
+        "<workspace>\\.venv-build\\Scripts\\python.exe",
+        "scripts/check_project.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.427
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.506
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "doctor"
+      ],
+      "exitCode": 0,
+      "seconds": 7.748
+    },
+    {
+      "command": [
+        "node",
+        "scripts/build_demo.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 5.009
+    },
+    {
+      "command": [
+        "node",
+        "scripts/build_extension.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125
+    },
+    {
+      "command": [
+        "cargo",
+        "build",
+        "--locked",
+        "-p",
+        "lai-cli"
+      ],
+      "exitCode": 0,
+      "seconds": 0.552
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "<workspace>\\apps\\demo\\tests\\http.test.mjs",
+        "<workspace>\\apps\\demo\\tests\\service.test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.626
+    },
+    {
+      "command": [
+        "<workspace>\\.venv-build\\Scripts\\python.exe",
+        "scripts/test_demo.py"
+      ],
+      "exitCode": 0,
+      "seconds": 23.528
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_live_demo.mjs",
+        "scripts/test_live_demo_opencode.mjs",
+        "scripts/test_demo_profile_auth.mjs",
+        "scripts/test_demo_errors.mjs",
+        "scripts/test_demo_catalog_visibility.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 7.029
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_accessibility.mjs",
+        "scripts/test_component_accessibility.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 36.88
+    }
+  ]
+}

@@ -1,5 +1,41 @@
 # Execution ledger - Local AI Kit
 
+## October 22 alpha18 security follow-up (qualification in progress)
+
+After refresh source `cf34b3d` was pushed, default-branch dependency alerts
+identified JWT claim validation and two CSS build parsers. The signed-token
+fixture failed before the claim change; requiring `exp`, `iss`, `aud` and `sub`
+passes. The candidate pins jsonwebtoken 10.3.0 with the ordinary AWS-LC backend,
+source-map-js 1.2.2 and selector parser 7.1.6. Fresh npm installation and audit
+pass with zero vulnerabilities. Independent R6 approves the scoped changes;
+its single guarded Windows auth execution passes 21 tests. No OAuth grant,
+scope or provider account was enabled.
+
+The first isolated-target full run retained a Retry-After fixture failure.
+A deliberately delayed source reproduces that failure as a virtual timeout
+before `RateLimited` delivery. The fixture now holds fake time until the public
+issue proves publication. Its 25 library and 20 integration tests pass, and R7
+accepts the ordering without a Critical or Important finding. Production cache
+and supervisor sources are unchanged from R5. The full Windows rerun passes
+all 24 commands (638 Rust tests plus SDK, generation, integration, browser,
+accessibility and React Doctor checks). The Retry-After mutation fails at the
+intended assertion; restored source then passes ten combined refresh runs,
+450 executions without failures or retries. Formatting, strict Clippy, 638
+all-feature Rust tests, all eight adapter conformance groups and the real C#
+native consumer pass. Qualification peaks at 8.03 GiB active output with no
+pressure stop. Exact-source artifact and remote-readiness checks remain gates;
+release remains held.
+
+Resource recovery relocated exactly 664 owned generated PDBs, 54,956,384,256
+bytes (51.182 GiB), to retained task-owned D: storage; zero files were deleted.
+The unique D: lane has a 54 GiB retained-symbol budget and 12 GiB active-output
+budget, with an 11 GiB observed stop threshold, C:/D: free-space reserves, two
+jobs, no symbols/incremental output and no Rust compiler wrapper per process.
+The initial run inherited global kache output outside its measured target;
+the guard now disables that wrapper without changing global configuration or
+removing shared cache entries. All other targets and live processes are preserved.
+See [the evidence and limits](../qualification/evidence/2026-10-22-shared-runtime/release-security-alpha18/README.md).
+
 ## October 22 Sol refresh lanes (local qualification; release held)
 
 Preserved the interrupted `cache.rs` / `metadata.rs` edits; the failed `lib.rs`

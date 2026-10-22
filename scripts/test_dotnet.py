@@ -9,7 +9,7 @@ if not dotnet:
     raise SystemExit('A .NET 8 SDK is required; set LAI_TEST_DOTNET to its executable.')
 subprocess.run([dotnet, 'build', str(ROOT/'examples/dotnet-http/LocalAI.Example.csproj'), '-c', 'Release', '--nologo'], cwd=ROOT, env=ENV, check=True, timeout=120)
 dll = ROOT/'examples/dotnet-http/bin/Release/net8.0/LocalAI.Example.dll'
-binary = ROOT/'target/debug'/('local-ai-kit'+suffix)
+binary = pathlib.Path(os.environ.get('LAI_NATIVE_BINARY', ROOT/'target/debug'/('local-ai-kit'+suffix)))
 with tempfile.TemporaryDirectory(prefix='lai-dotnet-home-') as temp:
     host = subprocess.Popen([str(binary), 'serve', '--http', '--port', '0', '--home', temp, '--allow-passive-discovery'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
     try:
