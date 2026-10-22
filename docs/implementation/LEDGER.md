@@ -1,4 +1,10 @@
-# Execution ledger — Local AI Kit
+# Execution ledger - Local AI Kit
+
+## Shared runtime - October 22, 2026
+
+Branch `feat/shared-runtime` (PR [#28](https://github.com/thomaslittle/local-ai-kit/pull/28)), from `556e35e`, merged with `origin/main` after dependency maintenance. Added `lai-store` SQLite state, atomic snapshot/metadata/journal revisions, epoch cursors and bounded replay, persistent health/issues, one notification coordinator, explicit independent broker lifetime with owner/admin token descriptors and stale-endpoint recovery, a public-API-only native Rust control center, Ed25519 update verification/staging/activation/rollback, inventory SDK subscriptions, and repaired upstream classification/report-only CI. Remotif and Crntly shared-broker integrations are in their own worktrees; both authenticated to a real broker process on Windows.
+
+Verified on Windows: 596 Rust tests, 68 TypeScript SDK, 13 React, 27 Python; `cargo fmt` and workspace clippy; real independent broker/control-center/app-revocation E2E; Remotif and Crntly opt-in cross-process broker tests; release debug bundle and unsigned single-executable update manifest. Deliberately unclaimed: full GUI E2E for both consumers, live provider accounts, signed/published/installed updates, Linux/macOS shared-runtime execution, and per-app isolation in independent mode. See [the acceptance ledger](../qualification/2026-10-22-shared-runtime.md).
 
 ## Readiness review — September 27, 2026
 
