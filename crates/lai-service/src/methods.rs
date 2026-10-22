@@ -80,7 +80,10 @@ impl NativeService {
                     .refresh_providers
                     .read()
                     .map(|providers| !providers.is_empty())
-                    .unwrap_or(false);
+                    .unwrap_or(false)
+                    || self
+                        .inventory_refresh
+                        .load(std::sync::atomic::Ordering::SeqCst);
                 Ok(
                     json!({"status": if storage.is_some() { "degraded" } else { "ok" },"mode":"live","executionAvailable":self.execution_state.source.is_some(),"metadataAvailable":self.metadata_source.is_some(),"revision":revision,"cursor":cursor,"hydrated":hydrated,"storageAvailable":storage.is_none(),"autonomousRefresh":autonomous}),
                 )

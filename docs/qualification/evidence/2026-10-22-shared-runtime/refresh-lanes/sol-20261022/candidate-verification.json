@@ -1,0 +1,66 @@
+{
+  "candidateVersion": "0.1.0-alpha.18",
+  "sourceBase": "bf3e67b326f3b9076979415a52bac10dc1178360",
+  "sourceManifest": "final-source-sha256.json",
+  "timestampUtc": "2026-10-22T20:14:21.428979+00:00",
+  "local": {
+    "fullProfile": {
+      "command": "python scripts/verify.py --profile all",
+      "exitCode": 0,
+      "commands": 24,
+      "rustPassed": 638,
+      "log": "56-final-all-pinned-dependencies.txt"
+    },
+    "allFeatures": {
+      "command": "cargo test --workspace --all-targets --all-features --locked --no-fail-fast",
+      "exitCode": 0,
+      "rustPassed": 638,
+      "log": "62-final-all-features-serialized.txt"
+    },
+    "format": {
+      "exitCode": 0,
+      "log": "52-final-format.txt"
+    },
+    "clippy": {
+      "exitCode": 0,
+      "log": "53-final-clippy-alpha18.txt"
+    },
+    "optimizedCompile": {
+      "exitCode": 0,
+      "log": "57-release-compile-alpha18.txt"
+    },
+    "csharpConsumer": {
+      "exitCode": 0,
+      "log": "61-final-dotnet-local-sdk.txt"
+    },
+    "independentReview": {
+      "round": 5,
+      "critical": 0,
+      "important": 0,
+      "executions": 450,
+      "failures": 0,
+      "log": "review5/summary.json"
+    }
+  },
+  "pending": [
+    "Exact-head remote CI",
+    "Clean committed-source Windows release packaging/checksums/consumer smoke",
+    "Authorized merge and unsigned alpha publication",
+    "Released-helper consumer qualification/integration"
+  ],
+  "limits": [
+    "Windows fixtures and owned loopback/native processes; no live accounts/inference or GUI here",
+    "Actual OS suspend/resume unqualified; fake sleep/wall-clock tested",
+    "Verified cross-connection quota operation unimplemented; current adapters require exact-connection coalescing",
+    "Unsigned alpha is not a signed automatic update"
+  ],
+  "retainedFailures": [
+    "Original audit and interrupted partial work",
+    "R1-R4 findings and test failures",
+    "48 missing Playwright dependency",
+    "50 missing npm offline cache",
+    "54 Windows sharing violation; interfering handle unknown",
+    "58 .NET SDK absent; corrected by workspace-only install59",
+    "60 parent build/native-executable overlap; serialized rerun62 passes"
+  ]
+}

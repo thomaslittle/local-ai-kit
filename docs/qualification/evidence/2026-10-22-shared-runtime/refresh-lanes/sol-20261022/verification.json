@@ -1,0 +1,30 @@
+[
+  {
+    "name": "21-workspace",
+    "command": [
+      "cargo",
+      "test",
+      "--workspace",
+      "--all-features",
+      "--locked",
+      "--no-fail-fast"
+    ],
+    "exitCode": 0,
+    "seconds": 171.984
+  },
+  {
+    "name": "22-clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--all-features",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exitCode": 0,
+    "seconds": 12.267
+  }
+]

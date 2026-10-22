@@ -1,0 +1,17 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+error[E0282]: type annotations needed for `JoinSet<std::result::Result<_, _>>`
+  --> crates\lai-service\src\refresh.rs:26:13
+   |
+26 |         let mut scans = JoinSet::new();
+   |             ^^^^^^^^^
+...
+42 |                 if matches!(result, Ok(Err(ref e)) if e.code == lai_contracts::ErrorCode::Cancelled) {
+   |                                                       ------ type must be known at this point
+   |
+help: consider giving `scans` an explicit type, where the type for type parameter `E` is specified
+   |
+26 |         let mut scans: JoinSet<std::result::Result<T, E>> = JoinSet::new();
+   |                      ++++++++++++++++++++++++++++++++++++
+
+For more information about this error, try `rustc --explain E0282`.
+error: could not compile `lai-service` (lib) due to 1 previous error

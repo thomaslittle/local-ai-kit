@@ -1,0 +1,22 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.70s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 1 test
+test immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds ... FAILED
+
+failures:
+
+---- immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds stdout ----
+
+thread 'immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds' (47880) panicked at crates\lai-service\tests\refresh_lanes.rs:140:5:
+blocking inventory worker did not finish within the bounded runnable budget
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 2.06s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

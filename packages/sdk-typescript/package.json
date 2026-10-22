@@ -1,6 +1,6 @@
 {
   "name": "@local-ai-kit/sdk",
-  "version": "0.1.0-alpha.17",
+  "version": "0.1.0-alpha.18",
   "private": true,
   "type": "module",
   "description": "Thin permission-aware Local AI Kit protocol client",

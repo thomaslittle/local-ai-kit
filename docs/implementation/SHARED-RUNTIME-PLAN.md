@@ -1,5 +1,22 @@
 # Shared runtime implementation plan
 
+## October 22 original section 5 remediation
+
+- [x] Preserve partial files and recover original requirements/branch boundaries.
+- [x] Implement separate host-authorized inventory and metadata/usage scheduling.
+- [x] Test fair admission past 64 failing sources, active/idle cadence, reset and
+  wall-clock/sleep behavior, coalescing boundaries, backoff and cancellation.
+- [x] Reproduce and repair initial independent-review findings in scoped events,
+  atomic failures, quota-warning freshness, fairness and restart progress.
+- [x] Complete fresh independent review and full local profile/strict lint.
+  C# and all-feature executions pass too. Exact-head CI and artifacts are tracked
+  in the qualification evidence; local success alone does not lift the release hold.
+- [ ] Commit/push the qualified candidate; verify exact-head remote checks.
+- [ ] Prepare alpha.18 under release conventions; qualify Windows artifacts and
+  provenance/clean-consumer checks before merge/publication.
+- [ ] Update released helper consumers and integrate Remotif into main, Crntly
+  into feature/gpui-native-rust-studio only. Preserve all existing GUI receipts.
+
 - **Started:** 2026-10-22
 - **Baseline:** `556e35e` (`main`, before this change)
 - **Decision record:** [ADR-001](../design/ADR-001-shared-runtime.md)

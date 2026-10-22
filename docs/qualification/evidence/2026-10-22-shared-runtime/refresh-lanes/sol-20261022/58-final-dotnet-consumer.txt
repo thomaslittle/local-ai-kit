@@ -1,0 +1,19 @@
+The command could not be loaded, possibly because:
+  * You intended to execute a .NET application:
+      The application 'build' does not exist or is not a managed .dll or .exe.
+  * You intended to execute a .NET SDK command:
+      No .NET SDKs were found.
+
+Download a .NET SDK:
+https://aka.ms/dotnet/download
+
+Learn about SDK resolution:
+https://aka.ms/dotnet/sdk-not-found
+Traceback (most recent call last):
+  File "<repo>\scripts\test_dotnet.py", line 10, in <module>
+    subprocess.run([dotnet, 'build', str(ROOT/'examples/dotnet-http/LocalAI.Example.csproj'), '-c', 'Release', '--nologo'], cwd=ROOT, env=ENV, check=True, timeout=120)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['C:\\Program Files\\dotnet\\dotnet.EXE', 'build', '<repo>\\examples\\dotnet-http\\LocalAI.Example.csproj', '-c', 'Release', '--nologo']' returned non-zero exit status 2147516571.

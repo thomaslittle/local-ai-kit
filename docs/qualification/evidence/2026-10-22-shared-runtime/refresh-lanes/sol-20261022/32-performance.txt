@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "<repo>\scripts\benchmark_shared_runtime.py", line 147, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "<repo>\scripts\benchmark_shared_runtime.py", line 138, in main
+    report = asyncio.run(measure(binary.resolve(), args.idle_seconds))
+  File "C:\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "<repo>\scripts\benchmark_shared_runtime.py", line 36, in measure
+    import psutil
+ModuleNotFoundError: No module named 'psutil'

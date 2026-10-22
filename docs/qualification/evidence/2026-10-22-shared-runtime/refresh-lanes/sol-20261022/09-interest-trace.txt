@@ -1,0 +1,115 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.52s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 1 test
+TOUCH app discovery.refresh
+interest=[("app", 5, true)]
+interest=[("app", 15, true)]
+interest=[("app", 25, true)]
+interest=[("app", 35, true)]
+interest=[("app", 45, true)]
+interest=[("app", 55, true)]
+interest=[("app", 65, true)]
+interest=[("app", 75, true)]
+interest=[("app", 85, true)]
+interest=[("app", 95, true)]
+interest=[("app", 105, true)]
+interest=[("app", 115, true)]
+interest=[("app", 125, true)]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+interest=[]
+TOUCH app snapshot.get
+
+thread 'metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket' (49388) panicked at crates\lai-service\tests\refresh_lanes.rs:228:5:
+assertion `left == right` failed: active interest must recheck expired metadata
+  left: 2
+ right: 4
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... FAILED
+
+failures:
+
+failures:
+    metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.41s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

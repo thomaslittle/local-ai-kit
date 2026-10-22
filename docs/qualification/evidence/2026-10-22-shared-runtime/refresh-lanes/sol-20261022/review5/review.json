@@ -1,0 +1,88 @@
+{
+  "assessment": "Approved round-5 test synchronization; no Critical or Important findings in reviewed scope. Release hold preserved.",
+  "head": "bf3e67b326f3b9076979415a52bac10dc1178360",
+  "source_hash_manifest": "source-before.json",
+  "source_changes_at_end": [],
+  "rust_test_threads_env": null,
+  "runs": [
+    {
+      "log": "combined-01.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-02.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-03.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-04.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-05.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-06.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-07.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-08.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-09.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    },
+    {
+      "log": "combined-10.txt",
+      "library_passed": 25,
+      "refresh_lanes_passed": 20
+    }
+  ],
+  "total_test_executions": 450,
+  "test_failures": 0,
+  "test_retries": 0,
+  "r4_cache_bytes_match_after_removing_only_moved_in_test": true,
+  "r4_cache_reconstructed_sha256": "d52aa884d7ebb0b66ca69829beebe6a50ecdaac2f8fbc154f2e58d870b2f05a6",
+  "other_r4_runtime_hash_matches": {
+    "crates/lai-service/src/lib.rs": true,
+    "crates/lai-service/src/refresh.rs": true,
+    "crates/lai-service/src/metadata.rs": true,
+    "crates/lai-service/src/inventory_events.rs": true,
+    "crates/lai-service/src/health.rs": true,
+    "crates/lai-service/src/methods.rs": true,
+    "crates/lai-cli/src/main.rs": true,
+    "crates/lai-service/Cargo.toml": true
+  },
+  "ordering": [
+    "run_refresh awaits the blocking worker before publish_scan (including cancellation/deadline branches).",
+    "publish_scan clears flight under the same mutex retained through cancellation rejection or snapshot/SQLite commit; observing flight None under that mutex therefore follows worker delivery and publication/retirement.",
+    "The restart test keeps paused time runnable while waiting, advances only six seconds after retirement, then holds time while waiting for replacement retirement and reads public snapshot scan-2.",
+    "Removing the Cancelled-result last_inventory reset leaves the restarted supervisor at its 300-second active cadence: at six seconds there is no third source call, so the assertion fails. This is a code-ordering assessment; no new mutation was run.",
+    "snapshot.get is a cache projection and cannot launch a scan; the final scan-2 assertion checks committed public data beyond source invocation count.",
+    "Adjacent commit-lock cancellation, host disable/re-enable Timeout, honest uncancelled Timeout, and foreground-join ownership tests remain exercised."
+  ],
+  "limits": [
+    "Windows synthetic-source service tests only; no actual OS suspend/resume",
+    "No live credentials, native consumer apps, inference, release artifacts or full gates were exercised",
+    "Cross-connection verified quota pooling remains unimplemented/outside current supported adapter evidence; no identity merging inferred"
+  ],
+  "ended": "2026-10-22T16:01:10.298688-04:00"
+}

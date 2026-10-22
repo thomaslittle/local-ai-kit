@@ -83,12 +83,42 @@ published after commit, never before.
 
 ### D4. Three refresh lanes and stale-while-revalidate
 
-- Slow inventory/catalog/capability reconciliation (`discovery.refresh`).
+- Host-opted-in passive inventory reconciliation (`discovery.refresh` shares its
+  single flight), every 5 minutes with active read/activity interest and every
+  30 minutes idle. CLI authorization is `--allow-passive-discovery`, independent
+  of provider metadata grants.
 - Targeted metadata/auth refresh after a debounced local change, an explicit
   probe, or expiry. The autonomous lane probes only host-authorized providers,
   coalesces dirty connections, and uses bounded concurrency and backoff.
-- Provider-supported usage/reset observations remain part of metadata/catalog
-  probes; a timer never declares a reset.
+- Slow metadata expires for scheduling at 15 minutes active / 60 minutes idle.
+  Provider-supported usage has its own 60-second active / 5-minute idle deadline.
+  A 120-second authenticated interest lease selects cadence; open idle sockets
+  do not count as active. Invalidation remains eligible at each 5-second tick.
+- Usage may use the same full native report where no usage-only operation
+  exists; one successful report satisfies both logical lanes. Unknown usage
+  does not create fast polling. Provider reset timestamps become monotonic
+  recheck deadlines. A timer never declares a reset or clears an exhausted
+  allowance; stale warnings require provider recovery evidence.
+- Admission rotates across connections and alternates metadata/usage priority,
+  with 64-item pages, two shared probe slots, one inventory flight, shared
+  jitter/backoff/Retry-After, and cancellation scoped to owned work. A canceled
+  worker retains its flight until it unwinds; restart retries promptly and
+  foreground joiners retain ownership.
+
+Current Codex, Claude and Muse adapters report connection-scoped quota pools
+with unknown cross-profile sharing. Auth/catalog/usage operations are also
+profile-bound. Coalescing therefore covers all verified routes/pools and apps
+within that exact connection; it never merges different profiles from an email
+or matching display label. Verified cross-connection quota operations are not
+provided by these adapters. The behavioral duplicate-route test and adapter
+source paths are recorded in the refresh-lane qualification evidence.
+
+Inventory and per-connection generations guard both successful and failed
+metadata publication atomically. Unrelated account reports can commit in
+parallel; a newer scan or invalidation rejects older results. Public journal
+pages retain currently scoped IDs, permitted connection removals, or anonymous
+invalidation hints for historical resources whose scope cannot be reverified.
+Clients resnapshot on hints; no historical private resource ID is exposed.
 
 A failed provider does not block another provider or erase last-known data.
 File invalidation marks data stale immediately and schedules a re-read; it does

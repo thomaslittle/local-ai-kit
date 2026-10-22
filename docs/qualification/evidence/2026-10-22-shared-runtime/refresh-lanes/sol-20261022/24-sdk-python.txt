@@ -1,0 +1,32 @@
+test_exact_native_file_is_verified_without_spawning (test_bundle.Bundles.test_exact_native_file_is_verified_without_spawning) ... ok
+test_modified_bytes_and_wrong_platform_are_rejected (test_bundle.Bundles.test_modified_bytes_and_wrong_platform_are_rejected) ... ok
+test_relative_path_and_missing_manifest_have_safe_errors (test_bundle.Bundles.test_relative_path_and_missing_manifest_have_safe_errors) ... ok
+test_symlink_is_not_followed (test_bundle.Bundles.test_symlink_is_not_followed) ... ok
+test_cancelled_task_does_not_break_later_requests (test_client.AsyncTests.test_cancelled_task_does_not_break_later_requests) ... ok
+test_close_idempotent (test_client.AsyncTests.test_close_idempotent) ... ok
+test_concurrent_responses_keep_identity (test_client.AsyncTests.test_concurrent_responses_keep_identity) ... ok
+test_environment_does_not_inherit_loader_hooks (test_client.AsyncTests.test_environment_does_not_inherit_loader_hooks) ... ok
+test_events_after_ack_are_not_lost (test_client.AsyncTests.test_events_after_ack_are_not_lost) ... ok
+test_inputs_put_is_gated_by_handshake (test_client.AsyncTests.test_inputs_put_is_gated_by_handshake) ... ok
+test_invalid_paths_before_spawn (test_client.AsyncTests.test_invalid_paths_before_spawn) ... ok
+test_malformed_output_fails_closed (test_client.AsyncTests.test_malformed_output_fails_closed) ... ok
+test_method_not_advertised_is_unavailable (test_client.AsyncTests.test_method_not_advertised_is_unavailable) ... ok
+test_native_error_is_redacted (test_client.AsyncTests.test_native_error_is_redacted) ... ok
+test_outgoing_limit (test_client.AsyncTests.test_outgoing_limit) ... ok
+test_peer_exit_rejects_pending_requests (test_client.AsyncTests.test_peer_exit_rejects_pending_requests) ... ok
+test_retry_metadata_is_preserved_without_private_error_details (test_client.AsyncTests.test_retry_metadata_is_preserved_without_private_error_details) ... ok
+test_same_client_handshake_and_snapshot (test_client.AsyncTests.test_same_client_handshake_and_snapshot) ... ok
+test_slow_consumer_gets_gap_not_silent_loss (test_client.AsyncTests.test_slow_consumer_gets_gap_not_silent_loss) ... ok
+test_text_not_interpreted_by_shell (test_client.AsyncTests.test_text_not_interpreted_by_shell) ... ok
+test_timeout_does_not_retry (test_client.AsyncTests.test_timeout_does_not_retry) ... ok
+test_unterminated_output_limit (test_client.AsyncTests.test_unterminated_output_limit) ... ok
+test_import_has_no_process_or_network_side_effect (test_client.SyncTests.test_import_has_no_process_or_network_side_effect) ... ok
+test_sync_facade_uses_same_async_transport (test_client.SyncTests.test_sync_facade_uses_same_async_transport) ... ok
+test_closing_releases_native_owner_before_transport (test_client_close.Close.test_closing_releases_native_owner_before_transport) ... ok
+test_failed_remote_cleanup_does_not_leak_or_prevent_shutdown (test_client_close.Close.test_failed_remote_cleanup_does_not_leak_or_prevent_shutdown) ... ok
+test_gap_does_not_kill_unrelated_requests (test_events_error.EventsError.test_gap_does_not_kill_unrelated_requests) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 0.954s
+
+OK

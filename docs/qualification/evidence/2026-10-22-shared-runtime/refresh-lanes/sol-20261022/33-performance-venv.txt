@@ -1,0 +1,40 @@
+{
+  "binary": "<repo>\\target\\debug\\local-ai-kit.exe",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "logicalCPUs": 16,
+  "fixture": {
+    "emptyHome": true,
+    "registeredProfiles": 10,
+    "providerCalls": 0,
+    "inferenceRequests": 0
+  },
+  "coldProcessAndScanMs": {
+    "count": 10,
+    "min": 16.504300001543015,
+    "mean": 18.492759997025132,
+    "p50": 17.823200032580644,
+    "p95": 22.7601999649778,
+    "max": 22.7601999649778
+  },
+  "warmSnapshotMs": {
+    "count": 200,
+    "min": 1.331100007519126,
+    "mean": 1.5415354981087148,
+    "p50": 1.4841000083833933,
+    "p95": 1.8469999777153134,
+    "max": 2.771599974948913
+  },
+  "idle": {
+    "seconds": 10.081695000000764,
+    "oneCoreCPUPercent": 0.0,
+    "peakRSSMiB": 14.93359375
+  },
+  "stateDbBytes": 53248,
+  "stateDbWalBytes": 53592,
+  "targetsMet": {
+    "coldP95Below1s": true,
+    "warmP95Below50ms": true,
+    "idleBelow50MiB": true,
+    "idleBelowOnePercent": true
+  }
+}

@@ -1,0 +1,27 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 21 tests
+test stopping_background_inventory_does_not_cancel_a_foreground_joiners_shared_scan ... ok
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds ... ok
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test explicit_probe_failure_from_before_a_scan_cannot_stale_the_new_generation ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test duplicate_routes_in_one_verified_quota_scope_share_one_probe_per_tick ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.51s

@@ -14,19 +14,27 @@ use std::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
     },
-    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::sync::{Notify, watch};
+use tokio::time::Instant;
 
 type RefreshResult = Option<Result<()>>;
 const METADATA_PROBE_CACHE_TTL: Duration = Duration::from_secs(60);
 const METADATA_FRESHNESS_TTL: Duration = Duration::from_secs(15 * 60);
+/// Authoritative usage/reset observations are polled on their own, faster
+/// cadence. This never advances a reset; it only re-reads provider evidence.
+const USAGE_FRESHNESS_TTL: Duration = Duration::from_secs(60);
 const JOURNAL_LIMIT: usize = 2048;
 const JOURNAL_PAGE: usize = 256;
 
 #[derive(Clone)]
 struct MetadataEntry {
     observed: Instant,
+    /// Last authoritative metadata probe that may contain usage/reset data.
+    /// Kept separately so usage can be refreshed at its own cadence.
+    usage_observed: Instant,
+    next_reset_check: Option<Instant>,
     report: ConnectionMetadata,
     /// A local filesystem event says this must be re-read. The old value stays
     /// visible as stale until a probe succeeds.
@@ -40,6 +48,7 @@ struct MetadataFailure {
     error: DomainError,
 }
 
+#[derive(Clone)]
 struct CacheState {
     snapshot: Snapshot,
     metadata: BTreeMap<String, MetadataEntry>,
@@ -57,7 +66,17 @@ struct CacheState {
     _locations: BTreeMap<String, LocatedClient>,
     updated: Option<Instant>,
     failure: Option<(Instant, DomainError)>,
+    scan_attempts: u32,
     flight: Option<watch::Receiver<RefreshResult>>,
+    flight_cancel: Option<Arc<AtomicBool>>,
+    flight_cancel_wake: Option<Arc<Notify>>,
+    flight_background: bool,
+    flight_generation: Option<u64>,
+    flight_host_cancelled: bool,
+    background_generation: u64,
+    inventory_enabled: bool,
+    scan_generation: u64,
+    connection_generations: BTreeMap<String, u64>,
     dirty: BTreeSet<String>,
     hydrated: bool,
 }
@@ -66,7 +85,58 @@ pub(crate) struct ProbeTarget {
     pub connection_id: String,
     pub located: LocatedClient,
     pub route_id: String,
-    pub base: String,
+    pub base: ProbeBase,
+}
+
+pub(crate) struct ProbeBase {
+    scan: u64,
+    connection: u64,
+    background: Option<u64>,
+}
+
+impl ProbeTarget {
+    pub(crate) fn for_background(mut self, generation: u64) -> Self {
+        self.base.background = Some(generation);
+        self
+    }
+}
+
+impl MetadataEntry {
+    fn merge(&self, snapshot: &mut Snapshot) {
+        crate::metadata::merge_report(
+            snapshot,
+            &self.report,
+            self.invalidated || metadata_is_stale(self.observed.elapsed()),
+        );
+        if self.usage_observed.elapsed() >= USAGE_FRESHNESS_TTL
+            || self.next_reset_check.is_some_and(|at| at <= Instant::now())
+        {
+            for pool in snapshot
+                .quota_pools
+                .iter_mut()
+                .filter(|p| p.connection_ids.contains(&self.report.connection_id))
+            {
+                for window in &mut pool.windows {
+                    window.reading.mark_stale();
+                }
+            }
+        }
+    }
+}
+
+fn reset_check(report: &ConnectionMetadata, now: chrono::DateTime<chrono::Utc>) -> Option<Instant> {
+    // Convert a future provider timestamp once to a monotonic deadline. A
+    // response still reporting a past reset does not cause a hot polling loop.
+    report
+        .quota_pools
+        .iter()
+        .flat_map(|p| &p.windows)
+        .filter_map(|w| {
+            let at = chrono::DateTime::parse_from_rfc3339(w.resets_at.as_ref()?.as_str()).ok()?;
+            let delay = (at.with_timezone(&chrono::Utc) - now).to_std().ok()?;
+            Some(Instant::now() + delay.max(Duration::from_secs(5)))
+        })
+        .min()
 }
 
 pub(crate) struct InventoryCache {
@@ -74,6 +144,7 @@ pub(crate) struct InventoryCache {
     source: InventorySource,
     ttl: Duration,
     wake: Notify,
+    wall_clock: Arc<dyn Fn() -> chrono::DateTime<chrono::Utc> + Send + Sync>,
 }
 
 fn unix_ms(at: SystemTime) -> u64 {
@@ -297,6 +368,7 @@ impl InventoryCache {
             source,
             ttl,
             wake: Notify::new(),
+            wall_clock: Arc::new(chrono::Utc::now),
             state: Mutex::new(CacheState {
                 snapshot: Snapshot::empty(DataMode::Live),
                 metadata: BTreeMap::new(),
@@ -313,7 +385,17 @@ impl InventoryCache {
                 _locations: BTreeMap::new(),
                 updated: None,
                 failure: None,
+                scan_attempts: 0,
                 flight: None,
+                flight_cancel: None,
+                flight_cancel_wake: None,
+                flight_background: false,
+                flight_generation: None,
+                flight_host_cancelled: false,
+                background_generation: 0,
+                inventory_enabled: false,
+                scan_generation: 0,
+                connection_generations: BTreeMap::new(),
                 dirty: BTreeSet::new(),
                 hydrated: false,
             }),
@@ -347,6 +429,8 @@ impl InventoryCache {
                 report.connection_id.clone(),
                 MetadataEntry {
                     observed,
+                    usage_observed: observed,
+                    next_reset_check: reset_check(&report, (self.wall_clock)()),
                     report,
                     invalidated: true,
                 },
@@ -399,8 +483,7 @@ impl InventoryCache {
         let state = self.state.lock().map_err(|_| unavailable())?;
         let mut snapshot = state.snapshot.clone();
         for entry in state.metadata.values() {
-            let stale = entry.invalidated || metadata_is_stale(entry.observed.elapsed());
-            crate::metadata::merge_report(&mut snapshot, &entry.report, stale);
+            entry.merge(&mut snapshot);
         }
         Ok(snapshot)
     }
@@ -478,7 +561,11 @@ impl InventoryCache {
             connection_id: connection.to_owned(),
             located,
             route_id: route.id.clone(),
-            base: state.revision.to_string(),
+            base: ProbeBase {
+                background: None,
+                scan: state.scan_generation,
+                connection: *state.connection_generations.get(connection).unwrap_or(&0),
+            },
         })
     }
 
@@ -487,6 +574,38 @@ impl InventoryCache {
         Ok(state.metadata.get(connection).is_some_and(|entry| {
             !entry.invalidated && entry.observed.elapsed() < METADATA_PROBE_CACHE_TTL
         }))
+    }
+
+    pub(crate) fn target_is_current(&self, target: &ProbeTarget) -> Result<bool> {
+        let state = self.state.lock().map_err(|_| unavailable())?;
+        Ok(state.scan_generation == target.base.scan
+            && target
+                .base
+                .background
+                .is_none_or(|g| g == state.background_generation)
+            && *state
+                .connection_generations
+                .get(&target.connection_id)
+                .unwrap_or(&0)
+                == target.base.connection)
+    }
+
+    /// Publish timer-driven freshness transitions once, without changing any
+    /// provider observation time, reading, auth state, or reset timestamp.
+    pub(crate) fn expire_observations(&self) -> Result<()> {
+        let mut state = self.state.lock().map_err(|_| unavailable())?;
+        let mut next = state.snapshot.clone();
+        for entry in state.metadata.values() {
+            entry.merge(&mut next);
+        }
+        let changes = diff_snapshot(&state.snapshot, &next);
+        if changes.is_empty() {
+            return Ok(());
+        }
+        let issues = self.compose_issues_locked(&state, &next);
+        next.health = summarize(&issues, state.hydrated);
+        next.issues = issues;
+        self.commit_locked(&mut state, &mut next, None, "freshness_expired", changes, 0)
     }
 
     pub(crate) fn metadata_failure(&self, connection: &str) -> Result<Option<DomainError>> {
@@ -508,9 +627,22 @@ impl InventoryCache {
         }))
     }
 
-    pub(crate) fn publish_metadata(&self, base: &str, report: ConnectionMetadata) -> Result<()> {
+    pub(crate) fn publish_metadata(
+        &self,
+        base: &ProbeBase,
+        report: ConnectionMetadata,
+    ) -> Result<()> {
         let mut state = self.state.lock().map_err(|_| unavailable())?;
-        if state.revision.to_string() != base {
+        if base
+            .background
+            .is_some_and(|g| g != state.background_generation)
+            || state.scan_generation != base.scan
+            || *state
+                .connection_generations
+                .get(&report.connection_id)
+                .unwrap_or(&0)
+                != base.connection
+        {
             return Err(DomainError::new(
                 ErrorCode::SelectionStale,
                 "Inventory changed during the metadata probe",
@@ -521,8 +653,11 @@ impl InventoryCache {
         next.observed_at = Timestamp::now();
         state.metadata_failures.remove(&report.connection_id);
         let observed_at_ms = unix_ms(SystemTime::now());
+        let now = Instant::now();
         let mut entry = MetadataEntry {
-            observed: Instant::now(),
+            observed: now,
+            usage_observed: now,
+            next_reset_check: reset_check(&report, (self.wall_clock)()),
             report,
             invalidated: false,
         };
@@ -551,14 +686,35 @@ impl InventoryCache {
             changes,
             observed_at_ms,
         )?;
+        *state
+            .connection_generations
+            .entry(entry.report.connection_id.clone())
+            .or_default() += 1;
+        state.dirty.remove(&entry.report.connection_id);
         state
             .metadata
             .insert(entry.report.connection_id.clone(), entry);
         Ok(())
     }
 
-    pub(crate) fn fail_metadata(&self, connection: &str, error: DomainError) -> Result<()> {
+    pub(crate) fn fail_metadata(
+        &self,
+        base: &ProbeBase,
+        connection: &str,
+        error: DomainError,
+    ) -> Result<()> {
         let mut state = self.state.lock().map_err(|_| unavailable())?;
+        if base
+            .background
+            .is_some_and(|g| g != state.background_generation)
+            || state.scan_generation != base.scan
+            || *state.connection_generations.get(connection).unwrap_or(&0) != base.connection
+        {
+            return Err(DomainError::new(
+                ErrorCode::SelectionStale,
+                "Inventory changed during the metadata probe",
+            ));
+        }
         let attempts = state
             .metadata_failures
             .get(connection)
@@ -578,11 +734,15 @@ impl InventoryCache {
             entry.invalidated = true;
         }
         state.dirty.insert(connection.into());
+        *state
+            .connection_generations
+            .entry(connection.into())
+            .or_default() += 1;
         let mut next = state.snapshot.clone();
         // The last-known observation remains visible as stale; failure never
         // rewrites it as fresh or pretends the account signed out.
         for entry in state.metadata.values() {
-            crate::metadata::merge_report(&mut next, &entry.report, true);
+            entry.merge(&mut next);
         }
         next.observed_at = Timestamp::now();
         let issues = self.compose_issues_locked(&state, &next);
@@ -619,6 +779,7 @@ impl InventoryCache {
                 }
             }
             state.dirty.insert(id.clone());
+            *state.connection_generations.entry(id.clone()).or_default() += 1;
         }
         if changed.is_empty() {
             drop(state);
@@ -627,11 +788,7 @@ impl InventoryCache {
         }
         let mut next = state.snapshot.clone();
         for entry in state.metadata.values() {
-            crate::metadata::merge_report(
-                &mut next,
-                &entry.report,
-                entry.invalidated || metadata_is_stale(entry.observed.elapsed()),
-            );
+            entry.merge(&mut next);
         }
         next.observed_at = Timestamp::now();
         let issues = self.compose_issues_locked(&state, &next);
@@ -656,10 +813,41 @@ impl InventoryCache {
         &self,
         allowed_providers: &BTreeSet<String>,
         limit: usize,
+        period: Duration,
+        after: &str,
     ) -> Result<Vec<ProbeTarget>> {
-        let mut state = self.state.lock().map_err(|_| unavailable())?;
+        self.due_probes_with(allowed_providers, limit, false, period, after)
+    }
+
+    /// Usage/reset observations are refreshed on their own cadence. They use
+    /// the same authoritative metadata probe and never synthesize a reset.
+    pub(crate) fn usage_due_probes(
+        &self,
+        allowed_providers: &BTreeSet<String>,
+        limit: usize,
+        period: Duration,
+        after: &str,
+    ) -> Result<Vec<ProbeTarget>> {
+        self.due_probes_with(allowed_providers, limit, true, period, after)
+    }
+
+    fn due_probes_with(
+        &self,
+        allowed_providers: &BTreeSet<String>,
+        limit: usize,
+        usage_lane: bool,
+        period: Duration,
+        after: &str,
+    ) -> Result<Vec<ProbeTarget>> {
+        let state = self.state.lock().map_err(|_| unavailable())?;
+        if limit == 0 {
+            return Ok(Vec::new());
+        }
         let now = Instant::now();
-        let connections: Vec<_> = state.snapshot.connections.clone();
+        let mut connections = state.snapshot.connections.clone();
+        connections.sort_by(|a, b| a.id.cmp(&b.id));
+        let offset = connections.partition_point(|c| c.id.as_str() <= after);
+        connections.rotate_left(offset);
         let mut due = Vec::new();
         for connection in connections {
             if !allowed_providers.contains(&connection.provider_id) {
@@ -673,11 +861,22 @@ impl InventoryCache {
                 continue;
             }
             let needs = match state.metadata.get(&connection.id) {
-                None => true,
+                None => !usage_lane,
                 Some(entry) => {
-                    entry.invalidated
-                        || entry.observed.elapsed() >= METADATA_FRESHNESS_TTL
-                        || state.dirty.contains(&connection.id)
+                    if usage_lane {
+                        (entry
+                            .report
+                            .quota_pools
+                            .iter()
+                            .any(|p| !p.windows.is_empty())
+                            || entry.report.included_usage_allowed.value().is_some())
+                            && (entry.usage_observed.elapsed() >= period
+                                || entry.next_reset_check.is_some_and(|at| at <= now))
+                    } else {
+                        entry.invalidated
+                            || state.dirty.contains(&connection.id)
+                            || entry.observed.elapsed() >= period
+                    }
                 }
             };
             if !needs {
@@ -695,12 +894,18 @@ impl InventoryCache {
             else {
                 continue;
             };
-            state.dirty.remove(&connection.id);
             due.push(ProbeTarget {
+                base: ProbeBase {
+                    background: None,
+                    scan: state.scan_generation,
+                    connection: *state
+                        .connection_generations
+                        .get(&connection.id)
+                        .unwrap_or(&0),
+                },
                 connection_id: connection.id,
                 located,
                 route_id: route.id,
-                base: state.revision.to_string(),
             });
             if due.len() >= limit {
                 break;
@@ -776,24 +981,95 @@ impl InventoryCache {
     }
 
     pub async fn refresh(self: &Arc<Self>) -> Result<()> {
+        self.refresh_with_owner(None).await
+    }
+
+    pub(crate) async fn refresh_background(self: &Arc<Self>, generation: u64) -> Result<()> {
+        self.refresh_with_owner(Some(generation)).await
+    }
+
+    pub(crate) fn cancel_background_refresh(&self) -> u64 {
+        if let Ok(mut state) = self.state.lock() {
+            state.background_generation = state.background_generation.wrapping_add(1);
+            if state.flight_background {
+                state.flight_host_cancelled = true;
+                if let Some(cancel) = &state.flight_cancel {
+                    cancel.store(true, Ordering::SeqCst);
+                    if let Some(wake) = &state.flight_cancel_wake {
+                        wake.notify_one();
+                    }
+                }
+            }
+            state.background_generation
+        } else {
+            0
+        }
+    }
+
+    pub(crate) fn set_inventory_refresh(&self, enabled: bool) {
+        if let Ok(mut state) = self.state.lock() {
+            state.inventory_enabled = enabled;
+            if !enabled && state.flight_background {
+                state.flight_host_cancelled = true;
+                if let Some(cancel) = &state.flight_cancel {
+                    cancel.store(true, Ordering::SeqCst);
+                    if let Some(wake) = &state.flight_cancel_wake {
+                        wake.notify_one();
+                    }
+                }
+            }
+        }
+    }
+
+    async fn refresh_with_owner(self: &Arc<Self>, background: Option<u64>) -> Result<()> {
         let mut receiver = {
             let mut state = self.state.lock().map_err(|_| unavailable())?;
+            if background
+                .is_some_and(|g| g != state.background_generation || !state.inventory_enabled)
+            {
+                return Err(DomainError::new(
+                    ErrorCode::Cancelled,
+                    "Background work stopped",
+                ));
+            }
             if state.updated.is_some_and(|at| at.elapsed() < self.ttl) {
                 return Ok(());
+            }
+            if background.is_none()
+                && !state
+                    .flight_cancel
+                    .as_ref()
+                    .is_some_and(|flag| flag.load(Ordering::SeqCst))
+            {
+                state.flight_background = false;
             }
             if let Some(receiver) = &state.flight {
                 receiver.clone()
             } else {
                 if let Some((at, error)) = &state.failure {
-                    if at.elapsed() < Duration::from_secs(1) {
-                        return Err(error.clone());
+                    let delay = metadata_backoff("inventory", state.scan_attempts, error);
+                    if at.elapsed() < delay {
+                        let mut safe = error.clone();
+                        safe.retry_after_ms = Some(
+                            u64::try_from(delay.saturating_sub(at.elapsed()).as_millis())
+                                .unwrap_or(u64::MAX)
+                                .max(1),
+                        );
+                        return Err(safe);
                     }
                 }
                 let (sender, receiver) = watch::channel(None);
                 state.flight = Some(receiver.clone());
+                let cancel = Arc::new(AtomicBool::new(false));
+                let cancel_wake = Arc::new(Notify::new());
+                state.flight_cancel_wake = Some(cancel_wake.clone());
+                state.flight_cancel = Some(cancel.clone());
+                state.flight_background = background.is_some();
+                state.flight_generation = background;
+                state.flight_host_cancelled = false;
                 let cache = self.clone();
                 tokio::spawn(async move {
-                    cache.run_refresh(sender).await;
+                    cache.run_refresh(sender, cancel, cancel_wake).await;
                 });
                 receiver
             }
@@ -807,12 +1083,24 @@ impl InventoryCache {
         }
     }
 
-    async fn run_refresh(self: Arc<Self>, sender: watch::Sender<RefreshResult>) {
-        let cancelled = Arc::new(AtomicBool::new(false));
+    async fn run_refresh(
+        self: Arc<Self>,
+        sender: watch::Sender<RefreshResult>,
+        cancelled: Arc<AtomicBool>,
+        cancel_wake: Arc<Notify>,
+    ) {
         let flag = cancelled.clone();
         let source = self.source.clone();
         let mut worker = tokio::task::spawn_blocking(move || source(&flag));
-        let outcome = match tokio::time::timeout(Duration::from_secs(5), &mut worker).await {
+        let outcome = tokio::select! {
+            biased;
+            _ = cancel_wake.notified() => {
+                let error = DomainError::new(ErrorCode::Cancelled, "Inventory reconciliation cancelled");
+                sender.send_replace(Some(Err(error.clone())));
+                let _ = worker.await;
+                Err(error)
+            }
+            result = tokio::time::timeout(Duration::from_secs(5), &mut worker) => match result {
             Ok(Ok(result)) => result,
             Ok(Err(_)) => Err(unavailable()),
             Err(_) => {
@@ -823,16 +1111,61 @@ impl InventoryCache {
                 let _ = worker.await;
                 Err(error)
             }
+        }
+        };
+        let outcome = if cancelled.load(Ordering::SeqCst)
+            && !outcome
+                .as_ref()
+                .is_err_and(|e| e.code == ErrorCode::Timeout)
+        {
+            Err(DomainError::new(
+                ErrorCode::Cancelled,
+                "Inventory reconciliation cancelled",
+            ))
+        } else {
+            outcome
         };
         let result = self.publish_scan(outcome);
         sender.send_replace(Some(result));
     }
 
     fn publish_scan(&self, outcome: Result<ScanResult>) -> Result<()> {
-        let mut state = self.state.lock().map_err(|_| unavailable())?;
-        state.flight = None;
+        let mut current = self.state.lock().map_err(|_| unavailable())?;
+        // Ownership and cancellation are revalidated under the commit lock.
+        // A foreground join made before cancellation transfers ownership; a
+        // late join cannot revive an already cancelled background operation.
+        let stopped = current.flight_host_cancelled
+            || (current.flight_background
+                && (current.flight_generation != Some(current.background_generation)
+                    || !current.inventory_enabled))
+            || (current
+                .flight_cancel
+                .as_ref()
+                .is_some_and(|flag| flag.load(Ordering::SeqCst))
+                && !outcome
+                    .as_ref()
+                    .is_err_and(|error| error.code == ErrorCode::Timeout));
+        current.flight = None;
+        current.flight_cancel = None;
+        current.flight_cancel_wake = None;
+        current.flight_background = false;
+        current.flight_generation = None;
+        current.flight_host_cancelled = false;
+        if stopped {
+            return Err(DomainError::new(
+                ErrorCode::Cancelled,
+                "Inventory reconciliation cancelled",
+            ));
+        }
+        // Scan reconciliation is infrequent. Stage its maps, native locations
+        // and generations together with the snapshot; a rejected SQLite
+        // transaction must leave the previous operational cache intact.
+        let mut state = current.clone();
+        state.storage_error = None;
         match outcome {
             Ok(result) => {
+                state.failure = None;
+                state.scan_generation += 1;
                 let mut next = result.snapshot;
                 state.metadata.retain(|id, _| {
                     next.connections
@@ -850,11 +1183,7 @@ impl InventoryCache {
                         .any(|connection| connection.id == *id)
                 });
                 for entry in state.metadata.values() {
-                    crate::metadata::merge_report(
-                        &mut next,
-                        &entry.report,
-                        entry.invalidated || metadata_is_stale(entry.observed.elapsed()),
-                    );
+                    entry.merge(&mut next);
                 }
                 next.observed_at = Timestamp::now();
                 let issues = self.compose_issues_locked(&state, &next);
@@ -862,6 +1191,10 @@ impl InventoryCache {
                 next.health = summarize(&issues, state.hydrated);
                 let changes = diff_snapshot(&state.snapshot, &next);
                 state._locations = result.locations;
+                let live: BTreeSet<_> = next.connections.iter().map(|c| c.id.clone()).collect();
+                state
+                    .connection_generations
+                    .retain(|id, _| live.contains(id));
                 let committed = self.commit_locked(&mut state, &mut next, None, "scan", changes, 0);
                 match committed {
                     Ok(()) => {
@@ -873,21 +1206,53 @@ impl InventoryCache {
                         state.snapshot = next;
                         state.updated = Some(Instant::now());
                         state.failure = None;
-                        drop(state);
+                        state.scan_attempts = 0;
+                        *current = state;
+                        drop(current);
                         self.wake.notify_waiters();
                         Ok(())
                     }
                     Err(error) => {
-                        state.failure = Some((Instant::now(), error.clone()));
-                        state.storage_error = Some(error.clone());
+                        current.failure = Some((Instant::now(), error.clone()));
+                        current.storage_error = Some(error.clone());
                         Err(error)
                     }
                 }
             }
             Err(error) => {
+                if error.code == ErrorCode::Cancelled {
+                    return Err(error);
+                }
                 // Never echo an arbitrary adapter/OS error, which may include private paths.
-                let safe = DomainError::new(error.code, "Native inventory is unavailable");
+                let mut safe = DomainError::new(error.code, "Native inventory is unavailable");
+                safe.retryable = error.retryable;
+                safe.retry_after_ms = error.retry_after_ms;
+                state.scan_attempts = state.scan_attempts.saturating_add(1).min(32);
                 state.failure = Some((Instant::now(), safe.clone()));
+                let mut next = state.snapshot.clone();
+                mark_snapshot_stale(&mut next);
+                for entry in state.metadata.values_mut() {
+                    entry.invalidated = true;
+                }
+                let issues = self.compose_issues_locked(&state, &next);
+                next.health = summarize(&issues, state.hydrated);
+                next.issues = issues;
+                let changes = diff_snapshot(&state.snapshot, &next);
+                if !changes.is_empty() {
+                    if let Err(error) = self.commit_locked(
+                        &mut state,
+                        &mut next,
+                        None,
+                        "inventory_failure",
+                        changes,
+                        0,
+                    ) {
+                        current.failure = Some((Instant::now(), error.clone()));
+                        current.storage_error = Some(error.clone());
+                        return Err(error);
+                    }
+                }
+                *current = state;
                 Err(safe)
             }
         }
@@ -895,6 +1260,12 @@ impl InventoryCache {
 
     fn compose_issues_locked(&self, state: &CacheState, snapshot: &Snapshot) -> Vec<Issue> {
         let mut issues = derive_issues(snapshot, &state.issues, state.hydrated);
+        if let Some((_, error)) = &state.failure {
+            // A source-wide inventory error is visible without revealing private paths.
+            let issue = crate::health::inventory_issue(error);
+            issues.retain(|old| old.id != issue.id);
+            issues.push(merge_issue(state.issues.get(&issue.id), issue));
+        }
         for (connection, failure) in &state.metadata_failures {
             let now = Timestamp::now();
             let extra = Issue {
@@ -1112,5 +1483,389 @@ mod metadata_freshness_tests {
         assert!(!metadata_is_stale(Duration::from_secs(61)));
         assert!(!metadata_is_stale(Duration::from_secs(15 * 60 - 1)));
         assert!(metadata_is_stale(Duration::from_secs(15 * 60)));
+    }
+}
+
+#[cfg(test)]
+mod refresh_generation_tests {
+    use super::*;
+    use lai_contracts::*;
+    #[allow(dead_code)]
+    mod common {
+        include!("../../lai-core/tests/common/mod.rs");
+    }
+
+    fn seeded() -> InventoryCache {
+        let cache = InventoryCache::new(
+            Arc::new(|_| unreachable!("no external source")),
+            Duration::ZERO,
+        );
+        cache
+            .publish_scan(Ok(ScanResult {
+                snapshot: common::fixture(),
+                locations: BTreeMap::from([(
+                    "personal".into(),
+                    LocatedClient {
+                        provider_id: "test".into(),
+                        profile_home: PathBuf::from("synthetic"),
+                        executable: None,
+                    },
+                )]),
+                metadata_probes: 0,
+            }))
+            .unwrap();
+        cache
+    }
+
+    #[test]
+    fn a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed() {
+        let cache = seeded();
+        let target = cache.probe_input("personal").unwrap();
+        assert!(cache.target_is_current(&target).unwrap());
+        cache.invalidate_metadata(&["personal".into()]).unwrap();
+        assert_eq!(
+            cache
+                .fail_metadata(
+                    &target.base,
+                    "personal",
+                    DomainError::new(ErrorCode::Timeout, "synthetic")
+                )
+                .unwrap_err()
+                .code,
+            ErrorCode::SelectionStale
+        );
+        assert!(cache.metadata_failure("personal").unwrap().is_none());
+        let target = cache.probe_input("personal").unwrap();
+        cache
+            .publish_scan(Ok(ScanResult {
+                snapshot: common::fixture(),
+                locations: BTreeMap::new(),
+                metadata_probes: 0,
+            }))
+            .unwrap();
+        assert_eq!(
+            cache
+                .fail_metadata(
+                    &target.base,
+                    "personal",
+                    DomainError::new(ErrorCode::Timeout, "synthetic")
+                )
+                .unwrap_err()
+                .code,
+            ErrorCode::SelectionStale
+        );
+    }
+
+    #[test]
+    fn rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work() {
+        let cache = seeded();
+        let fixture = common::fixture();
+        let report = ConnectionMetadata {
+            connection_id: "personal".into(),
+            route_id: "route-personal".into(),
+            version: Observation::unknown("TEST"),
+            auth: fixture.connections[0].auth.clone(),
+            plan: Observation::unknown("TEST"),
+            billing: fixture.routes[0].billing.clone(),
+            account: None,
+            models: vec![],
+            providers: vec![],
+            additional_routes: vec![],
+            quota_pools: vec![],
+            included_usage_allowed: Observation::unknown("TEST"),
+            diagnostics: vec![],
+        };
+        cache
+            .publish_metadata(&cache.probe_input("personal").unwrap().base, report)
+            .unwrap();
+        cache
+            .fail_metadata(
+                &cache.probe_input("personal").unwrap().base,
+                "personal",
+                DomainError::new(ErrorCode::Timeout, "synthetic").retryable(),
+            )
+            .unwrap();
+        let target = cache.probe_input("personal").unwrap();
+        let before = cache.snapshot().unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("state.db");
+        drop(StateStore::open(&path).unwrap());
+        cache.state.lock().unwrap().store =
+            Some(Arc::new(StateStore::open_read_only(&path).unwrap()));
+        assert_eq!(
+            cache
+                .publish_scan(Ok(ScanResult {
+                    snapshot: Snapshot::empty(DataMode::Synthetic),
+                    locations: BTreeMap::new(),
+                    metadata_probes: 0
+                }))
+                .unwrap_err()
+                .code,
+            ErrorCode::StorageUnavailable
+        );
+        assert!(
+            cache.probe_input("personal").is_ok(),
+            "the old visible connection must keep its native location after a rejected commit"
+        );
+        assert!(
+            cache.target_is_current(&target).unwrap(),
+            "an uncommitted scan must not advance the scan generation"
+        );
+        let state = cache.state.lock().unwrap();
+        assert!(state.metadata.contains_key("personal"));
+        assert!(state.metadata_failures.contains_key("personal"));
+        assert!(state.dirty.contains("personal"));
+        assert_eq!(state.snapshot.revision, before.revision);
+        assert_eq!(state.snapshot.cursor, before.cursor);
+    }
+
+    #[test]
+    fn cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit() {
+        for error in [
+            None,
+            Some(ErrorCode::ProviderUnavailable),
+            Some(ErrorCode::Timeout),
+        ] {
+            let cache = seeded();
+            cache.set_inventory_refresh(true);
+            let cancelled = Arc::new(AtomicBool::new(false));
+            {
+                let mut state = cache.state.lock().unwrap();
+                state.flight_cancel = Some(cancelled.clone());
+                state.flight_background = true;
+            }
+            let before = cache.snapshot().unwrap();
+            assert!(!cancelled.load(Ordering::SeqCst)); // Outer runtime check passed.
+            cache.cancel_background_refresh(); // Stop wins before the commit lock.
+            let outcome = match error {
+                Some(code) => Err(DomainError::new(code, "synthetic")),
+                None => Ok(ScanResult {
+                    snapshot: Snapshot::empty(DataMode::Synthetic),
+                    locations: BTreeMap::new(),
+                    metadata_probes: 0,
+                }),
+            };
+            assert_eq!(
+                cache.publish_scan(outcome).unwrap_err().code,
+                ErrorCode::Cancelled
+            );
+            assert_eq!(cache.snapshot().unwrap(), before);
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn committed_reset_deadline_survives_forward_and_backward_wall_clock_jumps() {
+        let mut cache = seeded();
+        let initial = chrono::DateTime::parse_from_rfc3339("2026-10-22T12:00:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Utc);
+        let wall = Arc::new(Mutex::new(initial));
+        let clock = wall.clone();
+        cache.wall_clock = Arc::new(move || *clock.lock().unwrap());
+        let fixture = common::fixture();
+        let mut pool = fixture.quota_pools[0].clone();
+        pool.id = "clock-pool".into();
+        pool.connection_ids = vec!["personal".into()];
+        pool.route_ids = vec!["route-personal".into()];
+        pool.windows = vec![UsageWindow {
+            id: "window".into(),
+            label: "Synthetic".into(),
+            reading: Observation::reported(
+                UsageReading::try_from(UsageInput {
+                    unit: "requests".into(),
+                    used: "80".to_owned().try_into().unwrap(),
+                    limit: Some("100".to_owned().try_into().unwrap()),
+                })
+                .unwrap(),
+                EvidenceSource::new(EvidenceKind::Synthetic, "test", "usage"),
+            ),
+            resets_at: Some(Timestamp::try_from("2026-10-22T12:00:30Z".to_owned()).unwrap()),
+            duration_seconds: None,
+        }];
+        let report = ConnectionMetadata {
+            connection_id: "personal".into(),
+            route_id: "route-personal".into(),
+            version: Observation::unknown("TEST"),
+            auth: fixture.connections[0].auth.clone(),
+            plan: Observation::unknown("NOT_REPORTED"),
+            billing: fixture.routes[0].billing.clone(),
+            account: None,
+            models: vec![],
+            additional_routes: vec![],
+            providers: vec![],
+            quota_pools: vec![pool],
+            included_usage_allowed: Observation::unknown("NOT_REPORTED"),
+            diagnostics: vec![],
+        };
+        cache
+            .publish_metadata(&cache.probe_input("personal").unwrap().base, report)
+            .unwrap();
+        let providers = BTreeSet::from(["test".into()]);
+        *wall.lock().unwrap() = initial + chrono::Duration::days(3650);
+        assert!(
+            cache
+                .usage_due_probes(&providers, 64, Duration::from_secs(3600), "")
+                .unwrap()
+                .is_empty()
+        );
+        *wall.lock().unwrap() = initial - chrono::Duration::days(3650);
+        tokio::time::advance(Duration::from_secs(31)).await;
+        assert_eq!(
+            cache
+                .usage_due_probes(&providers, 64, Duration::from_secs(3600), "")
+                .unwrap()
+                .len(),
+            1
+        );
+        let snapshot = cache.snapshot().unwrap();
+        let pool = snapshot
+            .quota_pools
+            .iter()
+            .find(|p| p.id == "clock-pool")
+            .unwrap();
+        assert_eq!(pool.windows[0].reading.value().unwrap().used.as_str(), "80");
+        assert!(pool.windows[0].reading.fresh_value().is_none());
+    }
+
+    #[test]
+    fn disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout() {
+        let cache = seeded();
+        cache.set_inventory_refresh(true);
+        let before = cache.snapshot().unwrap();
+        {
+            let mut state = cache.state.lock().unwrap();
+            state.flight_background = true;
+            state.flight_generation = Some(state.background_generation);
+            state.flight_cancel = Some(Arc::new(AtomicBool::new(true)));
+        } // Deadline already elapsed.
+        cache.set_inventory_refresh(false);
+        cache.set_inventory_refresh(true);
+        assert_eq!(
+            cache
+                .publish_scan(Err(DomainError::new(ErrorCode::Timeout, "synthetic")))
+                .unwrap_err()
+                .code,
+            ErrorCode::Cancelled
+        );
+        assert_eq!(cache.snapshot().unwrap(), before);
+    }
+
+    #[test]
+    fn an_uncancelled_owned_timeout_still_publishes_an_honest_failure() {
+        let cache = seeded();
+        cache.set_inventory_refresh(true);
+        let before = cache.snapshot().unwrap();
+        {
+            let mut state = cache.state.lock().unwrap();
+            state.flight_background = true;
+            state.flight_generation = Some(state.background_generation);
+            state.flight_cancel = Some(Arc::new(AtomicBool::new(true)));
+        } // Source deadline, no host cancellation.
+        assert_eq!(
+            cache
+                .publish_scan(Err(DomainError::new(ErrorCode::Timeout, "synthetic")))
+                .unwrap_err()
+                .code,
+            ErrorCode::Timeout
+        );
+        let after = cache.snapshot().unwrap();
+        assert_ne!(after.revision, before.revision);
+        assert!(
+            after
+                .issues
+                .iter()
+                .any(|issue| issue.kind == IssueKind::AdapterFailure)
+        );
+    }
+
+    #[tokio::test]
+    async fn immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds() {
+        use crate::NativeService;
+        use lai_core::ClientPolicy;
+        use serde_json::json;
+        use std::sync::atomic::AtomicUsize;
+        let calls = Arc::new(AtomicUsize::new(0));
+        let release = Arc::new(AtomicBool::new(false));
+        let (count, free) = (calls.clone(), release.clone());
+        let service = Arc::new(NativeService::new(
+            Arc::new(move |cancel| {
+                let n = count.fetch_add(1, Ordering::SeqCst);
+                if n == 1 {
+                    let deadline = std::time::Instant::now() + Duration::from_secs(2);
+                    while !free.load(Ordering::SeqCst) && std::time::Instant::now() < deadline {
+                        std::thread::yield_now();
+                    }
+                    assert!(cancel.load(Ordering::SeqCst));
+                }
+                let mut snapshot = common::fixture();
+                snapshot.connections[0].display_name = format!("scan-{n}");
+                Ok(ScanResult {
+                    snapshot,
+                    locations: BTreeMap::new(),
+                    metadata_probes: 0,
+                })
+            }),
+            Duration::ZERO,
+        ));
+        service
+            .register_client("app", ClientPolicy::passive())
+            .unwrap();
+        service
+            .handle("app", "discovery.refresh", json!({}))
+            .await
+            .unwrap();
+        tokio::time::pause();
+        service.enable_inventory_refresh(true);
+        assert!(service.start_background_tasks());
+        for _ in 0..100 {
+            tokio::task::yield_now().await;
+        }
+        tokio::time::advance(Duration::from_millis(1)).await;
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        while calls.load(Ordering::SeqCst) < 2 && std::time::Instant::now() < deadline {
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(calls.load(Ordering::SeqCst), 2);
+        service.stop_background_tasks();
+        assert!(service.start_background_tasks());
+        for _ in 0..100 {
+            tokio::task::yield_now().await;
+        }
+        tokio::time::advance(Duration::from_millis(1)).await;
+        for _ in 0..100 {
+            tokio::task::yield_now().await;
+        }
+        release.store(true, Ordering::SeqCst);
+        // Do not advance a paused timeout while its blocking worker is still
+        // delivering a result. Wait for publication/retirement under the same
+        // cache mutex used by production, then advance the supervisor tick.
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        while service.cache.state.lock().unwrap().flight.is_some()
+            && std::time::Instant::now() < deadline
+        {
+            tokio::task::yield_now().await;
+        }
+        assert!(service.cache.state.lock().unwrap().flight.is_none());
+        tokio::time::advance(Duration::from_secs(6)).await;
+        while calls.load(Ordering::SeqCst) < 3 && std::time::Instant::now() < deadline {
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            3,
+            "the new supervisor must retry before the full inventory cadence"
+        );
+        while service.cache.state.lock().unwrap().flight.is_some()
+            && std::time::Instant::now() < deadline
+        {
+            tokio::task::yield_now().await;
+        }
+        assert!(service.cache.state.lock().unwrap().flight.is_none());
+        let after = service
+            .handle("app", "snapshot.get", json!({}))
+            .await
+            .unwrap();
+        assert_eq!(after["connections"][0]["displayName"], "scan-2");
+        service.stop_background_tasks();
     }
 }

@@ -1,0 +1,32 @@
+{
+  "scanExitCode": 1,
+  "findingCount": 3,
+  "unresolvedFindings": 0,
+  "findings": [
+    {
+      "file": "crates/lai-chatgpt-auth/tests/fixtures/test-rsa.pem",
+      "line": 1,
+      "rule": "private-key",
+      "sha256": "fad7818d8a13ce1424c215cf22c51157c22c665f2bea9829489e6312a320c5c2",
+      "classification": "synthetic test fixture",
+      "reason": "Existing synthetic RSA test fixture introduced by 4bfae8f (Add synthetic RSA fixture for OAuth signature tests). Used only by cfg(test) loopback JWT signature validation at oauth.rs:1630,1712,2103. No key generated, rotated or used for release signing. Public test key carries no account identity."
+    },
+    {
+      "file": "packages/sdk-typescript/src/generated.ts",
+      "line": 39,
+      "rule": "generic-api-key",
+      "sha256": "36b54b0c6cdd8b179974946565321a1a7b2fd020ddafaaa59478f67f8d06e96b",
+      "classification": "type declaration false positive",
+      "reason": "Generated TypeScript type declaration containing only field names and type references. Both matches are inside Connection/ConnectionMetadata declarations (lines39,41); no credential literal. Generated file unchanged by this work."
+    },
+    {
+      "file": "packages/sdk-typescript/src/generated.ts",
+      "line": 41,
+      "rule": "generic-api-key",
+      "sha256": "36b54b0c6cdd8b179974946565321a1a7b2fd020ddafaaa59478f67f8d06e96b",
+      "classification": "type declaration false positive",
+      "reason": "Generated TypeScript type declaration containing only field names and type references. Both matches are inside Connection/ConnectionMetadata declarations (lines39,41); no credential literal. Generated file unchanged by this work."
+    }
+  ],
+  "note": "Raw default scan reports findings; it is not represented as a clean scanner exit. No ignore rule or suppression was added. Classification is source inspection, not live-secret validation."
+}

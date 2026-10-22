@@ -1,6 +1,85 @@
 # Development log — Local AI Kit
 
+## October 22 Sol refresh lanes (local qualification; release held)
+
+Preserved the interrupted `cache.rs` / `metadata.rs` edits; the failed `lib.rs`
+tool call had not applied. Implemented independently admitted inventory,
+metadata and authoritative usage/reset lanes, active/idle interest, bounded fair
+queues, shared coalescing/backoff and owned cancellation. Inventory opt-in is
+separate from provider grants. Timers retain stale readings and quota warnings;
+they never infer a reset or recovery.
+
+Five independent review rounds drove failure-first fixes for journal scope,
+atomic success/error generations, fairness beyond 64 sources, failed-SQLite
+scan staging, and cancellation under the commit mutex. Round 4 accepted the
+runtime but retained a nondeterministic restart-test failure. The test now waits
+for cache flight retirement/publication before advancing fake time. Round 5
+approved the ordering and ran ten default combined suites: 25 library plus 20
+integration tests each, 450 executions, zero failures or retries. No production
+code changed after round 4. Earlier failures and passing retries remain visible.
+
+The alpha18 full `verify.py --profile all` passes all 24 commands on Windows:
+638 Rust tests, 28 selector tests, 68 TypeScript SDK tests, 27 Python SDK tests,
+13 React tests, native bridge/generation/packaging checks, 16 Python browser
+checks, 16 Node browser checks, 34 accessibility checks and React Doctor with no
+issues. All-target/all-feature workspace tests also pass (638 passed, zero failed) in 62. Formatting
+and strict all-target/all-feature Clippy pass. Optimized binaries compile. The
+C# real native HTTP consumer passes using the checksum-verified workspace-local
+.NET 8 SDK with an empty NuGet source configuration. Logs and source hashes are under
+`docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/`.
+The initial missing-Playwright dependency error, offline npm cache miss, and
+one Windows error32 temporary-directory rename failure are retained. Pinned
+local dependencies were installed; the unchanged six-test resumption retry and
+full rerun pass. The interfering handle was not identified; no antivirus cause
+is asserted and no retry/suppression was added to the product or fixture.
+
+Three real guard mutations previously failed assertions, were restored
+byte-for-byte, and passed. The final default offline scan reports 15 inspected matches: an existing
+synthetic OAuth RSA fixture, two generated type declarations and 12 independently
+recomputed source checksums. The earlier scan 46 reported only the first three. Dispositions retain hashes and reasons; the scanner exit remains
+1 and no ignore rule was added. No signing credential was generated or used.
+
+Current Codex/Claude/Muse adapters provide only profile-bound full operations
+and connection-scoped pools with unknown cross-profile sharing. Coalesce all
+verified routes/apps in that connection; never merge similar identities.
+Verified cross-connection pool operations, actual OS suspend/resume and live
+provider accounts remain unqualified. Sleep/wall-clock fixtures pass. No live
+credential, paid inference, GUI input, audio or OS notification was used here.
+
+Alpha18 version preparation updates Rust/npm packages and the previously
+lagging Python wheel (`0.1.0a11` to `0.1.0a18`); no dependency upgrade was added.
+Latest published release remains `v0.1.0-alpha.17`. Exact-source CI, clean Windows
+release artifact/checksums and consumer release pins remain gates; no merge or
+publication has occurred. Kit/Remotif target main; Crntly targets only
+`feature/gpui-native-rust-studio`. Keep existing GUI recovery/scope/draft receipts
+and consumer changes intact. No parity, bot or rendering work is included.
+Kit owns no GUI lock or Remotif target directory.
+
 A reverse-chronological engineering log of what was implemented, how it was verified, and what is deliberately still unclaimed. It records source commits and verification results at the time of each entry; entries are not rewritten when later work supersedes them. For release-level summaries see the [changelog](../../CHANGELOG.md); for operation-level provider status see the [support matrix](../adapters/SUPPORT-MATRIX.md).
+
+## October 22 automatic read-only recovery and refresh-lane release hold
+
+Crntly and Remotif were rerun after the shared client paths gained bounded
+read-only reconnection. With the broker restarted and a fresh `Kimi K4` catalog
+revision, both **existing native PIDs** recovered without a process restart or
+refresh click. The gate preserves Crntly's selected route/model and draft, and
+Remotif's selected `opencode-go` account/route/model identity and draft; the
+Remotif index alone is not treated as the oracle. It also checks one client per
+app, no app-owned `serve --stdio` fallback scanner, and that revoked Crntly stays
+denied while the peer remains usable. Evidence:
+`docs/developer/gpui-native-migration/evidence/2026-10-22-compose-stack/combined/automatic-recovery-result.json`
+in the Crntly repository.
+
+Release readiness is nevertheless held: the original refresh requirements are
+not implemented. The only background lane is a fixed 5-second metadata loop;
+there is no scheduled inventory reconciliation, separately paced usage/reset
+lane, or client-interest cadence. `discovery.watch` is a filesystem metadata
+watcher, not an inventory scheduler. The failing audit and exact mapping are
+retained under
+`docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/`. Kit
+merge/publication and consumer version updates remain held pending implementation
+or an explicit owner scope decision. No release, merge, signing, or real OS
+notification was performed.
 
 ## October 22 combined-client lifecycle gate and corrected denial assertions
 

@@ -1,0 +1,19 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.97s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 1 test
+
+thread 'supported_usage_refreshes_before_slow_metadata_without_reset_inference' (4908) panicked at crates\lai-service\tests\refresh_lanes.rs:84:87:
+missing quotaPools/pool-personal: {"accounts":[],"connections":[{"accountId":null,"auth":{"reason":"UNPROBED","state":"unknown"},"diagnostics":[],"displayName":"personal","id":"personal","installationId":"install-personal","plan":{"reason":"NOT_REPORTED","state":"unknown"},"profileId":"profile-personal","providerId":"test","status":"ok"},{"accountId":null,"auth":{"reason":"UNPROBED","state":"unknown"},"diagnostics":[],"displayName":"work","id":"work","installationId":"install-work","plan":{"reason":"NOT_REPORTED","state":"unknown"},"profileId":"profile-work","providerId":"test","status":"ok"}],"cursor":"local-c941189a94bf420a:1","diagnostics":[],"health":{"checkedAt":"2026-10-22T18:58:59.990Z","hydrated":false,"openIssues":0,"status":"healthy"},"installations":[{"environmentId":"synthetic","id":"install-personal","locationHint":"synthetic","providerId":"test","version":{"reason":"NOT_PROBED","state":"unknown"}},{"environmentId":"synthetic","id":"install-work","locationHint":"synthetic","providerId":"test","version":{"reason":"NOT_PROBED","state":"unknown"}}],"issues":[],"mode":"synthetic","models":[],"observedAt":"2026-10-22T18:58:59.990Z","profiles":[{"id":"profile-personal","installationId":"install-personal","label":"personal"},{"id":"profile-work","installationId":"install-work","label":"work"}],"protocolVersion":"1.0","providers":[{"id":"test","kind":"synthetic","name":"Test"}],"quotaPools":[],"revision":"projection_0609a22e748a82daf1b6917983052aa924c1b597f9071a14c9d1cf4c8a0da1e4","routes":[{"billing":{"freshness":"fresh","observedAt":"2026-10-22T18:58:59.990Z","source":{"adapterId":"synthetic","adapterVersion":"0.1.0-alpha.17","kind":"synthetic","reference":"core test"},"state":"known","value":"subscription","verification":"reported"},"capabilities":[],"catalogRevision":"1","connectionId":"personal","displayName":"personal","id":"route-personal","providerId":"test"},{"billing":{"freshness":"fresh","observedAt":"2026-10-22T18:58:59.990Z","source":{"adapterId":"synthetic","adapterVersion":"0.1.0-alpha.17","kind":"synthetic","reference":"core test"},"state":"known","value":"subscription","verification":"reported"},"capabilities":[],"catalogRevision":"1","connectionId":"work","displayName":"work","id":"route-work","providerId":"test"}]}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... FAILED
+
+failures:
+
+failures:
+    supported_usage_refreshes_before_slow_metadata_without_reset_inference
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

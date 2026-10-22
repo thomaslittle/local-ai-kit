@@ -1,0 +1,8 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.74s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 1 test
+test immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.02s

@@ -43,3 +43,18 @@ Python: `AsyncStdioTransport.open_broker(executable=..., address=..., token=...)
 
 Verified on Windows with two independent SDK helper processes, one shared scan, denied third-client access, one-use credentials, duplicate broker rejection, client-specific revocation, independent lifetime across consumer disconnects, duplicate-launch convergence, idle shutdown, and a control-center process using only the public API. App-scoped grant tests additionally prove two distinct app identities and account projections, cross-account denial, and live revocation of one app's reusable grant without affecting the other app. The same workspace and its broker/transport tests pass in CI on Ubuntu and macOS; CI does not exercise a real desktop GUI. No implicit installation, telemetry, remote relay, or cross-user brokerage.
 
+
+## Autonomous refresh and subscriber hints
+
+`--allow-passive-discovery` separately authorizes background inventory. Existing
+`--allow-metadata PROVIDER` grants authorize that provider's background metadata
+and supported usage observations; client interest cannot grant either. Cached
+reads do not rescan. The service uses slower inventory/metadata and faster usage
+cadences, reduces idle work, coalesces all routes/apps in one verified connection,
+and shares bounded concurrency and Retry-After/backoff with explicit probes.
+
+Inventory event pages are scoped invalidation hints. Currently visible resource
+IDs are retained; historical removals whose scope cannot be reverified use the
+anonymous `inventory/*` hint. Read a fresh scoped snapshot after a hint, preserve
+its cursor, and use the existing gap/full-resync path on `EVENT_GAP`. A timer may
+mark usage stale and request authoritative data; it never resets an allowance.

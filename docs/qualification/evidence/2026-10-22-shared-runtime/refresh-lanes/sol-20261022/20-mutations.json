@@ -1,0 +1,49 @@
+[
+  {
+    "guard": "failure-generation",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "lai-service",
+      "--lib",
+      "a_failure_cannot_publish_after_a_generation_change"
+    ],
+    "faultExit": 101,
+    "restoredExit": 0,
+    "restoredSha256": "25290b95097e5835f723a4dc81477d218a18985e12d1f7bd1f0d16e4be8116d4"
+  },
+  {
+    "guard": "fairness",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "lai-service",
+      "--test",
+      "refresh_lanes",
+      "healthy_work_beyond_sixty_four"
+    ],
+    "faultExit": 101,
+    "restoredExit": 0,
+    "restoredSha256": "25290b95097e5835f723a4dc81477d218a18985e12d1f7bd1f0d16e4be8116d4"
+  },
+  {
+    "guard": "restart-progress",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "lai-service",
+      "--test",
+      "refresh_lanes",
+      "immediate_restart_retries"
+    ],
+    "faultExit": 101,
+    "restoredExit": 0,
+    "restoredSha256": "6835d380ed8c5736364a89fdf7ab2b52f87481a710c94af0fa4d128cc86d8cfe"
+  }
+]

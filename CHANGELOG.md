@@ -4,8 +4,11 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [0.1.0-alpha.18] - 2026-10-22
+
 ### Added
 
+- Independent passive inventory, slow metadata and faster supported-usage refresh scheduling, with active/idle cadence, fair bounded admission, shared probe/backoff state and owned cancellation. Provider reset times request observations; they never reset counters locally.
 - Shared per-user runtime with an explicit independent lifetime, owner-only token descriptor, race-free single-instance binding, idle shutdown, and on-demand SDK startup. Consumers can share one discovery/metadata/usage/session runtime without a parent-owned process dying with the first app.
 - Broker-owned SQLite persistence (`lai-store`) with an atomically committed ready snapshot, monotonic revisions, epoch-bound bounded journal, sanitized metadata, issues, and notification delivery state. Warm startup hydrates the snapshot as stale and reverifies it.
 - Inventory change events (`events.read` with `scope: "inventory"`), journal cursor/gap recovery, TypeScript inventory/live-store helpers, and Python inventory subscription.
@@ -17,6 +20,7 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ### Changed
 
+- Inventory events now expose only scoped resource IDs or an anonymous resynchronization hint. Late probe failures have the same generation guards as successful reports, and stale quota warnings survive timer expiry until authoritative recovery.
 - `serve --ipc` remains parent-owned by default; `--independent` is a separate, explicit lifetime. The SDK does not silently start a full scanner when a configured broker is unreachable.
 - Metadata invalidation now publishes a stale transition, advances the revision, and schedules an autonomous debounced re-read. A failed provider does not erase last-known observations.
 - Host MCP sessions can opt into the installed Codex or Claude Code native tools with `permissionMode: "native_policy"` plus the separately granted `--allow-native-policy`. `--review-native-requests` remains an independent once-only approval grant; the read-only host-tools-only default is unchanged.

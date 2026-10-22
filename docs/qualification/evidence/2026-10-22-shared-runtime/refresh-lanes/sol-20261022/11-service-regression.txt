@@ -1,0 +1,257 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 35.58s
+     Running unittests src\lib.rs (target\debug\deps\lai_service-d9ef0122999d599e.exe)
+
+running 18 tests
+test cache::metadata_freshness_tests::a_recent_authentication_check_stays_fresh_while_the_user_checks_other_profiles ... ok
+test delivery::tests::injected_sink_receives_only_the_projected_decision ... ok
+test cache::backoff_tests::retry_jitter_never_exceeds_the_thirty_second_cap ... ok
+test notifications::tests::disabled_notifications_still_expose_inline_health_decisions ... ok
+test notifications::tests::quiet_hours_suppress_without_marking_delivered ... ok
+test notifications::tests::private_content_hides_issue_text ... ok
+test health::tests::unknown_is_not_reported_as_expired_and_duplicates_merge ... ok
+test inputs::tests::png_and_jpeg_dimensions_come_from_headers ... ok
+test health::tests::a_missing_resource_does_not_prove_recovery_or_logout ... ok
+test health::tests::expired_auth_is_actionable_and_recovery_resolves ... ok
+test health::tests::dismissal_is_not_resolution ... ok
+test inputs::tests::store_is_owner_and_session_scoped_bounded_and_consumed ... ok
+test execution::lifecycle_tests::revoke_between_native_suspend_and_token_publication_cannot_revive_old_access ... ok
+test resume_token::tests::tokens_round_trip_across_store_instances_and_hide_contents ... ok
+test resume_token::tests::tampered_or_foreign_tokens_are_unavailable ... ok
+test notifications::tests::duplicate_polls_do_not_emit_twice_and_reminders_are_bounded ... ok
+test inputs::tests::owner_byte_budget_is_enforced ... ok
+test inputs::tests::invalid_images_are_rejected_with_typed_errors ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests\boundaries.rs (target\debug\deps\boundaries-36adc02144e53032.exe)
+
+running 4 tests
+test protocol_mismatch_and_parameter_smuggling_are_rejected ... ok
+test source_failure_does_not_serialize_private_error_text ... ok
+test revocation_during_scan_does_not_restore_authority ... ok
+test cached_reads_remain_responsive_while_scan_runs ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests\catalog_pages.rs (target\debug\deps\catalog_pages-176c246e5925d2d0.exe)
+
+running 5 tests
+test empty_catalog_returns_a_terminal_page_without_scanning ... ok
+test page_cursors_cannot_move_between_clients_or_route_filters ... ok
+test page_rechecks_scope_and_rejects_changed_catalogs ... ok
+test paged_catalog_preserves_order_and_every_route_identity ... ok
+test pages_validate_limits_and_never_return_oversized_frames ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running tests\chatgpt_auth_scope.rs (target\debug\deps\chatgpt_auth_scope-32457e5c3eb072a1.exe)
+
+running 3 tests
+test chatgpt_auth_methods_require_managed_metadata_scope ... ok
+test unrelated_provider_startup_does_not_delay_managed_disconnect ... ok
+test disconnect_waits_for_inflight_managed_create_then_closes_its_session ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests\client_lifecycle.rs (target\debug\deps\client_lifecycle-5ac1c57c560445a6.exe)
+
+running 3 tests
+test rpc_close_cannot_choose_a_different_owner ... ok
+test closing_one_app_preserves_the_other_apps_permissions ... ok
+test closed_clients_do_not_exhaust_the_long_lived_broker ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\execution.rs (target\debug\deps\execution-527b093be36cb677.exe)
+
+running 10 tests
+test discovery_permission_does_not_authorize_execution ... ok
+test request_cannot_supply_native_arguments_or_paths ... ok
+test selection_smuggling_does_not_reach_factory ... ok
+test revocation_during_open_then_regrant_closes_the_unpublished_agent ... ok
+test unknown_workspaces_and_permission_upgrades_are_rejected ... ok
+test session_factory_and_events_go_through_public_service ... ok
+test long_turn_prompt_reaches_native_agent_unchanged ... ok
+test artifacts_are_read_through_the_public_service_and_never_by_path ... ok
+test long_turn_exception_keeps_typed_and_other_method_bounds ... ok
+test turn_prompt_and_serialized_params_have_separate_bounds ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests\gateway_routes.rs (target\debug\deps\gateway_routes-8792e5a48be279b2.exe)
+
+running 3 tests
+test gateway_cannot_attach_model_routes_to_another_account ... ok
+test gateway_subroute_keeps_model_vendor_and_billing_identity ... ok
+test gateway_metadata_does_not_claim_an_execution_driver_exists ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\host_mcp.rs (target\debug\deps\host_mcp-b9605627dfb0b444.exe)
+
+running 8 tests
+test debug_output_redacts_the_bearer_token ... ok
+test handshake_advertises_host_mcp ... ok
+test host_servers_require_the_execution_grant_and_reject_workspace_write ... ok
+test omitted_host_servers_are_backwards_compatible ... ok
+test a_host_mcp_allowlist_of_130_tools_fits_session_create ... ok
+test two_host_servers_can_share_a_256_tool_allowlist ... ok
+test valid_host_servers_reach_the_adapter_and_are_never_echoed ... ok
+test invalid_host_servers_are_refused_before_any_launch ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\image_inputs.rs (target\debug\deps\image_inputs-4781a23a2b48db49.exe)
+
+running 5 tests
+test handshake_advertises_image_input_and_put_method ... ok
+test unsupported_model_or_adapter_fails_the_turn_instead_of_dropping_images ... ok
+test inputs_are_owner_and_session_scoped ... ok
+test invalid_puts_are_typed_request_errors ... ok
+test staged_image_reaches_a_capable_adapter_once ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\introspection.rs (target\debug\deps\introspection-79e76164c14b5ffb.exe)
+
+running 3 tests
+test adapter_listing_is_a_collection_not_fake_single_provider_status ... ok
+test health_describes_configured_runtime_not_a_stale_constant ... ok
+test diagnostics_and_grants_separate_available_execution_from_permission ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\long_running.rs (target\debug\deps\long_running-e9923f8fdb1731d4.exe)
+
+running 1 test
+test cached_metadata_age_does_not_cancel_an_already_authorized_turn ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\metadata.rs (target\debug\deps\metadata-95e71746cd9e183c.exe)
+
+running 14 tests
+test discovery_never_runs_client_probe_and_missing_grant_is_denied ... ok
+test one_connection_probe_cannot_overwrite_another_account ... ok
+test failed_metadata_probes_back_off_instead_of_respawning_for_each_caller ... ok
+test provider_scope_must_be_host_set_and_unknown_provider_does_not_spawn ... ok
+test approved_metadata_is_scoped_and_identity_stays_masked ... ok
+test a_corrupt_or_foreign_cache_file_is_preserved_and_rebuilt ... ok
+test repeated_reads_do_not_invent_new_observation_times_or_revisions ... ok
+test concurrent_probes_share_cached_work_without_repeated_client_spawns ... ok
+test observations_survive_a_restart_as_stale_while_revalidate_data_without_identity ... ok
+test revoked_during_probe_cannot_publish_new_metadata ... ok
+test provider_retry_after_is_sanitized_preserved_and_expires ... ok
+test watching_needs_discovery_permission_and_can_be_stopped ... ok
+test explicit_watch_invalidates_changed_metadata_without_running_a_probe ... ok
+test retryable_metadata_failures_use_increasing_bounded_backoff ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.25s
+
+     Running tests\native_policy.rs (target\debug\deps\native_policy-169d683dcf1a88cd.exe)
+
+running 3 tests
+test native_client_policy_needs_separate_host_authorization ... ok
+test native_policy_does_not_bypass_workspace_or_billing_grants ... ok
+test explicit_native_policy_is_preserved_for_the_provider_not_claimed_readonly ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\persistent_resume.rs (target\debug\deps\persistent_resume-f2b198208e74971b.exe)
+
+running 7 tests
+test handshake_and_routes_advertise_persistent_resume ... ok
+test persistent_requires_a_state_dir_and_a_resumable_route ... ok
+test missing_native_history_is_resume_unavailable_not_a_new_chat ... ok
+test model_revision_changes_are_tolerated_for_the_same_model_id ... ok
+test token_survives_a_helper_restart_and_reattaches_the_same_conversation ... ok
+test identity_changes_refuse_with_resume_unavailable ... ok
+test host_servers_are_resupplied_on_resume_never_stored ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 9 tests
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s
+
+     Running tests\resumption.rs (target\debug\deps\resumption-316a9eb1f336aa12.exe)
+
+running 6 tests
+test revocation_invalidates_unconsumed_resume_tokens ... ok
+test resume_tokens_are_invalid_after_runtime_restart ... ok
+test resume_tokens_are_opaque_owner_scoped_and_one_time ... ok
+test active_and_closed_sessions_cannot_be_suspended ... ok
+test resume_revalidates_account_model_route_billing_and_workspace_grant ... ok
+test completed_conversation_can_suspend_and_resume_without_a_fresh_session ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\runtime_sync.rs (target\debug\deps\runtime_sync-c7bfd5e41546ec23.exe)
+
+running 7 tests
+test issue_and_snapshot_projection_hide_inaccessible_connections ... ok
+test notifications_are_deduplicated_across_clients_and_respect_privacy ... ok
+test metadata_advances_the_revision_and_replays_exactly_once ... ok
+test an_installed_notification_sink_receives_only_due_decisions ... ok
+test expiry_creates_actionable_health_and_snooze_does_not_resolve_it ... ok
+test invalidation_is_debounced_then_the_autonomous_lane_rechecks_it ... ok
+test an_older_probe_cannot_overwrite_a_newer_revision ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests\scoped_execution.rs (target\debug\deps\scoped_execution-3e7f5caae4ad173d.exe)
+
+running 1 test
+test connection_scoped_executor_does_not_bless_sibling_account ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\service.rs (target\debug\deps\service-183f733dc3904864.exe)
+
+running 12 tests
+test ungranted_client_cannot_trigger_discovery ... ok
+test browser_request_cannot_grant_itself_more_permissions ... ok
+test unsupported_methods_and_nonpassive_scans_fail_closed ... ok
+test unknown_client_cannot_read_or_scan ... ok
+test duplicate_host_registration_does_not_replace_policy ... ok
+test construction_handshake_and_snapshot_never_scan ... ok
+test requests_are_bounded_and_projection_fields_are_allowlisted ... ok
+test request_payload_does_not_choose_caller_identity ... ok
+test revocation_immediately_hides_cached_data ... ok
+test native_selection_validation_uses_authorized_catalog ... ok
+test alternate_data_methods_respect_the_same_projection ... ok
+test simultaneous_refreshes_are_singleflight ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\session_auth.rs (target\debug\deps\session_auth-8c67822ff245127c.exe)
+
+running 1 test
+test session_start_rereads_live_auth_instead_of_trusting_cached_login ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\session_billing.rs (target\debug\deps\session_billing-74f09b6611dda576.exe)
+
+running 1 test
+test host_billing_allowance_does_not_widen_session_consent ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests lai_service
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

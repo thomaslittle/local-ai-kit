@@ -1,0 +1,6 @@
+Generated: protocol/methods.json
+Generated: protocol/openapi.json
+Generated: protocol/contracts.schema.json
+Generated: packages/sdk-typescript/src/generated.ts
+Generated: packages/sdk-python/src/local_ai_kit/generated.py
+Generated: packages/sdk-python/src/local_ai_kit/client.pyi

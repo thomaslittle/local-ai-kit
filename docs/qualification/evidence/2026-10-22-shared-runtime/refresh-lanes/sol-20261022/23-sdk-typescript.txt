@@ -1,0 +1,419 @@
+TAP version 13
+# Subtest: result bytes are fetched only on explicit invocation
+ok 1 - result bytes are fetched only on explicit invocation
+  ---
+  duration_ms: 1.1961
+  type: 'test'
+  ...
+# Subtest: chunks preserve offsets and cannot silently change session or artifact identity
+ok 2 - chunks preserve offsets and cannot silently change session or artifact identity
+  ---
+  duration_ms: 1.0943
+  type: 'test'
+  ...
+# Subtest: missing final state and malformed base64 fail without producing partial downloads
+ok 3 - missing final state and malformed base64 fail without producing partial downloads
+  ---
+  duration_ms: 0.4864
+  type: 'test'
+  ...
+# Subtest: explicit bundle verifies bytes and returns the same approved native path
+ok 4 - explicit bundle verifies bytes and returns the same approved native path
+  ---
+  duration_ms: 20.954
+  type: 'test'
+  ...
+# Subtest: changed binaries fail checksum validation
+ok 5 - changed binaries fail checksum validation
+  ---
+  duration_ms: 8.2743
+  type: 'test'
+  ...
+# Subtest: another architecture is not silently executed
+ok 6 - another architecture is not silently executed
+  ---
+  duration_ms: 7.8564
+  type: 'test'
+  ...
+# Subtest: missing and oversized manifests fail with sanitized errors
+ok 7 - missing and oversized manifests fail with sanitized errors
+  ---
+  duration_ms: 7.2186
+  type: 'test'
+  ...
+# Subtest: relative directories and malformed manifests cannot select other executables
+ok 8 - relative directories and malformed manifests cannot select other executables
+  ---
+  duration_ms: 6.791
+  type: 'test'
+  ...
+# Subtest: construction never loads a catalog and paginated reads preserve all models
+ok 9 - construction never loads a catalog and paginated reads preserve all models
+  ---
+  duration_ms: 2.2627
+  type: 'test'
+  ...
+# Subtest: changed catalog is rejected rather than combining different account snapshots
+ok 10 - changed catalog is rejected rather than combining different account snapshots
+  ---
+  duration_ms: 0.7222
+  type: 'test'
+  ...
+# Subtest: repeated cursors or model IDs cannot cause endless reads
+ok 11 - repeated cursors or model IDs cannot cause endless reads
+  ---
+  duration_ms: 0.4355
+  type: 'test'
+  ...
+# Subtest: legacy runtimes retain the existing explicit snapshot path
+ok 12 - legacy runtimes retain the existing explicit snapshot path
+  ---
+  duration_ms: 0.8344
+  type: 'test'
+  ...
+# Subtest: host model limits are enforced without returning truncated successful data
+ok 13 - host model limits are enforced without returning truncated successful data
+  ---
+  duration_ms: 0.3537
+  type: 'test'
+  ...
+# Subtest: managed auth calls use the advertised nested RPCs only
+ok 14 - managed auth calls use the advertised nested RPCs only
+  ---
+  duration_ms: 2.1382
+  type: 'test'
+  ...
+# Subtest: SDK close releases the native client once before closing its transport
+ok 15 - SDK close releases the native client once before closing its transport
+  ---
+  duration_ms: 2.1639
+  type: 'test'
+  ...
+# Subtest: a failed remote cleanup still closes the transport without leaking native errors
+ok 16 - a failed remote cleanup still closes the transport without leaking native errors
+  ---
+  duration_ms: 0.2927
+  type: 'test'
+  ...
+# Subtest: constructing a transport has no I/O
+ok 17 - constructing a transport has no I/O
+  ---
+  duration_ms: 1.1756
+  type: 'test'
+  ...
+# Subtest: pairing code helper reads the current code without credentials or caching
+ok 18 - pairing code helper reads the current code without credentials or caching
+  ---
+  duration_ms: 20.6651
+  type: 'test'
+  ...
+# Subtest: pairing code helper rejects malformed responses and remote hosts
+ok 19 - pairing code helper rejects malformed responses and remote hosts
+  ---
+  duration_ms: 1.188
+  type: 'test'
+  ...
+# Subtest: pairing code issue helper explicitly rotates by POST without auth
+ok 20 - pairing code issue helper explicitly rotates by POST without auth
+  ---
+  duration_ms: 0.688
+  type: 'test'
+  ...
+# Subtest: request uses header auth, exact method/params and no cookies or redirects
+ok 21 - request uses header auth, exact method/params and no cookies or redirects
+  ---
+  duration_ms: 0.9782
+  type: 'test'
+  ...
+# Subtest: nonlocal endpoints, URL credentials, query secrets and header injection are rejected
+ok 22 - nonlocal endpoints, URL credentials, query secrets and header injection are rejected
+  ---
+  duration_ms: 0.3119
+  type: 'test'
+  ...
+# Subtest: malformed or mismatched envelopes are rejected
+ok 23 - malformed or mismatched envelopes are rejected
+  ---
+  duration_ms: 1.3054
+  type: 'test'
+  ...
+# Subtest: provider error details are not reflected into SDK errors
+ok 24 - provider error details are not reflected into SDK errors
+  ---
+  duration_ms: 0.8457
+  type: 'test'
+  ...
+# Subtest: safe retry metadata is exposed without provider details
+ok 25 - safe retry metadata is exposed without provider details
+  ---
+  duration_ms: 0.5456
+  type: 'test'
+  ...
+# Subtest: no automatic retry on HTTP or ambiguous transport failure
+ok 26 - no automatic retry on HTTP or ambiguous transport failure
+  ---
+  duration_ms: 0.4178
+  type: 'test'
+  ...
+# Subtest: response bytes are bounded before JSON parsing
+ok 27 - response bytes are bounded before JSON parsing
+  ---
+  duration_ms: 0.833
+  type: 'test'
+  ...
+# Subtest: outgoing request bytes are bounded without sending
+ok 28 - outgoing request bytes are bounded without sending
+  ---
+  duration_ms: 0.3192
+  type: 'test'
+  ...
+# Subtest: aborted request sends nothing
+ok 29 - aborted request sends nothing
+  ---
+  duration_ms: 0.1581
+  type: 'test'
+  ...
+# Subtest: timeout aborts a hung request and never retries
+ok 30 - timeout aborts a hung request and never retries
+  ---
+  duration_ms: 24.571
+  type: 'test'
+  ...
+# Subtest: close aborts active requests and rejects future requests
+ok 31 - close aborts active requests and rejects future requests
+  ---
+  duration_ms: 0.5323
+  type: 'test'
+  ...
+# Subtest: client handshake rejects a mismatched protocol major and closes transport
+ok 32 - client handshake rejects a mismatched protocol major and closes transport
+  ---
+  duration_ms: 0.382
+  type: 'test'
+  ...
+# Subtest: client methods call exact RPC names, without auto discovery or execution
+ok 33 - client methods call exact RPC names, without auto discovery or execution
+  ---
+  duration_ms: 0.5117
+  type: 'test'
+  ...
+# Subtest: image inputs stage through inputs.put and advertise their runtime capability
+ok 34 - image inputs stage through inputs.put and advertise their runtime capability
+  ---
+  duration_ms: 0.3585
+  type: 'test'
+  ...
+# Subtest: SSE handles split UTF8, comments, CRLF and multiline data
+ok 35 - SSE handles split UTF8, comments, CRLF and multiline data
+  ---
+  duration_ms: 1.1778
+  type: 'test'
+  ...
+# Subtest: SSE never emits an incomplete event at EOF
+ok 36 - SSE never emits an incomplete event at EOF
+  ---
+  duration_ms: 0.1442
+  type: 'test'
+  ...
+# Subtest: SSE frame limits include unterminated lines
+ok 37 - SSE frame limits include unterminated lines
+  ---
+  duration_ms: 1.4929
+  type: 'test'
+  ...
+# Subtest: authenticated event stream uses safe cursor and explicit gap error
+ok 38 - authenticated event stream uses safe cursor and explicit gap error
+  ---
+  duration_ms: 0.6907
+  type: 'test'
+  ...
+# Subtest: plain text HTTP failures never disclose body content
+ok 39 - plain text HTTP failures never disclose body content
+  ---
+  duration_ms: 0.2811
+  type: 'test'
+  ...
+# Subtest: explicit native port carries handshake and data without ambient chrome access
+ok 40 - explicit native port carries handshake and data without ambient chrome access
+  ---
+  duration_ms: 3.2214
+  type: 'test'
+  ...
+# Subtest: native errors are typed and never echo provider strings
+ok 41 - native errors are typed and never echo provider strings
+  ---
+  duration_ms: 0.6788
+  type: 'test'
+  ...
+# Subtest: port disconnect rejects in-flight calls and releases listeners
+ok 42 - port disconnect rejects in-flight calls and releases listeners
+  ---
+  duration_ms: 0.2484
+  type: 'test'
+  ...
+# Subtest: oversized messages fail before posting and cancellation does not replay
+ok 43 - oversized messages fail before posting and cancellation does not replay
+  ---
+  duration_ms: 4.3015
+  type: 'test'
+  ...
+# Subtest: event subscription installs before same-tick updates and preserves unrelated calls
+ok 44 - event subscription installs before same-tick updates and preserves unrelated calls
+  ---
+  duration_ms: 0.528
+  type: 'test'
+  ...
+# Subtest: malformed native replies fail the connection instead of accepting untrusted payloads
+ok 45 - malformed native replies fail the connection instead of accepting untrusted payloads
+  ---
+  duration_ms: 0.4284
+  type: 'test'
+  ...
+# Subtest: explicit local process round trips through the same public client
+ok 46 - explicit local process round trips through the same public client
+  ---
+  duration_ms: 71.0345
+  type: 'test'
+  ...
+# Subtest: concurrent requests are correlated instead of relying on completion order
+ok 47 - concurrent requests are correlated instead of relying on completion order
+  ---
+  duration_ms: 86.8215
+  type: 'test'
+  ...
+# Subtest: prompts and arbitrary strings are data, not executable shell arguments
+ok 48 - prompts and arbitrary strings are data, not executable shell arguments
+  ---
+  duration_ms: 55.17
+  type: 'test'
+  ...
+# Subtest: relative executable or working directory is rejected
+ok 49 - relative executable or working directory is rejected
+  ---
+  duration_ms: 0.6634
+  type: 'test'
+  ...
+# Subtest: inherited NODE_OPTIONS is not injected into the helper
+ok 50 - inherited NODE_OPTIONS is not injected into the helper
+  ---
+  duration_ms: 58.3022
+  type: 'test'
+  ...
+# Subtest: request timeout does not retry and transport can still answer another request
+ok 51 - request timeout does not retry and transport can still answer another request
+  ---
+  duration_ms: 87.1662
+  type: 'test'
+  ...
+# Subtest: request AbortSignal rejects without replay or fallback
+ok 52 - request AbortSignal rejects without replay or fallback
+  ---
+  duration_ms: 5.391
+  type: 'test'
+  ...
+# Subtest: malformed peer output fails the transport closed
+ok 53 - malformed peer output fails the transport closed
+  ---
+  duration_ms: 56.471
+  type: 'test'
+  ...
+# Subtest: oversized unterminated stdout is bounded
+ok 54 - oversized unterminated stdout is bounded
+  ---
+  duration_ms: 64.9884
+  type: 'test'
+  ...
+# Subtest: peer exit rejects in-flight operations
+ok 55 - peer exit rejects in-flight operations
+  ---
+  duration_ms: 93.2138
+  type: 'test'
+  ...
+# Subtest: events in same stdout chunk as subscribe response are not lost
+ok 56 - events in same stdout chunk as subscribe response are not lost
+  ---
+  duration_ms: 48.3874
+  type: 'test'
+  ...
+# Subtest: event consumer overflow fails explicitly instead of dropping output
+ok 57 - event consumer overflow fails explicitly instead of dropping output
+  ---
+  duration_ms: 53.5161
+  type: 'test'
+  ...
+# Subtest: close is idempotent and does not leave pending requests
+ok 58 - close is idempotent and does not leave pending requests
+  ---
+  duration_ms: 4.4458
+  type: 'test'
+  ...
+# Subtest: stderr is drained but not returned or logged
+ok 59 - stderr is drained but not returned or logged
+  ---
+  duration_ms: 51.9968
+  type: 'test'
+  ...
+# Subtest: server event gap fails only its subscription and preserves request transport
+ok 60 - server event gap fails only its subscription and preserves request transport
+  ---
+  duration_ms: 52.0333
+  type: 'test'
+  ...
+# Subtest: concurrent successful probes share the newest snapshot instead of cancelling each other
+ok 61 - concurrent successful probes share the newest snapshot instead of cancelling each other
+  ---
+  duration_ms: 6.6439
+  type: 'test'
+  ...
+# Subtest: construction, subscription and reads do not start discovery or any request
+ok 62 - construction, subscription and reads do not start discovery or any request
+  ---
+  duration_ms: 0.2923
+  type: 'test'
+  ...
+# Subtest: concurrent snapshot loads share one public SDK request
+ok 63 - concurrent snapshot loads share one public SDK request
+  ---
+  duration_ms: 0.5804
+  type: 'test'
+  ...
+# Subtest: only explicit scan and probe calls enrich data
+ok 64 - only explicit scan and probe calls enrich data
+  ---
+  duration_ms: 0.6793
+  type: 'test'
+  ...
+# Subtest: a late request cannot repopulate a disposed store
+ok 65 - a late request cannot repopulate a disposed store
+  ---
+  duration_ms: 0.517
+  type: 'test'
+  ...
+# Subtest: authorization failures clear old account data and normalize the error
+ok 66 - authorization failures clear old account data and normalize the error
+  ---
+  duration_ms: 0.3759
+  type: 'test'
+  ...
+# Subtest: the store owns immutable data instead of mutating host input
+ok 67 - the store owns immutable data instead of mutating host input
+  ---
+  duration_ms: 0.3907
+  type: 'test'
+  ...
+# Subtest: store uses paged catalogs when the runtime advertises models.page
+ok 68 - store uses paged catalogs when the runtime advertises models.page
+  ---
+  duration_ms: 0.2814
+  type: 'test'
+  ...
+1..68
+# tests 68
+# suites 0
+# pass 68
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 959.0345
+Profile completed: sdk-typescript

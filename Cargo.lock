@@ -1275,7 +1275,7 @@ dependencies = [
 
 [[package]]
 name = "lai-adapters"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "axum",
  "chrono",
@@ -1298,7 +1298,7 @@ dependencies = [
 
 [[package]]
 name = "lai-chatgpt-auth"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "base64",
  "fs4",
@@ -1319,7 +1319,7 @@ dependencies = [
 
 [[package]]
 name = "lai-cli"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "lai-adapters",
  "lai-chatgpt-auth",
@@ -1338,7 +1338,7 @@ dependencies = [
 
 [[package]]
 name = "lai-contracts"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -1351,7 +1351,7 @@ dependencies = [
 
 [[package]]
 name = "lai-control"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "chrono",
  "crossterm",
@@ -1369,7 +1369,7 @@ dependencies = [
 
 [[package]]
 name = "lai-core"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "lai-contracts",
  "serde",
@@ -1378,7 +1378,7 @@ dependencies = [
 
 [[package]]
 name = "lai-discovery"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "lai-contracts",
  "lai-platform",
@@ -1389,7 +1389,7 @@ dependencies = [
 
 [[package]]
 name = "lai-kit"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "axum",
  "lai-adapters",
@@ -1408,7 +1408,7 @@ dependencies = [
 
 [[package]]
 name = "lai-platform"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "file-id",
  "lai-contracts",
@@ -1419,7 +1419,7 @@ dependencies = [
 
 [[package]]
 name = "lai-runtime"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "base64",
  "lai-contracts",
@@ -1430,7 +1430,7 @@ dependencies = [
 
 [[package]]
 name = "lai-service"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "base64",
  "chrono",
@@ -1452,7 +1452,7 @@ dependencies = [
 
 [[package]]
 name = "lai-store"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "getrandom 0.3.4",
  "lai-contracts",
@@ -1465,7 +1465,7 @@ dependencies = [
 
 [[package]]
 name = "lai-transports"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "async-stream",
  "axum",
@@ -1486,7 +1486,7 @@ dependencies = [
 
 [[package]]
 name = "lai-update"
-version = "0.1.0-alpha.17"
+version = "0.1.0-alpha.18"
 dependencies = [
  "base64",
  "fs4",

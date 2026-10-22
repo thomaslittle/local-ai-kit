@@ -140,6 +140,20 @@ fn merge(previous: Option<&Issue>, mut issue: Issue) -> Issue {
 }
 
 fn resource_present(issue: &Issue, snapshot: &Snapshot) -> bool {
+    if issue.kind == IssueKind::QuotaExhausted {
+        // Only a current, comparable provider reading below the threshold is
+        // recovery. Missing, unknown or stale usage retains the previous issue.
+        return !snapshot
+            .quota_pools
+            .iter()
+            .filter(|p| Some(&p.id) == issue.pool_id.as_ref())
+            .flat_map(|p| &p.windows)
+            .filter(|w| Some(&w.id) == issue.window_id.as_ref())
+            .any(|w| {
+                matches!(&w.reading, Observation::Known { value, freshness: Freshness::Fresh, .. }
+                if value.used_fraction.is_some_and(|fraction| fraction < 0.98))
+            });
+    }
     if let Some(connection) = &issue.connection_id {
         return !snapshot
             .connections
@@ -399,6 +413,9 @@ pub fn derive_issues(
         }
         if previous.state != IssueState::Resolved && resource_present(previous, snapshot) {
             let mut stale = previous.clone();
+            for evidence in &mut stale.evidence {
+                evidence.freshness = Some(Freshness::Stale);
+            }
             stale.last_seen_at = Timestamp::now();
             stale.occurrences = stale.occurrences.saturating_add(1);
             issues.push(stale);
@@ -449,6 +466,36 @@ pub fn summarize(issues: &[Issue], hydrated: bool) -> HealthSummary {
         checked_at: Some(Timestamp::now()),
         hydrated,
     }
+}
+
+pub fn inventory_issue(error: &DomainError) -> Issue {
+    observed_issue(
+        IssueKind::AdapterFailure,
+        IssueSeverity::Warning,
+        "inventory",
+        "Inventory could not be refreshed",
+        "Last-known inventory remains stale until a successful reconciliation.".into(),
+        None,
+        None,
+        vec![IssueEvidence {
+            code: format!("{:?}", error.code),
+            message: error.message.clone(),
+            source: Some(EvidenceSource::new(
+                EvidenceKind::Derived,
+                "lai-service",
+                "inventory refresh",
+            )),
+            observed_at: Some(Timestamp::now()),
+            freshness: Some(Freshness::Fresh),
+            verification: Some(Verification::Observed),
+        }],
+        vec![remediation(
+            RemediationKind::RetryLater,
+            "Retry later",
+            "The runtime retries with bounded backoff.",
+            false,
+        )],
+    )
 }
 
 pub fn storage_issue(error: &DomainError, _path_redacted: bool) -> Issue {

@@ -1,0 +1,17 @@
+refresh-lane audit against original shared-service requirements
+  MISSING: scheduled inventory reconciliation
+  MISSING: separately paced usage/reset lane
+  MISSING: client-interest cadence
+
+Current background loop:
+  lib.rs:108: let mut tick = tokio::time::interval(Duration::from_secs(5));
+  lib.rs:112: let _ = service.refresh_due_metadata(&providers_for_loop, 2).await;
+
+ADR statement:
+  ADR-001-shared-runtime.md:90: - Provider-supported usage/reset observations remain part of metadata/catalog
+
+Existing metadata cache/service tests do not cover these lanes:
+  runtime_sync::invalidation_is_debounced_then_the_autonomous_lane_rechecks_it
+  (metadata only; no inventory schedule, usage cadence, or interest gate)
+
+RESULT: FAIL - release-readiness hold; required lanes are absent

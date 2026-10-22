@@ -1,7 +1,7 @@
 # Shared runtime acceptance ledger — 2026-10-22
 
 - **Repository:** local-ai-kit (`C:\Users\User\Sites\local-ai-kit`)
-- **Branch:** `feat/shared-runtime`. Code head `eed3a2c26d7c0930d7f6e6313eed29bb528e9df8`
+- **Branch:** `feat/shared-runtime`. Historical consumer-qualification code head `eed3a2c26d7c0930d7f6e6313eed29bb528e9df8`
   (per-app grants, OpenCode Go billing, opt-in notification sink, interactive
   control-center fixes); the synthetic gateway fixture is
   `2ddd0e27ff1ea6f120020088545bfb1d0d793c51` (`recovered`/`Kimi K4` mode);
@@ -9,12 +9,21 @@
 - **Pull requests:** local-ai-kit [#28](https://github.com/thomaslittle/local-ai-kit/pull/28);
   Remotif [#36](https://github.com/thomaslittle/remotif/pull/36);
   Crntly [#117](https://github.com/thomaslittle/crntly-desktop/pull/117).
-- **Consumer heads:** Remotif `fc4a99e81b4a0da8ada8101c7469c6c6d5104bc6`
-  (`feat/shared-local-ai-runtime`); Crntly `b05ebb3002f9c63d0ec3ef802a956e0256e36d2e`
+- **Consumer heads:** Remotif `0c5d4701f722038f576fbcc6864c66f5ab74ce9c`
+  (`feat/shared-local-ai-runtime`); Crntly `2981b344cc5abd8e2ea73462cecb02383050499d`
   (`feat/shared-local-ai-runtime`, based on
-  `origin/feature/gpui-native-rust-studio`). The final Crntly binary was built
+  `origin/feature/gpui-native-rust-studio`). Crntly's final binary was built
   from that source: SHA-256
-  `30c1259c2d0a2aea22c280c73157416abe34714bda6858eb9f55b51cf7b58c4b`.
+  `f4c09f61504791d7eb21b69fc48805789fcc3ce86caf25a34d08f13666997473`;
+  Remotif's is `c4eeaaee2a3d90283c86523c970f4330f304d5d530216248d4a4c3b6d952a87a`.
+- **Release hold:** original section 5 lanes are implemented; round 5 independent
+  review approves them and the alpha18 full local profile passes (638 Rust tests).
+  Exact-head CI, clean Windows release artifact/provenance and consumer release
+  pins remain pending. See retained failures, final source hashes and evidence in
+  `docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/`.
+- **Approved integration boundaries:** kit and Remotif target main after gates;
+  Crntly targets only `feature/gpui-native-rust-studio`. No unrelated migration,
+  parity/render/bot work, signing credentials or OS notifications are authorized.
 - **Status vocabulary:** planned / implemented / fixture-tested /
   platform-executed / live-qualified. A fixture or mock is not a live provider.
 
@@ -22,6 +31,9 @@
 
 | Area | Status | Evidence |
 |---|---|---|
+| Independent refresh lanes, interest, authoritative reset/stale behavior | implemented, fixture-tested on Windows | `lai-service`25 library+20 refresh integration tests; fair70-source fixture, scoped journal, Retry-After, staged SQLite failure, cancellation, fake sleep/wall-clock; `refresh-lanes/sol-20261022/` |
+| Independent refresh review | approved within fixture scope; release hold preserved | R5:10 default combined runs,450 executions, zero failures/retries; earlier findings/failures retained in `review-rounds.json` and `review5/` |
+| Alpha18 full local profile | fixture-tested and platform-executed on Windows where applicable | `verify.py --profile all`:24 commands,638 Rust, SDK/React/generation/native bridge/packaging/headless demo/accessibility checks; `56-final-all-pinned-dependencies.*`; format52, strict Clippy53 |
 | Contracts compile; generated schemas/SDKs current | implemented, fixture-tested | `cargo check --workspace`, `python scripts/generate_contracts.py`, `python scripts/check_generated.py` |
 | SQLite snapshot/metadata/journal commit and replay | implemented, fixture-tested | `cargo test -p lai-store` (8 tests) |
 | Corrupt DB preserved, future schema fails closed, read-only diagnostic open | implemented, fixture-tested | `crates/lai-store/tests/store.rs` |
@@ -49,11 +61,11 @@
 | Remotif bridge scope/revocation/recovery | implemented, **platform-executed on Windows (real broker, test-owned IPC)** | `cargo test -p remotifd --test shared_bridge` at Remotif `fc4a99e`: two app-scoped tokens see only their codex or claude connection; `apps.revoke` invalidates the app and its cached view; peer survives; broker kill returns explicit unavailable rather than stale catalog; restart/reconnect recovers; log retained under `evidence/2026-10-22-shared-runtime/bridge/` |
 | Notification coordinator vs OS delivery | coordinator implemented; **optional OS sink implemented behind `os-notifications`/`--os-notifications`; not enabled in qualification** | injected sink test proves due decisions reach a host sink and duplicate polls do not; no real desktop notification was emitted; OS toast delivery is not claimed in the default build |
 | Control-center usability | implemented, **platform-executed in a test-owned Windows ConPTY** | keyboard/visual pass at 100x30 and 80x24 through real TUI rendering, no `SendInput` or global input: tab switching, row selection, confirmation prompt and cancel, redacted export, diagnostics scrolling, clean exit; a retained 80x24 failure showed the old prompt clipping `y/n`; later fixes and lost-attempt disclosure are in `evidence/2026-10-22-shared-runtime/control-center/` |
-| GUI lifecycle: first-app close/reopen, disconnect/reconnect, revoke | implemented, **platform-executed on Windows, with one explicit gap** | combined gate at Crntly `b05ebb30` / Remotif `fc4a99e`: distinct live clients, shared `GLM-5.3`, actual Crntly process close/reopen, explicit outage, broker restart, both live after **both app process restarts**, fresh `Kimi K4` seen by both, fresh Crntly `LOCAL_ACCESS_DENIED` denial with null baseline, and Remotif changed post-revoke catalog (`Kimi K4` removed) + `ready`. **Automatic reconnect was not implemented or qualified**; the gate used manual process restart. |
+| GUI lifecycle: first-app close/reopen, disconnect/reconnect, revoke | implemented, **platform-executed on Windows** | automatic gate at Crntly `2981b344` / Remotif `0c5d4701`: distinct live clients, shared `GLM-5.3`, actual Crntly process close/reopen, explicit outage, broker restart with **both native PIDs unchanged**, fresh `Kimi K4` seen by both without refresh clicks, preserved Crntly route/model + draft, preserved Remotif provider/account/route/model identity + draft, no fallback scanner, and revocation that stays denied while the peer remains usable. In-flight inference/tool retries remain deliberately unclaimed. |
 | Mutation validation of critical guards | implemented, **platform-executed on Windows** | four real patch-restored faults: metadata base revision, journal retention, app-grant revocation, exact Go provider id; each selected test failed with a real panic (exit 101), source was restored byte-for-byte, same test passed (exit 0); logs and SHA-256 summary in `evidence/2026-10-22-shared-runtime/mutations/` |
 | GUI failure injection | **partial** | synthetic gateway 503, broker grant revoke, auth/paid/unknown cases tested; full GUI error matrix and provider failure matrix not run |
 | Crntly shared helper | implemented, **platform-executed on Windows** | `cargo test -p crntly-core --no-default-features ai_assistant` (90); opt-in `shared_broker_helper_authenticates_and_reads_a_snapshot` with a real broker; shared health/issues added to the snapshot DTO and generated bindings |
-| Full Crntly + Remotif combined-client gate | implemented, **platform-executed on Windows (synthetic loopback, sequential injected input)** | accepted result `docs/developer/gpui-native-migration/evidence/2026-10-22-compose-stack/combined/full-gate-result.json` at Crntly `b05ebb30`, Remotif `fc4a99e`, kit `eed3a2c`, gateway fixture `2ddd0e2`: distinct client IDs on one broker; shared `GLM-5.3`; actual Crntly process close/reopen; Crntly outage `The AI helper stopped` (transport, not protocol) and Remotif explicit error with cached rows not treated as recovery; broker restart plus both app processes restarted; both live and observe fresh `Kimi K4`; app-scoped revoke yields fresh specific denial, while Remotif observes changed post-revoke catalog, reports `ready`, and remains registered. Manual-restart recovery only. |
+| Full Crntly + Remotif combined-client gate | implemented, **platform-executed on Windows (synthetic loopback, sequential injected input)** | `automatic-recovery-result.json` at Crntly `2981b344`, Remotif `0c5d4701`, kit `eed3a2c`, gateway fixture `2ddd0e2`: same native PIDs recover the read-only catalog after broker restart, fresh `Kimi K4` appears in both, selected provider/account/route/model identity and drafts are preserved, no fallback scanner starts, and revoked Crntly stays denied while Remotif remains usable. The earlier `full-gate-result.json` manual process-restart gate and its retained failures/pre-review evidence remain in the same directory. |
 | Live provider inference/account checks | **not run** | no account consumption is authorized by this task; no claim |
 
 ## Performance measurements
@@ -124,13 +136,19 @@ evidence.
 
 ## Remaining blockers / unclaimed scope
 
-1. **Automatic broker reconnection is not implemented or qualified.** The
-   accepted combined gate recovered only after **both native app processes were
-   restarted** following the broker restart; the existing workers did not
-   re-authenticate on their own. The crate/bridge tests still prove explicit
-   stale-cache refusal and recovery in their own paths, but no automatic
-   native-client reconnect is claimed. The prior stack overflow was diagnosed
-   with live cdb and fixed; it is no longer a blocker for the synthetic path.
+1. **Original refresh-lane requirements are not implemented.** The service has
+   one fixed 5-second metadata-only background loop (`lai-service/src/lib.rs`)
+   calling `refresh_due_metadata`. There is no scheduled inventory
+   reconciliation, no separately paced usage/reset lane, and no client-interest
+   cadence. The ADR folds usage into metadata and explicitly says a timer never
+   declares a reset. The only existing autonomous test covers metadata
+   invalidation/re-read. This is an original system requirement, not the
+   notification qualifier. The failing audit and exact mapping are retained in
+   `evidence/2026-10-22-shared-runtime/refresh-lanes/`; kit merge/publication
+   and consumer version updates are held until implemented or explicitly scoped
+   by the owner. Automatic same-process read-only reconnection itself is now
+   implemented and gate-proven; in-flight inference/tool operations are still
+   never retried.
 2. **GitHub PR creation for upstream reports.** The repository currently does
    not permit Actions to create/approve PRs. The workflow now runs report-only,
    uploads artifacts, and prints the exact minimum setting. Enabling PRs needs
@@ -154,15 +172,15 @@ evidence.
 7. **Consumer CI availability.** Remotif runs
    [39787048161](https://github.com/thomaslittle/remotif/actions/runs/39787048161)
    and [39787048643](https://github.com/thomaslittle/remotif/actions/runs/39787048643)
-   at `fc4a99e` completed failure with all four jobs reporting zero steps,
+   at `0c5d4701` completed failure with all four jobs reporting zero steps,
    consistent with the account's runner/billing restriction; no code step ran.
-   Crntly's `check.yml` is manual-only and no workflow run exists for
-   `b05ebb30`/`a8957095`; local targeted tests are the available evidence.
-   These are external CI availability limitations, not local test failures.
-8. **Two-app GUI acceptance boundaries.** The synthetic dual-app lifecycle
-   gate passed, but recovery required both app process restarts. This is not an
-   automatic-reconnect qualification, a live provider/account result, or a
-   release sign-off. A real notification, paid inference, or new provider test
+   Crntly's `check.yml` is manual-only and no workflow run exists for its latest
+   head; local targeted tests are the available evidence. These are external CI
+   availability limitations, not local test failures.
+8. **Two-app GUI acceptance boundaries.** The automatic read-only recovery gate
+   passed with unchanged app PIDs and preserved selected identity/drafts. It is
+   not a live provider/account result, an in-flight execution recovery claim, or
+   a release sign-off. A real notification, paid inference, or new provider test
    was not run.
 9. **Consumer UI release pins.** Remotif's managed helper remains available when
    no shared broker is configured. Crntly's managed component remains pinned to

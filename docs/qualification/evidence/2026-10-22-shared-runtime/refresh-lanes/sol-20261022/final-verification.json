@@ -1,0 +1,39 @@
+[
+  {
+    "name": "29-workspace",
+    "command": [
+      "cargo",
+      "test",
+      "--workspace",
+      "--all-features",
+      "--locked",
+      "--no-fail-fast"
+    ],
+    "exitCode": 0,
+    "seconds": 111.598
+  },
+  {
+    "name": "30-clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--all-features",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exitCode": 0,
+    "seconds": 5.102
+  },
+  {
+    "name": "31-native-bridge",
+    "command": [
+      "C:\\Python313\\python.exe",
+      "scripts/test_native_bridge.py"
+    ],
+    "exitCode": 0,
+    "seconds": 14.089
+  }
+]

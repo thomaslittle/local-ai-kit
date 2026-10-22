@@ -1,0 +1,1 @@
+First setup attempt did not match the formatted failure guard; assertion exited 1 before any source mutation or test execution. Corrected bounded function-local selector below.

@@ -1,6 +1,7 @@
 //! One native service shared by every transport. Only the trusted host sets policies.
 mod execution;
 mod inputs;
+mod inventory_events;
 pub use execution::{
     ExecutionGrant, ExecutionInput, ExecutionSource, PERSISTENT_RESUME, PersistentResume,
 };
@@ -13,6 +14,7 @@ mod metadata;
 mod methods;
 mod notifications;
 mod params;
+mod refresh;
 mod resume_token;
 use cache::InventoryCache;
 use lai_chatgpt_auth::AuthManager;
@@ -41,6 +43,9 @@ pub struct NativeService {
     /// Providers whose metadata the host authorized for the autonomous lane.
     refresh_providers: RwLock<BTreeSet<String>>,
     background: std::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
+    inventory_refresh: AtomicBool,
+    client_interest: std::sync::Mutex<BTreeMap<String, tokio::time::Instant>>,
+    metadata_slots: tokio::sync::Semaphore,
     /// Stable application identity per connection, for durable resume tokens.
     app_identities: RwLock<BTreeMap<String, String>>,
     /// Broker-owned hook that removes a reusable application grant when an
@@ -65,6 +70,9 @@ impl NativeService {
             watchers: std::sync::Mutex::new(BTreeMap::new()),
             refresh_providers: RwLock::new(BTreeSet::new()),
             background: std::sync::Mutex::new(None),
+            inventory_refresh: AtomicBool::new(false),
+            client_interest: std::sync::Mutex::new(BTreeMap::new()),
+            metadata_slots: tokio::sync::Semaphore::new(2),
             app_identities: RwLock::new(BTreeMap::new()),
             app_revoker: std::sync::Mutex::new(None),
             notification_sink: std::sync::Mutex::new(None),
@@ -85,15 +93,26 @@ impl NativeService {
             *current = providers;
         }
     }
-    /// Starts the background reconciliation lane. Safe to call once; a second
-    /// call returns false rather than creating another loop.
+    /// Host-only, independent of metadata grants. The installed source must
+    /// implement passive discovery; enabling provider probes does not allow scans.
+    pub fn enable_inventory_refresh(&self, enabled: bool) {
+        self.inventory_refresh
+            .store(enabled, std::sync::atomic::Ordering::SeqCst);
+        self.cache.set_inventory_refresh(enabled);
+    }
+    /// Starts the separately paced inventory, metadata and usage lanes.
+    /// Safe to call once; a second call returns false.
     pub fn start_background_tasks(self: &Arc<Self>) -> bool {
         let providers = self
             .refresh_providers
             .read()
             .map(|providers| providers.clone())
             .unwrap_or_default();
-        if providers.is_empty() || self.metadata_source.is_none() {
+        if !self
+            .inventory_refresh
+            .load(std::sync::atomic::Ordering::SeqCst)
+            && (providers.is_empty() || self.metadata_source.is_none())
+        {
             return false;
         }
         let Ok(mut slot) = self.background.lock() else {
@@ -102,21 +121,15 @@ impl NativeService {
         if slot.as_ref().is_some_and(|handle| !handle.is_finished()) {
             return false;
         }
-        let providers_for_loop = providers.clone();
         let service = self.clone();
-        let handle = tokio::spawn(async move {
-            let mut tick = tokio::time::interval(Duration::from_secs(5));
-            tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-            loop {
-                tick.tick().await;
-                let _ = service.refresh_due_metadata(&providers_for_loop, 2).await;
-            }
-        });
+        let generation = self.cache.cancel_background_refresh();
+        let handle = tokio::spawn(async move { service.run_refresh_lanes(generation).await });
         *slot = Some(handle);
         true
     }
     pub fn stop_background_tasks(&self) {
         if let Ok(mut slot) = self.background.lock() {
+            self.cache.cancel_background_refresh();
             if let Some(handle) = slot.take() {
                 handle.abort();
             }
@@ -249,6 +262,9 @@ impl NativeService {
     }
     /// Host-only cleanup for an application connection; other clients remain live.
     pub fn unregister_client(&self, id: &str) {
+        if let Ok(mut interest) = self.client_interest.lock() {
+            interest.remove(id);
+        }
         if let Ok(mut ids) = self.app_identities.write() {
             ids.remove(id);
         }
@@ -262,6 +278,9 @@ impl NativeService {
     }
     /// Release only this host-registered application. Other clients and shared metadata survive.
     pub fn close_client(&self, id: &str) {
+        if let Ok(mut interest) = self.client_interest.lock() {
+            interest.remove(id);
+        }
         if let Ok(mut watchers) = self.watchers.lock() {
             watchers.remove(id);
         }
@@ -347,6 +366,26 @@ impl NativeService {
                 None
             };
         self.policy(client)?;
+        // A registered but idle socket is not active UI interest. Only an
+        // authenticated read or authorized activity renews the short lease.
+        if matches!(
+            method,
+            "snapshot.get"
+                | "connections.list"
+                | "models.list"
+                | "models.page"
+                | "usage.read"
+                | "health.get"
+                | "events.read"
+                | "connections.probe"
+                | "discovery.refresh"
+                | "turns.start"
+                | "sessions.create"
+        ) {
+            if let Ok(mut interest) = self.client_interest.lock() {
+                interest.insert(client.to_owned(), tokio::time::Instant::now());
+            }
+        }
         // Staged images and turn text have separate bounds and closed typed params.
         if method == "inputs.put" {
             params.as_object().ok_or_else(params::invalid)?;
@@ -444,6 +483,7 @@ impl NativeService {
                 .map(str::to_owned)
                 .unwrap_or_else(|| snapshot.cursor.clone());
             let page = self.cache.inventory_page(&after)?;
+            let page = inventory_events::project(page, &snapshot, &self.policy(client)?);
             return serde_json::to_value(page).map_err(|_| params::invalid());
         }
         if method == "health.get" {
