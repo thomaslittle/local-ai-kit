@@ -63,7 +63,7 @@ jobs:
         run: python scripts/upstream_sync.py "$OPEN_PR_FLAG"
       - name: Upload durable Tokscale report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: upstream-tokscale-report
           path: upstream/tokscale/reviews/latest
@@ -94,7 +94,7 @@ jobs:
         run: python scripts/upstream_t3code.py "$OPEN_PR_FLAG"
       - name: Upload durable T3 Code report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: upstream-t3code-report
           path: upstream/t3code/reviews/latest
