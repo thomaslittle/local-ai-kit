@@ -4,13 +4,32 @@ use std::{
     process::{Command, Stdio},
 };
 fn run(origin: &str) -> (std::process::Output, tempfile::TempDir) {
+    // Two integration tests copy the same test binary. On Linux a concurrent
+    // execution can briefly report ETXTBSY; serialize the copy/spawn window.
+    static HOST_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _guard = HOST_TEST
+        .lock()
+        .unwrap_or_else(|poison| poison.into_inner());
     let dir = tempfile::tempdir().unwrap();
     let host = dir.path().join(if cfg!(windows) {
         "local-ai-kit-native-host.exe"
     } else {
         "local-ai-kit-native-host"
     });
-    std::fs::copy(env!("CARGO_BIN_EXE_local-ai-kit-native-host"), &host).unwrap();
+    let mut copied = false;
+    for _ in 0..20 {
+        match std::fs::copy(env!("CARGO_BIN_EXE_local-ai-kit-native-host"), &host) {
+            Ok(_) => {
+                copied = true;
+                break;
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::ExecutableFileBusy => {
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            Err(error) => panic!("could not prepare native host test binary: {error}"),
+        }
+    }
+    assert!(copied, "native host test binary stayed busy");
     let home = dir.path().join("home");
     std::fs::create_dir_all(home.join(".codex")).unwrap();
     let cfg = json!({"allowedOrigins":["chrome-extension://abcdefghijklmnopabcdefghijklmnop/"],"args":["--allow-passive-discovery","--home",home]});
