@@ -33,7 +33,7 @@
 | Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (4 tests) |
 | T3/Tokscale watcher parsing, classification, coverage report | implemented, fixture-tested | `python -m unittest scripts.test_upstream_sync scripts.test_upstream_t3code` (11 tests) |
 | Full Rust workspace | fixture-tested on Windows | `cargo test --workspace` — 598 passed, 0 failed |
-| Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39736523716](https://github.com/thomaslittle/local-ai-kit/actions/runs/39736523716) at code commit `e809afd`: Ubuntu 13m41s, macOS 13m10s, Windows 27m35s, all pass |
+| Linux and macOS shared-runtime tests | **platform-executed in GitHub CI** | run [39743883610](https://github.com/thomaslittle/local-ai-kit/actions/runs/39743883610) at code commit `6026590`: Ubuntu 11m13s, macOS 25m53s, Windows 27m56s, all pass |
 | Rust lint/format | passing | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
@@ -113,7 +113,7 @@ and the page is capped at 256 records (`journal_is_bounded_and_evicts_old_cursor
    registry publication, or live update endpoint was created. `lai-update` is
    fixture-tested; a real signed update was not installed.
 4. **Cross-platform qualification.** Shared-runtime tests and the full CI
-   verification passed on Windows, Ubuntu, and macOS in run `39736523716`.
+   verification passed on Windows, Ubuntu, and macOS in run `39743883610`.
    Performance numbers in this ledger are still Windows debug-build values; no
    release-performance or manual GUI qualification is claimed for Linux/macOS.
 5. **Live accounts.** No live provider account or inference was used; provider
