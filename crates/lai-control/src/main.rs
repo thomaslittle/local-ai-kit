@@ -185,7 +185,10 @@ fn act(app: &mut App, key: KeyCode) {
     if let Some(target) = app.confirm_revoke.clone() {
         match key {
             KeyCode::Char('y') => {
-                match app.client.call("apps.revoke", json!({"clientId": target})) {
+                match app
+                    .client
+                    .call("apps.revoke", json!({"targetClientId": target}))
+                {
                     Ok(_) => app.status = "Application revoked; its next request is denied.".into(),
                     Err(error) => app.status = error,
                 }

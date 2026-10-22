@@ -152,12 +152,12 @@
       "AppRevokeParams": {
         "additionalProperties": false,
         "properties": {
-          "clientId": {
+          "targetClientId": {
             "type": "string"
           }
         },
         "required": [
-          "clientId"
+          "targetClientId"
         ],
         "type": "object"
       },

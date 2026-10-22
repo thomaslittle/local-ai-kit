@@ -8,7 +8,7 @@ export type AccountScope = { "id": Observation; "kind": string; "label": Observa
 
 export type AdapterDescriptor = { "cancellation": boolean; "id": string; "integration": string; "limitations": Array<string>; "metadata": boolean; "name": string; "nativeToolApproval": boolean; "passiveDiscovery": boolean; "persistentResumption": boolean; "qualification": string; "textSessions": boolean; };
 
-export type AppRevokeParams = { "clientId": string; };
+export type AppRevokeParams = { "targetClientId": string; };
 
 export type ApprovalParams = { "allow": boolean; "approvalId": string; };
 

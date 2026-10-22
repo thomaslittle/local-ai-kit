@@ -9,7 +9,7 @@ AccountScope = TypedDict('AccountScope', {'id': Required['Observation'], 'kind':
 
 AdapterDescriptor = TypedDict('AdapterDescriptor', {'cancellation': Required[bool], 'id': Required[str], 'integration': Required[str], 'limitations': Required[List[str]], 'metadata': Required[bool], 'name': Required[str], 'nativeToolApproval': Required[bool], 'passiveDiscovery': Required[bool], 'persistentResumption': Required[bool], 'qualification': Required[str], 'textSessions': Required[bool]}, total=False)
 
-AppRevokeParams = TypedDict('AppRevokeParams', {'clientId': Required[str]}, total=False)
+AppRevokeParams = TypedDict('AppRevokeParams', {'targetClientId': Required[str]}, total=False)
 
 ApprovalParams = TypedDict('ApprovalParams', {'allow': Required[bool], 'approvalId': Required[str]}, total=False)
 

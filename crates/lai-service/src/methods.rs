@@ -126,11 +126,11 @@ impl NativeService {
                 Ok(json!(apps))
             }
             "apps.revoke" => {
-                params::allow(p, &["clientId"])?;
+                params::allow(p, &["targetClientId"])?;
                 if !self.policy(client)?.admin {
                     return Err(denied());
                 }
-                let target = params::text(p, "clientId")?.ok_or_else(params::invalid)?;
+                let target = params::text(p, "targetClientId")?.ok_or_else(params::invalid)?;
                 if target == client {
                     return Err(DomainError::new(
                         ErrorCode::Conflict,

@@ -162,6 +162,34 @@ async fn an_independent_broker_survives_consumer_disconnects_and_converges() {
         apps["result"].as_array().is_some(),
         "admin can list applications"
     );
+    let mut victim = authenticated(&address, &token).await;
+    let victims: Vec<String> = {
+        let listed = call(&mut admin_client, 4, "apps.list", json!({})).await;
+        listed["result"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|app| app["admin"] == false)
+            .filter_map(|app| app["id"].as_str().map(str::to_owned))
+            .collect()
+    };
+    assert!(!victims.is_empty());
+    for (index, victim_id) in victims.iter().enumerate() {
+        let result = call(
+            &mut admin_client,
+            (10 + index) as u64,
+            "apps.revoke",
+            json!({"targetClientId": victim_id}),
+        )
+        .await;
+        assert_eq!(
+            result["result"]["revoked"], true,
+            "revocation failed for {victim_id}: {result}"
+        );
+    }
+    let denied = call(&mut victim, 5, "runtime.health", json!({})).await;
+    assert_eq!(denied["error"]["data"]["code"], "LOCAL_ACCESS_DENIED");
+    drop(victim);
     drop(admin_client);
 
     // A concurrent launch must fail to take over the live endpoint.
