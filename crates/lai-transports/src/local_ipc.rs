@@ -102,7 +102,7 @@ fn name(value: &str) -> Result<interprocess::local_socket::Name<'_>> {
 /// those platforms restrict the endpoint to its owner right after binding and fail closed if they
 /// cannot. A connection also needs a one-use host grant, so the instant before this call exposes
 /// no usable access.
-#[cfg(all(unix, not(any(target_os = "linux", target_os = "android"))))]
+#[cfg(unix)]
 fn restrict_endpoint(address: &str) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
     std::fs::set_permissions(address, std::fs::Permissions::from_mode(0o600)).map_err(|_| {
@@ -143,10 +143,38 @@ impl Broker {
             use interprocess::os::unix::local_socket::ListenerOptionsExt;
             options.mode(0o600)
         };
-        let listener = options
-            .create_tokio()
-            .map_err(|_| fail(ErrorCode::Conflict))?;
-        #[cfg(all(unix, not(any(target_os = "linux", target_os = "android"))))]
+        let listener = match options.create_tokio() {
+            Ok(listener) => listener,
+            Err(_) => {
+                #[cfg(unix)]
+                {
+                    // Distinguish a live owner from a stale socket left by a
+                    // crash. Never unlink an endpoint that still accepts a
+                    // connection; just report a conflict.
+                    if Stream::connect(name(address)?).await.is_ok() {
+                        return Err(fail(ErrorCode::Conflict));
+                    }
+                    use std::os::unix::fs::FileTypeExt;
+                    let path = std::path::Path::new(address);
+                    if path
+                        .symlink_metadata()
+                        .map(|metadata| metadata.file_type().is_socket())
+                        .unwrap_or(false)
+                    {
+                        std::fs::remove_file(path).map_err(|_| fail(ErrorCode::Conflict))?;
+                    }
+                    ListenerOptions::new()
+                        .name(name(address)?)
+                        .create_tokio()
+                        .map_err(|_| fail(ErrorCode::Conflict))?
+                }
+                #[cfg(windows)]
+                {
+                    return Err(fail(ErrorCode::Conflict));
+                }
+            }
+        };
+        #[cfg(unix)]
         restrict_endpoint(address)?;
         let shared = Arc::new(Shared {
             service,

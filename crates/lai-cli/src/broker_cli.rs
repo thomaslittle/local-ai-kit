@@ -55,6 +55,8 @@ fn private_write(path: &std::path::Path, bytes: &[u8]) -> Result<()> {
                 "Broker token file could not be written",
             )
         })?;
+    #[cfg(windows)]
+    let _ = std::fs::remove_file(path);
     std::fs::rename(&temporary, path).map_err(|_| {
         DomainError::new(
             ErrorCode::StorageUnavailable,
@@ -115,7 +117,7 @@ fn descriptor(
         "protocolVersion": "1.0",
         "address": address,
         "token": token,
-        "expiresInSeconds": 300,
+        "expiresInSeconds": if reusable { 0 } else { 300 },
         "independent": reusable,
         "pid": std::process::id(),
     }))

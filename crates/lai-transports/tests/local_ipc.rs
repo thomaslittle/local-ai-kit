@@ -199,6 +199,22 @@ async fn endpoint_is_owner_only() {
     b.close().await;
 }
 
+#[cfg(unix)]
+#[tokio::test]
+async fn a_stale_unix_socket_is_reclaimed_but_a_live_one_is_not() {
+    let name = endpoint();
+    {
+        let listener = std::os::unix::net::UnixListener::bind(&name).unwrap();
+        drop(listener);
+    }
+    assert!(std::path::Path::new(&name).exists());
+    let (s, _) = service();
+    let broker = Broker::start(s, &name)
+        .await
+        .expect("stale socket is reclaimable");
+    broker.close().await;
+}
+
 #[tokio::test]
 async fn an_independent_owner_credential_can_open_more_than_one_connection() {
     let (s, _) = service();
