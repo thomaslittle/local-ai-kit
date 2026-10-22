@@ -1,0 +1,11 @@
+{"run": 1, "seconds": 1.902, "exitCode": 0}
+{"run": 2, "seconds": 1.315, "exitCode": 0}
+{"run": 3, "seconds": 1.506, "exitCode": 0}
+{"run": 4, "seconds": 1.268, "exitCode": 0}
+{"run": 5, "seconds": 1.316, "exitCode": 0}
+{"run": 6, "seconds": 1.541, "exitCode": 0}
+{"run": 7, "seconds": 1.317, "exitCode": 0}
+{"run": 8, "seconds": 1.245, "exitCode": 0}
+{"run": 9, "seconds": 1.224, "exitCode": 0}
+{"run": 10, "seconds": 1.987, "exitCode": 0}
+{"name": "bootstrap-sdk-repeat-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", ".verification/repeat_sdk_bootstrap.py"], "sourceCommit": "e6792159d0cbe1ebcb34574199dbbcdec2b9ba76", "exitCode": 0, "seconds": 16.238, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 8890896956, "finalActiveBytes": 8890658924, "cFreeBytes": 43586904064, "dFreeBytes": 605113057280, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

@@ -1,0 +1,6 @@
+test_python_client_uses_the_shared_native_broker_without_provider_logic (__main__.BrokerTest.test_python_client_uses_the_shared_native_broker_without_provider_logic) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.116s
+
+OK

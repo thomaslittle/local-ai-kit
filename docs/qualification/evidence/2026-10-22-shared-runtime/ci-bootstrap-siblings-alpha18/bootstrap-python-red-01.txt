@@ -1,0 +1,41 @@
+test_default_policy_denies_discovery (__main__.NativeAsync.test_default_policy_denies_discovery) ... Executing <Task pending name='Task-2' coro=<NativeAsync.test_default_policy_denies_discovery() running at <workspace>\tests\integration\test_sdk_native.py:35> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\Python313\Lib\asyncio\base_events.py:459> cb=[_run_until_complete_cb() at C:\Python313\Lib\asyncio\base_events.py:181] created at C:\Python313\Lib\asyncio\runners.py:100> took 0.897 seconds
+ok
+test_native_discovery_and_revocation (__main__.NativeAsync.test_native_discovery_and_revocation) ... FAIL
+test_sync_facade_scans_empty_home_through_rust (__main__.NativeSync.test_sync_facade_scans_empty_home_through_rust) ... ok
+
+======================================================================
+FAIL: test_native_discovery_and_revocation (__main__.NativeAsync.test_native_discovery_and_revocation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "<workspace>\tests\integration\test_sdk_native.py", line 18, in test_native_discovery_and_revocation
+    self.assertEqual((await ai.snapshot.get())['connections'],[])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [{'accountId': None, 'auth': {'reason': 'A[530 chars]ly'}] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+{'accountId': None, 'auth': {'reason': 'AUTH_NOT_CHECKED_PASSIVE_SCAN', 'state': 'unknown'}, 'diagnostics': ['CONFIGURATION_DIRECTORY_PRESENT'], 'displayName': 'Codex · Default profile', 'id': 'connection_f24038a8a7157c2aa61ce4f67eacbb1215eb4d4052a6be6e7c3332fccf7902ef', 'installationId': 'installation_c2f8716f9b2fae296e4ad9a2a05c9c6330a2501ba260b9eed442b72140282a47', 'plan': {'reason': 'PLAN_NOT_REPORTED', 'state': 'unknown'}, 'profileId': 'profile_df9dffc57e4e2526a1bc6f11e19f404a686fc9994ff410a69c1a2f09de41f067', 'providerId': 'codex', 'status': 'configuration_only'}
+
++ []
+- [{'accountId': None,
+-   'auth': {'reason': 'AUTH_NOT_CHECKED_PASSIVE_SCAN', 'state': 'unknown'},
+-   'diagnostics': ['CONFIGURATION_DIRECTORY_PRESENT'],
+-   'displayName': 'Codex · Default profile',
+-   'id': 'connection_f24038a8a7157c2aa61ce4f67eacbb1215eb4d4052a6be6e7c3332fccf7902ef',
+-   'installationId': 'installation_c2f8716f9b2fae296e4ad9a2a05c9c6330a2501ba260b9eed442b72140282a47',
+-   'plan': {'reason': 'PLAN_NOT_REPORTED', 'state': 'unknown'},
+-   'profileId': 'profile_df9dffc57e4e2526a1bc6f11e19f404a686fc9994ff410a69c1a2f09de41f067',
+-   'providerId': 'codex',
+-   'status': 'configuration_only'}]
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.371s
+
+FAILED (failures=1)
+{"name": "bootstrap-python-red-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", "tests/integration/test_sdk_native.py", "-v"], "sourceCommit": "e6792159d0cbe1ebcb34574199dbbcdec2b9ba76", "exitCode": 1, "seconds": 3.242, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 8890658924, "finalActiveBytes": 8890658924, "cFreeBytes": 43675201536, "dFreeBytes": 605113163776, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

@@ -1,0 +1,33 @@
+{
+  "sourceCommit": "e6792159d0cbe1ebcb34574199dbbcdec2b9ba76",
+  "workingTreeDirty": false,
+  "version": "0.1.0-alpha.18",
+  "platform": "x86_64-pc-windows-msvc",
+  "profile": "release",
+  "signed": false,
+  "archive": "dist\\release\\local-ai-kit-0.1.0-alpha.18-x86_64-pc-windows-msvc-e6792159d0cb.zip",
+  "archiveSha256": "a4a926b96203c06074431163ce75393ddc4dfb734d654cc8e0a413f79da664e8",
+  "standalone": "dist\\release\\local-ai-kit-0.1.0-alpha.18-windows-x86_64.exe",
+  "standaloneSha256": "9b3f6d2ea14b259b449145e6c15732c714f45b708ccdc560c193172d06bf42a6",
+  "licensesVerifiedByteForByte": [
+    {
+      "dependency": "jsonwebtoken@10.3.0",
+      "path": "licenses\\jsonwebtoken-10.3.0\\LICENSE",
+      "sha256": "a8012be84ea176195305bfb4e9109ed6f28860a8e697bc50302e75c2040813f3"
+    },
+    {
+      "dependency": "aws-lc-rs@1.18.2",
+      "path": "licenses\\aws-lc-rs-1.18.2\\LICENSE",
+      "sha256": "b50b376e7d24a0598488b730c3034ffcd0b58dd36c0913a24b9903a3cfd04bf7"
+    },
+    {
+      "dependency": "aws-lc-sys@0.46.0",
+      "path": "licenses\\aws-lc-sys-0.46.0\\LICENSE",
+      "sha256": "728536b4160e051f86d7c9c388f704866b3d512cd7df97ac3516c65279523c4e"
+    }
+  ],
+  "sbomPatchedDependencies": true,
+  "rustCryptoRSA": false,
+  "fipsClaim": false,
+  "scope": "Manifest/all bundle file hashes, source cleanliness, archive/standalone hashes, patched SBOM entries and exact upstream license retention. Unsigned artifact; no activation, accounts or inference."
+}

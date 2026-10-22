@@ -16,6 +16,14 @@ R8 accepts the sole source diff with no findings. Production/R6/R7 source hashes
 are unchanged. New source provenance and CI readiness remain gates; release is
 held. See [the receipts and limits](../qualification/evidence/2026-10-22-shared-runtime/ci-bootstrap-alpha18/README.md).
 
+The sibling Python first-read assertion is now aligned too. A combined rerun
+also exposed a page-revision comparison across a bootstrap publication; the
+empty fixture now brackets the page with snapshots and retains generation
+equality at either boundary. Both failures are retained. R9 accepts both test
+diffs with no findings; the final bridge passes Node 5/5 plus Python 4/4, and ten
+consecutive combined runs pass 90 executions with zero failures/retries. No
+production code or timing retry changed. See [the sibling receipts](../qualification/evidence/2026-10-22-shared-runtime/ci-bootstrap-siblings-alpha18/README.md).
+
 ## October 22 alpha18 security follow-up (qualification in progress)
 
 After refresh source `cf34b3d` was pushed, default-branch dependency alerts

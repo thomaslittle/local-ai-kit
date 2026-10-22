@@ -1,0 +1,8 @@
+test_default_policy_denies_discovery (__main__.NativeAsync.test_default_policy_denies_discovery) ... ok
+test_native_discovery_and_revocation (__main__.NativeAsync.test_native_discovery_and_revocation) ... ok
+test_sync_facade_scans_empty_home_through_rust (__main__.NativeSync.test_sync_facade_scans_empty_home_through_rust) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.223s
+
+OK

@@ -53,9 +53,13 @@ test('Node typed catalog pages are served by the actual native helper',async()=>
  const home=await mkdtemp(join(tmpdir(),'lai-paged-'));const ai=await connect(home);
  try{
   assert.ok(ai.handshake.methods.includes('models.page'));
+  const before=await ai.snapshot.get({fields:['revision']});
   const page=await ai.models.page({limit:10});
   assert.deepEqual(page.models,[]);assert.equal(page.nextCursor,null);
-  assert.equal(page.revision,(await ai.snapshot.get({fields:['revision']})).revision);
+  const after=await ai.snapshot.get({fields:['revision']});
+  // The empty fixture has one possible bootstrap publication. Keep revision
+  // validation while permitting that publication between independent reads.
+  assert.ok([before.revision,after.revision].includes(page.revision));
   await assert.rejects(ai.models.page({limit:0}),e=>e.code==='INVALID_REQUEST');
  }finally{await ai.close();await rm(home,{recursive:true,force:true});}
 });

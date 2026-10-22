@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: Node SDK shared broker uses independent credentials and one host survives client close
+ok 1 - Node SDK shared broker uses independent credentials and one host survives client close
+  ---
+  duration_ms: 326.3076
+  type: 'test'
+  ...
+# Subtest: Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+ok 2 - Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+  ---
+  duration_ms: 208.0247
+  type: 'test'
+  ...
+# Subtest: Node helper defaults to denied and cannot self-authorize over RPC
+ok 3 - Node helper defaults to denied and cannot self-authorize over RPC
+  ---
+  duration_ms: 109.1489
+  type: 'test'
+  ...
+# Subtest: Node empty-home scan stays empty in live mode
+ok 4 - Node empty-home scan stays empty in live mode
+  ---
+  duration_ms: 125.8965
+  type: 'test'
+  ...
+# Subtest: Node typed catalog pages are served by the actual native helper
+ok 5 - Node typed catalog pages are served by the actual native helper
+  ---
+  duration_ms: 92.914
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 691.2686
