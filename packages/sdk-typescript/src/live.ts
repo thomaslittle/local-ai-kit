@@ -26,19 +26,23 @@ export function createLiveSnapshotStore(
   let disposed = false;
   let pending: ReturnType<typeof setTimeout> | undefined;
   let reading = false;
+  let dirty = false;
 
   const schedule = () => {
     if (disposed) return;
-    if (pending) return;
+    dirty = true;
+    if (pending || reading) return;
     pending = setTimeout(() => {
       pending = undefined;
       if (disposed || reading) return;
+      if (!dirty) return;
+      dirty = false;
       reading = true;
       store.load().catch(() => {
         // The store already exposes the redacted LocalAIError to observers.
       }).finally(() => {
         reading = false;
-        if (!disposed) schedule();
+        if (!disposed && dirty) schedule();
       });
     }, 40);
   };
