@@ -40,6 +40,11 @@
 | TypeScript SDK/React/store | fixture-tested on Windows | `npm run test:react` (13), `npm run test:sdk` (68) |
 | Python SDK | fixture-tested on Windows | `python -m unittest discover -s packages/sdk-python/tests` (27) |
 | Remotif shared runtime | implemented, **platform-executed on Windows** | `cargo test -p remotif-kit` (6) with real broker/token; isolated native model-picker run with a distinct app token |
+| Remotif phone bridge shared mode | implemented, **not re-run as a phone/HTTP E2E this session** | the bridge uses the same `connect_client`; its shared-broker unit test passed, but no browser/phone session was driven |
+| Notification coordinator vs OS delivery | coordinator implemented and fixture-tested; OS notification delivery **not implemented** | dedupe/privacy/quiet-hours tests; no daemon or OS toast delivery claim |
+| Control-center usability | public-API E2E passed; **no interactive usability review** | `lai-control --test e2e`; keyboard/visual review remains unclaimed |
+| GUI lifecycle: first-app close/reopen, disconnect/reconnect, revoke | **partial** | broker lifecycle tests cover consumer disconnect, duplicate launch, idle shutdown, app revoke; Remotif picker proves discovery/refresh/error/recovery; Crntly GUI blocked; dual-app close/reopen not run |
+| Failure injection | **partial** | synthetic gateway 503, broker grant revoke, auth/paid/unknown cases tested; full GUI error matrix and provider disconnects not run |
 | Crntly shared helper | implemented, **platform-executed on Windows** | `cargo test -p crntly-core --no-default-features ai_assistant` (90); opt-in `shared_broker_helper_authenticates_and_reads_a_snapshot` with a real broker; shared health/issues added to the snapshot DTO and generated bindings |
 | Full Crntly GUI against one broker | **not passed / cause unconfirmed** | clean baseline and candidate both main-stack-overflow in Compose setup; retained as a blocker rather than claimed |
 | Live provider inference/account checks | **not run** | no account consumption is authorized by this task; no claim |
