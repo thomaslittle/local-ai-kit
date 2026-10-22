@@ -11,6 +11,7 @@ distinct upstream providers:
 `FAKE_OPENCODE_STATE` names a JSON file read on every request:
   {"mode": "normal"}   both providers, baseline model set
   {"mode": "updated"}  one additional Go model (incremental refresh)
+  {"mode": "recovered"} updated plus a fresh Go model for outage recovery
   {"mode": "error"}    HTTP 503 (failure injection)
 
 No inference endpoint is implemented; a session request gets HTTP 501. This is
@@ -38,7 +39,7 @@ def provider_payload(mode: str) -> dict:
             "limit": {"context": 262144},
         }
     }
-    if mode == "updated":
+    if mode in ("updated", "recovered"):
         go_models["glm-5.3"] = {
             "id": "glm-5.3",
             "providerID": "opencode-go",
@@ -49,6 +50,18 @@ def provider_payload(mode: str) -> dict:
                 "toolcall": False,
             },
             "limit": {"context": 131072},
+        }
+    if mode == "recovered":
+        go_models["kimi-k4"] = {
+            "id": "kimi-k4",
+            "providerID": "opencode-go",
+            "name": "Kimi K4",
+            "capabilities": {
+                "input": {"text": True, "image": False},
+                "output": {"text": True},
+                "toolcall": False,
+            },
+            "limit": {"context": 262144},
         }
     return {
         "connected": ["opencode-go", "opencode"],
