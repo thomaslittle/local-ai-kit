@@ -1,13 +1,12 @@
 # Shared runtime acceptance ledger — 2026-10-22
 
 - **Repository:** local-ai-kit (`C:\Users\User\Sites\local-ai-kit`)
-- **Branch:** `feat/shared-runtime`, head `9dd5e6b1b478d92f1d1ac82705380c25c2f3daa7`
-  (merge of `origin/main`; prior runtime commit `f98a8c6`).
+- **Branch:** `feat/shared-runtime`, head `5c30a71` (runtime commit `f98a8c6`; merge of `origin/main` before the docs/runtime follow-ups).
 - **Pull requests:** local-ai-kit [#28](https://github.com/thomaslittle/local-ai-kit/pull/28);
   Remotif [#36](https://github.com/thomaslittle/remotif/pull/36);
   Crntly [#117](https://github.com/thomaslittle/crntly-desktop/pull/117).
 - **Consumer heads:** Remotif `f4329fe96546e38b218b4218b24f924f8808f75d`
-  (`feat/shared-local-ai-runtime`); Crntly `c335ddd39cbb0c477ad008bef8dd0ded4a885625`
+  (`feat/shared-local-ai-runtime`); Crntly `c49686eae68773cd215824788e49df5783a15539`
   (`feat/shared-local-ai-runtime`, based on
   `origin/feature/gpui-native-rust-studio`).
 - **Status vocabulary:** planned / implemented / fixture-tested /
@@ -25,7 +24,7 @@
 | Debounced invalidation + autonomous re-read | implemented, fixture-tested | `runtime_sync::invalidation_is_debounced_then_the_autonomous_lane_rechecks_it` |
 | Issue derivation, snooze, projection filtering, notification dedupe/privacy | implemented, fixture-tested | `runtime_sync` health/notification tests; `lai-service/src/notifications.rs` tests |
 | Warm SQLite hydration labeled stale | implemented, fixture-tested | `metadata::observations_survive_a_restart_as_stale_while_revalidate_data_without_identity` |
-| Independent broker survives consumer disconnect; duplicate converges; idle releases endpoint/token | implemented, **platform-executed on Windows** | `cargo test -p lai-cli --test broker_lifetime` |
+| Independent broker survives consumer disconnect; duplicate converges; idle releases endpoint/token; admin token lists apps | implemented, **platform-executed on Windows** | `cargo test -p lai-cli --test broker_lifetime` |
 | Reusable owner credential | implemented, platform-executed on Windows | `lai-transports` local IPC test |
 | Control center public-API E2E | implemented, **platform-executed on Windows** | `cargo test -p lai-control --test e2e` |
 | Update signature/staging/active-session/rollback | implemented, fixture-tested | `cargo test -p lai-update` (3 tests) |
