@@ -50,9 +50,9 @@ inference was involved.
 
 | Measurement | Value | Budget |
 |---|---:|---:|
-| Cold process + passive scan p95 (10 samples) | 21.98 ms | < 1000 ms |
-| Cached stdio snapshot p95 (200 samples) | 2.02 ms | < 50 ms |
-| Idle peak RSS (10 s) | 14.90 MiB | < 50 MiB |
+| Cold process + passive scan p95 (10 samples) | 25.75 ms | < 1000 ms |
+| Cached stdio snapshot p95 (200 samples) | 1.85 ms | < 50 ms |
+| Idle peak RSS (10 s) | 14.94 MiB | < 50 MiB |
 | Idle CPU, % of one core (10 s) | 0.0% | < 1% |
 | Broker SQLite main file after scan | 53,248 B | n/a |
 | Broker WAL after scan | 53,592 B | n/a |
