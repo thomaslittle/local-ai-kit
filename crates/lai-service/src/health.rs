@@ -139,6 +139,27 @@ fn merge(previous: Option<&Issue>, mut issue: Issue) -> Issue {
     issue
 }
 
+fn resource_present(issue: &Issue, snapshot: &Snapshot) -> bool {
+    if let Some(connection) = &issue.connection_id {
+        return !snapshot
+            .connections
+            .iter()
+            .any(|candidate| &candidate.id == connection);
+    }
+    if let Some(pool_id) = &issue.pool_id {
+        return !snapshot.quota_pools.iter().any(|pool| {
+            &pool.id == pool_id
+                && issue
+                    .window_id
+                    .as_ref()
+                    .is_none_or(|window| pool.windows.iter().any(|item| &item.id == window))
+        });
+    }
+    // Storage/diagnostic issues have no provider resource. They are only kept
+    // while the current composition still emits them.
+    false
+}
+
 /// Produce the complete issue view for a snapshot. Issues that were observed
 /// before but are absent now are marked resolved only because this pass
 /// verified the corresponding resource, not because a timer elapsed.
@@ -369,6 +390,20 @@ pub fn derive_issues(
         // Hydration is a freshness fact, not an issue. Keep it in health only.
     }
     let mut issues: Vec<Issue> = observed.into_values().collect();
+    // A resource disappearing from a scan or a file event is not proof that
+    // the account recovered or signed out. Keep an unobserved open issue
+    // visible; only a later positive observation resolves it.
+    for previous in previous.values() {
+        if issues.iter().any(|current| current.id == previous.id) {
+            continue;
+        }
+        if previous.state != IssueState::Resolved && resource_present(previous, snapshot) {
+            let mut stale = previous.clone();
+            stale.last_seen_at = Timestamp::now();
+            stale.occurrences = stale.occurrences.saturating_add(1);
+            issues.push(stale);
+        }
+    }
     // Preserve recent resolved history, but never let it grow without a bound.
     let resolved: Vec<Issue> = previous
         .values()
@@ -523,5 +558,21 @@ mod tests {
         let second = derive_issues(&snapshot, &previous, false);
         assert_eq!(second[0].state, IssueState::Acknowledged);
         assert_eq!(second[0].occurrences, 2);
+    }
+
+    #[test]
+    fn a_missing_resource_does_not_prove_recovery_or_logout() {
+        let source = EvidenceSource::new(EvidenceKind::Synthetic, "test", "fixture");
+        let snapshot = connection(Observation::reported(AuthState::Expired, source));
+        let first = derive_issues(&snapshot, &BTreeMap::new(), false);
+        let previous: BTreeMap<_, _> = first
+            .iter()
+            .map(|issue| (issue.id.clone(), issue.clone()))
+            .collect();
+        let empty = Snapshot::empty(DataMode::Live);
+        let second = derive_issues(&empty, &previous, false);
+        assert_eq!(second.len(), 1);
+        assert_eq!(second[0].state, IssueState::Open);
+        assert_eq!(second[0].kind, IssueKind::AuthExpired);
     }
 }
