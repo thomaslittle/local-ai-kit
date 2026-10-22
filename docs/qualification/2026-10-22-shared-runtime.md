@@ -151,12 +151,14 @@ evidence.
    malware. Cross-platform app-grant tests remain open. The synthetic GUI
    dual-app gate passed; live OpenCode Go entitlement, quota, and Console Extra
    usage remain unverified, and the route class alone does not claim them.
-7. **Consumer CI availability.** Remotif workflow run
-   [39767436935](https://github.com/thomaslittle/remotif/actions/runs/39767436935)
-   at `026ee01` completed failure with all four jobs reporting zero steps,
+7. **Consumer CI availability.** Remotif runs
+   [39787048161](https://github.com/thomaslittle/remotif/actions/runs/39787048161)
+   and [39787048643](https://github.com/thomaslittle/remotif/actions/runs/39787048643)
+   at `fc4a99e` completed failure with all four jobs reporting zero steps,
    consistent with the account's runner/billing restriction; no code step ran.
-   Crntly has no workflow run for `c2bf8b6` (an empty run list was returned).
-   These are external CI availability failures, not local test failures.
+   Crntly's `check.yml` is manual-only and no workflow run exists for
+   `b05ebb30`/`a8957095`; local targeted tests are the available evidence.
+   These are external CI availability limitations, not local test failures.
 8. **Two-app GUI acceptance boundaries.** The synthetic dual-app lifecycle
    gate passed, but recovery required both app process restarts. This is not an
    automatic-reconnect qualification, a live provider/account result, or a
