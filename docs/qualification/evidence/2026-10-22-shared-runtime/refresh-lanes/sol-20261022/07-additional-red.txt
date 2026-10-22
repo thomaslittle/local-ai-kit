@@ -1,0 +1,46 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.43s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 9 tests
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... FAILED
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... FAILED
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... FAILED
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+
+failures:
+
+---- failed_inventory_retains_stale_observations_and_a_typed_refresh_error stdout ----
+
+thread 'failed_inventory_retains_stale_observations_and_a_typed_refresh_error' (34216) panicked at crates\lai-service\tests\refresh_lanes.rs:306:5:
+assertion `left == right` failed
+  left: String("fresh")
+ right: "stale"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- idle_usage_expiry_publishes_a_stale_event_without_inventing_zero stdout ----
+
+thread 'idle_usage_expiry_publishes_a_stale_event_without_inventing_zero' (27544) panicked at crates\lai-service\tests\refresh_lanes.rs:211:5:
+expiry must commit a journal change
+
+---- metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket stdout ----
+
+thread 'metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket' (45560) panicked at crates\lai-service\tests\refresh_lanes.rs:228:5:
+assertion `left == right` failed: active interest must recheck expired metadata
+  left: 2
+ right: 4
+
+
+failures:
+    failed_inventory_retains_stale_observations_and_a_typed_refresh_error
+    idle_usage_expiry_publishes_a_stale_event_without_inventing_zero
+    metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket
+
+test result: FAILED. 6 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

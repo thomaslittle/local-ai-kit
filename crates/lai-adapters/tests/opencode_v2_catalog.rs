@@ -37,6 +37,44 @@ fn retains_route_native_id_and_options_but_never_infers_auth_or_billing() {
     );
 }
 #[test]
+fn opencode_go_v2_is_subscription_and_payg_stays_unknown() {
+    let providers = json!({"data":[
+        {"id":"opencode-go","name":"OpenCode Go","activation":"enabled"},
+        {"id":"opencode","name":"OpenCode","activation":"enabled"}
+    ]});
+    let models = json!({"data":[
+        {"id":"go-model","providerID":"opencode-go","name":"Go","enabled":true,"capabilities":{"input":["text"],"output":["text"],"tools":false},"variants":[],"limit":{}},
+        {"id":"payg-model","providerID":"opencode","name":"PAYG","enabled":true,"capabilities":{"input":["text"],"output":["text"],"tools":false},"variants":[],"limit":{}}
+    ]});
+    let result = catalog_v2::catalog("c", "root", &providers, &models, &BTreeMap::new()).unwrap();
+    let go = result
+        .additional_routes
+        .iter()
+        .find(|route| route.provider_id == "opencode-go")
+        .unwrap();
+    assert_eq!(go.billing.value(), Some(&BillingMode::Subscription));
+    assert!(matches!(
+        &go.billing,
+        Observation::Known {
+            verification: Verification::Inferred,
+            ..
+        }
+    ));
+    assert!(
+        result
+            .additional_routes
+            .iter()
+            .find(|route| route.provider_id == "opencode")
+            .unwrap()
+            .billing
+            .value()
+            .is_none()
+    );
+    assert!(result.auth.value().is_none(), "route class is not auth");
+    assert!(result.quota_pools.is_empty());
+}
+
+#[test]
 fn ignores_disabled_and_non_text_models() {
     let (p, mut m) = inputs();
     m["data"][0]["enabled"] = json!(false);

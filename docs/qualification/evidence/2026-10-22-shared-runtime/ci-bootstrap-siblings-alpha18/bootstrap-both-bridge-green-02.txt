@@ -1,0 +1,60 @@
+    Finished `dev` profile [unoptimized] target(s) in 0.47s
+
+> local-ai-kit-workspace@0.1.0-alpha.18 build
+> tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json && tsc -p packages/react/tsconfig.json && tsc -p packages/ui-react/tsconfig.json && tsc -p apps/demo/tsconfig.json
+
+TAP version 13
+# Subtest: Node SDK shared broker uses independent credentials and one host survives client close
+ok 1 - Node SDK shared broker uses independent credentials and one host survives client close
+  ---
+  duration_ms: 982.335
+  type: 'test'
+  ...
+# Subtest: Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+ok 2 - Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+  ---
+  duration_ms: 943.3286
+  type: 'test'
+  ...
+# Subtest: Node helper defaults to denied and cannot self-authorize over RPC
+ok 3 - Node helper defaults to denied and cannot self-authorize over RPC
+  ---
+  duration_ms: 679.781
+  type: 'test'
+  ...
+# Subtest: Node empty-home scan stays empty in live mode
+ok 4 - Node empty-home scan stays empty in live mode
+  ---
+  duration_ms: 201.0455
+  type: 'test'
+  ...
+# Subtest: Node typed catalog pages are served by the actual native helper
+ok 5 - Node typed catalog pages are served by the actual native helper
+  ---
+  duration_ms: 201.5815
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2182.7303
+test_default_policy_denies_discovery (__main__.NativeAsync.test_default_policy_denies_discovery) ... ok
+test_native_discovery_and_revocation (__main__.NativeAsync.test_native_discovery_and_revocation) ... ok
+test_sync_facade_scans_empty_home_through_rust (__main__.NativeSync.test_sync_facade_scans_empty_home_through_rust) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.935s
+
+OK
+test_python_client_uses_the_shared_native_broker_without_provider_logic (__main__.BrokerTest.test_python_client_uses_the_shared_native_broker_without_provider_logic) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.137s
+
+OK
+{"name": "bootstrap-both-bridge-green-02", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", "scripts/test_native_bridge.py"], "sourceCommit": "e6792159d0cbe1ebcb34574199dbbcdec2b9ba76", "exitCode": 0, "seconds": 10.104, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 8890720912, "finalActiveBytes": 8890658924, "cFreeBytes": 43636940800, "dFreeBytes": 605113143296, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

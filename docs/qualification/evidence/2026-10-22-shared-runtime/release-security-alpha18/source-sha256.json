@@ -1,0 +1,10 @@
+{
+  "crates/lai-chatgpt-auth/Cargo.toml": "3fd1daf2af81d58fce3ed7dba791c77de69df30826fd5e26760fda165f674880",
+  "crates/lai-chatgpt-auth/src/oauth.rs": "f6553abf71fbf95600a3e74d1e7a709b11bbbd21cc9e43dc08747eb064b3c295",
+  "Cargo.lock": "603d573ce2939e2d9e680a2bcb5c498341c8070fd40a2ea0b207ddb8b091047f",
+  "package.json": "02f45e3c1d3f1455970ccad474b66b23efb0c0d208e714a9b51c0fd67012c370",
+  "package-lock.json": "a59ca5069c6ca30104ed8613ef1f4f0353a02dfd2dc3971b53af666f45506c28",
+  "scripts/test_dotnet.py": "255ce9460dc1aeb8329b8f86ee8bbcb2fb86a7f5028e19574ecd7f3cce9ca690",
+  "scripts/test_live_demo.mjs": "e3132f5c308cb85796c7fa99f6d0c7f62a3c08d44e3f8eaf7e29bed66895d2c0",
+  ".github/workflows/ci.yml": "bb35bec01a9bad96ae56ac09ea654bd13a45be8766748787bb6b2584a8b22ac0"
+}

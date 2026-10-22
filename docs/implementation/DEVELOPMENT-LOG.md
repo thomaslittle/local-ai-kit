@@ -1,6 +1,233 @@
 # Development log — Local AI Kit
 
+## October 22 native SDK bootstrap CI follow-up (release held)
+
+Clean source `aeecd15` passes Windows artifact provenance/licenses/SBOM,
+native/npm/Python/React consumers and all enforced 60-second performance targets.
+Latest-head Ubuntu and React Doctor CI passed; macOS executed and failed an
+SDK fixture that assumed the first cached snapshot preceded host-authorized
+background inventory. A delayed local fixture reproduces that failure.
+
+The test now accepts either valid startup ordering while requiring unknown
+auth, no models/accounts and no sentinel disclosure. Existing explicit refresh,
+credential equality, concurrent reads, revocation and default denial remain.
+After removing the diagnostic delay, Node 5/5 and Python 4/4 bridge checks pass.
+R8 accepts the sole source diff with no findings. Production/R6/R7 source hashes
+are unchanged. New source provenance and CI readiness remain gates; release is
+held. See [the receipts and limits](../qualification/evidence/2026-10-22-shared-runtime/ci-bootstrap-alpha18/README.md).
+
+The sibling Python first-read assertion is now aligned too. A combined rerun
+also exposed a page-revision comparison across a bootstrap publication; the
+empty fixture now brackets the page with snapshots and retains generation
+equality at either boundary. Both failures are retained. R9 accepts both test
+diffs with no findings; the final bridge passes Node 5/5 plus Python 4/4, and ten
+consecutive combined runs pass 90 executions with zero failures/retries. No
+production code or timing retry changed. See [the sibling receipts](../qualification/evidence/2026-10-22-shared-runtime/ci-bootstrap-siblings-alpha18/README.md).
+
+## October 22 alpha18 security follow-up (qualification in progress)
+
+After refresh source `cf34b3d` was pushed, default-branch dependency alerts
+identified JWT claim validation and two CSS build parsers. The signed-token
+fixture failed before the claim change; requiring `exp`, `iss`, `aud` and `sub`
+passes. The candidate pins jsonwebtoken 10.3.0 with the ordinary AWS-LC backend,
+source-map-js 1.2.2 and selector parser 7.1.6. Fresh npm installation and audit
+pass with zero vulnerabilities. Independent R6 approves the scoped changes;
+its single guarded Windows auth execution passes 21 tests. No OAuth grant,
+scope or provider account was enabled.
+
+The first isolated-target full run retained a Retry-After fixture failure.
+A deliberately delayed source reproduces that failure as a virtual timeout
+before `RateLimited` delivery. The fixture now holds fake time until the public
+issue proves publication. Its 25 library and 20 integration tests pass, and R7
+accepts the ordering without a Critical or Important finding. Production cache
+and supervisor sources are unchanged from R5. The full Windows rerun passes
+all 24 commands (638 Rust tests plus SDK, generation, integration, browser,
+accessibility and React Doctor checks). The Retry-After mutation fails at the
+intended assertion; restored source then passes ten combined refresh runs,
+450 executions without failures or retries. Formatting, strict Clippy, 638
+all-feature Rust tests, all eight adapter conformance groups and the real C#
+native consumer pass. Qualification peaks at 8.03 GiB active output with no
+pressure stop. Exact-source artifact and remote-readiness checks remain gates;
+release remains held.
+
+Resource recovery relocated exactly 664 owned generated PDBs, 54,956,384,256
+bytes (51.182 GiB), to retained task-owned D: storage; zero files were deleted.
+The unique D: lane has a 54 GiB retained-symbol budget and 12 GiB active-output
+budget, with an 11 GiB observed stop threshold, C:/D: free-space reserves, two
+jobs, no symbols/incremental output and no Rust compiler wrapper per process.
+The initial run inherited global kache output outside its measured target;
+the guard now disables that wrapper without changing global configuration or
+removing shared cache entries. All other targets and live processes are preserved.
+See [the evidence and limits](../qualification/evidence/2026-10-22-shared-runtime/release-security-alpha18/README.md).
+
+## October 22 Sol refresh lanes (local qualification; release held)
+
+Preserved the interrupted `cache.rs` / `metadata.rs` edits; the failed `lib.rs`
+tool call had not applied. Implemented independently admitted inventory,
+metadata and authoritative usage/reset lanes, active/idle interest, bounded fair
+queues, shared coalescing/backoff and owned cancellation. Inventory opt-in is
+separate from provider grants. Timers retain stale readings and quota warnings;
+they never infer a reset or recovery.
+
+Five independent review rounds drove failure-first fixes for journal scope,
+atomic success/error generations, fairness beyond 64 sources, failed-SQLite
+scan staging, and cancellation under the commit mutex. Round 4 accepted the
+runtime but retained a nondeterministic restart-test failure. The test now waits
+for cache flight retirement/publication before advancing fake time. Round 5
+approved the ordering and ran ten default combined suites: 25 library plus 20
+integration tests each, 450 executions, zero failures or retries. No production
+code changed after round 4. Earlier failures and passing retries remain visible.
+
+The alpha18 full `verify.py --profile all` passes all 24 commands on Windows:
+638 Rust tests, 28 selector tests, 68 TypeScript SDK tests, 27 Python SDK tests,
+13 React tests, native bridge/generation/packaging checks, 16 Python browser
+checks, 16 Node browser checks, 34 accessibility checks and React Doctor with no
+issues. All-target/all-feature workspace tests also pass (638 passed, zero failed) in 62. Formatting
+and strict all-target/all-feature Clippy pass. Optimized binaries compile. The
+C# real native HTTP consumer passes using the checksum-verified workspace-local
+.NET 8 SDK with an empty NuGet source configuration. Logs and source hashes are under
+`docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/`.
+The initial missing-Playwright dependency error, offline npm cache miss, and
+one Windows error32 temporary-directory rename failure are retained. Pinned
+local dependencies were installed; the unchanged six-test resumption retry and
+full rerun pass. The interfering handle was not identified; no antivirus cause
+is asserted and no retry/suppression was added to the product or fixture.
+
+Three real guard mutations previously failed assertions, were restored
+byte-for-byte, and passed. The final default offline scan reports 15 inspected matches: an existing
+synthetic OAuth RSA fixture, two generated type declarations and 12 independently
+recomputed source checksums. The earlier scan 46 reported only the first three. Dispositions retain hashes and reasons; the scanner exit remains
+1 and no ignore rule was added. No signing credential was generated or used.
+
+Current Codex/Claude/Muse adapters provide only profile-bound full operations
+and connection-scoped pools with unknown cross-profile sharing. Coalesce all
+verified routes/apps in that connection; never merge similar identities.
+Verified cross-connection pool operations, actual OS suspend/resume and live
+provider accounts remain unqualified. Sleep/wall-clock fixtures pass. No live
+credential, paid inference, GUI input, audio or OS notification was used here.
+
+Alpha18 version preparation updates Rust/npm packages and the previously
+lagging Python wheel (`0.1.0a11` to `0.1.0a18`); no dependency upgrade was added.
+Latest published release remains `v0.1.0-alpha.17`. Exact-source CI, clean Windows
+release artifact/checksums and consumer release pins remain gates; no merge or
+publication has occurred. Kit/Remotif target main; Crntly targets only
+`feature/gpui-native-rust-studio`. Keep existing GUI recovery/scope/draft receipts
+and consumer changes intact. No parity, bot or rendering work is included.
+Kit owns no GUI lock or Remotif target directory.
+
 A reverse-chronological engineering log of what was implemented, how it was verified, and what is deliberately still unclaimed. It records source commits and verification results at the time of each entry; entries are not rewritten when later work supersedes them. For release-level summaries see the [changelog](../../CHANGELOG.md); for operation-level provider status see the [support matrix](../adapters/SUPPORT-MATRIX.md).
+
+## October 22 automatic read-only recovery and refresh-lane release hold
+
+Crntly and Remotif were rerun after the shared client paths gained bounded
+read-only reconnection. With the broker restarted and a fresh `Kimi K4` catalog
+revision, both **existing native PIDs** recovered without a process restart or
+refresh click. The gate preserves Crntly's selected route/model and draft, and
+Remotif's selected `opencode-go` account/route/model identity and draft; the
+Remotif index alone is not treated as the oracle. It also checks one client per
+app, no app-owned `serve --stdio` fallback scanner, and that revoked Crntly stays
+denied while the peer remains usable. Evidence:
+`docs/developer/gpui-native-migration/evidence/2026-10-22-compose-stack/combined/automatic-recovery-result.json`
+in the Crntly repository.
+
+Release readiness is nevertheless held: the original refresh requirements are
+not implemented. The only background lane is a fixed 5-second metadata loop;
+there is no scheduled inventory reconciliation, separately paced usage/reset
+lane, or client-interest cadence. `discovery.watch` is a filesystem metadata
+watcher, not an inventory scheduler. The failing audit and exact mapping are
+retained under
+`docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/`. Kit
+merge/publication and consumer version updates remain held pending implementation
+or an explicit owner scope decision. No release, merge, signing, or real OS
+notification was performed.
+
+## October 22 combined-client lifecycle gate and corrected denial assertions
+
+Crntly and Remotif were qualified together against one independent broker with
+distinct app identities. The accepted gate at Crntly `b05ebb30`, Remotif
+`fc4a99e`, local-ai-kit `eed3a2c`, and synthetic gateway fixture `2ddd0e2`
+proves a shared `GLM-5.3` catalog change in both clients, an actual Crntly
+process close/reopen, explicit outage states, broker restart, both clients live
+again after **both app process restarts**, fresh `Kimi K4` observed by both, and
+app-scoped revocation with the peer still usable.
+
+The first 1255 PASS was retained but is not accepted: its revoked-client wait
+was caught and only recorded, so a missing denial could still pass, and its peer
+check read unchanged cached rows. The corrected gate requires a fresh
+`The shared AI runtime rejected this application` denial with a null baseline,
+and drives Remotif to a changed post-revoke catalog (Kimi K4 removed) with
+`ready` status before accepting the run. Crntly's outage path now distinguishes
+transport loss (`The AI helper stopped`) from genuine protocol incompatibility.
+The earlier cached-model/missing-peer failure (1225) and restart-path failure
+(1245) remain retained. Recovery used manual app restarts; automatic reconnect
+is not implemented or qualified. Evidence is under
+`docs/developer/gpui-native-migration/evidence/2026-10-22-compose-stack/combined/`
+in the Crntly repository; no live provider account, inference, real
+notification, or paid fallback was used.
+
+## October 22 mutation validation, bridge lifecycle, and control-center interaction
+
+Real patch-restored mutation validation replaced the earlier hypothetical
+fault notes. Four critical guards were exercised one at a time: the metadata
+base-revision check, journal retention bound, app-grant revocation, and exact
+OpenCode Go provider id. Each selected acceptance test failed with a real panic
+(exit 101), the source was restored byte-for-byte, and the same test passed
+(exit 0). Logs, source hashes, commands, and the clean-worktree checks are in
+`docs/qualification/evidence/2026-10-22-shared-runtime/mutations/`; no faulty
+variant was committed or pushed.
+
+The Remotif bridge now refuses to serve a cached catalog after its broker
+worker has exited, and a failed refresh clears the cache instead of presenting
+pre-revocation or pre-disconnect data as current. A new opt-in cross-process
+test (`remotifd/tests/shared_bridge.rs`, commit `fc4a99e`) proves app-scoped
+permission filtering, revocation of one app with a surviving peer, broker-kill
+failure, and restart/recovery using a real independent broker and only
+test-owned IPC. The control center was driven through a test-owned Windows
+ConPTY at 100x30 and 80x24 with no global input. It exposed and fixed stale
+selection after digit tab switches, `Esc`/`q` handling during revocation
+confirmation, clipped confirmation/help text, and non-scrollable Overview and
+Diagnostics reports. A retained 80x24 failure and the later passes are in
+`control-center/`; earlier artifacts that were deleted before the
+unique-evidence rule are disclosed in `control-center/ATTEMPTS.md` and are not
+claimed as retained.
+
+A full workspace run first hit a Windows ephemeral loopback socket-buffer
+failure in one HTTP test; that unchanged failure log is retained beside the
+passing targeted retry and the subsequent 611-passed, 0-failed full run under
+`tests/`. The failure is reported as a host socket-resource event, not as a
+product assertion or proven flakiness.
+
+**Deliberately unclaimed:** live OpenCode Go entitlement/quota/Extra-usage
+verification; any inference; Crntly native GUI acceptance; a real OS
+notification emission; signed updates and publication.
+
+## October 22 shared runtime, health, control center, and update verification
+
+Implemented on branch `feat/shared-runtime` (runtime commit `f98a8c6`, docs head at the time of writing `a1d4d55`), from baseline `556e35e`. The branch was merged with `origin/main` after the dependency-maintenance PR; no force-push and no merge into `main` was performed. Pull request: [#28](https://github.com/thomaslittle/local-ai-kit/pull/28).
+
+The previously verified broker, scoped grants, single-flight discovery, metadata cache, backoff, and file watching were preserved. The inspected gaps were real: the parent-owned broker stopped with its control input, invalidation did not schedule a re-read, metadata did not advance a shared revision, warm startup did not hydrate the ready snapshot or health, and there was no durable issue/notification/update path. The new `lai-store` owns SQLite state; `lai-service` commits the snapshot, metadata, revision, bounded journal, and issues atomically before publishing; `lai-control` is a public-API-only native Rust terminal control center; `lai-update` verifies Ed25519 updates, stages them, refuses activation during a live session lease, backs up the previous binary, and rolls back.
+
+**Fixture-tested / platform-executed on Windows, 2026-10-22:** `cargo test --workspace` passed 598 tests; `cargo fmt --all --check` and `cargo clippy --workspace --all-targets --all-features -- -D warnings` passed. `npm run test:sdk` passed 68, `npm run test:react` passed 13, and the Python SDK passed 27. `cargo test -p lai-cli --test broker_lifetime` exercised a real independent broker over a Windows pipe: one scan shared by two clients, consumer disconnect did not stop the broker, a duplicate launch exited with conflict, the admin token listed apps, idle shutdown removed both token files, and the endpoint was released. `cargo test -p lai-control --test e2e` launched the control-center binary against a real broker and token file. `cargo test -p lai-store` covered replay, gaps, bounded journal, corruption preservation, future-schema rejection, read-only diagnostics, identity redaction, and notification dedupe. `cargo test -p lai-update` covered signature/checksum/platform/downgrade rejection, active-session refusal, activation, and rollback. Remotif `remotif-kit` and Crntly's Tauri helper each authenticated to a real independent broker in their own opt-in cross-process tests; Crntly's 90 `ai_assistant` tests passed and its bindings were regenerated with health/issues.
+
+Measured on `target/debug` with 10 fixture profiles: cold process+scan p95 25.75 ms, cached stdio snapshot p95 1.85 ms, idle peak RSS 14.94 MiB over 10 s, idle CPU 0.0% of one core; the SQLite file was 53,248 bytes with a 53,592-byte WAL after the scan. These are debug-build, single-host values, not release guarantees.
+
+GitHub Actions run [39743883610](https://github.com/thomaslittle/local-ai-kit/actions/runs/39743883610) at code commit `6026590` passed the full deterministic verification and clean-consumer artifact build on Ubuntu (13m41s), macOS (13m10s), and Windows (27m35s). This is CI platform execution, not a manual GUI or live-provider qualification.
+
+**Deliberately unclaimed:** full Crntly and Remotif GUI launches against one broker (targeted consumer processes passed); live provider inference/accounts; signing credentials, publication, or installation of an update; Linux/macOS shared-runtime execution; and per-app isolation in independent mode (the reusable token is owner-scoped). The upstream workflow now runs report-only when GitHub Actions cannot create PRs and uploads a durable report; enabling PR creation still requires the repository's minimum Actions setting. Full details and rollback instructions are in the [acceptance ledger](../qualification/2026-10-22-shared-runtime.md), [ADR](../design/ADR-001-shared-runtime.md), and [security review](../security/SHARED-RUNTIME-REVIEW.md).
+
+## October 22 OpenCode Go billing and independent app-scoped grants
+
+Implemented on branch `feat/shared-runtime` after the shared-runtime delivery. The user-visible bug was not a plan lookup: OpenCode publishes Go under the exact provider id `opencode-go`, while the adapter left every gateway sub-route at `UPSTREAM_BILLING_NOT_REPORTED`. Remotif then wrote one connection-wide `subscription` declaration for the `opencode` connection, which made every OpenCode route user-supplied and treated a declared subscription as metered for auto-selection and per-send consent. Crntly's renderer similarly auto-declared the `opencode` connection.
+
+The adapter now classifies only the exact `opencode-go` route as subscription with `derived`/`inferred` evidence (official provider identity; entitlement/quota/Extra usage remain unknown). It consults declarations only for routes that are otherwise unknown. Console `opencode`, lookalikes, metered routes, expired auth, and unknown billing keep their existing gates. Remotif no longer writes or passes an OpenCode billing declaration, no longer treats a declared subscription as metered, and no longer emits "Billing declared" for Go. Crntly stops auto-declaring `opencode` connection-wide; Go is classified by the kit, while Console PAYG stays unknown. No route fallback, account switching, or paid opt-in is implicit.
+
+**Fixture-tested on Windows, 2026-10-22:** `cargo test -p lai-adapters --test opencode_catalog --test opencode_v2_catalog` (15), `cargo test -p lai-core --test opencode_go_billing` (3), `cargo test -p lai-adapters --test billing_declarations` (2), and the per-app grant/broker tests below. Remotif `cargo test -p remotif-kit` passed 6 tests. Remotif's isolated GUI run against one real independent broker passed: distinct app token, Go eligible with `declared:false`/`paid:false`, Console PAYG ineligible for billing consent, cached state, a new Go model after refresh, a synthetic gateway-error notice, and recovery; the run used its own APPDATA, a unique loopback E2E endpoint, unchanged foreground PID, and the child PID owning that listener. The isolated Remotif bridge (`remotifd --demo`, loopback only) independently passed the same Go/PAYG/update/error/recovery checks over `/api/v1/motif/models`; no LAN bind, firewall change, TV, or inference was used. Crntly's native Compose GUI did not reach acceptance: both the modified candidate and a clean exact-source `c49686e` baseline hit a main-thread stack overflow when Compose setup ran with an installed helper; the cause is not confirmed and no speculative fix is retained. The exact missing diagnostic is a native debugger/dump analyzer; the local WER service is stopped and the diagnostic LocalDumps values were removed rather than left enabled.
+
+Independent mode now accepts `--grants-file` with up to 32 per-app entries. Each app gets a distinct reusable token, stable app identity, scoped policy/execution grant, and broker-level revocation; `apps.revoke` removes the grant before sweeping live app connections, so an old token cannot reconnect. The legacy owner token remains for single-app compatibility. Tests prove A/B account isolation, cross-account and lookalike denial, token reuse after revoke, and an unaffected peer. The existing owner-scoped credential is no longer the only independent shape; the file/ACL boundary still means another process running as the same OS user can read an app token.
+
+Notification delivery now has an injected `NotificationSink` API. The service computes and deduplicates decisions as before; a host must explicitly install a sink. An optional `os-notifications` feature (and `serve --os-notifications`) installs the cross-platform desktop notifier, but it is off by default and was not enabled for qualification. The injected-sink regression proves only due decisions are delivered and a second poll remains deduplicated; no real desktop notification was emitted.
+
+**Deliberately unclaimed:** live OpenCode Go entitlement/quota/Extra-usage verification; any inference; Crntly native GUI acceptance; a real OS notification emission; signed updates and publication. See the [acceptance ledger](../qualification/2026-10-22-shared-runtime.md), [OpenCode adapter notes](../adapters/opencode.md), and [security review](../security/SHARED-RUNTIME-REVIEW.md).
 
 ## October 16 T3 Code provider sync (alpha.17)
 

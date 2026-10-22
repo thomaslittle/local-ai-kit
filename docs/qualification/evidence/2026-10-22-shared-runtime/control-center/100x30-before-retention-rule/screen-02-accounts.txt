@@ -1,0 +1,30 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Overview ────────────────────────────────────────────────────────────────────────────────────────┐
+│Revision       projection_53f3ceda9b08c3198d05261d68e37be9db2a009b930d5dda8f253baeb63ed997        │
+│Journal cursor a7b3e5e4bc52e8393cedc60b5373fdc3:2                                                 │
+│Observed       2026-10-22T13:09:59.314Z                                                           │
+│Mode           Live                                                                               │
+│Runtime        ok (-)                                                                             │
+│Storage        available                                                                          │
+│Hydrated       no                                                                                 │
+│Health         Healthy / 0 open                                                                   │
+│Inventory      2 providers, 3 connections, 0 authenticated, 3 routes, 0 models, 0 pools           │
+│Connected apps 1                                                                                  │
+│                                                                                                  │
+│Providers                                                                                         │
+│  Codex                2 connection(s), 0 authenticated                                           │
+│  Claude Code          1 connection(s), 0 authenticated                                           │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────────────────────────┐
+│Refreshed                                                                                         │
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                                           │
+│p probe account · a acknowledge · s snooze · x revoke app                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘

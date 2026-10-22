@@ -14,7 +14,13 @@ class NativeAsync(unittest.IsolatedAsyncioTestCase):
             pathlib.Path(home,'.codex').mkdir()
             secret=pathlib.Path(home,'.codex','auth.json');secret.write_text('PRIVATE-SENTINEL')
             async with await AsyncClient.connect(await AsyncStdioTransport.open(**options(home))) as ai:
-                self.assertEqual((await ai.snapshot.get())['connections'],[])
+                # Host-authorized inventory may already have populated this cache.
+                initial=await ai.snapshot.get()
+                self.assertEqual(initial['mode'],'live')
+                self.assertTrue(all(c['auth']['state']=='unknown' for c in initial['connections']))
+                self.assertEqual(initial['models'],[])
+                self.assertEqual(initial['accounts'],[])
+                self.assertNotIn('PRIVATE-SENTINEL',str(initial))
                 await ai.discovery.refresh({'level':'passive'})
                 snapshot=await ai.snapshot.get()
                 self.assertEqual(snapshot['mode'],'live')

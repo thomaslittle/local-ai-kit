@@ -1,0 +1,24 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics           │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Accounts ────────────────────────────────────────────────────────────────────┐
+│› Codex / Codex · Default profile [unknown -] identity hidden/unknown · plan u│
+│Codex / Codex · Additional profile 2 [unknown -] identity hidden/unknown · pla│
+│Claude Code / Claude Code · Default profile [unknown -] identity hidden/unknow│
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                       │
+│p probe account · a acknowledge · s snooze · x revoke app                     │
+└──────────────────────────────────────────────────────────────────────────────┘

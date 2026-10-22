@@ -1,0 +1,11 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.25s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 4 tests
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s

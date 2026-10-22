@@ -1,0 +1,1 @@
+PASS project hygiene: no implementation stubs, local Markdown links, package privacy and notices

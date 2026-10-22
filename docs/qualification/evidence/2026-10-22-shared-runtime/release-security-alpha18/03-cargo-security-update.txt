@@ -1,0 +1,12 @@
+    Updating crates.io index
+      Adding aws-lc-rs v1.18.2
+      Adding aws-lc-sys v0.46.0
+      Adding cmake v0.1.58
+      Adding dunce v1.0.5
+      Adding fs_extra v1.3.0
+      Adding jobserver v0.1.35
+    Updating jsonwebtoken v9.3.1 -> v10.3.0
+      Adding rand_core v0.6.4
+      Adding signature v2.2.0
+      Adding untrusted v0.7.1
+note: pass `--verbose` to see 63 unchanged dependencies behind latest

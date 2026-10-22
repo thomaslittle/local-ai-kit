@@ -106,6 +106,10 @@
     {
       "area": "acp-malformed-session-update",
       "finding": "effect-acp drops one schema-invalid session notification instead of ending the connection (559c4b1f). Local AI Kit's ACP client already continues on an unrecognized sessionUpdate and does not fail a turn when usage_update omits used. A notification with no sessionUpdate still ends the turn."
+    },
+    {
+      "area": "shell-resolution",
+      "finding": "T3's packages/shared/src/shell.ts and apps/desktop/src/shell/DesktopShellEnvironment.ts resolve login-shell PATH and platform environment for spawning desktop clients. Local AI Kit keeps its own injected platform environment and never reads shell profiles or executes discovered commands during passive discovery; shell probing remains an explicitly authorized active-probe concern."
     }
   ],
   "watchedPaths": [
@@ -115,6 +119,8 @@
     "apps/server/src/provider/CodexChatGptHandoff.ts",
     "apps/server/src/provider/CodexChatGptSessionLock.ts",
     "apps/server/src/provider/CodexInstallation.ts",
+    "packages/shared/src/shell.ts",
+    "apps/desktop/src/shell/DesktopShellEnvironment.ts",
     "apps/server/src/provider/CodexProvider.ts",
     "apps/server/src/provider/AntigravityInstallation.ts",
     "apps/server/src/provider/Drivers",

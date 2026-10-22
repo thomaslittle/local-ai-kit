@@ -1,0 +1,30 @@
+[package]
+name = "lai-control"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "local-ai-kit-control"
+path = "src/main.rs"
+
+[dependencies]
+lai-contracts = { path = "../lai-contracts" }
+lai-transports = { path = "../lai-transports" }
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "io-util"] }
+ratatui = "0.29"
+crossterm = "0.28"
+
+[dev-dependencies]
+lai-core = { path = "../lai-core" }
+lai-discovery = { path = "../lai-discovery" }
+lai-service = { path = "../lai-service" }
+tempfile = "3"
+
+[lints]
+workspace = true

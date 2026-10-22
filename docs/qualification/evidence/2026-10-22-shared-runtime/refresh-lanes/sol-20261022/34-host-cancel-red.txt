@@ -1,0 +1,24 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.39s
+     Running unittests src\lib.rs (target\debug\deps\lai_service-d9ef0122999d599e.exe)
+
+running 1 test
+test cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout ... FAILED
+
+failures:
+
+---- cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout stdout ----
+
+thread 'cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout' (72240) panicked at crates\lai-service\src\cache.rs:1730:9:
+assertion `left == right` failed
+  left: Timeout
+ right: Cancelled
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p lai-service --lib`

@@ -1,0 +1,19 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Overview ────────────────────────────────────────────────────────────────────────────────────────┐
+│Revision       projection_f22e4bbebbdc723cf24939ed07ed295e88deb8fc36d811d4dc00bcbd81debf91        │
+│Journal cursor a7b3e5e4bc52e8393cedc60b5373fdc3:1                                                 │
+│Observed       2026-10-22T13:09:59.012Z                                                           │
+│Mode           Live                                                                               │
+│Runtime        ok (-)                                                                             │
+│Storage        available                                                                          │
+│Hydrated       no                                                                                 │
+│Health         Healthy / 0 open                                                                   │
+│Inventory      0 providers, 0 connections, 0 authenticated, 0 routes, 0 models, 0 pools           │
+│Connected apps 1                                                                                  │
+│                                                                                                  │
+│Providers                                                                                         │
+│  No supported AI installation or explicit route was found.                                       │
+│                                                                                                  │
+│

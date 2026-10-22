@@ -1,0 +1,41 @@
+[
+  {
+    "name": "23-sdk-typescript",
+    "command": [
+      "C:\\Python313\\python.exe",
+      "scripts/verify.py",
+      "--profile",
+      "sdk-typescript"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "24-sdk-python",
+    "command": [
+      "C:\\Python313\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "packages/sdk-python/tests",
+      "-v"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "25-generated",
+    "command": [
+      "C:\\Python313\\python.exe",
+      "scripts/check_generated.py"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "26-hygiene",
+    "command": [
+      "C:\\Python313\\python.exe",
+      "scripts/check_project.py"
+    ],
+    "exitCode": 0
+  }
+]

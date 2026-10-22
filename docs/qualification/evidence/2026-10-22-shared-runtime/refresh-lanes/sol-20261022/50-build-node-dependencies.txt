@@ -1,0 +1,14 @@
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\<repo>\\node_modules\\@opentelemetry',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir '<repo>\node_modules\@opentelemetry\sdk-trace'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: '<repo>\\node_modules\\@opentelemetry\\sdk-trace'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+npm error code ENOTCACHED
+npm error request to https://registry.npmjs.org/@rolldown/plugin-babel/-/plugin-babel-0.2.4.tgz failed: cache mode is 'only-if-cached' but no cached response is available.
+npm error A complete log of this run can be found in: <user-home>\AppData\Local\npm-cache\_logs\2026-10-22T20_00_23_934Z-debug-0.log

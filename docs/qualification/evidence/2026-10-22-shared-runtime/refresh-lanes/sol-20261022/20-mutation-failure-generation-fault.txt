@@ -1,0 +1,31 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+warning: unused variable: `base`
+   --> crates\lai-service\src\cache.rs:695:9
+    |
+695 |         base: &ProbeBase,
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_base`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `lai-service` (lib test) generated 1 warning (run `cargo fix --lib -p lai-service --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.58s
+     Running unittests src\lib.rs (target\debug\deps\lai_service-d9ef0122999d599e.exe)
+
+running 1 test
+test cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed ... FAILED
+
+failures:
+
+---- cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed stdout ----
+
+thread 'cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed' (70672) panicked at crates\lai-service\src\cache.rs:1477:18:
+called `Result::unwrap_err()` on an `Ok` value: ()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p lai-service --lib`

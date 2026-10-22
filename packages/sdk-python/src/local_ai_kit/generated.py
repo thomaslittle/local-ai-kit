@@ -3,9 +3,13 @@ from typing import Any, Dict, List, Literal, Never, NotRequired, Required, TypeA
 
 AccessRoute = TypedDict('AccessRoute', {'billing': Required['Observation4'], 'capabilities': Required[List['Capability']], 'catalogRevision': Required[str], 'connectionId': Required[str], 'displayName': Required[str], 'id': Required[str], 'providerId': Required[str]}, total=False)
 
-Account = TypedDict('Account', {'displayLabel': Required['Observation'], 'id': Required[str], 'identitySource': Required['Observation'], 'providerId': Required[str]}, total=False)
+Account = TypedDict('Account', {'displayLabel': Required['Observation'], 'id': Required[str], 'identitySource': Required['Observation'], 'providerId': Required[str], 'scopes': NotRequired[List['AccountScope']]}, total=False)
+
+AccountScope = TypedDict('AccountScope', {'id': Required['Observation'], 'kind': Required[str], 'label': Required['Observation']}, total=False)
 
 AdapterDescriptor = TypedDict('AdapterDescriptor', {'cancellation': Required[bool], 'id': Required[str], 'integration': Required[str], 'limitations': Required[List[str]], 'metadata': Required[bool], 'name': Required[str], 'nativeToolApproval': Required[bool], 'passiveDiscovery': Required[bool], 'persistentResumption': Required[bool], 'qualification': Required[str], 'textSessions': Required[bool]}, total=False)
+
+AppRevokeParams = TypedDict('AppRevokeParams', {'targetClientId': Required[str]}, total=False)
 
 ApprovalParams = TypedDict('ApprovalParams', {'allow': Required[bool], 'approvalId': Required[str]}, total=False)
 
@@ -53,7 +57,7 @@ DomainError = TypedDict('DomainError', {'code': Required['ErrorCode'], 'message'
 
 EmptyParams: TypeAlias = Dict[str, Never]
 
-ErrorCode: TypeAlias = Union[Literal['INVALID_REQUEST', 'LOCAL_ACCESS_DENIED', 'AUTH_REQUIRED', 'KEYRING_LOCKED', 'RUNTIME_MISSING', 'INTEGRATION_RESTRICTED', 'PROTOCOL_INCOMPATIBLE', 'CAPABILITY_UNKNOWN', 'CAPABILITY_UNSUPPORTED', 'OPTION_UNSUPPORTED', 'SELECTION_STALE', 'RATE_LIMITED', 'BILLING_CONSENT_REQUIRED', 'APPROVAL_REQUIRED', 'SESSION_ROUTE_MISMATCH', 'EVENT_GAP', 'PROVIDER_UNAVAILABLE', 'TIMEOUT', 'CANCELLED', 'CONFLICT', 'FRAME_TOO_LARGE', 'NOT_FOUND', 'NOT_IMPLEMENTED'], Literal['RESUME_UNAVAILABLE']]
+ErrorCode: TypeAlias = Union[Literal['INVALID_REQUEST', 'LOCAL_ACCESS_DENIED', 'AUTH_REQUIRED', 'KEYRING_LOCKED', 'RUNTIME_MISSING', 'INTEGRATION_RESTRICTED', 'PROTOCOL_INCOMPATIBLE', 'CAPABILITY_UNKNOWN', 'CAPABILITY_UNSUPPORTED', 'OPTION_UNSUPPORTED', 'SELECTION_STALE', 'RATE_LIMITED', 'BILLING_CONSENT_REQUIRED', 'APPROVAL_REQUIRED', 'SESSION_ROUTE_MISMATCH', 'EVENT_GAP', 'PROVIDER_UNAVAILABLE', 'STORAGE_UNAVAILABLE', 'TIMEOUT', 'CANCELLED', 'CONFLICT', 'FRAME_TOO_LARGE', 'NOT_FOUND', 'NOT_IMPLEMENTED'], Literal['RESUME_UNAVAILABLE']]
 
 Event = TypedDict('Event', {'adapterId': Required[str], 'payload': Required['EventPayload'], 'schemaVersion': Required[str], 'sequence': Required[str], 'sessionId': Required[str], 'timestamp': Required['Timestamp'], 'turnId': NotRequired[Union[str, None]]}, total=False)
 
@@ -101,6 +105,12 @@ HandshakeParams = TypedDict('HandshakeParams', {'clientName': NotRequired[Union[
 
 HandshakeResult = TypedDict('HandshakeResult', {'capabilities': NotRequired[List[str]], 'methods': Required[List[str]], 'protocolVersion': Required[str], 'runtimeVersion': Required[str]}, total=False)
 
+HealthStatus: TypeAlias = Literal['healthy', 'degraded', 'unavailable', 'unknown']
+
+HealthSummary = TypedDict('HealthSummary', {'checkedAt': NotRequired[Union['Timestamp', None]], 'hydrated': Required[bool], 'openIssues': Required[int], 'status': Required['HealthStatus'], 'worstSeverity': NotRequired[Union['IssueSeverity', None]]}, total=False)
+
+HealthView = TypedDict('HealthView', {'issues': Required[List['Issue']], 'summary': Required['HealthSummary']}, total=False)
+
 HostMcpServer = TypedDict('HostMcpServer', {'allowedTools': Required[List[str]], 'bearerToken': Required[str], 'name': Required[str], 'url': Required[str]}, total=False)
 
 InputMediaType: TypeAlias = Literal['image/jpeg', 'image/png']
@@ -111,9 +121,25 @@ InputPutResult = TypedDict('InputPutResult', {'byteLength': Required[int], 'heig
 
 Installation = TypedDict('Installation', {'environmentId': Required[str], 'id': Required[str], 'locationHint': Required[str], 'providerId': Required[str], 'version': Required['Observation']}, total=False)
 
-MethodInputs = TypedDict('MethodInputs', {'adapters.list': Required['EmptyParams'], 'approvals.respond': Required['ApprovalParams'], 'artifacts.read': Required['ArtifactReadParams'], 'auth.chatgpt.cancel': Required['ChatgptCancelParams'], 'auth.chatgpt.disconnect': Required['EmptyParams'], 'auth.chatgpt.start': Required['EmptyParams'], 'auth.chatgpt.status': Required['EmptyParams'], 'capabilities.read': Required['ModelParams'], 'connections.list': Required['EmptyParams'], 'connections.probe': Required['ConnectionParams'], 'diagnostics.report': Required['EmptyParams'], 'discovery.refresh': Required['DiscoveryParams'], 'discovery.watch': Required['DiscoveryWatchParams'], 'events.read': Required['EventsParams'], 'events.subscribe': Required['EventsParams'], 'events.unsubscribe': Required['SubscriptionParams'], 'grants.list': Required['EmptyParams'], 'grants.request': Required['GrantParams'], 'grants.revoke': Required['EmptyParams'], 'inputs.put': Required['InputPutParams'], 'models.list': Required['ModelsParams'], 'models.page': Required['ModelPageParams'], 'runtime.closeClient': Required['EmptyParams'], 'runtime.handshake': Required['HandshakeParams'], 'runtime.health': Required['EmptyParams'], 'selection.resolve': Required['Requirements'], 'selection.validate': Required['SelectionParams'], 'sessions.close': Required['SessionParams'], 'sessions.create': Required['SessionCreateParams'], 'sessions.get': Required['SessionParams'], 'sessions.resume': Required['SessionResumeParams'], 'sessions.suspend': Required['SessionParams'], 'sessions.updateOptions': Required['SessionOptionsParams'], 'snapshot.get': Required['SnapshotParams'], 'turns.cancel': Required['TurnParams'], 'turns.start': Required['TurnStartParams'], 'usage.read': Required['EmptyParams']}, total=False)
+InventoryChange = TypedDict('InventoryChange', {'changes': Required[List['ResourceChange']], 'cursor': Required[str], 'issuesChanged': Required[bool], 'observedAt': Required['Timestamp'], 'previousRevision': Required[str], 'reason': Required[str], 'revision': Required[str], 'sequence': Required[str]}, total=False)
 
-MethodOutputs = TypedDict('MethodOutputs', {'adapters.list': Required[List['AdapterDescriptor']], 'approvals.respond': Required[Any], 'artifacts.read': Required['ArtifactChunk'], 'auth.chatgpt.cancel': Required[Any], 'auth.chatgpt.disconnect': Required[Any], 'auth.chatgpt.start': Required['ChatgptAuthStart'], 'auth.chatgpt.status': Required['ChatgptAuthStatus'], 'capabilities.read': Required[List['Capability']], 'connections.list': Required[List['Connection']], 'connections.probe': Required[Any], 'diagnostics.report': Required[Any], 'discovery.refresh': Required['DiscoveryResult'], 'discovery.watch': Required[Any], 'events.read': Required['EventPage'], 'events.subscribe': Required[Any], 'events.unsubscribe': Required[Any], 'grants.list': Required[Any], 'grants.request': Required[Any], 'grants.revoke': Required[Any], 'inputs.put': Required['InputPutResult'], 'models.list': Required[List['Model']], 'models.page': Required['ModelPage'], 'runtime.closeClient': Required[Any], 'runtime.handshake': Required['HandshakeResult'], 'runtime.health': Required['RuntimeHealth'], 'selection.resolve': Required[List['Candidate']], 'selection.validate': Required['ValidationResult'], 'sessions.close': Required[Any], 'sessions.create': Required['Session'], 'sessions.get': Required['Session'], 'sessions.resume': Required['Session'], 'sessions.suspend': Required['SessionSuspendResult'], 'sessions.updateOptions': Required['Session'], 'snapshot.get': Required['Snapshot'], 'turns.cancel': Required[Any], 'turns.start': Required['TurnStarted'], 'usage.read': Required[List['QuotaPool']]}, total=False)
+Issue = TypedDict('Issue', {'accountId': NotRequired[Union[str, None]], 'connectionId': NotRequired[Union[str, None]], 'evidence': Required[List['IssueEvidence']], 'fingerprint': Required[str], 'firstSeenAt': Required['Timestamp'], 'id': Required[str], 'kind': Required['IssueKind'], 'lastObservation': NotRequired[Union['Observation', None]], 'lastSeenAt': Required['Timestamp'], 'occurrences': Required[int], 'poolId': NotRequired[Union[str, None]], 'providerId': NotRequired[Union[str, None]], 'remediation': Required[List['Remediation']], 'resolvedAt': NotRequired[Union['Timestamp', None]], 'routeId': NotRequired[Union[str, None]], 'severity': Required['IssueSeverity'], 'snoozedUntil': NotRequired[Union['Timestamp', None]], 'state': Required['IssueState'], 'summary': Required[str], 'title': Required[str], 'windowId': NotRequired[Union[str, None]]}, total=False)
+
+IssueEvidence = TypedDict('IssueEvidence', {'code': Required[str], 'freshness': NotRequired[Union['Freshness', None]], 'message': Required[str], 'observedAt': NotRequired[Union['Timestamp', None]], 'source': NotRequired[Union['EvidenceSource', None]], 'verification': NotRequired[Union['Verification', None]]}, total=False)
+
+IssueKind: TypeAlias = Literal['auth_required', 'auth_expired', 'keyring_locked', 'unsupported_client', 'usage_unavailable', 'quota_exhausted', 'rate_limited', 'adapter_failure', 'storage_unavailable', 'permission_denied', 'service_unavailable', 'configuration_invalid', 'unknown']
+
+IssueSeverity: TypeAlias = Literal['info', 'warning', 'error', 'critical']
+
+IssueState: TypeAlias = Union[Literal['open'], Literal['acknowledged'], Literal['snoozed'], Literal['resolved']]
+
+IssueUpdateParams = TypedDict('IssueUpdateParams', {'issueId': Required[str], 'until': NotRequired[Union['Timestamp', None]]}, total=False)
+
+IssueUpdateResult = TypedDict('IssueUpdateResult', {'issue': Required['Issue']}, total=False)
+
+MethodInputs = TypedDict('MethodInputs', {'adapters.list': Required['EmptyParams'], 'approvals.respond': Required['ApprovalParams'], 'apps.list': Required['EmptyParams'], 'apps.revoke': Required['AppRevokeParams'], 'artifacts.read': Required['ArtifactReadParams'], 'auth.chatgpt.cancel': Required['ChatgptCancelParams'], 'auth.chatgpt.disconnect': Required['EmptyParams'], 'auth.chatgpt.start': Required['EmptyParams'], 'auth.chatgpt.status': Required['EmptyParams'], 'capabilities.read': Required['ModelParams'], 'connections.list': Required['EmptyParams'], 'connections.probe': Required['ConnectionParams'], 'diagnostics.report': Required['EmptyParams'], 'discovery.refresh': Required['DiscoveryParams'], 'discovery.watch': Required['DiscoveryWatchParams'], 'events.read': Required['EventsParams'], 'events.subscribe': Required['EventsParams'], 'events.unsubscribe': Required['SubscriptionParams'], 'grants.list': Required['EmptyParams'], 'grants.request': Required['GrantParams'], 'grants.revoke': Required['EmptyParams'], 'health.get': Required['EmptyParams'], 'inputs.put': Required['InputPutParams'], 'issues.acknowledge': Required['IssueUpdateParams'], 'issues.list': Required['EmptyParams'], 'issues.snooze': Required['IssueUpdateParams'], 'models.list': Required['ModelsParams'], 'models.page': Required['ModelPageParams'], 'notifications.ack': Required['NotificationAckParams'], 'notifications.configure': Required['NotificationPreferences'], 'notifications.poll': Required['EmptyParams'], 'runtime.closeClient': Required['EmptyParams'], 'runtime.handshake': Required['HandshakeParams'], 'runtime.health': Required['EmptyParams'], 'selection.resolve': Required['Requirements'], 'selection.validate': Required['SelectionParams'], 'sessions.close': Required['SessionParams'], 'sessions.create': Required['SessionCreateParams'], 'sessions.get': Required['SessionParams'], 'sessions.resume': Required['SessionResumeParams'], 'sessions.suspend': Required['SessionParams'], 'sessions.updateOptions': Required['SessionOptionsParams'], 'snapshot.get': Required['SnapshotParams'], 'turns.cancel': Required['TurnParams'], 'turns.start': Required['TurnStartParams'], 'usage.read': Required['EmptyParams']}, total=False)
+
+MethodOutputs = TypedDict('MethodOutputs', {'adapters.list': Required[List['AdapterDescriptor']], 'approvals.respond': Required[Any], 'apps.list': Required[Any], 'apps.revoke': Required[Any], 'artifacts.read': Required['ArtifactChunk'], 'auth.chatgpt.cancel': Required[Any], 'auth.chatgpt.disconnect': Required[Any], 'auth.chatgpt.start': Required['ChatgptAuthStart'], 'auth.chatgpt.status': Required['ChatgptAuthStatus'], 'capabilities.read': Required[List['Capability']], 'connections.list': Required[List['Connection']], 'connections.probe': Required[Any], 'diagnostics.report': Required[Any], 'discovery.refresh': Required['DiscoveryResult'], 'discovery.watch': Required[Any], 'events.read': Required['EventPage'], 'events.subscribe': Required[Any], 'events.unsubscribe': Required[Any], 'grants.list': Required[Any], 'grants.request': Required[Any], 'grants.revoke': Required[Any], 'health.get': Required['HealthView'], 'inputs.put': Required['InputPutResult'], 'issues.acknowledge': Required['IssueUpdateResult'], 'issues.list': Required[List['Issue']], 'issues.snooze': Required['IssueUpdateResult'], 'models.list': Required[List['Model']], 'models.page': Required['ModelPage'], 'notifications.ack': Required[Any], 'notifications.configure': Required['NotificationPreferences'], 'notifications.poll': Required[List['NotificationDecision']], 'runtime.closeClient': Required[Any], 'runtime.handshake': Required['HandshakeResult'], 'runtime.health': Required['RuntimeHealth'], 'selection.resolve': Required[List['Candidate']], 'selection.validate': Required['ValidationResult'], 'sessions.close': Required[Any], 'sessions.create': Required['Session'], 'sessions.get': Required['Session'], 'sessions.resume': Required['Session'], 'sessions.suspend': Required['SessionSuspendResult'], 'sessions.updateOptions': Required['Session'], 'snapshot.get': Required['Snapshot'], 'turns.cancel': Required[Any], 'turns.start': Required['TurnStarted'], 'usage.read': Required[List['QuotaPool']]}, total=False)
 
 Model = TypedDict('Model', {'capabilities': Required[List['Capability']], 'contextWindow': Required['Observation'], 'id': Required[str], 'isDefault': Required[bool], 'name': Required[str], 'nativeId': Required[str], 'options': Required[List['OptionDescriptor']], 'revision': Required[str], 'routeId': Required[str]}, total=False)
 
@@ -124,6 +150,12 @@ ModelPageParams = TypedDict('ModelPageParams', {'cursor': NotRequired[Union[str,
 ModelParams = TypedDict('ModelParams', {'modelId': Required[str]}, total=False)
 
 ModelsParams = TypedDict('ModelsParams', {'routeId': NotRequired[Union[str, None]]}, total=False)
+
+NotificationAckParams = TypedDict('NotificationAckParams', {'dedupeKey': Required[str], 'issueId': Required[str]}, total=False)
+
+NotificationDecision = TypedDict('NotificationDecision', {'body': Required[str], 'dedupeKey': Required[str], 'issueId': Required[str], 'reason': Required[str], 'severity': Required['IssueSeverity'], 'shouldNotify': Required[bool], 'title': Required[str]}, total=False)
+
+NotificationPreferences = TypedDict('NotificationPreferences', {'enabled': NotRequired[bool], 'minimumSeverity': NotRequired['IssueSeverity'], 'privateContent': NotRequired[bool], 'quietHoursEndMinute': NotRequired[Union[int, None]], 'quietHoursStartMinute': NotRequired[Union[int, None]], 'reminderAfterSeconds': NotRequired[int]}, total=False)
 
 Observation_Case0 = TypedDict('Observation_Case0', {'expiresAt': NotRequired[Union['Timestamp', None]], 'freshness': Required['Freshness'], 'observedAt': Required['Timestamp'], 'source': Required['EvidenceSource'], 'state': Required[Literal['known']], 'value': Required[str], 'verification': Required['Verification']}, total=False)
 
@@ -197,7 +229,15 @@ Provider = TypedDict('Provider', {'id': Required[str], 'kind': Required[str], 'n
 
 QuotaPool = TypedDict('QuotaPool', {'accountId': NotRequired[Union[str, None]], 'connectionIds': Required[List[str]], 'id': Required[str], 'routeIds': Required[List[str]], 'sharing': Required[str], 'windows': Required[List['UsageWindow']]}, total=False)
 
+Remediation = TypedDict('Remediation', {'description': Required[str], 'kind': Required['RemediationKind'], 'label': Required[str], 'requiresUserAction': Required[bool]}, total=False)
+
+RemediationKind: TypeAlias = Literal['refresh', 'sign_in', 'unlock_keyring', 'update_client', 'open_settings', 'retry_later', 'restart_service', 'free_storage', 'contact_support', 'none']
+
 Requirements = TypedDict('Requirements', {'allowPaidFallback': NotRequired[bool], 'billingPreference': NotRequired[Union[str, None]], 'eligibleOnly': NotRequired[bool], 'query': NotRequired[Union[str, None]], 'requiredCapabilities': NotRequired[List[str]]}, total=False)
+
+ResourceChange = TypedDict('ResourceChange', {'change': Required['ResourceChangeKind'], 'id': Required[str], 'reason': NotRequired[Union[str, None]], 'resource': Required[str]}, total=False)
+
+ResourceChangeKind: TypeAlias = Literal['added', 'updated', 'removed']
 
 RuntimeHealth = TypedDict('RuntimeHealth', {'executionAvailable': Required[bool], 'metadataAvailable': Required[bool], 'mode': Required[str], 'status': Required[str]}, total=False)
 
@@ -219,7 +259,7 @@ SessionState: TypeAlias = Literal['ready', 'running', 'awaiting_approval', 'comp
 
 SessionSuspendResult = TypedDict('SessionSuspendResult', {'resumeToken': Required[str]}, total=False)
 
-Snapshot = TypedDict('Snapshot', {'accounts': Required[List['Account']], 'connections': Required[List['Connection']], 'diagnostics': Required[List[str]], 'installations': Required[List['Installation']], 'mode': Required['DataMode'], 'models': Required[List['Model']], 'observedAt': Required['Timestamp'], 'profiles': Required[List['Profile']], 'protocolVersion': Required[str], 'providers': Required[List['Provider']], 'quotaPools': Required[List['QuotaPool']], 'revision': Required[str], 'routes': Required[List['AccessRoute']]}, total=False)
+Snapshot = TypedDict('Snapshot', {'accounts': Required[List['Account']], 'connections': Required[List['Connection']], 'cursor': NotRequired[str], 'diagnostics': Required[List[str]], 'health': NotRequired['HealthSummary'], 'installations': Required[List['Installation']], 'issues': NotRequired[List['Issue']], 'mode': Required['DataMode'], 'models': Required[List['Model']], 'observedAt': Required['Timestamp'], 'profiles': Required[List['Profile']], 'protocolVersion': Required[str], 'providers': Required[List['Provider']], 'quotaPools': Required[List['QuotaPool']], 'revision': Required[str], 'routes': Required[List['AccessRoute']]}, total=False)
 
 SnapshotParams = TypedDict('SnapshotParams', {'fields': NotRequired[Union[List[str], None]]}, total=False)
 

@@ -26,6 +26,30 @@ fn evidence() -> EvidenceSource {
         "OpenCode /provider catalog",
     )
 }
+
+/// OpenCode's Go product is a subscription gateway on the same `opencode`
+/// connection, published under the exact provider id `opencode-go`. Token
+/// prices in its catalog measure allowance consumption; they do not make it a
+/// pay-as-you-go API. Classify only the exact official id: `opencode` (Console
+/// PAYG) and lookalikes must stay unknown until billing is declared.
+///
+/// This is route classification, not entitlement verification: auth, quota,
+/// and the Console Extra usage toggle remain separately unknown. It therefore
+/// never fabricates an included-quota or zero-overage claim.
+pub(crate) fn inferred_gateway_billing(provider_id: &str) -> Option<Observation<BillingMode>> {
+    (provider_id == "opencode-go").then(|| Observation::Known {
+        value: BillingMode::Subscription,
+        source: EvidenceSource::new(
+            EvidenceKind::Derived,
+            "opencode",
+            "OpenCode Go provider id; subscription route class per official OpenCode docs; entitlement, quota and extra usage are not verified",
+        ),
+        observed_at: Timestamp::now(),
+        freshness: Freshness::Fresh,
+        verification: Verification::Inferred,
+        expires_at: None,
+    })
+}
 fn capability(id: &str, v: &Value) -> Capability {
     let support = match v.as_bool() {
         Some(true) => Support::Supported,
@@ -208,18 +232,21 @@ pub fn catalog(
             connection_id: connection.into(),
             provider_id: id.clone(),
             display_name: format!("OpenCode / {name}"),
-            billing: billing
-                .get(&id)
-                .filter(|b| **b != BillingMode::Unknown)
-                .map(|b| {
-                    Observation::reported(
-                        b.clone(),
-                        EvidenceSource::new(
-                            EvidenceKind::UserSupplied,
-                            "opencode",
-                            "Explicit providerBilling declaration; not an inferred subscription",
-                        ),
-                    )
+            billing: inferred_gateway_billing(&id)
+                .or_else(|| {
+                    billing
+                        .get(&id)
+                        .filter(|b| **b != BillingMode::Unknown)
+                        .map(|b| {
+                            Observation::reported(
+                                b.clone(),
+                                EvidenceSource::new(
+                                    EvidenceKind::UserSupplied,
+                                    "opencode",
+                                    "Explicit providerBilling declaration; not an inferred subscription",
+                                ),
+                            )
+                        })
                 })
                 .unwrap_or_else(|| Observation::unknown("UPSTREAM_BILLING_NOT_REPORTED")),
             capabilities: vec![],

@@ -1,0 +1,20 @@
+   Compiling lai-contracts v0.1.0-alpha.18 (<repo>\crates\lai-contracts)
+   Compiling lai-chatgpt-auth v0.1.0-alpha.18 (<repo>\crates\lai-chatgpt-auth)
+   Compiling lai-platform v0.1.0-alpha.18 (<repo>\crates\lai-platform)
+   Compiling lai-runtime v0.1.0-alpha.18 (<repo>\crates\lai-runtime)
+   Compiling lai-store v0.1.0-alpha.18 (<repo>\crates\lai-store)
+   Compiling lai-core v0.1.0-alpha.18 (<repo>\crates\lai-core)
+   Compiling lai-discovery v0.1.0-alpha.18 (<repo>\crates\lai-discovery)
+   Compiling lai-service v0.1.0-alpha.18 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.72s
+     Running tests\resumption.rs (target\debug\deps\resumption-47ef40f9ffde2e62.exe)
+
+running 6 tests
+test revocation_invalidates_unconsumed_resume_tokens ... ok
+test resume_tokens_are_invalid_after_runtime_restart ... ok
+test resume_tokens_are_opaque_owner_scoped_and_one_time ... ok
+test active_and_closed_sessions_cannot_be_suspended ... ok
+test completed_conversation_can_suspend_and_resume_without_a_fresh_session ... ok
+test resume_revalidates_account_model_route_billing_and_workspace_grant ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s

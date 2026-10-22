@@ -1,0 +1,47 @@
+{
+  "platform": "Windows x86_64",
+  "qualificationWorkingTreeDirty": true,
+  "sourceManifest": "32-qualified-source-hashes.json",
+  "fullProfileCommands": 24,
+  "defaultRust": {
+    "passed": 638,
+    "failed": 0,
+    "ignored": 0
+  },
+  "allFeaturesRust": {
+    "passed": 638,
+    "failed": 0,
+    "ignored": 0
+  },
+  "refreshRepeatedExecutions": 450,
+  "refreshRepeatedFailures": 0,
+  "refreshRetries": 0,
+  "mutationAssertionDetected": true,
+  "mutationSourceRestoredByteForByte": true,
+  "independentReviews": {
+    "R6": "No Critical/Important in security delta; independent 21 auth tests",
+    "R7": "No Critical/Important in fixture synchronization/guard; read-only"
+  },
+  "strictClippy": "pass",
+  "format": "pass",
+  "adapterConformance": "pass",
+  "dotnetNativeConsumer": "pass",
+  "npmAuditReportedVulnerabilities": 0,
+  "peakObservedActiveBytes": 8622620476,
+  "pressureStops": 0,
+  "failedAttemptsRetained": [
+    "01",
+    "06",
+    "08",
+    "09",
+    "14",
+    "18",
+    "19"
+  ],
+  "remainingGates": [
+    "clean-source release artifact/provenance and package smoke",
+    "latest-source remote checks/readiness",
+    "authorized release/consumer integration"
+  ],
+  "limits": "Fixture-tested and platform-executed on Windows only for this source delta. No new GUI/live provider accounts/inference/actual OS suspend-resume/cross-connection quota-pooling qualification. Unsigned artifacts only; no signing/activation."
+}

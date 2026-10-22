@@ -1,0 +1,1475 @@
+   Compiling memchr v2.8.3
+   Compiling serde_core v1.0.229
+   Compiling num-traits v0.2.19
+   Compiling serde v1.0.229
+   Compiling windows-sys v0.61.2
+   Compiling serde_json v1.0.154
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.4.8
+   Compiling ref-cast v1.0.27
+   Compiling libm v0.2.16
+   Compiling bigdecimal v0.4.11
+   Compiling ref-cast-impl v1.0.27
+   Compiling serde_derive_internals v0.30.0
+   Compiling schemars_derive v1.2.3
+   Compiling dyn-clone v1.0.20
+   Compiling schemars v1.2.3
+   Compiling chrono v0.4.45
+   Compiling lai-contracts v0.1.0-alpha.18 (<workspace>\crates\lai-contracts)
+   Compiling syn v2.0.119
+   Compiling mio v1.2.3
+   Compiling socket2 v0.6.5
+   Compiling tokio v1.53.3
+   Compiling futures-sink v0.3.34
+   Compiling windows-sys v0.60.2
+   Compiling tempfile v3.27.0
+   Compiling futures-channel v0.3.34
+   Compiling winapi-util v0.1.11
+   Compiling same-file v1.0.6
+   Compiling futures-macro v0.3.34
+   Compiling futures-task v0.3.34
+   Compiling slab v0.4.12
+   Compiling futures-io v0.3.34
+   Compiling futures-util v0.3.34
+   Compiling walkdir v2.5.0
+   Compiling notify-types v2.1.0
+   Compiling tracing-attributes v0.1.31
+   Compiling notify v8.2.0
+   Compiling tracing v0.1.44
+   Compiling file-id v0.2.3
+   Compiling zerocopy v0.8.58
+   Compiling lai-platform v0.1.0-alpha.18 (<workspace>\crates\lai-platform)
+   Compiling ahash v0.8.12
+   Compiling vcpkg v0.2.15
+   Compiling pkg-config v0.3.34
+   Compiling httpdate v1.0.3
+   Compiling hyper v1.11.1
+   Compiling libsqlite3-sys v0.30.1
+   Compiling hyper-util v0.1.20
+   Compiling hashbrown v0.14.5
+   Compiling tower v0.5.3
+   Compiling lai-runtime v0.1.0-alpha.18 (<workspace>\crates\lai-runtime)
+   Compiling tokio-rustls v0.26.5
+   Compiling hashlink v0.9.1
+   Compiling serde_urlencoded v0.7.1
+   Compiling lai-discovery v0.1.0-alpha.18 (<workspace>\crates\lai-discovery)
+   Compiling tokio-util v0.7.19
+   Compiling fallible-iterator v0.3.0
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling hyper-rustls v0.27.10
+   Compiling rusqlite v0.32.1
+   Compiling tower-http v0.6.11
+   Compiling reqwest v0.12.28
+   Compiling mime v0.3.17
+   Compiling axum-core v0.5.6
+   Compiling serde_path_to_error v0.1.20
+   Compiling matchit v0.8.4
+   Compiling axum v0.8.9
+   Compiling equivalent v1.0.2
+   Compiling windows-interface v0.59.3
+   Compiling windows-implement v0.60.2
+   Compiling windows-strings v0.5.1
+   Compiling windows-result v0.4.1
+   Compiling windows-core v0.62.2
+   Compiling windows-threading v0.2.1
+   Compiling windows-future v0.3.2
+   Compiling windows-numerics v0.3.1
+   Compiling windows-collections v0.3.2
+   Compiling futures-executor v0.3.34
+   Compiling hashbrown v0.17.1
+   Compiling windows v0.62.2
+   Compiling indexmap v2.14.2
+   Compiling futures v0.3.34
+   Compiling lai-core v0.1.0-alpha.18 (<workspace>\crates\lai-core)
+   Compiling process-wrap v10.0.1
+   Compiling simple_asn1 v0.6.4
+   Compiling jsonwebtoken v10.3.0
+   Compiling keyring v3.6.3
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+   Compiling lai-store v0.1.0-alpha.18 (<workspace>\crates\lai-store)
+   Compiling lai-chatgpt-auth v0.1.0-alpha.18 (<workspace>\crates\lai-chatgpt-auth)
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+   Compiling tokio-stream v0.1.19
+   Compiling async-stream-impl v0.3.6
+   Compiling widestring v1.2.1
+   Compiling recvmsg v1.0.0
+   Compiling doctest-file v1.1.1
+   Compiling async-stream v0.3.6
+   Compiling interprocess v2.4.6
+   Compiling lai-kit v0.1.0-alpha.18 (<workspace>\crates\lai-kit)
+   Compiling rustversion v1.0.23
+   Compiling lai-transports v0.1.0-alpha.18 (<workspace>\crates\lai-transports)
+   Compiling strsim v0.11.1
+   Compiling fnv v1.0.7
+   Compiling parking_lot_core v0.9.12
+   Compiling winapi v0.3.9
+   Compiling ident_case v1.0.1
+   Compiling darling_core v0.20.11
+   Compiling scopeguard v1.2.0
+   Compiling lock_api v0.4.14
+   Compiling darling_macro v0.20.11
+   Compiling either v1.19.0
+   Compiling heck v0.5.0
+   Compiling instability v0.3.10
+   Compiling allocator-api2 v0.2.21
+   Compiling foldhash v0.1.5
+   Compiling paste v1.0.15
+   Compiling crossterm_winapi v0.9.1
+   Compiling hashbrown v0.15.5
+   Compiling strum_macros v0.26.4
+   Compiling itertools v0.13.0
+   Compiling darling v0.20.11
+   Compiling parking_lot v0.12.5
+   Compiling castaway v0.2.4
+   Compiling indoc v2.0.8
+   Compiling static_assertions v1.1.0
+   Compiling unicode-segmentation v1.13.3
+   Compiling unicode-width v0.1.14
+   Compiling unicode-truncate v1.1.0
+   Compiling compact_str v0.8.2
+   Compiling crossterm v0.28.1
+   Compiling strum v0.26.3
+   Compiling lru v0.12.5
+   Compiling cassowary v0.3.0
+   Compiling unicode-width v0.2.0
+   Compiling ratatui v0.29.0
+   Compiling lai-cli v0.1.0-alpha.18 (<workspace>\crates\lai-cli)
+   Compiling lai-control v0.1.0-alpha.18 (<workspace>\crates\lai-control)
+   Compiling lai-update v0.1.0-alpha.18 (<workspace>\crates\lai-update)
+    Finished `test` profile [unoptimized] target(s) in 3m 13s
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_adapters-90ce53a3b8594dd3.exe)
+
+running 15 tests
+test muse::launch::tests::release_versions_match_the_launcher_pattern ... ok
+test muse::events::tests::frames_for_other_sessions_and_raw_reasoning_are_ignored ... ok
+test process::account_identity_tests::only_a_sign_out_update_ends_the_session ... ok
+test muse::launch::tests::uuid_v7_has_version_and_variant_bits ... ok
+test host_mcp::tests::resolve_accepts_server_forms_and_unambiguous_bare_names ... ok
+test process::account_identity_tests::volatile_account_fields_do_not_change_the_identity ... ok
+test host_mcp::tests::qualified_names_are_exact ... ok
+test execution::codex::direct_namespace_tests::host_namespace_cannot_make_builtin_functions_direct ... ok
+test muse::events::tests::approval_twins_ask_once_and_each_stage_asks_again ... ok
+test muse::launch::tests::read_only_hosts_remove_shell_writes_and_network_tools ... ok
+test muse::events::tests::a_report_turn_for_outliving_work_joins_the_kit_turn ... ok
+test process::account_identity_tests::a_different_account_or_auth_kind_is_a_new_identity ... ok
+test opencode::version::tests::accepts_reported_legacy_versions_only ... ok
+test muse::events::tests::a_queued_turn_ignores_the_turn_muse_is_still_running ... ok
+test muse::launch::tests::the_windows_launcher_resolves_to_its_active_binary ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\acp_auth.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_auth-24cfbfc355081e96.exe)
+
+running 5 tests
+test auth_errors_are_sanitized_and_do_not_reveal_native_urls ... ok
+test existing_clients_without_auth_negotiation_still_use_the_same_driver ... ok
+test explicit_advertised_auth_method_can_reuse_native_login_without_tokens ... ok
+test missing_auth_is_not_treated_as_a_connected_subscription ... ok
+test unadvertised_authentication_methods_are_not_sent_to_the_client ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s
+
+     Running tests\acp_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_catalog-0655306ce995642c.exe)
+
+running 9 tests
+test legacy_catalog_is_supported_without_inventing_effort ... ok
+test malformed_versions_duplicate_ids_and_values_fail ... ok
+test omitted_capabilities_are_unsupported_not_enabled ... ok
+test preserves_native_ids_groups_and_thought_options ... ok
+test unknown_control_type_is_inspectable_not_editable ... ok
+test mode_and_unclassified_controls_cannot_disable_permissions_silently ... ok
+test prefers_config_options_over_legacy_modes_and_models ... ok
+test unknown_upstream_fields_do_not_leak_into_catalog ... ok
+test route_identity_and_configuration_changes_invalidate_selections ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\acp_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_process-b37be7d7206681fa.exe)
+
+running 12 tests
+test actual_acp_exchange_preserves_native_config_without_generation ... ok
+test negotiation_mismatch_is_rejected_before_session ... ok
+test peers_without_prompt_image_support_reject_image_turns_before_prompting ... ok
+test approval_is_scoped_and_rejection_reaches_native_agent ... ok
+test provider_switch_during_turn_fails_without_silent_model_fallback ... ok
+test provider_error_message_reaches_diagnostics_with_secrets_redacted ... ok
+test file_callbacks_not_advertised_are_denied ... ok
+test native_stream_arrives_before_prompt_response_and_session_reuses_context ... ok
+test native_cancel_completes_without_prompt_retry ... ok
+test foreign_session_cannot_inject_output ... ok
+test text_only_session_fails_the_turn_when_the_client_uses_a_native_tool ... ok
+test image_blocks_reach_peers_that_advertise_prompt_image_support ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.03s
+
+     Running tests\acp_resume.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_resume-227b2ed96373e28f.exe)
+
+running 4 tests
+test missing_load_session_capability_fails_before_exposing_a_resume_id ... ok
+test native_peer_cannot_substitute_a_different_session_id ... ok
+test wrong_or_unavailable_native_session_is_not_recreated_as_a_new_chat ... ok
+test advertised_load_session_can_suspend_without_closing_and_resume_same_native_id ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.77s
+
+     Running tests\billing_declarations.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\billing_declarations-ff6c50d4c3db294e.exe)
+
+running 2 tests
+test fills_only_unknown_billing_as_user_supplied_and_needs_matching_provider ... ok
+test rejects_unknown_mixed_duplicate_local_native_and_extra_fields ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\claude_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\claude_metadata-e0c4408db157ab75.exe)
+
+running 7 tests
+test unavailable_usage_is_not_zero ... ok
+test distinct_profile_same_email_is_not_linked ... ok
+test duplicate_model_values_and_invalid_usage_fail ... ok
+test reported_plan_native_ids_and_effort_are_preserved ... ok
+test unknown_or_metered_auth_is_not_a_subscription ... ok
+test normalized_usage_does_not_duplicate_legacy_buckets ... ok
+test private_initialization_fields_and_secrets_do_not_escape ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\claude_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\claude_process-f874b366cabe8252.exe)
+
+running 7 tests
+test claude_catalog_reports_image_input ... ok
+test metadata_control_never_needs_a_user_prompt ... ok
+test cancellation_terminates_without_restarting_native_turn ... ok
+test effort_change_requires_a_new_native_session ... ok
+test text_only_mode_denies_unexpected_native_tool_requests ... ok
+test native_stream_and_whole_message_do_not_duplicate_text ... ok
+test images_are_sent_as_base64_content_blocks_before_the_text ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.16s
+
+     Running tests\codex_launch.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_launch-c4ea5a36a4f12ed8.exe)
+
+running 5 tests
+test managed_codex_launch_isolated_and_uses_responses_provider ... ok
+test arbitrary_wrapper_and_absent_binary_are_not_executed ... ok
+test direct_native_executable_is_preserved ... ok
+test known_windows_npm_wrapper_resolves_to_packaged_native_binary ... ok
+test extensionless_npm_shim_uses_the_native_package_not_a_shell ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\codex_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_metadata-1cdc4678e49aaf39.exe)
+
+running 13 tests
+test malformed_native_records_fail_closed ... ok
+test model_input_capability_is_not_image_generation ... ok
+test multiple_clients_do_not_merge_accounts_based_on_same_email ... ok
+test legacy_and_multi_bucket_views_are_not_double_counted ... ok
+test absent_effort_and_context_are_not_invented ... ok
+test duplicate_model_ids_do_not_create_ambiguous_routes ... ok
+test unavailable_usage_is_not_an_empty_remaining_allowance ... ok
+test actual_plan_and_native_effort_survive_without_model_name_rules ... ok
+test api_key_auth_is_not_a_chatgpt_subscription ... ok
+test changed_identity_changes_catalog_revision ... ok
+test no_account_does_not_claim_active_plan_or_model_access ... ok
+test secrets_private_paths_and_unknown_fields_do_not_escape ... ok
+test unchanged_catalog_keeps_model_revisions_across_probes ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+     Running tests\codex_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_process-075e1e0fb7f92ee0.exe)
+
+running 12 tests
+test relative_executable_and_loader_hook_environment_are_rejected ... ok
+test account_change_after_initial_read_invalidates_catalog_probe ... ok
+test token_refresh_during_probe_keeps_the_same_account ... ok
+test repeated_pagination_cursor_fails_instead_of_looping ... ok
+test unauthenticated_client_does_not_fetch_model_or_usage_catalog ... ok
+test startup_account_notice_precedes_authoritative_account_read ... ok
+test managed_identity_fetches_catalog_without_native_account_or_usage ... ok
+test quota_endpoint_failure_keeps_account_catalog_and_redacts_error ... ok
+test unsolicited_execution_request_fails_closed ... ok
+test managed_route_requires_codex_0157_or_newer ... ok
+test native_protocol_reads_metadata_without_starting_threads_or_turns ... ok
+test malformed_oversized_and_timed_out_peers_are_bounded ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.81s
+
+     Running tests\command_output.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\command_output-da26ee6f876de9a7.exe)
+
+running 3 tests
+test collects_utf8_status_without_shell ... ok
+test failed_command_does_not_return_error_text ... ok
+test large_output_and_timeout_are_bounded ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s
+
+     Running tests\cursor_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\cursor_metadata-08a3539a44198825.exe)
+
+running 7 tests
+test absent_and_corrupt_cache_is_unavailable_not_an_authenticated_account ... ok
+test large_cursor_database_is_read_through_bounded_indexed_lookups ... ok
+test tokens_and_paths_are_not_exported_from_the_allowlisted_cache ... ok
+test read_does_not_write_database_sidecars_or_change_original_bytes ... ok
+test malformed_cached_values_do_not_become_plan_claims ... ok
+test cached_identity_and_plan_are_stale_and_never_claim_live_auth ... ok
+test profiles_remain_distinct_even_when_cached_email_matches ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\endpoint_config.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\endpoint_config-792ebbde8c1e6a67.exe)
+
+running 5 tests
+test opencode_route_billing_configuration_is_explicit_and_transport_stays_local ... ok
+test parsing_does_not_require_or_read_an_api_key ... ok
+test scope_and_endpoint_identity_are_part_of_connection_id ... ok
+test configuration_rejects_inline_secrets_duplicate_names_and_bad_urls ... ok
+test registered_endpoints_are_inventory_not_authenticated_accounts ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\execution-05c7373997f5071b.exe)
+
+running 9 tests
+test changed_model_catalog_cannot_start_generation ... ok
+test unsafe_sandbox_response_fails_before_turn ... ok
+test account_switch_aborts_without_retry ... ok
+test account_is_rechecked_before_submitting_each_turn ... ok
+test token_refresh_mid_turn_keeps_the_session ... ok
+test native_text_streams_including_events_before_ack ... ok
+test images_are_sent_as_app_server_image_items_after_the_text ... ok
+test native_approval_denial_reaches_client ... ok
+test native_cancel_interrupts_without_a_second_turn ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.23s
+
+     Running tests\grok.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\grok-8298c1396ce368e2.exe)
+
+running 4 tests
+test absent_status_and_auth_failure_are_not_active_accounts ... ok
+test native_grok_login_line_reports_auth_but_not_unpublished_plan_or_costs ... ok
+test health_probes_disable_the_autoupdater_even_when_the_caller_left_it_off ... ok
+test unrelated_output_is_not_preserved ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\host_mcp.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_mcp-7cee2dd659312d03.exe)
+
+running 14 tests
+test claude_event_checks_distinguish_host_tools ... ok
+test claude_launch_without_host_servers_is_unchanged ... ok
+test acp_mcp_server_entries_use_http_headers ... ok
+test claude_launch_writes_a_private_config_and_keeps_tools_disabled ... ok
+test claude_session_deletes_the_config_on_close ... ok
+test codex_thread_config_attaches_host_server_and_allows_its_tool ... ok
+test codex_refuses_a_host_name_already_configured ... ok
+test acp_host_servers_go_to_session_new_and_host_tools_are_allowed ... ok
+test acp_native_tool_still_fails_the_turn ... ok
+test acp_peer_without_http_mcp_is_refused_typed ... ok
+test claude_host_tool_is_allowed_and_reported_neutrally ... ok
+test codex_non_host_tools_fail_a_text_only_turn ... ok
+test claude_native_tool_still_fails_the_turn ... ok
+test claude_host_server_that_fails_to_connect_fails_the_session ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.80s
+
+     Running tests\host_mcp_live.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_mcp_live-0b4d3508c731a213.exe)
+
+running 2 tests
+test live_codex_native_tools_and_host_mcp_share_a_session ... ok
+test live_claude_turn_calls_host_and_native_tools ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\http.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http-2dbd48344793e795.exe)
+
+running 6 tests
+test endpoints_reject_cleartext_remote_userinfo_and_query_credentials ... ok
+test redirects_are_not_followed_and_paths_cannot_escape ... ok
+test native_json_and_credentials_stay_bound_to_the_endpoint ... ok
+test line_stream_preserves_frames_and_rejects_truncated_output ... ok
+test auth_rate_limits_and_large_bodies_return_safe_errors ... ok
+test explicitly_bounded_provider_metadata_reads_allow_large_compressed_catalogs ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests\http_catalogs.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_catalogs-0584ab3592ab312f.exe)
+
+running 7 tests
+test duplicate_or_malformed_catalogs_fail_without_echoing_secrets ... ok
+test api_models_without_capability_evidence_are_not_automatically_eligible ... ok
+test local_capabilities_are_metadata_not_model_name_guesses ... ok
+test absent_details_are_not_fake_capabilities_or_allowances ... ok
+test lmstudio_filters_embeddings_and_preserves_native_context ... ok
+test google_native_method_metadata_and_anthropic_efforts_are_preserved ... ok
+test route_identity_is_retained_and_api_catalog_is_not_a_subscription ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\http_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_execution-2b46af6480405e9f.exe)
+
+running 2 tests
+test probing_never_runs_generation_and_catalog_does_not_claim_paid_access ... ok
+test native_runtime_streams_http_turns_with_owned_history ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\http_frames.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_frames-98dc6765e1a6f6a8.exe)
+
+running 2 tests
+test provider_frames_preserve_text_and_native_terminal_signals ... ok
+test provider_errors_do_not_leak_error_bodies_or_execute_tools ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\http_images.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_images-c98a359bc1a26a66.exe)
+
+running 6 tests
+test fixture_base64_matches_bytes ... ok
+test ollama_sends_images_beside_message_content ... ok
+test gemini_uses_inline_data_parts ... ok
+test anthropic_messages_use_base64_image_blocks ... ok
+test responses_api_routes_use_input_image_parts ... ok
+test chat_completions_routes_use_image_url_data_parts ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\muse_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_catalog-f80f0e33acbdd156.exe)
+
+running 8 tests
+test malformed_catalogs_are_protocol_errors ... ok
+test unknown_and_future_efforts_are_not_invented ... ok
+test an_account_login_is_an_authenticated_subscription_with_native_efforts ... ok
+test without_account_read_auth_stays_unknown_not_assumed ... ok
+test fake_and_foreign_catalogs_are_not_live_models ... ok
+test subscription_usage_becomes_plan_and_percent_windows ... ok
+test two_accounts_with_the_same_model_have_distinct_revisions ... ok
+test api_keys_are_metered_and_signed_out_muse_is_unauthenticated ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\muse_live.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_live-14106aceef79c89f.exe)
+
+running 4 tests
+test live_echo_turn_streams_text_through_the_runtime ... ok
+test live_echo_turn_runs_when_the_host_mcp_server_is_unreachable ... ok
+test live_metadata_reports_account_lane_and_catalog_without_inference ... ok
+test live_echo_session_resumes_after_its_host_exits ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\muse_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_process-53c0f238c7ca23e7.exe)
+
+running 26 tests
+test an_unknown_envelope_version_is_refused ... ok
+test a_read_only_turn_streams_text_and_usage_and_starts_a_denying_session ... ok
+test cancelling_during_a_subagent_interrupts_the_parent_turn ... ok
+test host_mcp_servers_attach_as_optional_session_servers ... ok
+test a_signed_out_turn_is_auth_required_without_leaking_login_codes ... ok
+test effort_and_images_reach_turn_start ... ok
+test a_changed_catalog_revision_is_stale ... ok
+test another_mcp_servers_tool_fails_the_turn ... ok
+test a_workflow_and_the_report_turn_muse_starts_for_it_are_one_kit_turn ... ok
+test cancellation_interrupts_the_owned_muse_turn ... ok
+test host_mcp_needs_the_session_mcp_capability ... ok
+test an_inaccessible_model_surfaces_muses_access_error ... ok
+test a_subagent_approval_is_reviewed_by_the_host ... ok
+test consecutive_turns_reuse_the_native_session ... ok
+test a_stream_that_ends_mid_reply_fails_the_turn ... ok
+test metadata_reports_account_lane_catalog_and_efforts_without_a_prompt ... ok
+test host_tool_calls_are_neutral_tool_events ... ok
+test read_only_sessions_allow_muse_read_tools_but_not_the_shell ... ok
+test native_subagents_are_reported_with_their_results ... ok
+test structured_questions_are_declined_and_the_turn_continues ... ok
+test supervised_approvals_reach_the_host_and_map_to_once_choices ... ok
+test web_hits_reasoning_summaries_todos_and_retries_are_presented ... ok
+test unreviewed_read_only_sessions_decline_requests_and_refuse_the_shell ... ok
+test logged_out_muse_is_unauthenticated_and_cannot_open_a_session ... ok
+test closing_one_session_leaves_another_running ... ok
+test persistent_sessions_resume_with_their_approval_mode ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.30s
+
+     Running tests\native_evidence.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_evidence-e046d2129fbbc344.exe)
+
+running 2 tests
+test successful_native_session_proves_auth_but_not_plan ... ok
+test host_billing_declaration_stays_user_supplied ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\native_launch.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_launch-769fb582e9afc842.exe)
+
+running 8 tests
+test grok_sessions_launch_without_any_native_tool ... ok
+test ide_launcher_is_not_a_google_agent_runtime ... ok
+test unsupported_shell_wrappers_are_never_executed ... ok
+test grok_custom_profile_is_not_silently_replaced_with_another_account ... ok
+test clients_that_cannot_remove_their_tools_refuse_text_only_sessions ... ok
+test grok_metadata_probes_disable_the_updater_and_text_sessions_do_not ... ok
+test custom_auth_is_explicit_and_not_a_token_export ... ok
+test google_acp_requires_native_harness_and_blocked_interactive_browser ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\native_profiles.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_profiles-2efb54cdde878c9e.exe)
+
+running 8 tests
+test malformed_profiles_and_unsupported_auth_switches_are_rejected ... ok
+test stable_ids_include_native_profile_scope_and_executable ... ok
+test another_connection_cannot_claim_a_configured_profile ... ok
+test native_registration_is_inert_and_retains_distinct_google_clients ... ok
+test native_billing_declaration_is_not_published_as_verified_access_during_inventory ... ok
+test credentials_arbitrary_args_and_remote_paths_are_not_configuration_fields ... ok
+test managed_codex_is_inert_isolated_and_stable ... ok
+test managed_codex_can_use_private_executable_only_inventory ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\opencode_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_catalog-9c881aac82dac9a3.exe)
+
+running 10 tests
+test an_opencode_gateway_without_connected_providers_is_not_authenticated ... ok
+test opencode_go_is_a_subscription_route_without_a_billing_declaration ... ok
+test mismatched_provider_ids_and_duplicate_sources_are_rejected ... ok
+test variants_and_context_are_native_and_unknown_quota_is_not_zero ... ok
+test lookalike_provider_ids_do_not_receive_the_go_subscription_class ... ok
+test billing_declarations_are_per_provider_and_labeled_as_user_supplied ... ok
+test gateway_models_preserve_distinct_vendor_routes ... ok
+test managed_server_runs_the_native_binary_never_the_npm_shell_shim ... ok
+test large_official_provider_directory_can_still_filter_to_connected_accounts ... ok
+test unchanged_gateway_catalog_keeps_model_revisions_across_probes ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+     Running tests\opencode_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_execution-946049f65e22cd92.exe)
+
+running 2 tests
+test permission_echo_is_required_before_any_generation ... ok
+test owns_one_native_session_streams_and_deletes_only_that_session ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\opencode_live.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_live-2a1a5272c69596c6.exe)
+
+running 1 test
+test live_managed_server_runs_one_text_turn ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\opencode_v2.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_v2-256057abc090fce2.exe)
+
+running 8 tests
+test rejects_missing_permission_echo_before_prompt ... ok
+test uncertain_delete_responses_keep_owned_id_for_retry ... ok
+test cancellation_interrupts_only_owned_session ... ok
+test text_chunks_are_utf8_bounded ... ok
+test receives_streamed_and_final_only_replies ... ok
+test rejects_delayed_prior_turn_events_without_breaking_fresh_continuations ... ok
+test errors_and_tools_fail_without_approvals ... ok
+test close_can_retry_a_failed_or_cancelled_delete ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests\opencode_v2_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_v2_catalog-3f104d441bdebeeb.exe)
+
+running 5 tests
+test ignores_disabled_and_non_text_models ... ok
+test opencode_go_v2_is_subscription_and_payg_stays_unknown ... ok
+test explicit_billing_does_not_fabricate_authentication ... ok
+test rejects_duplicate_model_and_unknown_provider ... ok
+test retains_route_native_id_and_options_but_never_infers_auth_or_billing ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\opencode_version.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_version-53a334016b47da20.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\process_tree.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\process_tree-312a255486a5255d.exe)
+
+running 1 test
+test closing_native_peer_stops_owned_descendants_but_not_separate_processes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.04s
+
+     Running tests\resume_native.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\resume_native-db0a7f72531f72df.exe)
+
+running 12 tests
+test claude_persistence_replaces_no_persistence_with_session_or_resume ... ok
+test claude_resume_requires_the_stored_conversation ... ok
+test opencode_non_persistent_sessions_are_not_resumable ... ok
+test opencode_suspend_keeps_the_session_and_resume_reattaches_it ... ok
+test codex_ephemeral_threads_stay_unresumable ... ok
+test codex_resume_reattaches_the_thread_without_starting_one ... ok
+test managed_codex_changed_identity_rejects_turn_before_native_thread_start ... ok
+test codex_persistent_thread_suspends_to_its_native_id ... ok
+test managed_codex_rotated_token_restarts_and_resumes_same_thread ... ok
+test codex_missing_or_different_thread_is_resume_unavailable ... ok
+test claude_resumed_session_keeps_the_same_id ... ok
+test claude_persistent_session_suspends_to_its_id_after_a_turn ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.25s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_chatgpt_auth-fee7003be9b86bfc.exe)
+
+running 21 tests
+test oauth::tests::discovery_rejects_untrusted_endpoints ... ok
+test oauth::tests::callback_accepts_only_expected_path_and_requires_state ... ok
+test oauth::tests::pinned_chatgpt_oauth_surface_matches_the_t3code_snapshot ... ok
+test oauth::tests::token_response_requires_exact_scope_and_rotates_together ... ok
+test oauth::tests::malformed_registration_is_not_reset_by_auth_actions ... ok
+test tests::constructor_does_not_read_credential_storage ... ok
+test tests::scope_gate_requires_exact_plan_permission ... ok
+test oauth::tests::callback_waits_for_complete_bounded_headers ... ok
+test oauth::tests::es256_identity_tokens_match_the_jwk_curve ... ok
+test oauth::tests::signed_id_requires_issuer_audience_nonce_expiry_and_signature ... ok
+test oauth::tests::disabled_plan_sharing_asks_for_consent_on_the_next_attempt ... ok
+test oauth::tests::changed_verified_registration_is_not_reset ... ok
+test oauth::tests::direct_first_run_disconnect_is_idempotent ... ok
+test oauth::tests::callback_rejects_missing_or_changed_client_and_cancelled_attempt ... ok
+test oauth::tests::inactive_marker_survives_crash_before_ciphertext_deletion ... ok
+test oauth::tests::missing_key_allows_disconnect_to_invalidate_and_clear_local_material ... ok
+test oauth::tests::corrupt_key_allows_fresh_sign_in_without_changing_registration ... ok
+test oauth::tests::earliest_refresh_at_does_not_race_a_deferred_renewal ... ok
+test oauth::tests::status_invalidates_pending_after_another_manager_disconnects ... ok
+test oauth::tests::start_uses_stable_host_fresh_pkce_and_cancellation ... ok
+test oauth::tests::registration_refresh_disconnect_and_account_switch_rejection ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+
+     Running unittests src\main.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit-0323c199f8353d0d.exe)
+
+running 10 tests
+test args::tests::execution_needs_explicit_workspace_and_metadata_permission ... ok
+test args::additional_provider_tests::independent_grants_replace_the_shared_owner_token_and_need_independent_mode ... ok
+test args::additional_provider_tests::executable_only_provider_is_repeatable_and_rejects_unknown_or_conflicting_grants ... ok
+test args::tests::explicit_http_serving_and_assets_are_supported ... ok
+test args::additional_provider_tests::billing_declarations_allow_declared_grok_execution_without_native_profiles ... ok
+test args::additional_provider_tests::grok_metadata_is_explicit_and_does_not_imply_execution ... ok
+test args::additional_provider_tests::native_subscription_execution_requires_an_explicit_profile_file ... ok
+test args::tests::unsafe_or_conflicting_flags_are_rejected ... ok
+test args::tests::warm_up_is_opt_in_and_needs_http_discovery_and_a_metadata_provider ... ok
+test args::additional_provider_tests::managed_chatgpt_registration_is_opt_in_and_needs_no_native_profile_file ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\auth_blocker.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit_auth_blocker-4f45a5e19ce5dc50.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\native_main.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit_native_host-cc229ba9efd85427.exe)
+
+running 10 tests
+test args::additional_provider_tests::managed_chatgpt_registration_is_opt_in_and_needs_no_native_profile_file ... ok
+test args::tests::execution_needs_explicit_workspace_and_metadata_permission ... ok
+test args::additional_provider_tests::independent_grants_replace_the_shared_owner_token_and_need_independent_mode ... ok
+test args::additional_provider_tests::billing_declarations_allow_declared_grok_execution_without_native_profiles ... ok
+test args::additional_provider_tests::grok_metadata_is_explicit_and_does_not_imply_execution ... ok
+test args::additional_provider_tests::native_subscription_execution_requires_an_explicit_profile_file ... ok
+test args::additional_provider_tests::executable_only_provider_is_repeatable_and_rejects_unknown_or_conflicting_grants ... ok
+test args::tests::unsafe_or_conflicting_flags_are_rejected ... ok
+test args::tests::warm_up_is_opt_in_and_needs_http_discovery_and_a_metadata_provider ... ok
+test args::tests::explicit_http_serving_and_assets_are_supported ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\auth_blocker.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\auth_blocker-a25b5f908a560d2a.exe)
+
+running 1 test
+test metadata_browser_controller_never_opens_or_echoes_an_auth_url ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\broker_lifetime.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\broker_lifetime-e7b261d3ee6917fe.exe)
+
+running 2 tests
+test independently_scoped_app_grants_revoke_one_app_without_the_owner_credential ... ok
+test an_independent_broker_survives_consumer_disconnects_and_converges ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.09s
+
+     Running tests\commands.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\commands-f15fe75fdf76e14f.exe)
+
+running 7 tests
+test stdio_defaults_to_no_discovery_authorization ... ok
+test explicit_empty_home_does_not_fall_back_to_personal_profiles ... ok
+test codex_probe_is_advertised_without_running_it_during_startup ... ok
+test scan_calls_native_discovery_without_verifying_credentials ... ok
+test help_and_version_do_not_scan ... ok
+test executable_only_scan_omits_legacy_provider_but_keeps_other_profiles ... ok
+test unknown_or_incomplete_arguments_fail_without_actions ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests\endpoints.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\endpoints-3e15c57c2908d9e1.exe)
+
+running 3 tests
+test config_with_inline_secret_is_rejected_without_echoing_content ... ok
+test explicit_endpoint_inventory_is_available_through_the_real_helper ... ok
+test metadata_permission_supports_registered_providers_without_starting_them ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests\host_modes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_modes-41edf5461b5e3dba.exe)
+
+running 4 tests
+test broker_endpoint_rejects_tokens_in_argv ... ok
+test native_host_without_registration_rejects_origin ... ok
+LocalAccessDenied: Native host registration is unavailable or does not allow this extension
+test native_host_untrusted_origin_cannot_use_json_as_authorization ... ok
+test connect_mode_does_not_start_a_missing_broker_or_scan ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.92s
+
+     Running tests\native_host.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_host-f020d3c429dd4115.exe)
+
+running 2 tests
+test origin_is_checked_again_even_when_manifest_would_normally_filter_it ... ok
+test registered_host_reaches_native_service_without_installing_browser_entries ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.78s
+
+     Running tests\native_profiles.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_profiles-bead467625e35a5b.exe)
+
+running 3 tests
+test native_profile_file_rejects_inline_credentials_without_echoing_them ... ok
+test native_profile_inventory_is_explicit_and_inert ... ok
+test executable_only_provider_rejects_explicit_profile_for_same_provider ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\provider_flags.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\provider_flags-a43c404f28bec9f5.exe)
+
+running 3 tests
+test generic_provider_flags_are_explicit_and_repeatable ... ok
+test unsupported_provider_ids_fail_without_launch ... ok
+test muse_metadata_and_execution_grants_are_accepted ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_contracts-f1e953bf05c500f9.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\api_contracts.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\api_contracts-c0ceb09b01ce7292.exe)
+
+running 2 tests
+test public_schema_contains_method_input_and_output_maps ... ok
+test method_shapes_do_not_accept_caller_identity_or_arbitrary_executable ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\contracts.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\contracts-ef8e6b6c84e6976c.exe)
+
+running 13 tests
+test negative_or_numeric_or_nondecimal_usage_is_rejected ... ok
+test invalid_timestamp_is_rejected ... ok
+test numeric_bounds_are_enforced ... ok
+test unknown_cannot_smuggle_a_value ... ok
+test future_native_effort_is_accepted_only_when_advertised ... ok
+test known_requires_evidence_and_time ... ok
+test unavailable_is_not_unknown ... ok
+test known_roundtrips_without_losing_stale_state ... ok
+test identical_native_ids_remain_distinct_across_routes_and_delimiters ... ok
+test unknown_quota_denominator_stays_unknown ... ok
+test counts_beyond_javascript_precision_stay_exact ... ok
+test money_stays_decimal_and_usage_over_limit_is_not_negative_remaining ... ok
+test schema_is_generated_and_contains_domain_records ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\diagnostic_redaction.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\diagnostic_redaction-0213c55f3e724017.exe)
+
+running 2 tests
+test diagnostic_detail_retains_provider_reason_and_redacts_credentials ... ok
+test diagnostic_detail_is_bounded_and_removes_control_characters ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\schema.rs (D:\lai-task-7a4b270a-20261022\target\debug\examples\schema-0864487a5edffa37.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_control-9da83b00f222553c.exe)
+
+running 5 tests
+test tests::issue_view_exposes_actionable_remediation_without_connection_secrets ... ok
+test tests::issue_and_usage_views_keep_unknown_distinct_from_zero ... ok
+test tests::overview_shows_revision_health_and_explicit_staleness ... ok
+test tests::destructuring_export_removes_secret_shaped_keys_at_any_depth ... ok
+test tests::diagnostics_document_carries_provenance_and_no_secrets ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit_control-090d00c67dbd3399.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\e2e.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\e2e-bd0f57785bf1a49c.exe)
+
+running 1 test
+test the_control_center_uses_only_the_public_authenticated_api ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_core-040f0d169b5c84c2.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\included_allowance.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\included_allowance-24dbd1328c556a43.exe)
+
+running 4 tests
+test passed_time_or_stale_denial_is_not_automatic_quota_recovery ... ok
+test separate_metered_route_still_requires_its_own_billing_consent ... ok
+test fresh_backend_allowance_restoration_is_honored ... ok
+test explicit_included_usage_denial_blocks_selection_even_with_paid_option_consent ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\opencode_go_billing.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_go_billing-0ba777f4e8d44ed0.exe)
+
+running 3 tests
+test subscribed_go_route_is_eligible_without_declaration_or_paid_opt_in ... ok
+test metered_api_and_lookalike_routes_keep_their_safeguards ... ok
+test expired_or_signed_out_auth_blocks_even_a_subscription_route ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\selection_projection.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\selection_projection-55e01a1f97e9c471.exe)
+
+running 14 tests
+test changed_catalog_revision_cannot_execute_saved_selection ... ok
+test matching_model_name_from_another_route_is_not_interchangeable ... ok
+test signed_out_identity_blocks_runtime_selection ... ok
+test api_billing_does_not_inherit_subscription_consent ... ok
+test accountless_local_runtime_requires_matching_provider_and_fresh_local_evidence ... ok
+test native_model_names_do_not_erase_account_routes ... ok
+test unknown_or_conditional_capability_is_not_confirmed ... ok
+test denied_client_sees_no_account_model_pool_or_profile ... ok
+test unadvertised_options_are_rejected_before_execution ... ok
+test future_native_effort_is_preserved_and_validated ... ok
+test stale_sign_in_stands_until_the_client_reports_otherwise ... ok
+test projection_filters_linked_routes_not_just_top_level_connections ... ok
+test projections_do_not_mutate_source ... ok
+test identity_needs_separate_permission ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\sensitive_options.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\sensitive_options-f7a89de8cf1d446c.exe)
+
+running 2 tests
+test subscription_does_not_authorize_billing_sensitive_option ... ok
+test permission_sensitive_option_needs_a_separate_approval_path ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_discovery-8360ed8f52fd06c9.exe)
+
+running 1 test
+test knowledge::tests::official_client_evidence_outranks_tokscale ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\log_tail.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\log_tail-41e5d95db3e5062a.exe)
+
+running 10 tests
+test synthetic_gigabyte_log_reads_only_the_bounded_window ... ok
+test cancellation_is_checked_before_any_file_read ... ok
+test truncation_restarts_without_replaying_old_records ... ok
+test cancellation_during_a_poll_preserves_the_callers_saved_offset_and_buffer ... ok
+test replacement_rotation_is_detected_even_when_new_file_is_larger ... ok
+test line_limit_buffers_complete_records_without_duplicate_file_reads ... ok
+test append_and_partial_records_are_incremental ... ok
+test replacement_with_same_anchor_bytes_is_detected_by_file_identity ... ok
+test changed_prefix_detects_rotation_when_identity_and_tail_anchor_are_reused ... ok
+test invalid_budgets_and_oversized_single_records_fail_closed ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\passive.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\passive-68fb7512c8f9ae7d.exe)
+
+running 19 tests
+test cancellation_before_scan_causes_no_successful_inventory ... ok
+test relative_and_network_profile_roots_are_rejected ... ok
+test custom_home_override_is_respected_without_mutating_either_directory ... ok
+test empty_home_has_no_fabricated_connections_or_models ... ok
+test gemini_and_antigravity_are_distinct_routes ... ok
+test same_client_has_distinct_work_and_personal_profiles ... ok
+test executable_only_provider_never_probes_its_profiles_or_publishes_legacy_routes ... ok
+test a_configured_muse_binary_replaces_the_search ... ok
+test partial_results_are_emitted_progressively_and_ids_stay_stable ... ok
+test cursor_named_binary_remains_a_passive_candidate ... ok
+test opencode_configuration_only_keeps_identity_when_data_directory_appears ... ok
+test credential_presence_is_unchecked_not_authentication_and_is_never_read ... ok
+test separate_installation_directories_remain_selectable_connections ... ok
+test another_providers_agent_binary_is_not_misidentified_as_cursor ... ok
+test multiple_windows_shims_for_one_profile_do_not_duplicate_the_profile ... ok
+test opencode_xdg_config_and_data_directories_are_one_profile ... ok
+test muse_is_found_in_its_windows_install_directory_without_reading_it ... ok
+test user_profile_paths_do_not_escape_the_normalized_snapshot ... ok
+test windows_shims_are_detected_as_candidates_without_execution ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\t3code_surface.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\t3code_surface-bcc7e7a5529a2a28.exe)
+
+running 2 tests
+test pi_profile_follows_the_t3code_snapshot ... ok
+test pi_configuration_and_off_path_opencode_are_inventory_only ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\upstream_parity.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\upstream_parity-b955bf43e10470fc.exe)
+
+running 7 tests
+test platform_profile_components_stay_split ... ok
+test windows_discovery_paths_keep_native_separators ... ok
+test secure_storage_override_stays_ahead_of_the_tokscale_claude_home ... ok
+test windows_redirect_ignores_git_bash_home ... ok
+test windows_redirect_ignores_posix_and_drive_relative_home ... ok
+test upstream_parity_matches_pinned_tokscale_discovery ... ok
+test adopted_homes_are_discovered_without_reading_session_files ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_kit-109c724de5d49771.exe)
+
+running 1 test
+test adapter_info::tests::muse_is_a_native_client_with_mediated_approvals_and_resumption ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\embedded.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\embedded-e0b97cd48aa76bc0.exe)
+
+running 5 tests
+test relative_home_is_rejected_without_creating_a_directory ... ok
+test building_and_reading_do_not_scan_or_probe ... ok
+test denied_and_same_label_clients_are_isolated ... ok
+test one_import_provides_real_passive_discovery ... ok
+test explicit_native_profiles_are_inert_until_scan_and_remain_distinct ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\live_claude_image.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\live_claude_image-9852bd5a5edfa2f1.exe)
+
+running 1 test
+test live_claude_turn_sees_a_staged_image ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\live_persistent_resume.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\live_persistent_resume-6d71709905164bc5.exe)
+
+running 1 test
+test live_claude_conversation_resumes_after_a_helper_restart ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\local_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_execution-12a7534892d5f0c4.exe)
+
+running 1 test
+test accountless_ollama_flows_through_discovery_selection_grants_and_streaming ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running unittests examples\inspect.rs (D:\lai-task-7a4b270a-20261022\target\debug\examples\inspect-ec9edd318a9885f3.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\synthetic_adapter.rs (D:\lai-task-7a4b270a-20261022\target\debug\examples\synthetic_adapter-c3e02262e2a3262b.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_platform-45f6485eeab59a60.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\filesystem.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\filesystem-6844b587ad840f69.exe)
+
+running 8 tests
+test traversal_and_absolute_child_names_are_rejected ... ok
+test diagnostic_errors_never_embed_private_path ... ok
+test detects_missing_file_directory_without_reading_content ... ok
+test unicode_paths_are_not_lossily_reconstructed ... ok
+test invalid_byte_budgets_and_offsets_fail_instead_of_unbounded_read ... ok
+test bounded_directory_listing_is_explicitly_partial ... ok
+test file_identity_uses_birth_time_when_available_and_survives_append ... ok
+test reads_only_requested_byte_window_from_sparse_gigabyte_file ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+
+     Running tests\watcher.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\watcher-aed3b6e51974db3e.exe)
+
+running 3 tests
+test invalid_roots_fail_without_creating_or_following_them ... ok
+test watches_only_explicit_metadata_names_without_reading_contents ... ok
+test atomic_replacement_and_deletion_invalidate_the_profile ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_runtime-a58c6cda64fb283d.exe)
+
+running 3 tests
+test artifact::tests::oversized_results_are_rejected ... ok
+test artifact::tests::expired_results_release_capacity_and_are_not_returned ... ok
+test artifact::tests::result_ids_do_not_cross_session_boundaries ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\artifacts.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\artifacts-fd845a08b17134e4.exe)
+
+running 6 tests
+test binary_artifacts_are_not_forced_through_utf8 ... ok
+test chunk_limits_offsets_and_close_are_enforced ... ok
+test completed_text_has_owner_scoped_chunked_result ... ok
+test unregistered_artifact_events_cannot_be_forged ... ok
+test invalid_names_and_media_types_are_rejected ... ok
+test revocation_removes_owned_artifacts ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\cleanup_retry.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\cleanup_retry-fed5353a7ca0991a.exe)
+
+running 2 tests
+test failed_turn_cleanup_retains_driver_until_explicit_close_retry ... ok
+test failed_or_timed_out_close_retains_owned_driver_for_retry_and_pruning ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s
+
+     Running tests\empty_journal.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\empty_journal-3fb34e946dd9bf1b.exe)
+
+running 2 tests
+test a_cursor_ahead_of_an_empty_journal_is_a_gap_not_silent_success ... ok
+test a_new_clients_event_page_has_a_valid_tail_cursor ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\journal_limits.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\journal_limits-3dd534d50b0e06cb.exe)
+
+running 2 tests
+test closed_sessions_do_not_exhaust_active_capacity ... ok
+test replay_pages_are_bounded_without_losing_events ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\lifecycle.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lifecycle-c640f49a52849428.exe)
+
+running 10 tests
+test revocation_cancels_owned_work_and_hides_results ... ok
+test per_turn_guard_is_rechecked ... ok
+test close_blocks_further_turns ... ok
+test session_and_events_are_owner_scoped ... ok
+test duplicate_request_never_runs_twice ... ok
+test creation_is_not_generation_and_turn_streams_once ... ok
+test error_events_keep_provider_diagnostics_and_redact_credentials ... ok
+test cancellation_is_terminal_and_does_not_retry ... ok
+test approval_is_scoped_and_single_use ... ok
+test failed_or_timed_out_suspend_never_reenables_an_uncertain_conversation ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.01s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_service-8cb2a282ae0b65d2.exe)
+
+running 25 tests
+test cache::backoff_tests::retry_jitter_never_exceeds_the_thirty_second_cap ... ok
+test cache::metadata_freshness_tests::a_recent_authentication_check_stays_fresh_while_the_user_checks_other_profiles ... ok
+test delivery::tests::injected_sink_receives_only_the_projected_decision ... ok
+test health::tests::unknown_is_not_reported_as_expired_and_duplicates_merge ... ok
+test health::tests::expired_auth_is_actionable_and_recovery_resolves ... ok
+test health::tests::dismissal_is_not_resolution ... ok
+test health::tests::a_missing_resource_does_not_prove_recovery_or_logout ... ok
+test execution::lifecycle_tests::revoke_between_native_suspend_and_token_publication_cannot_revive_old_access ... ok
+test cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout ... ok
+test notifications::tests::quiet_hours_suppress_without_marking_delivered ... ok
+test notifications::tests::private_content_hides_issue_text ... ok
+test cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit ... ok
+test cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed ... ok
+test inputs::tests::store_is_owner_and_session_scoped_bounded_and_consumed ... ok
+test cache::refresh_generation_tests::committed_reset_deadline_survives_forward_and_backward_wall_clock_jumps ... ok
+test notifications::tests::disabled_notifications_still_expose_inline_health_decisions ... ok
+test inputs::tests::png_and_jpeg_dimensions_come_from_headers ... ok
+test cache::refresh_generation_tests::an_uncancelled_owned_timeout_still_publishes_an_honest_failure ... ok
+test cache::refresh_generation_tests::immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds ... ok
+test resume_token::tests::tokens_round_trip_across_store_instances_and_hide_contents ... ok
+test cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work ... ok
+test resume_token::tests::tampered_or_foreign_tokens_are_unavailable ... ok
+test notifications::tests::duplicate_polls_do_not_emit_twice_and_reminders_are_bounded ... ok
+test inputs::tests::invalid_images_are_rejected_with_typed_errors ... ok
+test inputs::tests::owner_byte_budget_is_enforced ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\boundaries.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\boundaries-7fe1602acb5b0486.exe)
+
+running 4 tests
+test protocol_mismatch_and_parameter_smuggling_are_rejected ... ok
+test source_failure_does_not_serialize_private_error_text ... ok
+test revocation_during_scan_does_not_restore_authority ... ok
+test cached_reads_remain_responsive_while_scan_runs ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests\catalog_pages.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\catalog_pages-715da1b72a12bf4c.exe)
+
+running 5 tests
+test empty_catalog_returns_a_terminal_page_without_scanning ... ok
+test page_cursors_cannot_move_between_clients_or_route_filters ... ok
+test page_rechecks_scope_and_rejects_changed_catalogs ... ok
+test paged_catalog_preserves_order_and_every_route_identity ... ok
+test pages_validate_limits_and_never_return_oversized_frames ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+
+     Running tests\chatgpt_auth_scope.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\chatgpt_auth_scope-0f5fd560fd2ac0b6.exe)
+
+running 3 tests
+test chatgpt_auth_methods_require_managed_metadata_scope ... ok
+test unrelated_provider_startup_does_not_delay_managed_disconnect ... ok
+test disconnect_waits_for_inflight_managed_create_then_closes_its_session ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\client_lifecycle.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\client_lifecycle-b32ae29f513e54cb.exe)
+
+running 3 tests
+test rpc_close_cannot_choose_a_different_owner ... ok
+test closed_clients_do_not_exhaust_the_long_lived_broker ... ok
+test closing_one_app_preserves_the_other_apps_permissions ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\execution-eec2fdfcaa2aec00.exe)
+
+running 10 tests
+test selection_smuggling_does_not_reach_factory ... ok
+test revocation_during_open_then_regrant_closes_the_unpublished_agent ... ok
+test request_cannot_supply_native_arguments_or_paths ... ok
+test discovery_permission_does_not_authorize_execution ... ok
+test unknown_workspaces_and_permission_upgrades_are_rejected ... ok
+test session_factory_and_events_go_through_public_service ... ok
+test artifacts_are_read_through_the_public_service_and_never_by_path ... ok
+test long_turn_prompt_reaches_native_agent_unchanged ... ok
+test long_turn_exception_keeps_typed_and_other_method_bounds ... ok
+test turn_prompt_and_serialized_params_have_separate_bounds ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\gateway_routes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\gateway_routes-5dbe5190e186fdfe.exe)
+
+running 3 tests
+test gateway_cannot_attach_model_routes_to_another_account ... ok
+test gateway_subroute_keeps_model_vendor_and_billing_identity ... ok
+test gateway_metadata_does_not_claim_an_execution_driver_exists ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\host_mcp.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_mcp-960aaea5727119ed.exe)
+
+running 8 tests
+test debug_output_redacts_the_bearer_token ... ok
+test handshake_advertises_host_mcp ... ok
+test host_servers_require_the_execution_grant_and_reject_workspace_write ... ok
+test omitted_host_servers_are_backwards_compatible ... ok
+test valid_host_servers_reach_the_adapter_and_are_never_echoed ... ok
+test invalid_host_servers_are_refused_before_any_launch ... ok
+test two_host_servers_can_share_a_256_tool_allowlist ... ok
+test a_host_mcp_allowlist_of_130_tools_fits_session_create ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\image_inputs.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\image_inputs-4e514f1cd9bb960d.exe)
+
+running 5 tests
+test handshake_advertises_image_input_and_put_method ... ok
+test unsupported_model_or_adapter_fails_the_turn_instead_of_dropping_images ... ok
+test inputs_are_owner_and_session_scoped ... ok
+test invalid_puts_are_typed_request_errors ... ok
+test staged_image_reaches_a_capable_adapter_once ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\introspection.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\introspection-58dcc416c211209e.exe)
+
+running 3 tests
+test adapter_listing_is_a_collection_not_fake_single_provider_status ... ok
+test health_describes_configured_runtime_not_a_stale_constant ... ok
+test diagnostics_and_grants_separate_available_execution_from_permission ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\long_running.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\long_running-7b9645bf05d71b3f.exe)
+
+running 1 test
+test cached_metadata_age_does_not_cancel_an_already_authorized_turn ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\metadata-5aa3ae28287e2b64.exe)
+
+running 14 tests
+test discovery_never_runs_client_probe_and_missing_grant_is_denied ... ok
+test one_connection_probe_cannot_overwrite_another_account ... ok
+test failed_metadata_probes_back_off_instead_of_respawning_for_each_caller ... ok
+test provider_scope_must_be_host_set_and_unknown_provider_does_not_spawn ... ok
+test approved_metadata_is_scoped_and_identity_stays_masked ... ok
+test a_corrupt_or_foreign_cache_file_is_preserved_and_rebuilt ... ok
+test repeated_reads_do_not_invent_new_observation_times_or_revisions ... ok
+test observations_survive_a_restart_as_stale_while_revalidate_data_without_identity ... ok
+test concurrent_probes_share_cached_work_without_repeated_client_spawns ... ok
+test revoked_during_probe_cannot_publish_new_metadata ... ok
+test watching_needs_discovery_permission_and_can_be_stopped ... ok
+test provider_retry_after_is_sanitized_preserved_and_expires ... ok
+test explicit_watch_invalidates_changed_metadata_without_running_a_probe ... ok
+test retryable_metadata_failures_use_increasing_bounded_backoff ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.24s
+
+     Running tests\native_policy.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_policy-f67537b0f3cde4d0.exe)
+
+running 3 tests
+test native_client_policy_needs_separate_host_authorization ... ok
+test native_policy_does_not_bypass_workspace_or_billing_grants ... ok
+test explicit_native_policy_is_preserved_for_the_provider_not_claimed_readonly ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\persistent_resume.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\persistent_resume-0b4a0e3c6152cdc6.exe)
+
+running 7 tests
+test handshake_and_routes_advertise_persistent_resume ... ok
+test persistent_requires_a_state_dir_and_a_resumable_route ... ok
+test missing_native_history_is_resume_unavailable_not_a_new_chat ... ok
+test model_revision_changes_are_tolerated_for_the_same_model_id ... ok
+test token_survives_a_helper_restart_and_reattaches_the_same_conversation ... ok
+test identity_changes_refuse_with_resume_unavailable ... ok
+test host_servers_are_resupplied_on_resume_never_stored ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests\refresh_lanes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\refresh_lanes-40b9bf569bfb7a98.exe)
+
+running 20 tests
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test explicit_probe_failure_from_before_a_scan_cannot_stale_the_new_generation ... ok
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test stopping_background_inventory_does_not_cancel_a_foreground_joiners_shared_scan ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+test duplicate_routes_in_one_verified_quota_scope_share_one_probe_per_tick ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... FAILED
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+
+failures:
+
+---- inventory_retry_after_is_shared_by_background_and_explicit_refreshes stdout ----
+
+thread 'inventory_retry_after_is_shared_by_background_and_explicit_refreshes' (54296) panicked at crates\lai-service\tests\refresh_lanes.rs:599:5:
+assertion `left == right` failed: background inventory must respect authoritative Retry-After
+  left: 3
+ right: 2
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    inventory_retry_after_is_shared_by_background_and_explicit_refreshes
+
+test result: FAILED. 19 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.84s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`
+     Running tests\resumption.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\resumption-107b7808d71ad8d0.exe)
+
+running 6 tests
+test revocation_invalidates_unconsumed_resume_tokens ... ok
+test resume_tokens_are_invalid_after_runtime_restart ... ok
+test active_and_closed_sessions_cannot_be_suspended ... ok
+test resume_tokens_are_opaque_owner_scoped_and_one_time ... ok
+test completed_conversation_can_suspend_and_resume_without_a_fresh_session ... ok
+test resume_revalidates_account_model_route_billing_and_workspace_grant ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests\runtime_sync.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\runtime_sync-2eb113c138a8c7cd.exe)
+
+running 7 tests
+test issue_and_snapshot_projection_hide_inaccessible_connections ... ok
+test notifications_are_deduplicated_across_clients_and_respect_privacy ... ok
+test metadata_advances_the_revision_and_replays_exactly_once ... ok
+test an_installed_notification_sink_receives_only_due_decisions ... ok
+test expiry_creates_actionable_health_and_snooze_does_not_resolve_it ... ok
+test invalidation_is_debounced_then_the_autonomous_lane_rechecks_it ... ok
+test an_older_probe_cannot_overwrite_a_newer_revision ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+
+     Running tests\scoped_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\scoped_execution-42b6655f73e1fed9.exe)
+
+running 1 test
+test connection_scoped_executor_does_not_bless_sibling_account ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests\service.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\service-da8b39d6f430cfea.exe)
+
+running 12 tests
+test unknown_client_cannot_read_or_scan ... ok
+test browser_request_cannot_grant_itself_more_permissions ... ok
+test ungranted_client_cannot_trigger_discovery ... ok
+test unsupported_methods_and_nonpassive_scans_fail_closed ... ok
+test duplicate_host_registration_does_not_replace_policy ... ok
+test construction_handshake_and_snapshot_never_scan ... ok
+test requests_are_bounded_and_projection_fields_are_allowlisted ... ok
+test request_payload_does_not_choose_caller_identity ... ok
+test revocation_immediately_hides_cached_data ... ok
+test native_selection_validation_uses_authorized_catalog ... ok
+test alternate_data_methods_respect_the_same_projection ... ok
+test simultaneous_refreshes_are_singleflight ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\session_auth.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\session_auth-2002cdafe7f53746.exe)
+
+running 1 test
+test session_start_rereads_live_auth_instead_of_trusting_cached_login ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\session_billing.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\session_billing-515b550809dbbe05.exe)
+
+running 1 test
+test host_billing_allowance_does_not_widen_session_consent ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_store-b32effe2da5d4172.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\store.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\store-de668bd8e620ba6d.exe)
+
+running 8 tests
+test persisted_metadata_never_contains_account_identity_text ... ok
+test a_future_schema_fails_closed ... ok
+test a_corrupt_database_is_preserved_not_deleted ... ok
+test notification_dedupe_state_survives_a_restart ... ok
+test an_old_epoch_or_a_future_cursor_is_an_explicit_gap ... ok
+test commit_reloads_snapshot_and_replays_the_exact_journal ... ok
+test read_only_diagnostics_do_not_create_or_modify_state ... ok
+test journal_is_bounded_and_evicts_old_cursors_without_losing_the_snapshot ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_transports-1e6bf4ed3b72baee.exe)
+
+running 1 test
+test http::auth::lifecycle_tests::expiring_a_pairing_token_releases_only_that_client ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\http.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http-7699d4f560db91f4.exe)
+
+running 10 tests
+test pairing_cannot_upgrade_grants ... ok
+test no_bootstrap_token_or_automatic_scan ... ok
+test variable_font_assets_are_served_as_woff2 ... ok
+test host_origin_and_query_credentials_are_rejected ... ok
+test foreign_origin_cannot_redeem_a_valid_code ... ok
+test same_origin_pairing_code_endpoint_returns_current_code_without_consuming_it ... ok
+test single_use_pairing_and_native_rpc ... ok
+test client_routes_serve_index_and_everything_else_stays_strict ... ok
+test malformed_requests_and_body_limits_are_enforced ... ok
+test repeated_pair_and_revoke_does_not_exhaust_broker_client_slots ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.45s
+
+     Running tests\local_ipc.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ipc-149df73de669bfb6.exe)
+
+running 8 tests
+test endpoint_rejects_network_names_and_ambiguous_addresses ... ok
+test another_broker_cannot_take_over_a_live_endpoint ... ok
+test an_independent_owner_credential_can_open_more_than_one_connection ... ok
+test unauthorized_connections_cannot_query_and_keys_are_single_use ... ok
+test permissions_are_per_connection_and_revocation_is_local ... ok
+test two_clients_share_inventory_and_closing_one_does_not_stop_broker ... ok
+test scoped_app_grants_isolate_accounts_and_revocation_removes_the_grant ... ok
+test an_idle_independent_broker_releases_its_endpoint ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.91s
+
+     Running tests\native_messaging.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_messaging-52460ff929a7bb50.exe)
+
+running 6 tests
+test missing_or_unregistered_origins_never_touch_the_service ... ok
+test oversized_input_is_rejected_before_allocating_payload ... ok
+test partial_header_and_body_are_protocol_errors ... ok
+test invalid_utf8_and_json_fail_without_echoing_payload ... ok
+test multiline_json_remains_one_native_request ... ok
+test real_service_roundtrip_uses_native_length_prefix_not_text_lines ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\stdio.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\stdio-cb00bf95621dab04.exe)
+
+running 8 tests
+test protocol_mismatch_never_unlocks_discovery ... ok
+test notifications_cannot_trigger_work ... ok
+test real_service_negotiates_and_returns_empty_live_snapshot ... ok
+test string_ids_and_typed_domain_errors_are_preserved ... ok
+test unfinished_and_oversized_lines_fail_closed ... ok
+test handshake_is_required_before_a_scan ... ok
+test malformed_frames_and_batches_have_jsonrpc_errors ... ok
+test responses_are_correlated_without_blocking_cached_reads ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\streaming.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\streaming-dc1fdb7ae296e216.exe)
+
+running 2 tests
+test native_stdio_subscriptions_stream_after_ack_and_unsubscribe ... ok
+test native_sse_is_an_authorized_service_stream ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_update-8358faa559817d55.exe)
+
+running 4 tests
+test tests::signature_checksum_platform_and_downgrade_are_all_required ... ok
+test tests::an_old_crash_marker_is_preserved_but_does_not_block_activation ... ok
+test tests::a_failed_staging_copy_never_touches_the_installed_binary ... ok
+test tests::staged_activation_refuses_a_live_session_and_rolls_back ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+error: 1 target failed:
+    `-p lai-service --test refresh_lanes`
+Command '['cargo', 'test', '--workspace', '--all-targets', '--locked', '--no-fail-fast']' returned non-zero exit status 101.
+{"name": "full-profile-security-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", "scripts/verify.py", "--profile", "all"], "sourceCommit": "cf34b3dc8c9daf9a9684da32c9d49b5ca8871a4e", "exitCode": 101, "seconds": 300.052, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 3105629266, "finalActiveBytes": 3083978145, "cFreeBytes": 45353943040, "dFreeBytes": 611529269248, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

@@ -1,0 +1,24 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.78s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 1 test
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... FAILED
+
+failures:
+
+---- healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress stdout ----
+
+thread 'healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress' (70504) panicked at crates\lai-service\tests\refresh_lanes.rs:823:5:
+assertion `left == right` failed: a continuously failing prefix must not starve a healthy account beyond the page bound
+  left: String("ok")
+ right: "metadata_ready"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.76s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

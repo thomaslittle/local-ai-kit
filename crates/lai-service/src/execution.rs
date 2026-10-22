@@ -4,6 +4,7 @@ use lai_contracts::*;
 use lai_core::{project_snapshot, validate_selection};
 use lai_discovery::LocatedClient;
 use lai_runtime::{Agent, BoxFuture, Runtime};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -11,15 +12,23 @@ use std::{
     sync::{Arc, RwLock},
     time::Duration,
 };
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExecutionGrant {
+    #[serde(default)]
     pub connection_ids: BTreeSet<String>,
+    #[serde(default)]
     pub provider_ids: BTreeSet<String>,
+    #[serde(default)]
     pub workspaces: BTreeMap<String, PathBuf>,
+    #[serde(default)]
     pub allow_paid: bool,
+    #[serde(default)]
     pub allow_writes: bool,
+    #[serde(default)]
     pub review_native: bool,
     /// Explicit host trust in the installed client's native permission policy; not a Kit OS sandbox.
+    #[serde(default)]
     pub allow_native_policy: bool,
 }
 impl ExecutionGrant {
@@ -472,7 +481,7 @@ impl NativeService {
                 "Persistent sessions need a kit state directory",
             ));
         }
-        let located = self.cache.probe_input(&connection.id)?.0;
+        let located = self.cache.probe_input(&connection.id)?.located;
         let input = ExecutionInput {
             located,
             connection_id: connection.id.clone(),

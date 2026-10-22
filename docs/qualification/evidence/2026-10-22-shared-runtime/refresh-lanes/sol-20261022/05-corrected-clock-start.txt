@@ -1,0 +1,33 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.15s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 4 tests
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... FAILED
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... FAILED
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+
+failures:
+
+---- supported_usage_refreshes_before_slow_metadata_without_reset_inference stdout ----
+
+thread 'supported_usage_refreshes_before_slow_metadata_without_reset_inference' (67600) panicked at crates\lai-service\tests\refresh_lanes.rs:84:87:
+missing quotaPools/pool-personal: {"accounts":[],"connections":[{"accountId":null,"auth":{"reason":"UNPROBED","state":"unknown"},"diagnostics":[],"displayName":"personal","id":"personal","installationId":"install-personal","plan":{"reason":"NOT_REPORTED","state":"unknown"},"profileId":"profile-personal","providerId":"test","status":"ok"},{"accountId":null,"auth":{"reason":"UNPROBED","state":"unknown"},"diagnostics":[],"displayName":"work","id":"work","installationId":"install-work","plan":{"reason":"NOT_REPORTED","state":"unknown"},"profileId":"profile-work","providerId":"test","status":"ok"}],"cursor":"local-15510c1b2d865854:1","diagnostics":[],"health":{"checkedAt":"2026-10-22T18:59:18.353Z","hydrated":false,"openIssues":0,"status":"healthy"},"installations":[{"environmentId":"synthetic","id":"install-personal","locationHint":"synthetic","providerId":"test","version":{"reason":"NOT_PROBED","state":"unknown"}},{"environmentId":"synthetic","id":"install-work","locationHint":"synthetic","providerId":"test","version":{"reason":"NOT_PROBED","state":"unknown"}}],"issues":[],"mode":"synthetic","models":[],"observedAt":"2026-10-22T18:59:18.353Z","profiles":[{"id":"profile-personal","installationId":"install-personal","label":"personal"},{"id":"profile-work","installationId":"install-work","label":"work"}],"protocolVersion":"1.0","providers":[{"id":"test","kind":"synthetic","name":"Test"}],"quotaPools":[],"revision":"projection_3f8b40b7069244789788885c1dc39230caeb9a0fbbbfee7d94229e3f42e40d87","routes":[{"billing":{"freshness":"fresh","observedAt":"2026-10-22T18:59:18.352Z","source":{"adapterId":"synthetic","adapterVersion":"0.1.0-alpha.17","kind":"synthetic","reference":"core test"},"state":"known","value":"subscription","verification":"reported"},"capabilities":[],"catalogRevision":"1","connectionId":"personal","displayName":"personal","id":"route-personal","providerId":"test"},{"billing":{"freshness":"fresh","observedAt":"2026-10-22T18:59:18.352Z","source":{"adapterId":"synthetic","adapterVersion":"0.1.0-alpha.17","kind":"synthetic","reference":"core test"},"state":"known","value":"subscription","verification":"reported"},"capabilities":[],"catalogRevision":"1","connectionId":"work","displayName":"work","id":"route-work","providerId":"test"}]}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes stdout ----
+
+thread 'a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes' (36664) panicked at crates\lai-service\tests\refresh_lanes.rs:138:5:
+assertion `left == right` failed: a peer's commit must not discard this independent report
+  left: String("ok")
+ right: "metadata_ready"
+
+
+failures:
+    a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes
+    supported_usage_refreshes_before_slow_metadata_without_reset_inference
+
+test result: FAILED. 2 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

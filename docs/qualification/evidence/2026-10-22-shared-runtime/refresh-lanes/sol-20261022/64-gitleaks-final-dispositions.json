@@ -1,0 +1,128 @@
+{
+  "scanExitCode": 1,
+  "findingCount": 15,
+  "unresolvedFindings": 0,
+  "findings": [
+    {
+      "file": "crates/lai-chatgpt-auth/tests/fixtures/test-rsa.pem",
+      "line": 1,
+      "rule": "private-key",
+      "sha256": "fad7818d8a13ce1424c215cf22c51157c22c665f2bea9829489e6312a320c5c2",
+      "classification": "synthetic test fixture",
+      "reason": "Existing synthetic RSA test fixture introduced by 4bfae8f (Add synthetic RSA fixture for OAuth signature tests). Used only by cfg(test) loopback JWT signature validation at oauth.rs:1630,1712,2103. No key generated, rotated or used for release signing. Public test key carries no account identity."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-final.json",
+      "line": 19,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/src/resume_token.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-final.json",
+      "line": 22,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/chatgpt_auth_scope.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-final.json",
+      "line": 38,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/session_auth.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/final-source-sha256.json",
+      "line": 19,
+      "rule": "generic-api-key",
+      "sha256": "d3a6409ef2c12ab10fee19e01e89ea8e8009a252ec013ed1312b863303672e45",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/src/resume_token.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/final-source-sha256.json",
+      "line": 22,
+      "rule": "generic-api-key",
+      "sha256": "d3a6409ef2c12ab10fee19e01e89ea8e8009a252ec013ed1312b863303672e45",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/chatgpt_auth_scope.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/final-source-sha256.json",
+      "line": 38,
+      "rule": "generic-api-key",
+      "sha256": "d3a6409ef2c12ab10fee19e01e89ea8e8009a252ec013ed1312b863303672e45",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/session_auth.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-after.json",
+      "line": 19,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/src/resume_token.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-after.json",
+      "line": 22,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/chatgpt_auth_scope.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-after.json",
+      "line": 38,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/session_auth.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-before.json",
+      "line": 19,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/src/resume_token.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-before.json",
+      "line": 22,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/chatgpt_auth_scope.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/review5/source-before.json",
+      "line": 38,
+      "rule": "generic-api-key",
+      "sha256": "45d9cb88b0c26b87f7a77f517bc091d8431a5e0083b4a77fd246382a7247f54c",
+      "classification": "verified source checksum false positive",
+      "reason": "The value is the SHA-256 of crates/lai-service/tests/session_auth.rs. It was independently recomputed from the current reviewed source bytes and matched exactly. The auth-related filename triggered a generic credential pattern; no token value is present."
+    },
+    {
+      "file": "packages/sdk-typescript/src/generated.ts",
+      "line": 39,
+      "rule": "generic-api-key",
+      "sha256": "36b54b0c6cdd8b179974946565321a1a7b2fd020ddafaaa59478f67f8d06e96b",
+      "classification": "type declaration false positive",
+      "reason": "Generated TypeScript type declaration containing only field names and type references. Both matches are inside Connection/ConnectionMetadata declarations (lines39,41); no credential literal. Generated file unchanged by this work."
+    },
+    {
+      "file": "packages/sdk-typescript/src/generated.ts",
+      "line": 41,
+      "rule": "generic-api-key",
+      "sha256": "36b54b0c6cdd8b179974946565321a1a7b2fd020ddafaaa59478f67f8d06e96b",
+      "classification": "type declaration false positive",
+      "reason": "Generated TypeScript type declaration containing only field names and type references. Both matches are inside Connection/ConnectionMetadata declarations (lines39,41); no credential literal. Generated file unchanged by this work."
+    }
+  ],
+  "note": "Default scan is nonzero. No ignore/suppression was added. Fifteen matches were source-inspected:1 existing synthetic RSA fixture,2 generated type declarations,12 recomputed source SHA-256 checksums. No online credential validation."
+}

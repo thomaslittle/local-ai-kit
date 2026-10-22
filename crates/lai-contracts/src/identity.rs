@@ -1,4 +1,4 @@
-use crate::{Observation, OptionDescriptor, QuotaPool, Timestamp};
+use crate::{HealthSummary, Issue, Observation, OptionDescriptor, QuotaPool, Timestamp};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -85,11 +85,23 @@ pub struct Profile {
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AccountScope {
+    /// `organization`, `workspace`, `project`, `region`, or a provider-native kind.
+    pub kind: String,
+    pub id: Observation<String>,
+    pub label: Observation<String>,
+}
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Account {
     pub id: String,
     pub provider_id: String,
     pub display_label: Observation<String>,
     pub identity_source: Observation<String>,
+    /// Organization/project/region scope. Accounts with different verified
+    /// scopes are never merged, pooled, or silently switched between.
+    #[serde(default)]
+    pub scopes: Vec<AccountScope>,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -148,6 +160,10 @@ pub struct Snapshot {
     pub revision: String,
     pub observed_at: Timestamp,
     pub mode: DataMode,
+    /// Opaque journal cursor at the committed revision. Subscribe with this
+    /// value to obtain every inventory change committed after the snapshot.
+    #[serde(default)]
+    pub cursor: String,
     pub providers: Vec<Provider>,
     pub installations: Vec<Installation>,
     pub profiles: Vec<Profile>,
@@ -156,6 +172,10 @@ pub struct Snapshot {
     pub routes: Vec<AccessRoute>,
     pub models: Vec<Model>,
     pub quota_pools: Vec<QuotaPool>,
+    #[serde(default)]
+    pub issues: Vec<Issue>,
+    #[serde(default)]
+    pub health: HealthSummary,
     pub diagnostics: Vec<String>,
 }
 impl Snapshot {
@@ -165,6 +185,7 @@ impl Snapshot {
             revision: "0".into(),
             observed_at: Timestamp::now(),
             mode,
+            cursor: "0:0".into(),
             providers: vec![],
             installations: vec![],
             profiles: vec![],
@@ -173,6 +194,8 @@ impl Snapshot {
             routes: vec![],
             models: vec![],
             quota_pools: vec![],
+            issues: vec![],
+            health: HealthSummary::default(),
             diagnostics: vec![],
         }
     }

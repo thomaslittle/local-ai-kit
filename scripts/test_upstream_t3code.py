@@ -31,6 +31,36 @@ class UpstreamT3CodeTests(unittest.TestCase):
         self.assertFalse(sync.diff_is_relevant("\n"))
         self.assertTrue(sync.diff_is_relevant("apps/server/src/provider/CodexChatGptAuth.ts\n"))
 
+    def test_release_and_relay_noise_is_classified_away_from_provider_facts(self):
+        diff = (
+            "diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml\n"
+            "diff --git a/apps/server/src/cloud/CloudLink.ts b/apps/server/src/cloud/CloudLink.ts\n"
+            "diff --git a/apps/server/src/provider/CodexProvider.ts b/apps/server/src/provider/CodexProvider.ts\n"
+            "diff --git a/packages/shared/src/shell.ts b/packages/shared/src/shell.ts\n"
+        )
+        groups = sync.classify_diff_files(diff)
+        self.assertIn("apps/server/src/provider/CodexProvider.ts", groups["provider"])
+        self.assertIn("packages/shared/src/shell.ts", groups["provider"])
+        self.assertIn(".github/workflows/release.yml", groups["orchestration"])
+        self.assertIn("apps/server/src/cloud/CloudLink.ts", groups["orchestration"])
+
+    def test_report_names_coverage_loss_and_unwatched_candidates(self):
+        report = sync.format_report(
+            "a" * 40,
+            "b" * 40,
+            "diff --git a/apps/server/src/provider/CodexProvider.ts b/apps/server/src/provider/CodexProvider.ts\n",
+            "v0.1.1-nightly.20261016.3203",
+            "c" * 40,
+            "d" * 40,
+            "",
+            {"candidates": ["M apps/server/src/provider/NewProvider.ts"], "missing": []},
+            {"candidates": [], "missing": []},
+            ["packages/shared/src/shell.ts"],
+        )
+        self.assertIn("Unwatched provider-shaped candidates", report)
+        self.assertIn("COVERAGE LOSS", report)
+        self.assertIn("packages/shared/src/shell.ts", report)
+
     def test_report_names_the_four_watched_areas(self):
         report = sync.format_report(
             "a" * 40,

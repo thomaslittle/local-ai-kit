@@ -39,11 +39,15 @@ def dependency_inventory(stage):
     write(stage/'sbom.cdx.json',{'bomFormat':'CycloneDX','specVersion':'1.5','version':1,'components':sorted(components,key=lambda c:c['purl'])})
 
 def build(profile):
-    run(['cargo','build','--locked','-p','lai-cli',*(['--release'] if profile=='release' else [])])
+    run(['cargo','build','--locked','-p','lai-cli','-p','lai-control',*(['--release'] if profile=='release' else [])])
     run(['npm','run','build']);run(['node','scripts/build_demo.mjs']);run(['node','scripts/build_extension.mjs'])
     head=run(['git','rev-parse','HEAD']).strip();dirty=bool(run(['git','status','--porcelain']).strip())
     version=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']
     target=next(line.split(': ',1)[1] for line in run(['rustc','-vV']).splitlines() if line.startswith('host: '))
+    normalized_os=platform.system()
+    normalized_os={'Windows':'windows','Darwin':'macos','Linux':'linux'}.get(normalized_os, normalized_os.lower())
+    normalized_arch={'AMD64':'x86_64','x86_64':'x86_64','arm64':'aarch64','aarch64':'aarch64'}.get(platform.machine(), platform.machine().lower())
+    update_platform=f'{normalized_os}-{normalized_arch}'
     out=ROOT/'dist/release';out.mkdir(parents=True,exist_ok=True)
     name=f'local-ai-kit-{version}-{target}-{head[:12]}'+('-working' if dirty else '')
     final=out/name
@@ -52,7 +56,7 @@ def build(profile):
         target_dir=pathlib.Path(os.environ.get('CARGO_TARGET_DIR',ROOT/'target'))
         if not target_dir.is_absolute():target_dir=ROOT/target_dir
         binaries=target_dir/('release' if profile=='release' else 'debug');(stage/'bin').mkdir()
-        for binary in ('local-ai-kit','local-ai-kit-native-host','local-ai-kit-auth-blocker'):
+        for binary in ('local-ai-kit','local-ai-kit-native-host','local-ai-kit-auth-blocker','local-ai-kit-control'):
             filename=binary+('.exe' if os.name=='nt' else '');shutil.copy2(binaries/filename,stage/'bin'/filename)
         shutil.copytree(ROOT/'apps/demo/dist',stage/'demo');shutil.copytree(ROOT/'dist/browser-extension',stage/'browser-extension')
         for path in ('LICENSE','THIRD_PARTY_NOTICES.md','SECURITY.md'):shutil.copy2(ROOT/path,stage/path)
@@ -77,8 +81,29 @@ def build(profile):
         stage.rename(final)
     archive=out/(name+'.zip');create_archive(final,archive)
     (out/(name+'.sha256')).write_text(sha256(archive)+'  '+archive.name+'\n',encoding='utf-8')
-    write(out/'latest.json',{'directory':str(final.relative_to(ROOT)),'archive':str(archive.relative_to(ROOT)),'sha256':sha256(archive),'sourceCommit':head,'workingTreeDirty':dirty})
-    print(json.dumps({'bundle':str(final),'archive':str(archive),'profile':profile,'dirty':dirty}))
+    target_dir=pathlib.Path(os.environ.get('CARGO_TARGET_DIR',ROOT/'target'))
+    if not target_dir.is_absolute():target_dir=ROOT/target_dir
+    binary_dir=target_dir/('release' if profile=='release' else 'debug')
+    update_artifact=out/(f'local-ai-kit-{version}-{update_platform}'+('.exe' if os.name=='nt' else ''))
+    shutil.copy2(binary_dir/('local-ai-kit.exe' if os.name=='nt' else 'local-ai-kit'),update_artifact)
+    update_manifest={
+        'schemaVersion':1,
+        'version':version,
+        'channel':'alpha',
+        'platform':update_platform,
+        'protocolVersion':'1.0',
+        'archive':update_artifact.name,
+        'archiveBytes':update_artifact.stat().st_size,
+        'archiveSha256':sha256(update_artifact),
+        'publishedAt':__import__('datetime').datetime.now(__import__('datetime').timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'notesUrl':None,
+        'signature':'',
+        'signed':False,
+        'status':'unsigned; activation requires an external Ed25519 signature',
+    }
+    write(out/'update-manifest.unsigned.json',update_manifest)
+    write(out/'latest.json',{'directory':str(final.relative_to(ROOT)),'archive':str(archive.relative_to(ROOT)),'sha256':sha256(archive),'sourceCommit':head,'workingTreeDirty':dirty,'updateManifest':str((out/'update-manifest.unsigned.json').relative_to(ROOT)),'updateArchive':str(update_artifact.relative_to(ROOT)),'updateArchiveSha256':sha256(update_artifact)})
+    print(json.dumps({'bundle':str(final),'archive':str(archive),'profile':profile,'dirty':dirty,'updateManifest':str(out/'update-manifest.unsigned.json'),'updateArchive':str(update_artifact)}))
     return final
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--profile',choices=['debug','release'],default='release');args=p.parse_args()

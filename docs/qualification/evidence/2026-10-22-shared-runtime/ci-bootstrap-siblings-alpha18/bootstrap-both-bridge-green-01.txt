@@ -1,0 +1,79 @@
+    Finished `dev` profile [unoptimized] target(s) in 1.09s
+
+> local-ai-kit-workspace@0.1.0-alpha.18 build
+> tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json && tsc -p packages/react/tsconfig.json && tsc -p packages/ui-react/tsconfig.json && tsc -p apps/demo/tsconfig.json
+
+TAP version 13
+# Subtest: Node SDK shared broker uses independent credentials and one host survives client close
+ok 1 - Node SDK shared broker uses independent credentials and one host survives client close
+  ---
+  duration_ms: 280.765
+  type: 'test'
+  ...
+# Subtest: Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+ok 2 - Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+  ---
+  duration_ms: 106.2589
+  type: 'test'
+  ...
+# Subtest: Node helper defaults to denied and cannot self-authorize over RPC
+ok 3 - Node helper defaults to denied and cannot self-authorize over RPC
+  ---
+  duration_ms: 73.7655
+  type: 'test'
+  ...
+# Subtest: Node empty-home scan stays empty in live mode
+ok 4 - Node empty-home scan stays empty in live mode
+  ---
+  duration_ms: 90.1553
+  type: 'test'
+  ...
+# Subtest: Node typed catalog pages are served by the actual native helper
+not ok 5 - Node typed catalog pages are served by the actual native helper
+  ---
+  duration_ms: 82.5104
+  type: 'test'
+  location: '<workspace>\\tests\\integration\\sdk-native.test.mjs:52:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'projection_1821a9f803dd589bb6ac211485394887ab5e9d573426784b95b88b9bc9d75c24'
+    - 'projection_db5c5152221dcfb27b8da16966965cd5e6d8353e105e734e82e3f71526bcf6ef'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'projection_db5c5152221dcfb27b8da16966965cd5e6d8353e105e734e82e3f71526bcf6ef'
+  actual: 'projection_1821a9f803dd589bb6ac211485394887ab5e9d573426784b95b88b9bc9d75c24'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///<workspace>/tests/integration/sdk-native.test.mjs:58:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 451.4528
+Traceback (most recent call last):
+  File "<workspace>\scripts\test_native_bridge.py", line 21, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "<workspace>\scripts\test_native_bridge.py", line 18, in main
+    run(['node','--test','tests/integration/sdk-native.test.mjs','tests/integration/broker-native.test.mjs'],env)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>\scripts\test_native_bridge.py", line 9, in run
+    subprocess.run(command,cwd=ROOT,env=env,check=True,timeout=180)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['node', '--test', 'tests/integration/sdk-native.test.mjs', 'tests/integration/broker-native.test.mjs']' returned non-zero exit status 1.
+{"name": "bootstrap-both-bridge-green-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", "scripts/test_native_bridge.py"], "sourceCommit": "e6792159d0cbe1ebcb34574199dbbcdec2b9ba76", "exitCode": 1, "seconds": 5.106, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 8890658924, "finalActiveBytes": 8890658924, "cFreeBytes": 43661869056, "dFreeBytes": 605113155584, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

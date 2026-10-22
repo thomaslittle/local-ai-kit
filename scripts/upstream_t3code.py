@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +44,8 @@ REQUIRED_PATHS = {
     "cli-acp": "packages/provider-acp-registry/src/server",
     "chatgpt-oauth": "apps/server/src/provider/CodexChatGptAuth.ts",
     "chatgpt-handoff": "apps/server/src/provider/CodexChatGptHandoff.ts",
+    "shell-shared": "packages/shared/src/shell.ts",
+    "shell-desktop": "apps/desktop/src/shell/DesktopShellEnvironment.ts",
 }
 REQUIRED_AREAS = {
     "local-model-runtimes",
@@ -137,6 +140,100 @@ def diff_is_relevant(text: str) -> bool:
     return bool(text.strip())
 
 
+PROVIDER_PREFIXES = (
+    "apps/server/src/provider/",
+    "packages/provider-",
+    "packages/shared/src/shell.ts",
+    "apps/desktop/src/shell/DesktopShellEnvironment.ts",
+)
+ORCHESTRATION_PREFIXES = (
+    "apps/server/src/cloud/",
+    ".github/workflows/",
+    "docs/operations/release.md",
+)
+RELEVANT_NAME_MARKERS = (
+    "provider", "driver", "installation", "auth", "login", "usage", "quota",
+    "model", "catalog", "settings", "detect", "environment", "shell", "acp",
+    "codex", "claude", "grok", "muse", "opencode", "cursor", "antigravity", "pi",
+)
+
+
+def classify_path(path: str) -> str:
+    """Separate provider facts from release/orchestration noise."""
+    if path.startswith(ORCHESTRATION_PREFIXES):
+        return "orchestration"
+    if path.startswith(PROVIDER_PREFIXES):
+        return "provider"
+    if path.startswith(("docs/",)):
+        return "documentation"
+    return "other"
+
+
+def classify_diff_files(text: str) -> dict[str, list[str]]:
+    groups = {"provider": [], "orchestration": [], "documentation": [], "other": []}
+    for line in text.splitlines():
+        if not line.startswith("diff --git "):
+            continue
+        parts = line.split()
+        if len(parts) < 4:
+            continue
+        path = parts[3].removeprefix("b/")
+        groups[classify_path(path)].append(path)
+    return {name: sorted(set(paths)) for name, paths in groups.items()}
+
+
+def diff_actions(text: str) -> list[str]:
+    actions = []
+    for line in text.splitlines():
+        if line.startswith(("new file mode", "deleted file mode", "rename from", "rename to")):
+            actions.append(line)
+    return actions
+
+
+def coverage_candidates(
+    repo: Path, base: str, tip: str, watched: list[str]
+) -> list[str]:
+    """Changed provider-shaped files that are not in the watched set.
+
+    A new module must be visible even before a maintainer adds it to the
+    snapshot. This is a review prompt, not an automatic adapter change.
+    """
+    completed = subprocess.run(
+        [
+            "git",
+            "diff",
+            "--name-status",
+            f"{base}..{tip}",
+            "--",
+            "apps/server/src/provider",
+            "apps/desktop/src/shell",
+            "packages",
+        ],
+        cwd=repo,
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode:
+        return [f"coverage scan failed: {redact(completed.stderr.strip())[:500]}"]
+    watched_set = set(watched)
+    candidates = []
+    for line in completed.stdout.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 2:
+            continue
+        path = parts[-1]
+        if path in watched_set or any(path.startswith(item.rstrip("/") + "/") for item in watched if item.endswith("/")):
+            continue
+        lowered = path.lower()
+        if any(marker in lowered for marker in RELEVANT_NAME_MARKERS):
+            candidates.append(f"{parts[0]} {path}")
+    return sorted(set(candidates))[:40]
+
+
+def missing_watched(repo: Path, watched: list[str]) -> list[str]:
+    return [path for path in watched if not (repo / path).exists()]
+
+
 def format_report(
     pinned: str,
     main_commit: str,
@@ -145,6 +242,9 @@ def format_report(
     nightly_base: str,
     nightly_commit: str,
     nightly_diff: str,
+    main_coverage: dict | None = None,
+    nightly_coverage: dict | None = None,
+    missing: list[str] | None = None,
 ) -> str:
     def section(title: str, body: str) -> str:
         if not diff_is_relevant(body):
@@ -152,19 +252,49 @@ def format_report(
         clipped = body if len(body) <= 12000 else body[:12000] + "\n… diff truncated …\n"
         return f"## {title}\n\n```diff\n{clipped.rstrip()}\n```\n"
 
+    def grouped(label: str, diff: str, coverage: dict | None) -> str:
+        groups = classify_diff_files(diff)
+        lines = [f"### {label}", ""]
+        lines.append("Provider-relevant files: " + (", ".join(groups["provider"]) or "(none)"))
+        lines.append("Orchestration/release files: " + (", ".join(groups["orchestration"]) or "(none)"))
+        lines.append("Documentation files: " + (", ".join(groups["documentation"]) or "(none)"))
+        actions = diff_actions(diff)
+        if actions:
+            lines.append("Structural changes: " + "; ".join(actions[:20]))
+        candidates = (coverage or {}).get("candidates", [])
+        if candidates:
+            lines.append("Unwatched provider-shaped candidates (review): " + ", ".join(candidates))
+        gaps = (coverage or {}).get("missing", [])
+        if gaps:
+            lines.append("COVERAGE LOSS: watched paths missing at the tip: " + ", ".join(gaps))
+        failures = (coverage or {}).get("failure")
+        if failures:
+            lines.append("Coverage scan failure: " + failures)
+        lines.append("")
+        return "\n".join(lines)
+
     return (
         f"# T3 Code provider review\n\n"
         f"Pinned commit: `{pinned}`\n\n"
         f"Compared `main` `{main_commit}` and nightly `{nightly_tag}` "
         f"(`{nightly_commit}`) against nightly pin `{nightly_base}`.\n\n"
         "Watched areas: local model providers, cloud CLI providers, installed "
-        "CLI detection, and ChatGPT OAuth. This report does not change Local "
-        "AI Kit behavior.\n\n"
+        "CLI detection, ChatGPT OAuth, and desktop/shared shell resolution. "
+        "This report does not change Local AI Kit behavior.\n\n"
+        + grouped("Change classification · main", main_diff, main_coverage)
+        + "\n"
+        + grouped("Change classification · nightly", nightly_diff, nightly_coverage)
+        + "\n"
         + section(f"main ({pinned[:12]}..{main_commit[:12]})", main_diff)
         + "\n"
         + section(f"nightly ({nightly_tag})", nightly_diff)
         + "\nDo not move the pin until a maintainer ports a fact and updates "
         "the snapshot in the same change.\n"
+        + (
+            "\nCOVERAGE LOSS: " + ", ".join(missing) + "\n"
+            if missing
+            else ""
+        )
     )
 
 
@@ -217,13 +347,19 @@ def commit_for_tag(tag: str) -> str:
 
 
 def run(command: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
+    completed = subprocess.run(
         command,
         cwd=cwd,
-        check=True,
+        check=False,
         text=True,
         capture_output=True,
     )
+    if completed.returncode:
+        detail = redact((completed.stderr or completed.stdout or "").strip())
+        raise RuntimeError(
+            f"command failed ({completed.returncode}): {command[0]}\n{detail[:4000]}"
+        )
+    return completed
 
 
 def materialize(commit: str, dest: Path, paths: list[str]) -> None:
@@ -245,10 +381,12 @@ def diff_commits(repo: Path, base: str, tip: str, paths: list[str]) -> str:
     completed = subprocess.run(
         ["git", "diff", "--stat", "--patch", f"{base}..{tip}", "--", *paths],
         cwd=repo,
-        check=True,
+        check=False,
         text=True,
         capture_output=True,
     )
+    if completed.returncode:
+        raise RuntimeError(redact(completed.stderr or "diff failed"))
     return completed.stdout
 
 
@@ -277,7 +415,39 @@ def redact(text: str) -> str:
     return text
 
 
-def open_review_pr(report: str, main_commit: str) -> str:
+def run_gh(command: list[str]) -> subprocess.CompletedProcess[str]:
+    completed = subprocess.run(
+        command,
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode:
+        detail = redact((completed.stderr or completed.stdout or "").strip())
+        if "not permitted to create or approve pull requests" in detail.lower():
+            raise RuntimeError(
+                "GitHub Actions is not permitted to create pull requests. "
+                "The review branch and report were still produced. Minimum fix: "
+                "Settings > Actions > General > Workflow permissions > "
+                "'Allow GitHub Actions to create and approve pull requests'. "
+                f"gh said: {detail[:2000]}"
+            )
+        raise RuntimeError(f"gh command failed ({completed.returncode}):\n{detail[:4000]}")
+    return completed
+
+
+def write_local_report(report: str, metadata: dict | None = None) -> None:
+    review = ROOT / "upstream" / "t3code" / "reviews" / "latest"
+    review.mkdir(parents=True, exist_ok=True)
+    (review / "report.md").write_text(report, encoding="utf-8")
+    (review / "report.json").write_text(
+        json.dumps({"report": report, **(metadata or {})}, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def open_review_pr(report: str, main_commit: str, metadata: dict | None = None) -> str:
     branch = "upstream/t3code-provider-review"
     run(["git", "fetch", "origin", "main"])
     existing = subprocess.run(
@@ -295,12 +465,10 @@ def open_review_pr(report: str, main_commit: str) -> str:
             capture_output=True,
         )
         if merge.returncode != 0:
-            raise SystemExit(redact(merge.stderr or "could not update the review branch with main"))
+            raise RuntimeError(redact(merge.stderr or "could not update the review branch with main"))
     else:
         run(["git", "checkout", "-B", branch, "origin/main"])
-    review = ROOT / "upstream" / "t3code" / "reviews" / "latest"
-    review.mkdir(parents=True, exist_ok=True)
-    (review / "report.md").write_text(report, encoding="utf-8")
+    write_local_report(report, metadata)
     run(["git", "add", "--", "upstream/t3code/reviews/latest"])
     status = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=ROOT, check=False)
     if status.returncode != 0:
@@ -309,47 +477,39 @@ def open_review_pr(report: str, main_commit: str) -> str:
             f"Review {main_commit} against the pinned provider surface. "
             "This commit does not change runtime discovery or ChatGPT auth."
         )
-        subprocess.run(["git", "commit", "-m", message], cwd=ROOT, check=True)
+        run(["git", "commit", "-m", message])
     run(["git", "push", "-u", "origin", branch])
     title = "Review T3 Code provider changes"
     body = (
         "## Summary\n\n"
-        "- T3 Code `main` or a newer nightly changed a watched provider path.\n"
-        "- The watched surface is local model providers, cloud CLI providers, "
-        "installed CLI detection, and ChatGPT OAuth.\n"
+        "- T3 Code `main` or a newer nightly changed a provider-relevant watched path, or coverage was lost.\n"
+        "- The watched surface includes local model providers, cloud CLI providers, "
+        "installed CLI detection, ChatGPT OAuth, and desktop/shared shell resolution.\n"
         "- Production behavior is unchanged by this pull request.\n\n"
         "## Upstream diff\n\n"
         "```text\n"
         + report[:12000]
         + "\n```\n\n"
         "## Test plan\n\n"
-        "- [ ] Confirm the diff is in local models, cloud CLIs, installed CLI detection, or ChatGPT OAuth\n"
+        "- [ ] Confirm the diff is provider-relevant; orchestration-only changes do not open this PR\n"
         "- [ ] Decide which facts to adopt without copying T3 Code source\n"
         "- [ ] Update `upstream/t3code/snapshot.json` and `UPSTREAM_T3CODE.md` only with the adopted pin\n"
         "- [ ] Re-run `python scripts/upstream_t3code.py --offline`\n"
     )
-    listed = subprocess.run(
-        ["gh", "pr", "list", "--head", branch, "--json", "number,url", "--jq", ".[0].url // \"\""],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=True,
+    listed = run_gh(
+        ["gh", "pr", "list", "--head", branch, "--json", "number,url", "--jq", ".[0].url // \"\""]
     )
     url = listed.stdout.strip()
     if url:
-        subprocess.run(["gh", "pr", "edit", url, "--title", title, "--body", body], cwd=ROOT, check=True)
+        run_gh(["gh", "pr", "edit", url, "--title", title, "--body", body])
         return url
-    created = subprocess.run(
-        ["gh", "pr", "create", "--base", "main", "--head", branch, "--title", title, "--body", body],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=True,
+    created = run_gh(
+        ["gh", "pr", "create", "--base", "main", "--head", branch, "--title", title, "--body", body]
     )
     return created.stdout.strip()
 
 
-def compare(open_pr: bool) -> int:
+def compare(open_pr: bool, report_only: bool = False) -> int:
     snapshot = load_json(SNAPSHOT_PATH)
     pinned = snapshot_commit(snapshot)
     nightly_base = snapshot["source"]["nightlyCommit"]
@@ -376,24 +536,72 @@ def compare(open_pr: bool) -> int:
         nightly_diff = (
             diff_commits(dest, nightly_base, nightly_commit, paths) if needs_nightly else ""
         )
-    relevant = diff_is_relevant(main_diff) or diff_is_relevant(nightly_diff)
-    if not relevant:
+        main_missing = missing_watched(dest, paths)
+        main_candidates = coverage_candidates(dest, pinned, main_commit, paths) if needs_main else []
+        nightly_candidates = (
+            coverage_candidates(dest, nightly_base, nightly_commit, paths) if needs_nightly else []
+        )
+    main_coverage = {"candidates": main_candidates, "missing": main_missing}
+    nightly_coverage = {"candidates": nightly_candidates, "missing": []}
+    groups = classify_diff_files(main_diff + "\n" + nightly_diff)
+    provider_relevant = bool(groups["provider"])
+    coverage_gap = bool(main_missing) or any(
+        candidate and not candidate.startswith("coverage scan failed")
+        for candidate in main_candidates + nightly_candidates
+    )
+    if not provider_relevant and not coverage_gap:
+        detail = (
+            "orchestration/release changes were present but were filtered"
+            if groups["orchestration"]
+            else "no watched-path changes"
+        )
         message = (
-            f"T3 Code {pinned[:12]}..{main_commit[:12]} and nightly {tag} "
-            "have no watched provider changes."
+            f"T3 Code {pinned[:12]}..{main_commit[:12]} and nightly {tag}: "
+            f"no provider-relevant changes ({detail})."
         )
         print(message)
         append_summary(message + "\n")
         set_output("relevant", "false")
+        set_output("filtered_non_provider", "true" if groups["orchestration"] else "false")
         return 0
     report = format_report(
-        pinned, main_commit, main_diff, tag, nightly_base, nightly_commit, nightly_diff
+        pinned,
+        main_commit,
+        main_diff,
+        tag,
+        nightly_base,
+        nightly_commit,
+        nightly_diff,
+        main_coverage,
+        nightly_coverage,
+        main_missing,
     )
     print(report)
     append_summary("```text\n" + report[:8000] + "\n```\n")
     set_output("relevant", "true")
+    metadata = {
+        "pinned": pinned,
+        "main": main_commit,
+        "nightlyTag": tag,
+        "nightly": nightly_commit,
+        "providerRelevant": provider_relevant,
+        "coverageGap": coverage_gap,
+        "missingWatchedPaths": main_missing,
+        "coverageCandidates": main_candidates + nightly_candidates,
+        "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    if report_only:
+        write_local_report(report, metadata)
+        print("Report-only mode: branch and pull request were not modified.")
+        set_output("report_only", "true")
+        return 0
     if open_pr:
-        url = open_review_pr(report, main_commit)
+        try:
+            url = open_review_pr(report, main_commit, metadata)
+        except RuntimeError as error:
+            set_output("reporting_failure", str(error).replace("\n", " ")[:1000])
+            print(f"UPSTREAM REPORTING FAILURE: {error}", file=sys.stderr)
+            return 2
         print(f"Review pull request: {url}")
         set_output("pull_request", url)
     return 0
@@ -409,13 +617,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--open-pr",
         action="store_true",
-        help="when watched paths differ, push a review branch and open or update a pull request",
+        help="when provider-relevant changes exist, push a review branch and open or update a pull request",
+    )
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="produce the report and exit without changing a branch or pull request",
     )
     args = parser.parse_args(argv)
     if args.offline:
         return validate_offline()
-    return compare(args.open_pr)
+    return compare(args.open_pr, args.report_only)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except (RuntimeError, subprocess.SubprocessError, OSError) as error:
+        print(f"UPSTREAM WATCH FAILURE: {error}", file=sys.stderr)
+        sys.exit(1)

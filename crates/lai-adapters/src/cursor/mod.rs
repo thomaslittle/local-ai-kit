@@ -88,6 +88,7 @@ pub fn read_cached(
         provider_id: "cursor".into(),
         display_label: cached(label),
         identity_source: cached("Cursor cached account".into()),
+        scopes: vec![],
     });
     Ok(ConnectionMetadata {
         connection_id: connection.into(),

@@ -1,0 +1,148 @@
+{
+  "tool": "gitleaks",
+  "version": "8.30.1",
+  "license": "MIT",
+  "source": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
+  "archiveSha256": "d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e",
+  "positiveControl": {
+    "exitCode": 1,
+    "rule": "github-pat",
+    "synthetic": true,
+    "network": false
+  },
+  "sourceScan": {
+    "exitCode": 1,
+    "files": 902,
+    "bytes": 6533312,
+    "fileHashManifestSha256": "393711ac1b0ccc01a0ac14091614fd5888a2f96282ab7dedb676a3e3546159ae",
+    "findings": [
+      {
+        "RuleID": "private-key",
+        "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
+        "File": "crates\\lai-chatgpt-auth\\tests\\fixtures\\test-rsa.pem",
+        "StartLine": 1,
+        "EndLine": 28
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\release-security-alpha18\\source-sha256.json",
+        "StartLine": 3,
+        "EndLine": 3
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\release-security-alpha18\\32-qualified-source-hashes.json",
+        "StartLine": 7,
+        "EndLine": 7
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\release-security-alpha18\\16-review6-hashes.json",
+        "StartLine": 43,
+        "EndLine": 43
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "packages\\sdk-typescript\\src\\generated.ts",
+        "StartLine": 39,
+        "EndLine": 39
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "packages\\sdk-typescript\\src\\generated.ts",
+        "StartLine": 41,
+        "EndLine": 41
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-final.json",
+        "StartLine": 19,
+        "EndLine": 19
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-final.json",
+        "StartLine": 22,
+        "EndLine": 22
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-final.json",
+        "StartLine": 38,
+        "EndLine": 38
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-before.json",
+        "StartLine": 19,
+        "EndLine": 19
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-before.json",
+        "StartLine": 22,
+        "EndLine": 22
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-before.json",
+        "StartLine": 38,
+        "EndLine": 38
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-after.json",
+        "StartLine": 19,
+        "EndLine": 19
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-after.json",
+        "StartLine": 22,
+        "EndLine": 22
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\review5\\source-after.json",
+        "StartLine": 38,
+        "EndLine": 38
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\final-source-sha256.json",
+        "StartLine": 19,
+        "EndLine": 19
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\final-source-sha256.json",
+        "StartLine": 22,
+        "EndLine": 22
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "docs\\qualification\\evidence\\2026-10-22-shared-runtime\\refresh-lanes\\sol-20261022\\final-source-sha256.json",
+        "StartLine": 38,
+        "EndLine": 38
+      }
+    ]
+  },
+  "limits": "Working tree tracked and nonignored untracked repository files only; no git history, ignored builds, credentials or consumer trees. Default rules, empty ignore file, inline allow comments disabled. No online validation. Raw reports stay ignored. This is a detection check, not proof of absence."
+}

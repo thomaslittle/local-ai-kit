@@ -1,0 +1,22 @@
+    Checking tokio v1.53.3
+    Checking hyper v1.11.1
+    Checking tower v0.5.3
+    Checking lai-runtime v0.1.0-alpha.17 (<repo>\crates\lai-runtime)
+    Checking tokio-util v0.7.19
+    Checking tokio-rustls v0.26.5
+    Checking process-wrap v10.0.1
+    Checking interprocess v2.4.6
+    Checking tokio-stream v0.1.19
+    Checking tower-http v0.6.11
+    Checking hyper-util v0.1.20
+    Checking hyper-rustls v0.27.10
+    Checking axum v0.8.9
+    Checking reqwest v0.12.28
+    Checking lai-adapters v0.1.0-alpha.17 (<repo>\crates\lai-adapters)
+    Checking lai-chatgpt-auth v0.1.0-alpha.17 (<repo>\crates\lai-chatgpt-auth)
+    Checking lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Checking lai-transports v0.1.0-alpha.17 (<repo>\crates\lai-transports)
+    Checking lai-kit v0.1.0-alpha.17 (<repo>\crates\lai-kit)
+    Checking lai-control v0.1.0-alpha.17 (<repo>\crates\lai-control)
+    Checking lai-cli v0.1.0-alpha.17 (<repo>\crates\lai-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.01s

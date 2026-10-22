@@ -8,6 +8,17 @@ The ChatGPT managed-auth integration is original Rust integration code in this r
 
 Reference does not imply affiliation, endorsement, inherited security guarantees, or blanket rights to use vendor services. Provider names are used for identification. Logos and trademarks are not granted by this repository's license. Provider authentication, subscription access, and endpoint use remain separate integration-policy questions.
 
+## Alpha18 authentication dependencies
+
+The managed-auth verifier uses `jsonwebtoken` 10.3.0 (MIT) with `aws-lc-rs`
+1.18.2 and `aws-lc-sys` 0.46.0. The latter retain their combined upstream
+AWS-LC/BoringSSL/OpenSSL and bundled third-party notices in their complete
+`LICENSE` files, copied into the release bundle's dependency license directory.
+Windows enables the upstream `prebuilt-nasm` fallback; this is the ordinary
+AWS-LC backend and makes no FIPS claim. Exact crate archive checksums, upstream
+commits, declared licenses and MSRV evidence are recorded in the
+[alpha18 dependency receipt](docs/qualification/evidence/2026-10-22-shared-runtime/release-security-alpha18/16-review6-dependencies.json).
+
 ## Other reference projects
 
 | Project | Source | Intended reference |

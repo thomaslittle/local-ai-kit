@@ -1,0 +1,200 @@
+{
+  "transform": "Workspace path redaction, UTF-8/trailing-whitespace normalization; raw originals retained ignored.",
+  "files": [
+    {
+      "path": "bootstrap-python-red-01.txt",
+      "rawSha256": "36f85a855dcb486e5c4c2a8abbe9862da9a8d45be0334a5e18e880e985d2d09a",
+      "publicSha256": "7f6e3f1a9ca1adb51a40d48e5f3c2071b4a644519e3fa3d6cfd130517d60635c"
+    },
+    {
+      "path": "bootstrap-python-delayed-green-01.txt",
+      "rawSha256": "3a58902065ed5f590b42900353e88df8ce8b520fb58fa8b31d62592c670cb7b9",
+      "publicSha256": "e7006cced30531537274e0d8920b7873e10bc97800c017fe2f342c90f9637b5c"
+    },
+    {
+      "path": "bootstrap-both-bridge-green-01.txt",
+      "rawSha256": "56bbdd3b26373895f19c4cb2cb93e13ae38f91f2b1e30e6619dd615702155db7",
+      "publicSha256": "fc3ed6ae04ace4b2ba872a7a893ea94fb09ef61168414bba9ced223353f5dc76"
+    },
+    {
+      "path": "bootstrap-both-bridge-green-02.txt",
+      "rawSha256": "207f05f14b9fc21978e23490dd331e01b38c5fcb62692eecbd374c7e65a8af96",
+      "publicSha256": "eb88e77a938b0ffb81515079b65b114526aa6d5ce46d6dc76c079206896fea28"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-01.txt",
+      "rawSha256": "607e393cae97109ccc2a79f4dcd7936c4ffec04e040be6630bc8fb6b6020b9aa",
+      "publicSha256": "428f9bbed37114853516b1b1fd28d74d4eaaa0f58ff2457f571cc474c7e707b2"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-results.json",
+      "rawSha256": "46e681828cbe2799026eda695ea1f7d454d2e143eea55ac2b863361a891a6829",
+      "publicSha256": "521fdef16d8615fd14d8c37c9fa9e6488ae87ff6ad8b2717dd8b56a012197b55"
+    },
+    {
+      "path": "release-security-artifact-provenance.json",
+      "rawSha256": "baa11e3f6d3e679a982378a9e752e7c8f356b600b56c23e8718cf9a19d54fb94",
+      "publicSha256": "95a80e189f18a75e16d42fdc7f6192fa66a2e6eb9b17444919ae5daf26b32de1"
+    },
+    {
+      "path": "release-security-package-smoke.json",
+      "rawSha256": "a55ec7fd38c2cb6c967ffca6e755e9fcc456e143c072a6b5d985385f9e2cffae",
+      "publicSha256": "52d8a8992c2e4e0b7edeb00996f479923318c05bb6293dddf617c9d126f9abc7"
+    },
+    {
+      "path": "release-security-performance.json",
+      "rawSha256": "410eced7f23ce5f11f4d4e63fb16e6b8eacab21e058930cc46030c9bedc1d414",
+      "publicSha256": "56a60b4bec92eabc576f03ccebb4e9f32fab2c70bb7a2a1b4e8778ceb651c2c7"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-01-1.txt",
+      "rawSha256": "25d9c8b9d9c99d15c2a3be4bd537df55a66aa24d807f6be4c33982ac776fea3e",
+      "publicSha256": "25d9c8b9d9c99d15c2a3be4bd537df55a66aa24d807f6be4c33982ac776fea3e"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-01-2.txt",
+      "rawSha256": "7632edc5fcfadfd61d313d875fd654e1dea0bc786a7b3c272ff812f222a6381b",
+      "publicSha256": "f5eb1e27117469a0567869cc015a1441cd2bd7ca530a05efc9b895bafbe65a52"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-01-3.txt",
+      "rawSha256": "4a3b7703fb6e8a649510d0bdfc46b96c00a0c946185fef3eb959b6724ea2d281",
+      "publicSha256": "a8e87bda15e8fb043155d774707e43a71406acacea8b14a9b57091f9f8a9fbcc"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-02-1.txt",
+      "rawSha256": "4877dee65b037db5921659e076a30a6b0da0ad246c2939c8d83187786a9184e4",
+      "publicSha256": "4877dee65b037db5921659e076a30a6b0da0ad246c2939c8d83187786a9184e4"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-02-2.txt",
+      "rawSha256": "99d5b883c33c1a148c1ff9c2a69bcfad69623474edaff57e35f89210881cd132",
+      "publicSha256": "9f4d628a2662bea5281a1aa9d36b5f9c6f9d32091e10be5d29c3317f8264bbf6"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-02-3.txt",
+      "rawSha256": "caccbe89c43110e7db9de59044d216102a0b6e5f127fecedd36261692a99b704",
+      "publicSha256": "3c2ea574be8e566370fe2b387b89d5b8e179af81e1edcddf5de98930ea170442"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-03-1.txt",
+      "rawSha256": "cea2bc3f8e7b8752610b445b6824abedba2e2310b32daeada7d79e263b24c906",
+      "publicSha256": "cea2bc3f8e7b8752610b445b6824abedba2e2310b32daeada7d79e263b24c906"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-03-2.txt",
+      "rawSha256": "0b85fdb13b1279d7f85daae358bfa98e6f4f32bb291a88c50e2ef484571ad615",
+      "publicSha256": "1ab6c68054a9508939ed090ca0948c5290c02257540163ac74589afd57426940"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-03-3.txt",
+      "rawSha256": "103427bad27cc85832cab659f41075c9b529b51306c1f9c6fec62e7d3da6191b",
+      "publicSha256": "32b117bb268b5e70c5da957585b19e8d5b5d201e1eba489829df428766efca44"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-04-1.txt",
+      "rawSha256": "aaf65c9981bdcb69f050df7060c5da825db22e1dc14bfd3756383ef1dd0ab2ac",
+      "publicSha256": "aaf65c9981bdcb69f050df7060c5da825db22e1dc14bfd3756383ef1dd0ab2ac"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-04-2.txt",
+      "rawSha256": "15b4310adcc1d25934f63362b52b63605c906830c66ee51cfe360d5c41446d9e",
+      "publicSha256": "889e2da2f9ce3e2b9bb4d7e54fabd719b58285ad8e66f2067c9d761d90913ece"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-04-3.txt",
+      "rawSha256": "27a3233f4602b4259282fcb071f944e2dc5658ab2d649c3fa6363502ac102e02",
+      "publicSha256": "43faa64392f0ee32ee3e11ddfffd0f75774b4e1eecc2caabf0df959a478cdbfc"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-05-1.txt",
+      "rawSha256": "684c50e9cd6a1c418f1bd7c1bed80ada5d40da89cb8d762b042c33b3385f9257",
+      "publicSha256": "684c50e9cd6a1c418f1bd7c1bed80ada5d40da89cb8d762b042c33b3385f9257"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-05-2.txt",
+      "rawSha256": "f92dab4e4e787286ea1be0309733baf4eafc1f99d12038ba80468b0459361b0c",
+      "publicSha256": "6ce9f78c3deb067f647d27d74ba400ad317e9abed15161202c679a66ffccb530"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-05-3.txt",
+      "rawSha256": "84f3423d0de0ecf141aa4780550507dc50a6d8badb91af908bab162fe1568c95",
+      "publicSha256": "06f57cb2747b0bdd7b7e0e0ecf9001de70156e23ccc979b529bb3f81d78c0310"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-06-1.txt",
+      "rawSha256": "c07de940da1457c10642b22caedac964aeef9530289638823f090f08c19e55a2",
+      "publicSha256": "c07de940da1457c10642b22caedac964aeef9530289638823f090f08c19e55a2"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-06-2.txt",
+      "rawSha256": "c616dea83e97b9ee0eb33643f967e9f49ebf02a749497e857fc28491dfdfd38e",
+      "publicSha256": "85d374d361b301167630c8ada522e3a322c1daa722e4a05d68a851f2d5b660b1"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-06-3.txt",
+      "rawSha256": "0d46abb9e5b6aba491c4ecc8d7cfad604a47e3db70ee1d5bda3bc0b3a636af4b",
+      "publicSha256": "39c71854128e052d68e2a9c04820222cad2458592358fad2d2a1162eb66e81de"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-07-1.txt",
+      "rawSha256": "f2c2fea5cb9a65f45cafb809de59cbab97bedf617d47793a4138611cb6866578",
+      "publicSha256": "f2c2fea5cb9a65f45cafb809de59cbab97bedf617d47793a4138611cb6866578"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-07-2.txt",
+      "rawSha256": "adc061739d2fcdb170b3bc327477c3b0f482cafa5d50e1e76e2b9d7a67cf8e8c",
+      "publicSha256": "e828b8ec667a8536d314c7cfa36179e751f9d39245af8d5848b72d958e7b95c8"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-07-3.txt",
+      "rawSha256": "c33bbd9eba32fe235c3dfff667bce57f16d9af6ebfa0432d8924ab106d55700c",
+      "publicSha256": "9df4a8d162bfcead92272c5967d0c6d13cee470c291b11adcb9b7bbaf116240b"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-08-1.txt",
+      "rawSha256": "6acb398ab3365cc54c0e45346b4d7113e39c3af0277af9aaa3d88ed763bbb256",
+      "publicSha256": "6acb398ab3365cc54c0e45346b4d7113e39c3af0277af9aaa3d88ed763bbb256"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-08-2.txt",
+      "rawSha256": "811d6603a80c462f67d923ebf18a143bfa91499a2eb1d394078b3de82c10b720",
+      "publicSha256": "df9f0e505e80d75df0d15d5e81eb858748427ac4bf84cef533224a7f750ec3fc"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-08-3.txt",
+      "rawSha256": "3a17a6bfdc4a9504f7b24e602e9360a682d28403c284258053870140ef3952b2",
+      "publicSha256": "81720486a027fe492cf2a49208f7d5faa68471c5442d9b135fc9a2a18f33745b"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-09-1.txt",
+      "rawSha256": "284980c77d4a5230cf5531d4d636d9439aea5201b8e09beae1f6b7d130274417",
+      "publicSha256": "284980c77d4a5230cf5531d4d636d9439aea5201b8e09beae1f6b7d130274417"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-09-2.txt",
+      "rawSha256": "adc061739d2fcdb170b3bc327477c3b0f482cafa5d50e1e76e2b9d7a67cf8e8c",
+      "publicSha256": "e828b8ec667a8536d314c7cfa36179e751f9d39245af8d5848b72d958e7b95c8"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-09-3.txt",
+      "rawSha256": "c33bbd9eba32fe235c3dfff667bce57f16d9af6ebfa0432d8924ab106d55700c",
+      "publicSha256": "9df4a8d162bfcead92272c5967d0c6d13cee470c291b11adcb9b7bbaf116240b"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-10-1.txt",
+      "rawSha256": "7cf1493813bf1216f23a4053bc6cedc3bdea0423e0f2fec9cef1aa981d22d260",
+      "publicSha256": "7cf1493813bf1216f23a4053bc6cedc3bdea0423e0f2fec9cef1aa981d22d260"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-10-2.txt",
+      "rawSha256": "c616dea83e97b9ee0eb33643f967e9f49ebf02a749497e857fc28491dfdfd38e",
+      "publicSha256": "85d374d361b301167630c8ada522e3a322c1daa722e4a05d68a851f2d5b660b1"
+    },
+    {
+      "path": "bootstrap-sdk-repeat-10-3.txt",
+      "rawSha256": "a9064a7fa313adce6ad5827c628513564135791603c5faa061b86117c1f92ff0",
+      "publicSha256": "ef5442bf98828fbc3164222806efe38eaff2f1c29a4dc3b84a20a4dcc365681f"
+    }
+  ]
+}

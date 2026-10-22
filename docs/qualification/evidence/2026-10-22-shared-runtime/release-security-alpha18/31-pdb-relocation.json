@@ -1,0 +1,2670 @@
+{
+  "utc": "2026-10-22T20:33:33.1804690Z",
+  "source": "<workspace>\\target\\debug\\deps",
+  "destination": "D:\\lai-task-7a4b270a-20261022\\retained-symbols",
+  "movedCount": 664,
+  "movedBytes": 54956384256,
+  "beforeCFreeBytes": 11394850816,
+  "afterCFreeBytes": 65845964800,
+  "afterDFreeBytes": 614445387776,
+  "files": [
+    {
+      "name": "acp_auth-13f70d21fde0ffa5.pdb",
+      "bytes": 69038080
+    },
+    {
+      "name": "acp_auth-77d3720aef224928.pdb",
+      "bytes": 78983168
+    },
+    {
+      "name": "acp_auth-93c3b7681ae82b08.pdb",
+      "bytes": 82440192
+    },
+    {
+      "name": "acp_auth-a07e72218df26c3c.pdb",
+      "bytes": 65638400
+    },
+    {
+      "name": "acp_auth-d3df84efe8b963db.pdb",
+      "bytes": 67760128
+    },
+    {
+      "name": "acp_auth-ff34fa8e00485784.pdb",
+      "bytes": 81432576
+    },
+    {
+      "name": "acp_catalog-24fdd7ce868f013f.pdb",
+      "bytes": 76574720
+    },
+    {
+      "name": "acp_catalog-2a5ef300ac684d87.pdb",
+      "bytes": 59781120
+    },
+    {
+      "name": "acp_catalog-48734b98931d7c1d.pdb",
+      "bytes": 63148032
+    },
+    {
+      "name": "acp_catalog-7b7f2be99b6a2b10.pdb",
+      "bytes": 61861888
+    },
+    {
+      "name": "acp_catalog-b6d69aae705a19e7.pdb",
+      "bytes": 73240576
+    },
+    {
+      "name": "acp_catalog-ce56b70aeb96f566.pdb",
+      "bytes": 75665408
+    },
+    {
+      "name": "acp_process-1a0b5cc533952efd.pdb",
+      "bytes": 73166848
+    },
+    {
+      "name": "acp_process-39065266eff480b0.pdb",
+      "bytes": 71593984
+    },
+    {
+      "name": "acp_process-a2d0b8eeb6bc44ff.pdb",
+      "bytes": 83161088
+    },
+    {
+      "name": "acp_process-a7d8a04ff8590e06.pdb",
+      "bytes": 86560768
+    },
+    {
+      "name": "acp_process-c2be8a9bde6a2c31.pdb",
+      "bytes": 85495808
+    },
+    {
+      "name": "acp_process-f18c26232b6b6cc1.pdb",
+      "bytes": 69423104
+    },
+    {
+      "name": "acp_resume-01e5b0c09ce3b782.pdb",
+      "bytes": 70905856
+    },
+    {
+      "name": "acp_resume-2d9dc45a8d784bb9.pdb",
+      "bytes": 69611520
+    },
+    {
+      "name": "acp_resume-adb3f4952051ec84.pdb",
+      "bytes": 84275200
+    },
+    {
+      "name": "acp_resume-df0f265637d04ddc.pdb",
+      "bytes": 67473408
+    },
+    {
+      "name": "acp_resume-f026e37527c7a12f.pdb",
+      "bytes": 83251200
+    },
+    {
+      "name": "acp_resume-f58698379eff0192.pdb",
+      "bytes": 80883712
+    },
+    {
+      "name": "api_contracts-68b81515946aa0b6.pdb",
+      "bytes": 16248832
+    },
+    {
+      "name": "api_contracts-d6bf77ae339fc48b.pdb",
+      "bytes": 13963264
+    },
+    {
+      "name": "api_contracts-e70b874b8cfe4be9.pdb",
+      "bytes": 13414400
+    },
+    {
+      "name": "artifacts-0a8445ee7e1ea1d8.pdb",
+      "bytes": 31158272
+    },
+    {
+      "name": "artifacts-66d28e1e843f8a2d.pdb",
+      "bytes": 25849856
+    },
+    {
+      "name": "artifacts-79f373a4ea2f515e.pdb",
+      "bytes": 26726400
+    },
+    {
+      "name": "artifacts-f051057080f06056.pdb",
+      "bytes": 26038272
+    },
+    {
+      "name": "async_stream_impl-4d883c8e944b8166.pdb",
+      "bytes": 2691072
+    },
+    {
+      "name": "auth_blocker-31b7292db0257f19.pdb",
+      "bytes": 3354624
+    },
+    {
+      "name": "auth_blocker-4270f346ac35ae6f.pdb",
+      "bytes": 3674112
+    },
+    {
+      "name": "auth_blocker-917df00c088f61a7.pdb",
+      "bytes": 3354624
+    },
+    {
+      "name": "auth_blocker-f27bd636e85f34ed.pdb",
+      "bytes": 3674112
+    },
+    {
+      "name": "auth_blocker-f971203da8a62e47.pdb",
+      "bytes": 3674112
+    },
+    {
+      "name": "auth_blocker-fbb60b5282e5126f.pdb",
+      "bytes": 3674112
+    },
+    {
+      "name": "billing_declarations-05ea31044f911725.pdb",
+      "bytes": 75984896
+    },
+    {
+      "name": "billing_declarations-2979f6a0ed6d4d70.pdb",
+      "bytes": 75083776
+    },
+    {
+      "name": "billing_declarations-68d9bd9f50a3882b.pdb",
+      "bytes": 72404992
+    },
+    {
+      "name": "billing_declarations-7ec869fe3379c431.pdb",
+      "bytes": 59191296
+    },
+    {
+      "name": "billing_declarations-9a3042322e9df8c3.pdb",
+      "bytes": 62525440
+    },
+    {
+      "name": "billing_declarations-a9d1c8c6987cf392.pdb",
+      "bytes": 61288448
+    },
+    {
+      "name": "billing_declarations-f8d5a5064ec4e78b.pdb",
+      "bytes": 72568832
+    },
+    {
+      "name": "boundaries-36adc02144e53032.pdb",
+      "bytes": 116297728
+    },
+    {
+      "name": "boundaries-49de1b0f9d150139.pdb",
+      "bytes": 130519040
+    },
+    {
+      "name": "boundaries-4a0e4fcc3add6a31.pdb",
+      "bytes": 118943744
+    },
+    {
+      "name": "boundaries-53a9603dc5081ea8.pdb",
+      "bytes": 138686464
+    },
+    {
+      "name": "boundaries-6700266a94f45304.pdb",
+      "bytes": 122089472
+    },
+    {
+      "name": "boundaries-b519b88ee3409236.pdb",
+      "bytes": 142127104
+    },
+    {
+      "name": "boundaries-bc84a1e420ca1a0f.pdb",
+      "bytes": 99897344
+    },
+    {
+      "name": "boundaries-d9f44a511ded39e7.pdb",
+      "bytes": 137318400
+    },
+    {
+      "name": "broker_lifetime-07b43bd88171e35b.pdb",
+      "bytes": 84455424
+    },
+    {
+      "name": "broker_lifetime-19a73a67408b6d66.pdb",
+      "bytes": 108015616
+    },
+    {
+      "name": "broker_lifetime-90019e8dd9b6c794.pdb",
+      "bytes": 105394176
+    },
+    {
+      "name": "broker_lifetime-95e59952e9c83906.pdb",
+      "bytes": 110727168
+    },
+    {
+      "name": "broker_lifetime-99838e8dc1a7e6a6.pdb",
+      "bytes": 103886848
+    },
+    {
+      "name": "broker_lifetime-b7ae65837dcfb490.pdb",
+      "bytes": 87519232
+    },
+    {
+      "name": "catalog_pages-176c246e5925d2d0.pdb",
+      "bytes": 115412992
+    },
+    {
+      "name": "catalog_pages-85ae8b4242239891.pdb",
+      "bytes": 118206464
+    },
+    {
+      "name": "catalog_pages-992793285c650e29.pdb",
+      "bytes": 137809920
+    },
+    {
+      "name": "catalog_pages-99eb0eb422a093a2.pdb",
+      "bytes": 99102720
+    },
+    {
+      "name": "catalog_pages-b764ae3f3e7ce720.pdb",
+      "bytes": 141316096
+    },
+    {
+      "name": "catalog_pages-c7572f2d0910d119.pdb",
+      "bytes": 129634304
+    },
+    {
+      "name": "catalog_pages-d240be8a4267c326.pdb",
+      "bytes": 121368576
+    },
+    {
+      "name": "catalog_pages-ec16ef24d5d3ac7d.pdb",
+      "bytes": 136097792
+    },
+    {
+      "name": "chatgpt_auth_scope-0b9416c62e53c611.pdb",
+      "bytes": 144052224
+    },
+    {
+      "name": "chatgpt_auth_scope-1af2ada65868a055.pdb",
+      "bytes": 135843840
+    },
+    {
+      "name": "chatgpt_auth_scope-32457e5c3eb072a1.pdb",
+      "bytes": 121425920
+    },
+    {
+      "name": "chatgpt_auth_scope-4209cd8cba54815f.pdb",
+      "bytes": 147427328
+    },
+    {
+      "name": "chatgpt_auth_scope-b56b8c52dd49fc58.pdb",
+      "bytes": 124121088
+    },
+    {
+      "name": "chatgpt_auth_scope-b8c097663ea80456.pdb",
+      "bytes": 105115648
+    },
+    {
+      "name": "chatgpt_auth_scope-c5ce6636f542bb52.pdb",
+      "bytes": 143052800
+    },
+    {
+      "name": "chatgpt_auth_scope-d9b4bad1d8f5fc24.pdb",
+      "bytes": 127193088
+    },
+    {
+      "name": "claude_metadata-367989e3ae254b39.pdb",
+      "bytes": 76836864
+    },
+    {
+      "name": "claude_metadata-5a50123694c91598.pdb",
+      "bytes": 77664256
+    },
+    {
+      "name": "claude_metadata-60dbf6b5b13ce8dd.pdb",
+      "bytes": 63008768
+    },
+    {
+      "name": "claude_metadata-68c27459ca7805f8.pdb",
+      "bytes": 60928000
+    },
+    {
+      "name": "claude_metadata-d8167338c811c96b.pdb",
+      "bytes": 74321920
+    },
+    {
+      "name": "claude_metadata-fd250302f59729d0.pdb",
+      "bytes": 64253952
+    },
+    {
+      "name": "claude_process-0da1a1c85734e966.pdb",
+      "bytes": 72003584
+    },
+    {
+      "name": "claude_process-23f4784c7121048f.pdb",
+      "bytes": 69799936
+    },
+    {
+      "name": "claude_process-3347e80436d73620.pdb",
+      "bytes": 85946368
+    },
+    {
+      "name": "claude_process-c64d33f3c7f04cbf.pdb",
+      "bytes": 73478144
+    },
+    {
+      "name": "claude_process-e1f89ec8bc3e7e96.pdb",
+      "bytes": 83554304
+    },
+    {
+      "name": "claude_process-ed4eccaf5d4c9ccd.pdb",
+      "bytes": 86937600
+    },
+    {
+      "name": "cleanup_retry-0442beba71f15e3f.pdb",
+      "bytes": 30011392
+    },
+    {
+      "name": "cleanup_retry-1a367f875f50b118.pdb",
+      "bytes": 24875008
+    },
+    {
+      "name": "cleanup_retry-4da12956d98aaf2b.pdb",
+      "bytes": 25579520
+    },
+    {
+      "name": "cleanup_retry-a9ad1438fcd2bc0b.pdb",
+      "bytes": 24752128
+    },
+    {
+      "name": "client_lifecycle-00706696aff6bad5.pdb",
+      "bytes": 135696384
+    },
+    {
+      "name": "client_lifecycle-0c3869a56628c416.pdb",
+      "bytes": 120975360
+    },
+    {
+      "name": "client_lifecycle-381b2631f87f7da1.pdb",
+      "bytes": 140914688
+    },
+    {
+      "name": "client_lifecycle-5ac1c57c560445a6.pdb",
+      "bytes": 115109888
+    },
+    {
+      "name": "client_lifecycle-8502af64f5601e3f.pdb",
+      "bytes": 98750464
+    },
+    {
+      "name": "client_lifecycle-87e1c8a2b5d88e0d.pdb",
+      "bytes": 129273856
+    },
+    {
+      "name": "client_lifecycle-a01d6d4ab94be1b1.pdb",
+      "bytes": 117854208
+    },
+    {
+      "name": "client_lifecycle-ad1feb557a47d157.pdb",
+      "bytes": 137383936
+    },
+    {
+      "name": "codex_launch-1276e1b02916fedb.pdb",
+      "bytes": 74379264
+    },
+    {
+      "name": "codex_launch-2cd316bff71a2c0f.pdb",
+      "bytes": 71888896
+    },
+    {
+      "name": "codex_launch-b4ef4c953d2ac1ab.pdb",
+      "bytes": 61829120
+    },
+    {
+      "name": "codex_launch-b8004901ed651404.pdb",
+      "bytes": 60583936
+    },
+    {
+      "name": "codex_launch-b833536d61b5e5b5.pdb",
+      "bytes": 75304960
+    },
+    {
+      "name": "codex_launch-ced693a8a958106d.pdb",
+      "bytes": 58454016
+    },
+    {
+      "name": "codex_metadata-17c0d4fa622b5d14.pdb",
+      "bytes": 78303232
+    },
+    {
+      "name": "codex_metadata-6213f105372f1c61.pdb",
+      "bytes": 63582208
+    },
+    {
+      "name": "codex_metadata-7510368e0451b97a.pdb",
+      "bytes": 61435904
+    },
+    {
+      "name": "codex_metadata-7fb4c587106978c4.pdb",
+      "bytes": 74919936
+    },
+    {
+      "name": "codex_metadata-8fd986513497d18c.pdb",
+      "bytes": 64860160
+    },
+    {
+      "name": "codex_metadata-be0953be0bf19134.pdb",
+      "bytes": 77361152
+    },
+    {
+      "name": "codex_process-0c4eff816625cfd8.pdb",
+      "bytes": 71454720
+    },
+    {
+      "name": "codex_process-31ae0d8d953db580.pdb",
+      "bytes": 81408000
+    },
+    {
+      "name": "codex_process-31b5b294bd25fb09.pdb",
+      "bytes": 84856832
+    },
+    {
+      "name": "codex_process-6aab04dd624cd0ef.pdb",
+      "bytes": 67899392
+    },
+    {
+      "name": "codex_process-7b02a12bfe12ca62.pdb",
+      "bytes": 83865600
+    },
+    {
+      "name": "codex_process-d644eb5766cbad84.pdb",
+      "bytes": 70078464
+    },
+    {
+      "name": "command_output-0313efe1f1a4f980.pdb",
+      "bytes": 63164416
+    },
+    {
+      "name": "command_output-2e9e2e9f1866052e.pdb",
+      "bytes": 76640256
+    },
+    {
+      "name": "command_output-391118a6fbf9a3d0.pdb",
+      "bytes": 79130624
+    },
+    {
+      "name": "command_output-3b84be305dac0315.pdb",
+      "bytes": 65318912
+    },
+    {
+      "name": "command_output-58c414af26b1dfc1.pdb",
+      "bytes": 80064512
+    },
+    {
+      "name": "command_output-ad10d4289bafce0b.pdb",
+      "bytes": 66629632
+    },
+    {
+      "name": "command_output-b7dcd119648aab2b.pdb",
+      "bytes": 63172608
+    },
+    {
+      "name": "commands-18c2f5cacef19542.pdb",
+      "bytes": 7032832
+    },
+    {
+      "name": "commands-1dedcffee9176d8d.pdb",
+      "bytes": 7032832
+    },
+    {
+      "name": "commands-3f6d4958b5e12d2f.pdb",
+      "bytes": 6303744
+    },
+    {
+      "name": "commands-43a8f36f5953030c.pdb",
+      "bytes": 7041024
+    },
+    {
+      "name": "commands-63ec1fe1a178ee72.pdb",
+      "bytes": 6311936
+    },
+    {
+      "name": "commands-ab45a39bf1cd9014.pdb",
+      "bytes": 7041024
+    },
+    {
+      "name": "contracts-637eb8f38f0761a7.pdb",
+      "bytes": 16642048
+    },
+    {
+      "name": "contracts-a1891283b87f1d99.pdb",
+      "bytes": 18886656
+    },
+    {
+      "name": "contracts-f98b1a065db942c2.pdb",
+      "bytes": 16117760
+    },
+    {
+      "name": "cursor_metadata-14f1242ae5b6520b.pdb",
+      "bytes": 77606912
+    },
+    {
+      "name": "cursor_metadata-24a8c3f016b7500a.pdb",
+      "bytes": 61583360
+    },
+    {
+      "name": "cursor_metadata-3a686bf576d4f2e9.pdb",
+      "bytes": 78557184
+    },
+    {
+      "name": "cursor_metadata-4dc91d17a0018243.pdb",
+      "bytes": 65097728
+    },
+    {
+      "name": "cursor_metadata-5071b0a29678eb44.pdb",
+      "bytes": 75165696
+    },
+    {
+      "name": "cursor_metadata-b5ac4d9e07977eb2.pdb",
+      "bytes": 63705088
+    },
+    {
+      "name": "darling_macro-817d6d972f83debb.pdb",
+      "bytes": 3608576
+    },
+    {
+      "name": "diagnostic_redaction-5eee70f85f170272.pdb",
+      "bytes": 10219520
+    },
+    {
+      "name": "diagnostic_redaction-b2bbcdf1939c4186.pdb",
+      "bytes": 12570624
+    },
+    {
+      "name": "diagnostic_redaction-dd000f2475fb90ea.pdb",
+      "bytes": 10260480
+    },
+    {
+      "name": "direct-9193a164f8c42a8a.pdb",
+      "bytes": 127324160
+    },
+    {
+      "name": "e2e-002ea13ffbea5e61.pdb",
+      "bytes": 148713472
+    },
+    {
+      "name": "e2e-023c1f21add8e766.pdb",
+      "bytes": 156635136
+    },
+    {
+      "name": "e2e-7511ac07bab02bc4.pdb",
+      "bytes": 151924736
+    },
+    {
+      "name": "e2e-a34cf582736638bb.pdb",
+      "bytes": 130191360
+    },
+    {
+      "name": "e2e-aa12b529696c8988.pdb",
+      "bytes": 153153536
+    },
+    {
+      "name": "e2e-e29a304cbea5b0b7.pdb",
+      "bytes": 133271552
+    },
+    {
+      "name": "embedded-00e6e42ff6873db7.pdb",
+      "bytes": 149180416
+    },
+    {
+      "name": "embedded-25b9d30a32d292f9.pdb",
+      "bytes": 172503040
+    },
+    {
+      "name": "embedded-5cf37262bbe940c3.pdb",
+      "bytes": 168693760
+    },
+    {
+      "name": "embedded-68a95e23ae7978cf.pdb",
+      "bytes": 169136128
+    },
+    {
+      "name": "embedded-aaed38c696b06d79.pdb",
+      "bytes": 146903040
+    },
+    {
+      "name": "embedded-c61524c5897cf51c.pdb",
+      "bytes": 149491712
+    },
+    {
+      "name": "empty_journal-170f1641c01046cf.pdb",
+      "bytes": 20901888
+    },
+    {
+      "name": "empty_journal-95869ddfcbb940a4.pdb",
+      "bytes": 25333760
+    },
+    {
+      "name": "empty_journal-e61483850ba73400.pdb",
+      "bytes": 20197376
+    },
+    {
+      "name": "empty_journal-f412f3ff9b8842c4.pdb",
+      "bytes": 20246528
+    },
+    {
+      "name": "endpoint_config-0bc885f288f57b72.pdb",
+      "bytes": 77934592
+    },
+    {
+      "name": "endpoint_config-13db049a12d460d0.pdb",
+      "bytes": 91254784
+    },
+    {
+      "name": "endpoint_config-37602d78214998e5.pdb",
+      "bytes": 93900800
+    },
+    {
+      "name": "endpoint_config-82448f7488d064dc.pdb",
+      "bytes": 94818304
+    },
+    {
+      "name": "endpoint_config-a144155dfcd8033f.pdb",
+      "bytes": 81367040
+    },
+    {
+      "name": "endpoint_config-c41b34276532fde3.pdb",
+      "bytes": 80048128
+    },
+    {
+      "name": "endpoints-3a9682dbc05cce2b.pdb",
+      "bytes": 6787072
+    },
+    {
+      "name": "endpoints-4d7535c4a8fff4d1.pdb",
+      "bytes": 6795264
+    },
+    {
+      "name": "endpoints-b129bc8b55e256e5.pdb",
+      "bytes": 6098944
+    },
+    {
+      "name": "endpoints-c1dd02f99fc52f38.pdb",
+      "bytes": 6778880
+    },
+    {
+      "name": "endpoints-ecef2af9a5c3dc9a.pdb",
+      "bytes": 6787072
+    },
+    {
+      "name": "endpoints-f09a667fc55581d0.pdb",
+      "bytes": 6098944
+    },
+    {
+      "name": "execution-0a8a9c5609bbf714.pdb",
+      "bytes": 70733824
+    },
+    {
+      "name": "execution-15092fd63b617153.pdb",
+      "bytes": 119705600
+    },
+    {
+      "name": "execution-2ed678a8ac974bf8.pdb",
+      "bytes": 84422656
+    },
+    {
+      "name": "execution-364b063bab10a68b.pdb",
+      "bytes": 86765568
+    },
+    {
+      "name": "execution-4212f677dd4fd3b7.pdb",
+      "bytes": 122793984
+    },
+    {
+      "name": "execution-45bf3fba257ac21a.pdb",
+      "bytes": 139554816
+    },
+    {
+      "name": "execution-527b093be36cb677.pdb",
+      "bytes": 117043200
+    },
+    {
+      "name": "execution-564b79914895cb28.pdb",
+      "bytes": 131330048
+    },
+    {
+      "name": "execution-6b662ebdf82ac7ea.pdb",
+      "bytes": 100847616
+    },
+    {
+      "name": "execution-6e8a32595cdbab11.pdb",
+      "bytes": 138113024
+    },
+    {
+      "name": "execution-7cc9a43bf3143971.pdb",
+      "bytes": 142987264
+    },
+    {
+      "name": "execution-7e380de995d95a48.pdb",
+      "bytes": 74338304
+    },
+    {
+      "name": "execution-b1b3b930576422e9.pdb",
+      "bytes": 87805952
+    },
+    {
+      "name": "execution-d5ddc48a48437eb0.pdb",
+      "bytes": 72871936
+    },
+    {
+      "name": "execution-dc960b691ac35fcf.pdb",
+      "bytes": 83939328
+    },
+    {
+      "name": "filesystem-057cdee495b79964.pdb",
+      "bytes": 14479360
+    },
+    {
+      "name": "filesystem-5ac3e739c634b066.pdb",
+      "bytes": 14495744
+    },
+    {
+      "name": "filesystem-7269a52cfb67c097.pdb",
+      "bytes": 18108416
+    },
+    {
+      "name": "gateway_routes-04df777ee7a7cba7.pdb",
+      "bytes": 121434112
+    },
+    {
+      "name": "gateway_routes-4507b0698db68daf.pdb",
+      "bytes": 118288384
+    },
+    {
+      "name": "gateway_routes-4d54420a7e0bef43.pdb",
+      "bytes": 99233792
+    },
+    {
+      "name": "gateway_routes-6aa3831dfce2a38e.pdb",
+      "bytes": 141406208
+    },
+    {
+      "name": "gateway_routes-8792e5a48be279b2.pdb",
+      "bytes": 115576832
+    },
+    {
+      "name": "gateway_routes-88c422674962e11f.pdb",
+      "bytes": 138047488
+    },
+    {
+      "name": "gateway_routes-e656ba1c42b3156d.pdb",
+      "bytes": 129773568
+    },
+    {
+      "name": "gateway_routes-f2df9fc7be444846.pdb",
+      "bytes": 136302592
+    },
+    {
+      "name": "grok-0cf0ede8eccd6ff1.pdb",
+      "bytes": 71749632
+    },
+    {
+      "name": "grok-51a6453c75766f65.pdb",
+      "bytes": 75124736
+    },
+    {
+      "name": "grok-6c42722dd7c1493c.pdb",
+      "bytes": 60428288
+    },
+    {
+      "name": "grok-6e3667b7f2b44bea.pdb",
+      "bytes": 74190848
+    },
+    {
+      "name": "grok-7fbf128e374b55fb.pdb",
+      "bytes": 58290176
+    },
+    {
+      "name": "grok-f693997675738dd4.pdb",
+      "bytes": 61640704
+    },
+    {
+      "name": "host_mcp-2ef5072322e9bf71.pdb",
+      "bytes": 110415872
+    },
+    {
+      "name": "host_mcp-33e70e29f508c2cd.pdb",
+      "bytes": 137105408
+    },
+    {
+      "name": "host_mcp-366e2cde90500e47.pdb",
+      "bytes": 86257664
+    },
+    {
+      "name": "host_mcp-3fe57de3a74749cd.pdb",
+      "bytes": 76222464
+    },
+    {
+      "name": "host_mcp-46a0c023467f259b.pdb",
+      "bytes": 100151296
+    },
+    {
+      "name": "host_mcp-5c14cae12b2e4852.pdb",
+      "bytes": 88592384
+    },
+    {
+      "name": "host_mcp-5d6a549ceb05e5e0.pdb",
+      "bytes": 130609152
+    },
+    {
+      "name": "host_mcp-a178f878ddb2b951.pdb",
+      "bytes": 142266368
+    },
+    {
+      "name": "host_mcp-a9131e479833e4f3.pdb",
+      "bytes": 89624576
+    },
+    {
+      "name": "host_mcp-b07ea437f4cbdaa0.pdb",
+      "bytes": 74682368
+    },
+    {
+      "name": "host_mcp-b9605627dfb0b444.pdb",
+      "bytes": 116436992
+    },
+    {
+      "name": "host_mcp-b9972d5ec6c60436.pdb",
+      "bytes": 119140352
+    },
+    {
+      "name": "host_mcp-c3b814da2030b6ba.pdb",
+      "bytes": 72585216
+    },
+    {
+      "name": "host_mcp-dff67e0ec8096ab3.pdb",
+      "bytes": 85807104
+    },
+    {
+      "name": "host_mcp-f1946293012a6624.pdb",
+      "bytes": 138809344
+    },
+    {
+      "name": "host_mcp-f782c7cbe886c939.pdb",
+      "bytes": 122236928
+    },
+    {
+      "name": "host_mcp_live-54b08c980c11c26f.pdb",
+      "bytes": 85479424
+    },
+    {
+      "name": "host_mcp_live-621ed5ecb67c0e50.pdb",
+      "bytes": 74289152
+    },
+    {
+      "name": "host_mcp_live-699b890ffa67a2df.pdb",
+      "bytes": 88174592
+    },
+    {
+      "name": "host_mcp_live-79f67380042a1aa8.pdb",
+      "bytes": 75780096
+    },
+    {
+      "name": "host_mcp_live-900b4d81ab0fadad.pdb",
+      "bytes": 72151040
+    },
+    {
+      "name": "host_mcp_live-cb044465ba117cbd.pdb",
+      "bytes": 89206784
+    },
+    {
+      "name": "host_mcp_live-d05a8df82a62c99b.pdb",
+      "bytes": 85766144
+    },
+    {
+      "name": "host_modes-26f64751c29c95a7.pdb",
+      "bytes": 3952640
+    },
+    {
+      "name": "host_modes-80fb0a1aac0ff116.pdb",
+      "bytes": 3952640
+    },
+    {
+      "name": "host_modes-9416cafb794b1c0d.pdb",
+      "bytes": 3526656
+    },
+    {
+      "name": "host_modes-c6e38b01e11a4d83.pdb",
+      "bytes": 3526656
+    },
+    {
+      "name": "host_modes-e814474f1ca29a0c.pdb",
+      "bytes": 3952640
+    },
+    {
+      "name": "host_modes-f8fb37bf0a16b700.pdb",
+      "bytes": 3952640
+    },
+    {
+      "name": "http-32ea98143e50ee40.pdb",
+      "bytes": 106549248
+    },
+    {
+      "name": "http-4c59ea8a6b85dacb.pdb",
+      "bytes": 92557312
+    },
+    {
+      "name": "http-5143c22153ecf407.pdb",
+      "bytes": 160206848
+    },
+    {
+      "name": "http-74291cacfebd18e7.pdb",
+      "bytes": 88526848
+    },
+    {
+      "name": "http-817ec567c7cde037.pdb",
+      "bytes": 163672064
+    },
+    {
+      "name": "http-89992f19043806b5.pdb",
+      "bytes": 105615360
+    },
+    {
+      "name": "http-91062531368559c0.pdb",
+      "bytes": 103198720
+    },
+    {
+      "name": "http-a159012bb76089af.pdb",
+      "bytes": 90664960
+    },
+    {
+      "name": "http-b659b45097fe7ef6.pdb",
+      "bytes": 136679424
+    },
+    {
+      "name": "http-c35a71245cc9a74b.pdb",
+      "bytes": 118140928
+    },
+    {
+      "name": "http-c7a59efff6e42daf.pdb",
+      "bytes": 140922880
+    },
+    {
+      "name": "http-c91e1bc7032870bb.pdb",
+      "bytes": 137842688
+    },
+    {
+      "name": "http-faed9298bdfabcac.pdb",
+      "bytes": 158601216
+    },
+    {
+      "name": "http_catalogs-01bb2eef9faaa6f7.pdb",
+      "bytes": 62320640
+    },
+    {
+      "name": "http_catalogs-35e0aeb0b9e0232e.pdb",
+      "bytes": 60182528
+    },
+    {
+      "name": "http_catalogs-49c863fe40c3110c.pdb",
+      "bytes": 76238848
+    },
+    {
+      "name": "http_catalogs-59c274104d85ba85.pdb",
+      "bytes": 77107200
+    },
+    {
+      "name": "http_catalogs-7c897d1be4b7fd8c.pdb",
+      "bytes": 63672320
+    },
+    {
+      "name": "http_catalogs-e7213f56e13d93de.pdb",
+      "bytes": 73797632
+    },
+    {
+      "name": "http_execution-23bb67e7c22c85f3.pdb",
+      "bytes": 109604864
+    },
+    {
+      "name": "http_execution-5cb746d7abac505f.pdb",
+      "bytes": 96497664
+    },
+    {
+      "name": "http_execution-66cfe2ee34c777d5.pdb",
+      "bytes": 94572544
+    },
+    {
+      "name": "http_execution-6ba0adf1d5d7bdb6.pdb",
+      "bytes": 110530560
+    },
+    {
+      "name": "http_execution-ccb437ab0bdcea7c.pdb",
+      "bytes": 107229184
+    },
+    {
+      "name": "http_execution-f3ace352437e7682.pdb",
+      "bytes": 92434432
+    },
+    {
+      "name": "http_frames-41ed5ad65cd1d6d6.pdb",
+      "bytes": 75010048
+    },
+    {
+      "name": "http_frames-6272f49ff86d763c.pdb",
+      "bytes": 74117120
+    },
+    {
+      "name": "http_frames-76a35ff20ddf5172.pdb",
+      "bytes": 60297216
+    },
+    {
+      "name": "http_frames-9928af2d506199f0.pdb",
+      "bytes": 71634944
+    },
+    {
+      "name": "http_frames-a196a3695415157b.pdb",
+      "bytes": 58175488
+    },
+    {
+      "name": "http_frames-d7c2a09f67191bc4.pdb",
+      "bytes": 61558784
+    },
+    {
+      "name": "http_images-21902c1daac5c859.pdb",
+      "bytes": 91934720
+    },
+    {
+      "name": "http_images-37265abdc974f5a0.pdb",
+      "bytes": 109998080
+    },
+    {
+      "name": "http_images-432ff4cafc657f1f.pdb",
+      "bytes": 94007296
+    },
+    {
+      "name": "http_images-7004e05db68c875f.pdb",
+      "bytes": 95965184
+    },
+    {
+      "name": "http_images-efd72638c38e61cf.pdb",
+      "bytes": 109056000
+    },
+    {
+      "name": "http_images-f18f7db7457b7eb9.pdb",
+      "bytes": 106672128
+    },
+    {
+      "name": "image_inputs-0c6919793e756822.pdb",
+      "bytes": 113594368
+    },
+    {
+      "name": "image_inputs-147d69f044aa1c5f.pdb",
+      "bytes": 136916992
+    },
+    {
+      "name": "image_inputs-4781a23a2b48db49.pdb",
+      "bytes": 116174848
+    },
+    {
+      "name": "image_inputs-6436146bd6675141.pdb",
+      "bytes": 138604544
+    },
+    {
+      "name": "image_inputs-6d4aeea72c29eaf9.pdb",
+      "bytes": 142020608
+    },
+    {
+      "name": "image_inputs-7c85fb425430f417.pdb",
+      "bytes": 130387968
+    },
+    {
+      "name": "image_inputs-86ed9e5d5e61db82.pdb",
+      "bytes": 118861824
+    },
+    {
+      "name": "image_inputs-9e368ac45b3fb501.pdb",
+      "bytes": 97103872
+    },
+    {
+      "name": "image_inputs-e1300637f0abdf7f.pdb",
+      "bytes": 122073088
+    },
+    {
+      "name": "included_allowance-5b97305fa8250244.pdb",
+      "bytes": 11587584
+    },
+    {
+      "name": "included_allowance-8866914c7ec5c8cf.pdb",
+      "bytes": 14487552
+    },
+    {
+      "name": "included_allowance-bb05c55bbfccb75c.pdb",
+      "bytes": 11661312
+    },
+    {
+      "name": "indoc-0f513238ca2c4df3.pdb",
+      "bytes": 1486848
+    },
+    {
+      "name": "instability-5c403d2eba08248d.pdb",
+      "bytes": 2863104
+    },
+    {
+      "name": "introspection-035f3a1a2181e0b2.pdb",
+      "bytes": 99282944
+    },
+    {
+      "name": "introspection-09a38c6f855b7d0e.pdb",
+      "bytes": 141430784
+    },
+    {
+      "name": "introspection-1337d74777f4d6cc.pdb",
+      "bytes": 136220672
+    },
+    {
+      "name": "introspection-79e76164c14b5ffb.pdb",
+      "bytes": 115535872
+    },
+    {
+      "name": "introspection-9685cb6a8fb59508.pdb",
+      "bytes": 121524224
+    },
+    {
+      "name": "introspection-9dbff33f17d74f6a.pdb",
+      "bytes": 118403072
+    },
+    {
+      "name": "introspection-cabf3b880ec8f4d9.pdb",
+      "bytes": 129757184
+    },
+    {
+      "name": "introspection-e5633cc9191c9dce.pdb",
+      "bytes": 137924608
+    },
+    {
+      "name": "journal_limits-1c07f8202943c4de.pdb",
+      "bytes": 26103808
+    },
+    {
+      "name": "journal_limits-73549b2d4df11808.pdb",
+      "bytes": 30568448
+    },
+    {
+      "name": "journal_limits-8d8055ec74c801bd.pdb",
+      "bytes": 25235456
+    },
+    {
+      "name": "journal_limits-9f32cd28ebc76184.pdb",
+      "bytes": 25440256
+    },
+    {
+      "name": "lai_adapters-0e63d9df99c5b178.pdb",
+      "bytes": 75673600
+    },
+    {
+      "name": "lai_adapters-50be77c4887a86e5.pdb",
+      "bytes": 63057920
+    },
+    {
+      "name": "lai_adapters-64329c2d221cc330.pdb",
+      "bytes": 71397376
+    },
+    {
+      "name": "lai_adapters-b4ff14c6eb509ead.pdb",
+      "bytes": 58953728
+    },
+    {
+      "name": "lai_adapters-bf339a428940302b.pdb",
+      "bytes": 61083648
+    },
+    {
+      "name": "lai_adapters-e6e387ab1dc26735.pdb",
+      "bytes": 73764864
+    },
+    {
+      "name": "lai_chatgpt_auth-404f42f8714c58da.pdb",
+      "bytes": 73674752
+    },
+    {
+      "name": "lai_chatgpt_auth-41b5954bfd537409.pdb",
+      "bytes": 70578176
+    },
+    {
+      "name": "lai_chatgpt_auth-42e34648c0a3c294.pdb",
+      "bytes": 71430144
+    },
+    {
+      "name": "lai_chatgpt_auth-45ebd88063a0cb69.pdb",
+      "bytes": 73330688
+    },
+    {
+      "name": "lai_chatgpt_auth-9b2de1289ae7a7ba.pdb",
+      "bytes": 71454720
+    },
+    {
+      "name": "lai_chatgpt_auth-c2c3f4ae75d604ee.pdb",
+      "bytes": 71479296
+    },
+    {
+      "name": "lai_contracts-3211971c847e5e6c.pdb",
+      "bytes": 3002368
+    },
+    {
+      "name": "lai_contracts-9ca25cfb52e1b733.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "lai_contracts-ea6be5002149b7e2.pdb",
+      "bytes": 2985984
+    },
+    {
+      "name": "lai_control-0064883a7e4e327b.pdb",
+      "bytes": 104599552
+    },
+    {
+      "name": "lai_control-41a12f5ce4a9a236.pdb",
+      "bytes": 98930688
+    },
+    {
+      "name": "lai_control-5b7318ac60858cb2.pdb",
+      "bytes": 107343872
+    },
+    {
+      "name": "lai_control-80960957417ab2fb.pdb",
+      "bytes": 84365312
+    },
+    {
+      "name": "lai_control-eaef79bed11853e5.pdb",
+      "bytes": 81244160
+    },
+    {
+      "name": "lai_control-ecba8d96b90e0dfe.pdb",
+      "bytes": 102486016
+    },
+    {
+      "name": "lai_control-f02f9bc80f4c24c7.pdb",
+      "bytes": 78401536
+    },
+    {
+      "name": "lai_core-2985508237f897e0.pdb",
+      "bytes": 2985984
+    },
+    {
+      "name": "lai_core-58a4eb0921e1de71.pdb",
+      "bytes": 3092480
+    },
+    {
+      "name": "lai_core-86aeec7a32212ff8.pdb",
+      "bytes": 3002368
+    },
+    {
+      "name": "lai_discovery-1ecfada46aa934ea.pdb",
+      "bytes": 12439552
+    },
+    {
+      "name": "lai_discovery-27e0be50074160e4.pdb",
+      "bytes": 15314944
+    },
+    {
+      "name": "lai_discovery-92c66166aef6d825.pdb",
+      "bytes": 12423168
+    },
+    {
+      "name": "lai_kit-06a0daf8964931c5.pdb",
+      "bytes": 98062336
+    },
+    {
+      "name": "lai_kit-41f457b61d5d70f7.pdb",
+      "bytes": 98103296
+    },
+    {
+      "name": "lai_kit-528a8cad04b36607.pdb",
+      "bytes": 77238272
+    },
+    {
+      "name": "lai_kit-9cf6f36f313298de.pdb",
+      "bytes": 100806656
+    },
+    {
+      "name": "lai_kit-a1478f268cde2249.pdb",
+      "bytes": 79843328
+    },
+    {
+      "name": "lai_kit-bd7c7de84b00f2ac.pdb",
+      "bytes": 85209088
+    },
+    {
+      "name": "lai_platform-135744496b4ee7b8.pdb",
+      "bytes": 3100672
+    },
+    {
+      "name": "lai_platform-501774e43fc30d7c.pdb",
+      "bytes": 2994176
+    },
+    {
+      "name": "lai_platform-84cfc52f49ac1ac4.pdb",
+      "bytes": 3010560
+    },
+    {
+      "name": "lai_runtime-1e5d21e7834cf7cd.pdb",
+      "bytes": 21450752
+    },
+    {
+      "name": "lai_runtime-304ebc246f4b8d42.pdb",
+      "bytes": 17362944
+    },
+    {
+      "name": "lai_runtime-3308e62dd6ad44ab.pdb",
+      "bytes": 17272832
+    },
+    {
+      "name": "lai_runtime-fd9aa8fe555c78cb.pdb",
+      "bytes": 18100224
+    },
+    {
+      "name": "lai_service-02136249afdfc93e.pdb",
+      "bytes": 102387712
+    },
+    {
+      "name": "lai_service-1cecd9a123b588ef.pdb",
+      "bytes": 57978880
+    },
+    {
+      "name": "lai_service-b6ac9ca294a47175.pdb",
+      "bytes": 123793408
+    },
+    {
+      "name": "lai_service-c819e0e27202bf83.pdb",
+      "bytes": 75304960
+    },
+    {
+      "name": "lai_service-ca0e4c42d2e3c14b.pdb",
+      "bytes": 120639488
+    },
+    {
+      "name": "lai_service-cc0e35f3cd9e728c.pdb",
+      "bytes": 81186816
+    },
+    {
+      "name": "lai_service-d9ef0122999d599e.pdb",
+      "bytes": 94326784
+    },
+    {
+      "name": "lai_service-f537dcadd93fd521.pdb",
+      "bytes": 83849216
+    },
+    {
+      "name": "lai_service-f6743ef37544600e.pdb",
+      "bytes": 133591040
+    },
+    {
+      "name": "lai_store-6b9cabdb5e986f4d.pdb",
+      "bytes": 2985984
+    },
+    {
+      "name": "lai_store-8ba11a364852b81a.pdb",
+      "bytes": 3092480
+    },
+    {
+      "name": "lai_store-a2272e2955700b48.pdb",
+      "bytes": 3092480
+    },
+    {
+      "name": "lai_store-beb671999688c8af.pdb",
+      "bytes": 3002368
+    },
+    {
+      "name": "lai_transports-02bd055d319130af.pdb",
+      "bytes": 132296704
+    },
+    {
+      "name": "lai_transports-179bc89ed299c017.pdb",
+      "bytes": 135467008
+    },
+    {
+      "name": "lai_transports-2375df42df56f153.pdb",
+      "bytes": 152186880
+    },
+    {
+      "name": "lai_transports-7bf286399103e96d.pdb",
+      "bytes": 153899008
+    },
+    {
+      "name": "lai_transports-dedbbbbdcda80fcd.pdb",
+      "bytes": 113528832
+    },
+    {
+      "name": "lai_transports-e13d434f73b36bb2.pdb",
+      "bytes": 157708288
+    },
+    {
+      "name": "lai_update-22fee067a06ba366.pdb",
+      "bytes": 15691776
+    },
+    {
+      "name": "lai_update-a8480fb3246e5b99.pdb",
+      "bytes": 18878464
+    },
+    {
+      "name": "lai_update-e276aa2ab53634d4.pdb",
+      "bytes": 15781888
+    },
+    {
+      "name": "lai_update-f23ce6ad7d497980.pdb",
+      "bytes": 18305024
+    },
+    {
+      "name": "lifecycle-1d11b06fbe7a59ba.pdb",
+      "bytes": 26497024
+    },
+    {
+      "name": "lifecycle-510e8207aa462e87.pdb",
+      "bytes": 27447296
+    },
+    {
+      "name": "lifecycle-cf66e977364abe6a.pdb",
+      "bytes": 31944704
+    },
+    {
+      "name": "lifecycle-e87c6d4151f8cda9.pdb",
+      "bytes": 26767360
+    },
+    {
+      "name": "live_claude_image-1228f138c6f7a7e8.pdb",
+      "bytes": 146436096
+    },
+    {
+      "name": "live_claude_image-3a455e0f89d6efbf.pdb",
+      "bytes": 143609856
+    },
+    {
+      "name": "live_claude_image-a6700a767cf5d358.pdb",
+      "bytes": 165392384
+    },
+    {
+      "name": "live_claude_image-acbfba9e8233ebf7.pdb",
+      "bytes": 165916672
+    },
+    {
+      "name": "live_claude_image-cc9403908e3ae46d.pdb",
+      "bytes": 146272256
+    },
+    {
+      "name": "live_claude_image-e4ec7135307974be.pdb",
+      "bytes": 169324544
+    },
+    {
+      "name": "live_persistent_resume-1fb7b07f84cd8803.pdb",
+      "bytes": 146395136
+    },
+    {
+      "name": "live_persistent_resume-46b25324bc5bba14.pdb",
+      "bytes": 169316352
+    },
+    {
+      "name": "live_persistent_resume-74a57920ae1546fe.pdb",
+      "bytes": 165457920
+    },
+    {
+      "name": "live_persistent_resume-c8c2a63a5e75669a.pdb",
+      "bytes": 146313216
+    },
+    {
+      "name": "live_persistent_resume-d3af2a7205b1cde9.pdb",
+      "bytes": 165941248
+    },
+    {
+      "name": "live_persistent_resume-dfa3543f4fecc7ae.pdb",
+      "bytes": 143642624
+    },
+    {
+      "name": "local_ai_kit-106abf71205b82a3.pdb",
+      "bytes": 119255040
+    },
+    {
+      "name": "local_ai_kit-70d96407930e2540.pdb",
+      "bytes": 104919040
+    },
+    {
+      "name": "local_ai_kit-8ef3a7cb359616e2.pdb",
+      "bytes": 94629888
+    },
+    {
+      "name": "local_ai_kit-8fd1b44fe758e5d8.pdb",
+      "bytes": 93155328
+    },
+    {
+      "name": "local_ai_kit-9d3f7d8844a27109.pdb",
+      "bytes": 121647104
+    },
+    {
+      "name": "local_ai_kit-a0f9a2d97a539328.pdb",
+      "bytes": 121663488
+    },
+    {
+      "name": "local_ai_kit-f989c3afa4c8b2a8.pdb",
+      "bytes": 92049408
+    },
+    {
+      "name": "local_ai_kit.pdb",
+      "bytes": 175173632
+    },
+    {
+      "name": "local_ai_kit_auth_blocker-1bfac459cb620b84.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "local_ai_kit_auth_blocker-7b2ecf0e307d82a7.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "local_ai_kit_auth_blocker-848f4fb8ad1faa19.pdb",
+      "bytes": 2985984
+    },
+    {
+      "name": "local_ai_kit_auth_blocker-99e1296c88c55af6.pdb",
+      "bytes": 2985984
+    },
+    {
+      "name": "local_ai_kit_auth_blocker-cb1cc3f675cd8aa3.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "local_ai_kit_auth_blocker-cf4b5497361bf060.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "local_ai_kit_auth_blocker.pdb",
+      "bytes": 1257472
+    },
+    {
+      "name": "local_ai_kit_control-35ae376d7ab3524d.pdb",
+      "bytes": 3010560
+    },
+    {
+      "name": "local_ai_kit_control-555a499f3fe8211f.pdb",
+      "bytes": 3133440
+    },
+    {
+      "name": "local_ai_kit_control-5db5aac8202e4a45.pdb",
+      "bytes": 3010560
+    },
+    {
+      "name": "local_ai_kit_control-6d37784c4a1f39dc.pdb",
+      "bytes": 3100672
+    },
+    {
+      "name": "local_ai_kit_control-9eb88d014b23ddfa.pdb",
+      "bytes": 3100672
+    },
+    {
+      "name": "local_ai_kit_control-dda60c57dfbc32cc.pdb",
+      "bytes": 2994176
+    },
+    {
+      "name": "local_ai_kit_control-f6e7e1f6016aa428.pdb",
+      "bytes": 3133440
+    },
+    {
+      "name": "local_ai_kit_control.pdb",
+      "bytes": 98701312
+    },
+    {
+      "name": "local_ai_kit_native_host-4094c46dd9c39cf6.pdb",
+      "bytes": 102486016
+    },
+    {
+      "name": "local_ai_kit_native_host-b6bbdf503c50bb19.pdb",
+      "bytes": 78573568
+    },
+    {
+      "name": "local_ai_kit_native_host-c0b728be08b7f1a1.pdb",
+      "bytes": 99610624
+    },
+    {
+      "name": "local_ai_kit_native_host-c241943b9fef724c.pdb",
+      "bytes": 88535040
+    },
+    {
+      "name": "local_ai_kit_native_host-c9320dc2f92d66d2.pdb",
+      "bytes": 81170432
+    },
+    {
+      "name": "local_ai_kit_native_host-ee5f4c162fb569bd.pdb",
+      "bytes": 99577856
+    },
+    {
+      "name": "local_ai_kit_native_host.pdb",
+      "bytes": 157077504
+    },
+    {
+      "name": "local_execution-0ecadca5dab277a3.pdb",
+      "bytes": 176467968
+    },
+    {
+      "name": "local_execution-4a201f1500bdc36d.pdb",
+      "bytes": 176500736
+    },
+    {
+      "name": "local_execution-b172312868ec451e.pdb",
+      "bytes": 153489408
+    },
+    {
+      "name": "local_execution-b86adab1404b9dbb.pdb",
+      "bytes": 156135424
+    },
+    {
+      "name": "local_execution-e9e23375492d828b.pdb",
+      "bytes": 179908608
+    },
+    {
+      "name": "local_execution-fc00bb8be38ed551.pdb",
+      "bytes": 156618752
+    },
+    {
+      "name": "local_ipc-312b8d29dfa6301a.pdb",
+      "bytes": 150712320
+    },
+    {
+      "name": "local_ipc-53826d31ada6086b.pdb",
+      "bytes": 157192192
+    },
+    {
+      "name": "local_ipc-55b8a390c476b14a.pdb",
+      "bytes": 111177728
+    },
+    {
+      "name": "local_ipc-5ae8a4beb1994252.pdb",
+      "bytes": 133722112
+    },
+    {
+      "name": "local_ipc-6b91d81c744d1c5b.pdb",
+      "bytes": 129773568
+    },
+    {
+      "name": "local_ipc-8df9895c2f9dce16.pdb",
+      "bytes": 153284608
+    },
+    {
+      "name": "local_ipc-dd9cfa3591cbf084.pdb",
+      "bytes": 153563136
+    },
+    {
+      "name": "local_ipc-e992904995adcd4e.pdb",
+      "bytes": 130560000
+    },
+    {
+      "name": "log_tail-0b43d43134590a99.pdb",
+      "bytes": 15380480
+    },
+    {
+      "name": "log_tail-27b9f83e37ae6761.pdb",
+      "bytes": 15372288
+    },
+    {
+      "name": "log_tail-99f4b8ad485c57fc.pdb",
+      "bytes": 19468288
+    },
+    {
+      "name": "long_running-0b2efad83433520c.pdb",
+      "bytes": 141717504
+    },
+    {
+      "name": "long_running-1b36357a8d938d1b.pdb",
+      "bytes": 118558720
+    },
+    {
+      "name": "long_running-218184a0e6c8385f.pdb",
+      "bytes": 121704448
+    },
+    {
+      "name": "long_running-3126cfe81327f4b9.pdb",
+      "bytes": 138309632
+    },
+    {
+      "name": "long_running-6bc9881c23fb6c9e.pdb",
+      "bytes": 130076672
+    },
+    {
+      "name": "long_running-e9923f8fdb1731d4.pdb",
+      "bytes": 115879936
+    },
+    {
+      "name": "long_running-ebcdfe34959d806f.pdb",
+      "bytes": 136589312
+    },
+    {
+      "name": "long_running-eef0de990f7dc6f7.pdb",
+      "bytes": 99545088
+    },
+    {
+      "name": "metadata-39fb298888fea41a.pdb",
+      "bytes": 143323136
+    },
+    {
+      "name": "metadata-83b52521c53662ac.pdb",
+      "bytes": 142151680
+    },
+    {
+      "name": "metadata-95e71746cd9e183c.pdb",
+      "bytes": 120852480
+    },
+    {
+      "name": "metadata-b0d426656198253e.pdb",
+      "bytes": 100413440
+    },
+    {
+      "name": "metadata-caed90e28d8686c1.pdb",
+      "bytes": 126570496
+    },
+    {
+      "name": "metadata-cd502dac1a064302.pdb",
+      "bytes": 135213056
+    },
+    {
+      "name": "metadata-d271018b4fa42fe3.pdb",
+      "bytes": 146837504
+    },
+    {
+      "name": "metadata-d5777b6ac54ab741.pdb",
+      "bytes": 103657472
+    },
+    {
+      "name": "metadata-f810e959bf47d6b7.pdb",
+      "bytes": 123441152
+    },
+    {
+      "name": "muse_catalog-1cf581f952ab4711.pdb",
+      "bytes": 64344064
+    },
+    {
+      "name": "muse_catalog-542ae4cc7fb39be3.pdb",
+      "bytes": 60919808
+    },
+    {
+      "name": "muse_catalog-8e834eb98a185134.pdb",
+      "bytes": 74371072
+    },
+    {
+      "name": "muse_catalog-a4193df60e7bd0b7.pdb",
+      "bytes": 77795328
+    },
+    {
+      "name": "muse_catalog-e5299ebc98d94aa6.pdb",
+      "bytes": 63066112
+    },
+    {
+      "name": "muse_catalog-f5e6262db3742960.pdb",
+      "bytes": 76853248
+    },
+    {
+      "name": "muse_live-0622d22f01577302.pdb",
+      "bytes": 71880704
+    },
+    {
+      "name": "muse_live-419030d8b52f59ba.pdb",
+      "bytes": 88920064
+    },
+    {
+      "name": "muse_live-46fcb076323abd22.pdb",
+      "bytes": 87846912
+    },
+    {
+      "name": "muse_live-5e7f5d5e637a2f1c.pdb",
+      "bytes": 75468800
+    },
+    {
+      "name": "muse_live-9b73a114d30cb758.pdb",
+      "bytes": 85495808
+    },
+    {
+      "name": "muse_live-e424daac72be037e.pdb",
+      "bytes": 74027008
+    },
+    {
+      "name": "muse_process-1decaaceafe0f7e0.pdb",
+      "bytes": 72781824
+    },
+    {
+      "name": "muse_process-38d218e8df1791fe.pdb",
+      "bytes": 88936448
+    },
+    {
+      "name": "muse_process-7e95733f4b7ae99b.pdb",
+      "bytes": 86577152
+    },
+    {
+      "name": "muse_process-83799b4f71d2da13.pdb",
+      "bytes": 90001408
+    },
+    {
+      "name": "muse_process-94512e66c233146c.pdb",
+      "bytes": 76509184
+    },
+    {
+      "name": "muse_process-d6775f604d20d945.pdb",
+      "bytes": 74952704
+    },
+    {
+      "name": "native_evidence-3582a56580411fee.pdb",
+      "bytes": 57757696
+    },
+    {
+      "name": "native_evidence-3a644c570ba4dcdf.pdb",
+      "bytes": 59936768
+    },
+    {
+      "name": "native_evidence-3b3d47386ef034c9.pdb",
+      "bytes": 73674752
+    },
+    {
+      "name": "native_evidence-3c12064a3db18bc3.pdb",
+      "bytes": 74534912
+    },
+    {
+      "name": "native_evidence-4e04de9e86838c76.pdb",
+      "bytes": 61100032
+    },
+    {
+      "name": "native_evidence-f4971b889f2b24a0.pdb",
+      "bytes": 71151616
+    },
+    {
+      "name": "native_host-12221929c534dafb.pdb",
+      "bytes": 6557696
+    },
+    {
+      "name": "native_host-49fcc28e3d0ae5a3.pdb",
+      "bytes": 6254592
+    },
+    {
+      "name": "native_host-61122e30f9577c85.pdb",
+      "bytes": 7032832
+    },
+    {
+      "name": "native_host-67c7a71e17c4ed0e.pdb",
+      "bytes": 6262784
+    },
+    {
+      "name": "native_host-88f593f128eb9348.pdb",
+      "bytes": 7016448
+    },
+    {
+      "name": "native_host-ae77e70715525e43.pdb",
+      "bytes": 6942720
+    },
+    {
+      "name": "native_host-ecd4c1c1f3d0cf60.pdb",
+      "bytes": 7016448
+    },
+    {
+      "name": "native_launch-13be42c2df684d8f.pdb",
+      "bytes": 84537344
+    },
+    {
+      "name": "native_launch-18c35c2efe8f1b7d.pdb",
+      "bytes": 81129472
+    },
+    {
+      "name": "native_launch-351c476f2b6b879e.pdb",
+      "bytes": 67710976
+    },
+    {
+      "name": "native_launch-3632be52ac5c8449.pdb",
+      "bytes": 83529728
+    },
+    {
+      "name": "native_launch-4c14c2eeb703f619.pdb",
+      "bytes": 69808128
+    },
+    {
+      "name": "native_launch-576dabf620cd05d5.pdb",
+      "bytes": 71200768
+    },
+    {
+      "name": "native_messaging-684ba788502dfae0.pdb",
+      "bytes": 109244416
+    },
+    {
+      "name": "native_messaging-918875b57ccde156.pdb",
+      "bytes": 151425024
+    },
+    {
+      "name": "native_messaging-9314591203c6fb8b.pdb",
+      "bytes": 128749568
+    },
+    {
+      "name": "native_messaging-997cce4bc161cfca.pdb",
+      "bytes": 154906624
+    },
+    {
+      "name": "native_messaging-bbb2d323f3ff4acd.pdb",
+      "bytes": 131747840
+    },
+    {
+      "name": "native_messaging-c5fad5ae07f21132.pdb",
+      "bytes": 150368256
+    },
+    {
+      "name": "native_policy-169d683dcf1a88cd.pdb",
+      "bytes": 115888128
+    },
+    {
+      "name": "native_policy-1944f11008fcb307.pdb",
+      "bytes": 136491008
+    },
+    {
+      "name": "native_policy-1a0241df059b9702.pdb",
+      "bytes": 99536896
+    },
+    {
+      "name": "native_policy-2536757585e3a654.pdb",
+      "bytes": 141635584
+    },
+    {
+      "name": "native_policy-2dd3e9b21977b4a7.pdb",
+      "bytes": 118558720
+    },
+    {
+      "name": "native_policy-2f3cc05016b913e2.pdb",
+      "bytes": 138194944
+    },
+    {
+      "name": "native_policy-58612782d7fb5ca8.pdb",
+      "bytes": 109670400
+    },
+    {
+      "name": "native_policy-87c838a67f1776ff.pdb",
+      "bytes": 121696256
+    },
+    {
+      "name": "native_policy-df71af530d94c371.pdb",
+      "bytes": 130019328
+    },
+    {
+      "name": "native_profiles-07a0c58885102d15.pdb",
+      "bytes": 65687552
+    },
+    {
+      "name": "native_profiles-1c49f68133740a51.pdb",
+      "bytes": 79851520
+    },
+    {
+      "name": "native_profiles-2e2fc28f832319c4.pdb",
+      "bytes": 6115328
+    },
+    {
+      "name": "native_profiles-4fca9213f1f2c2c3.pdb",
+      "bytes": 6115328
+    },
+    {
+      "name": "native_profiles-709087133e543038.pdb",
+      "bytes": 77287424
+    },
+    {
+      "name": "native_profiles-711b79e59b1c3c74.pdb",
+      "bytes": 67063808
+    },
+    {
+      "name": "native_profiles-7daedf801e9d4832.pdb",
+      "bytes": 6819840
+    },
+    {
+      "name": "native_profiles-815d9aa9fdb99d12.pdb",
+      "bytes": 63524864
+    },
+    {
+      "name": "native_profiles-821a69b2cba6e4e3.pdb",
+      "bytes": 6811648
+    },
+    {
+      "name": "native_profiles-87ae47b6698d5315.pdb",
+      "bytes": 80801792
+    },
+    {
+      "name": "native_profiles-9fa22724c878ffd2.pdb",
+      "bytes": 6819840
+    },
+    {
+      "name": "native_profiles-e0241882da8c0653.pdb",
+      "bytes": 6811648
+    },
+    {
+      "name": "opencode_catalog-1bd4b728a0d06404.pdb",
+      "bytes": 64614400
+    },
+    {
+      "name": "opencode_catalog-2409c3de0d2fccbd.pdb",
+      "bytes": 78008320
+    },
+    {
+      "name": "opencode_catalog-6ec61ad4eb74ac97.pdb",
+      "bytes": 63205376
+    },
+    {
+      "name": "opencode_catalog-6f35d9699e7cdfc9.pdb",
+      "bytes": 74952704
+    },
+    {
+      "name": "opencode_catalog-7a79b18d360c09af.pdb",
+      "bytes": 74502144
+    },
+    {
+      "name": "opencode_catalog-aa18c82f9e325ebc.pdb",
+      "bytes": 77099008
+    },
+    {
+      "name": "opencode_catalog-b25b6b633d585b1c.pdb",
+      "bytes": 61050880
+    },
+    {
+      "name": "opencode_execution-14499815c552aace.pdb",
+      "bytes": 107663360
+    },
+    {
+      "name": "opencode_execution-4d5760e47aebb5da.pdb",
+      "bytes": 111030272
+    },
+    {
+      "name": "opencode_execution-51b990b8d0b674ad.pdb",
+      "bytes": 94883840
+    },
+    {
+      "name": "opencode_execution-5d87ef4941cf6a7b.pdb",
+      "bytes": 92729344
+    },
+    {
+      "name": "opencode_execution-f4defd00c77e6ba9.pdb",
+      "bytes": 110071808
+    },
+    {
+      "name": "opencode_execution-fcb56348a600646f.pdb",
+      "bytes": 96899072
+    },
+    {
+      "name": "opencode_go_billing-15e6b2af69987e15.pdb",
+      "bytes": 14610432
+    },
+    {
+      "name": "opencode_go_billing-162a99fca5063c50.pdb",
+      "bytes": 11808768
+    },
+    {
+      "name": "opencode_go_billing-1a54170d7c83593d.pdb",
+      "bytes": 12480512
+    },
+    {
+      "name": "opencode_live-6974958275ef2d80.pdb",
+      "bytes": 104607744
+    },
+    {
+      "name": "opencode_live-c8e37d5264d30c4b.pdb",
+      "bytes": 89796608
+    },
+    {
+      "name": "opencode_live-cbfe430f230a033e.pdb",
+      "bytes": 91172864
+    },
+    {
+      "name": "opencode_live-e0436693b87c6da1.pdb",
+      "bytes": 101240832
+    },
+    {
+      "name": "opencode_live-e9a52f2122293e99.pdb",
+      "bytes": 103591936
+    },
+    {
+      "name": "opencode_live-f18db7cb7db0e43c.pdb",
+      "bytes": 87609344
+    },
+    {
+      "name": "opencode_v2-01412322efff561b.pdb",
+      "bytes": 112308224
+    },
+    {
+      "name": "opencode_v2-1e7a34a2350829c7.pdb",
+      "bytes": 93949952
+    },
+    {
+      "name": "opencode_v2-8451e4943b8df76c.pdb",
+      "bytes": 108908544
+    },
+    {
+      "name": "opencode_v2-9bb6e05865a8fef8.pdb",
+      "bytes": 98062336
+    },
+    {
+      "name": "opencode_v2-a3feef064c4d51de.pdb",
+      "bytes": 96071680
+    },
+    {
+      "name": "opencode_v2-b4cc2c94ba0e1b13.pdb",
+      "bytes": 111325184
+    },
+    {
+      "name": "opencode_v2_catalog-04dea046a00c0f16.pdb",
+      "bytes": 62918656
+    },
+    {
+      "name": "opencode_v2_catalog-07fe78a5377682f2.pdb",
+      "bytes": 60755968
+    },
+    {
+      "name": "opencode_v2_catalog-3f3825953c9892e5.pdb",
+      "bytes": 77697024
+    },
+    {
+      "name": "opencode_v2_catalog-6ce12c3a6cc5b88b.pdb",
+      "bytes": 74280960
+    },
+    {
+      "name": "opencode_v2_catalog-b953dd0f7a02ffc8.pdb",
+      "bytes": 60747776
+    },
+    {
+      "name": "opencode_v2_catalog-d0aa807f7d6d4dc2.pdb",
+      "bytes": 64237568
+    },
+    {
+      "name": "opencode_v2_catalog-da3eda4bcd680893.pdb",
+      "bytes": 76795904
+    },
+    {
+      "name": "opencode_version-2f0c92705246228f.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "opencode_version-45334f7a00b0e496.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "opencode_version-4bfeb44288cdc913.pdb",
+      "bytes": 2985984
+    },
+    {
+      "name": "opencode_version-b6c203326aefd2c8.pdb",
+      "bytes": 3002368
+    },
+    {
+      "name": "opencode_version-e0babfd4d4e5f238.pdb",
+      "bytes": 2985984
+    },
+    {
+      "name": "opencode_version-ec039e8eed5f95ca.pdb",
+      "bytes": 3084288
+    },
+    {
+      "name": "passive-431e8f1cfef99273.pdb",
+      "bytes": 20860928
+    },
+    {
+      "name": "passive-dd6f3dd552da4f7a.pdb",
+      "bytes": 25538560
+    },
+    {
+      "name": "passive-eb675599037284f5.pdb",
+      "bytes": 20836352
+    },
+    {
+      "name": "persistent_resume-02e57b056a692861.pdb",
+      "bytes": 138964992
+    },
+    {
+      "name": "persistent_resume-290971deffdc5e5e.pdb",
+      "bytes": 130740224
+    },
+    {
+      "name": "persistent_resume-4964e1ad58e0b73c.pdb",
+      "bytes": 119271424
+    },
+    {
+      "name": "persistent_resume-50eaaddd7c0ffe43.pdb",
+      "bytes": 100306944
+    },
+    {
+      "name": "persistent_resume-6c3c0e0287e74b4c.pdb",
+      "bytes": 137293824
+    },
+    {
+      "name": "persistent_resume-d41ffdada0eabf75.pdb",
+      "bytes": 122351616
+    },
+    {
+      "name": "persistent_resume-e70214d2dff70c45.pdb",
+      "bytes": 142356480
+    },
+    {
+      "name": "persistent_resume-f2b198208e74971b.pdb",
+      "bytes": 116510720
+    },
+    {
+      "name": "process_tree-1ca1a09b40af503b.pdb",
+      "bytes": 82931712
+    },
+    {
+      "name": "process_tree-425163c292b9ef3e.pdb",
+      "bytes": 66998272
+    },
+    {
+      "name": "process_tree-58e0923f06014fc2.pdb",
+      "bytes": 69128192
+    },
+    {
+      "name": "process_tree-987b8bee1614cc89.pdb",
+      "bytes": 83914752
+    },
+    {
+      "name": "process_tree-bbaf370a703da27d.pdb",
+      "bytes": 80506880
+    },
+    {
+      "name": "process_tree-e3f5320dc1176acb.pdb",
+      "bytes": 70512640
+    },
+    {
+      "name": "provider_flags-118c6c8061d3966a.pdb",
+      "bytes": 4304896
+    },
+    {
+      "name": "provider_flags-3c45c19c9770b0b3.pdb",
+      "bytes": 4304896
+    },
+    {
+      "name": "provider_flags-8bd306c4882cb232.pdb",
+      "bytes": 3960832
+    },
+    {
+      "name": "provider_flags-a9ffbd373e620e83.pdb",
+      "bytes": 4304896
+    },
+    {
+      "name": "provider_flags-bb77c345e9ed5e91.pdb",
+      "bytes": 4304896
+    },
+    {
+      "name": "provider_flags-f178d36e3f503569.pdb",
+      "bytes": 3960832
+    },
+    {
+      "name": "refresh_lanes-223c108f21c84e6f.pdb",
+      "bytes": 137007104
+    },
+    {
+      "name": "refresh_lanes-306250b70ae39aa6.pdb",
+      "bytes": 125972480
+    },
+    {
+      "name": "refresh_lanes-5aae4d535527c5e9.pdb",
+      "bytes": 122867712
+    },
+    {
+      "name": "refresh_lanes-6b0e86daf4f2d65c.pdb",
+      "bytes": 140480512
+    },
+    {
+      "name": "refresh_lanes-74b7739767725341.pdb",
+      "bytes": 146280448
+    },
+    {
+      "name": "resume_native-0b13dd6cbea097bc.pdb",
+      "bytes": 113340416
+    },
+    {
+      "name": "resume_native-2a5587c49916cdd7.pdb",
+      "bytes": 98562048
+    },
+    {
+      "name": "resume_native-3378abfa6e1175ec.pdb",
+      "bytes": 100569088
+    },
+    {
+      "name": "resume_native-64f715483716990d.pdb",
+      "bytes": 102608896
+    },
+    {
+      "name": "resume_native-80433c15796b5cf9.pdb",
+      "bytes": 115650560
+    },
+    {
+      "name": "resume_native-8d0eee4e6a9f7470.pdb",
+      "bytes": 116723712
+    },
+    {
+      "name": "resume_native-e3acbd4127977e98.pdb",
+      "bytes": 112947200
+    },
+    {
+      "name": "resumption-20ab380a34cafeeb.pdb",
+      "bytes": 100028416
+    },
+    {
+      "name": "resumption-2295556ca26b976a.pdb",
+      "bytes": 138735616
+    },
+    {
+      "name": "resumption-316a9eb1f336aa12.pdb",
+      "bytes": 116273152
+    },
+    {
+      "name": "resumption-452884b7c65f3b67.pdb",
+      "bytes": 130478080
+    },
+    {
+      "name": "resumption-47ef40f9ffde2e62.pdb",
+      "bytes": 115666944
+    },
+    {
+      "name": "resumption-5faf5a48e1464ecc.pdb",
+      "bytes": 142127104
+    },
+    {
+      "name": "resumption-ab8399b67e83dd41.pdb",
+      "bytes": 119033856
+    },
+    {
+      "name": "resumption-d38e6099ef975633.pdb",
+      "bytes": 122138624
+    },
+    {
+      "name": "resumption-ffb8128f55725ed9.pdb",
+      "bytes": 137031680
+    },
+    {
+      "name": "runtime_sync-01df2aaee0f6df35.pdb",
+      "bytes": 126939136
+    },
+    {
+      "name": "runtime_sync-1019c3d6bbcabcd1.pdb",
+      "bytes": 142692352
+    },
+    {
+      "name": "runtime_sync-616b7e9843351661.pdb",
+      "bytes": 123867136
+    },
+    {
+      "name": "runtime_sync-b8bb6975400996ca.pdb",
+      "bytes": 134131712
+    },
+    {
+      "name": "runtime_sync-c7bfd5e41546ec23.pdb",
+      "bytes": 121081856
+    },
+    {
+      "name": "runtime_sync-d6b0d27723bbab6c.pdb",
+      "bytes": 147189760
+    },
+    {
+      "name": "runtime_sync-e38afb058e71d4ca.pdb",
+      "bytes": 140234752
+    },
+    {
+      "name": "schemars_derive-12c6f816371ea448.pdb",
+      "bytes": 3125248
+    },
+    {
+      "name": "schemars_derive-541501c39f46d071.pdb",
+      "bytes": 3502080
+    },
+    {
+      "name": "scoped_execution-15e8507de0234c4f.pdb",
+      "bytes": 98840576
+    },
+    {
+      "name": "scoped_execution-3e43175cb2418015.pdb",
+      "bytes": 129363968
+    },
+    {
+      "name": "scoped_execution-3e7f5caae4ad173d.pdb",
+      "bytes": 115142656
+    },
+    {
+      "name": "scoped_execution-900912abdddc3d1e.pdb",
+      "bytes": 140963840
+    },
+    {
+      "name": "scoped_execution-ace9c4865f238498.pdb",
+      "bytes": 117977088
+    },
+    {
+      "name": "scoped_execution-b7e75c3606627cdf.pdb",
+      "bytes": 121114624
+    },
+    {
+      "name": "scoped_execution-c6229c19ccf881e9.pdb",
+      "bytes": 137515008
+    },
+    {
+      "name": "scoped_execution-f27042ca2a1b220c.pdb",
+      "bytes": 135876608
+    },
+    {
+      "name": "selection_projection-40fac8ac93340168.pdb",
+      "bytes": 15298560
+    },
+    {
+      "name": "selection_projection-88df75dad43c8853.pdb",
+      "bytes": 18632704
+    },
+    {
+      "name": "selection_projection-b949b3022a8aaf62.pdb",
+      "bytes": 15749120
+    },
+    {
+      "name": "sensitive_options-2ec772627eb0cd3e.pdb",
+      "bytes": 11554816
+    },
+    {
+      "name": "sensitive_options-7431fdf736fd90ff.pdb",
+      "bytes": 14389248
+    },
+    {
+      "name": "sensitive_options-c8e2d5dbcbbef5a8.pdb",
+      "bytes": 11464704
+    },
+    {
+      "name": "service-183f733dc3904864.pdb",
+      "bytes": 115978240
+    },
+    {
+      "name": "service-86cd4c6dc3d2bdda.pdb",
+      "bytes": 118755328
+    },
+    {
+      "name": "service-97817fd37a2c8ba9.pdb",
+      "bytes": 136810496
+    },
+    {
+      "name": "service-aa054816e1e4658d.pdb",
+      "bytes": 121860096
+    },
+    {
+      "name": "service-b530cee081bcf071.pdb",
+      "bytes": 99725312
+    },
+    {
+      "name": "service-c0b35f0e2d11c25f.pdb",
+      "bytes": 138375168
+    },
+    {
+      "name": "service-d31ee5b0a79079f3.pdb",
+      "bytes": 141914112
+    },
+    {
+      "name": "service-ea8642862f634382.pdb",
+      "bytes": 130150400
+    },
+    {
+      "name": "session_auth-02279d24151247c0.pdb",
+      "bytes": 136531968
+    },
+    {
+      "name": "session_auth-04cceb8a2e12a65e.pdb",
+      "bytes": 99536896
+    },
+    {
+      "name": "session_auth-1f03e249ddf6b138.pdb",
+      "bytes": 138219520
+    },
+    {
+      "name": "session_auth-4a175f073f9f97ff.pdb",
+      "bytes": 141651968
+    },
+    {
+      "name": "session_auth-8c67822ff245127c.pdb",
+      "bytes": 115847168
+    },
+    {
+      "name": "session_auth-e658ff774bb5db8b.pdb",
+      "bytes": 118648832
+    },
+    {
+      "name": "session_auth-f25e2b71dd1e80d7.pdb",
+      "bytes": 121679872
+    },
+    {
+      "name": "session_auth-f5ebc02e4b78c916.pdb",
+      "bytes": 130043904
+    },
+    {
+      "name": "session_billing-04cd4c4ebb4403b1.pdb",
+      "bytes": 141619200
+    },
+    {
+      "name": "session_billing-383aa2d12e0298a9.pdb",
+      "bytes": 118566912
+    },
+    {
+      "name": "session_billing-74f09b6611dda576.pdb",
+      "bytes": 115806208
+    },
+    {
+      "name": "session_billing-aad33da8a55e7a75.pdb",
+      "bytes": 138227712
+    },
+    {
+      "name": "session_billing-bd67b92e1b2bed10.pdb",
+      "bytes": 121720832
+    },
+    {
+      "name": "session_billing-c39aa727f7e00024.pdb",
+      "bytes": 136482816
+    },
+    {
+      "name": "session_billing-c91fabaf6c68f0f4.pdb",
+      "bytes": 130011136
+    },
+    {
+      "name": "session_billing-f63836685e9fa1b9.pdb",
+      "bytes": 99495936
+    },
+    {
+      "name": "stdio-28c0b0bb2ed608ad.pdb",
+      "bytes": 131018752
+    },
+    {
+      "name": "stdio-2c530a0a30a60a4f.pdb",
+      "bytes": 149499904
+    },
+    {
+      "name": "stdio-2c75bfa397c1aa25.pdb",
+      "bytes": 150523904
+    },
+    {
+      "name": "stdio-401e6a7968ba5a96.pdb",
+      "bytes": 108531712
+    },
+    {
+      "name": "stdio-c8eaf8cf58708868.pdb",
+      "bytes": 127807488
+    },
+    {
+      "name": "stdio-e47c1610ef0a0710.pdb",
+      "bytes": 154013696
+    },
+    {
+      "name": "store-38cb5a68ed1a46e7.pdb",
+      "bytes": 26365952
+    },
+    {
+      "name": "store-3e3585880be01d41.pdb",
+      "bytes": 23007232
+    },
+    {
+      "name": "store-4f8c8b05eb5d0930.pdb",
+      "bytes": 26308608
+    },
+    {
+      "name": "store-d0133e6b67650818.pdb",
+      "bytes": 22671360
+    },
+    {
+      "name": "streaming-25881095a545e1f9.pdb",
+      "bytes": 162041856
+    },
+    {
+      "name": "streaming-3074c1feea337bb3.pdb",
+      "bytes": 166424576
+    },
+    {
+      "name": "streaming-b1918dca718583c8.pdb",
+      "bytes": 120958976
+    },
+    {
+      "name": "streaming-c41321aa88b4ce68.pdb",
+      "bytes": 140087296
+    },
+    {
+      "name": "streaming-d74d45694e3911c1.pdb",
+      "bytes": 163131392
+    },
+    {
+      "name": "streaming-de28bba534576f9f.pdb",
+      "bytes": 143233024
+    },
+    {
+      "name": "strum_macros-a73f656c84f83a7f.pdb",
+      "bytes": 3461120
+    },
+    {
+      "name": "t3code_surface-449927c7064eb37a.pdb",
+      "bytes": 18984960
+    },
+    {
+      "name": "t3code_surface-53395c54e028d281.pdb",
+      "bytes": 23523328
+    },
+    {
+      "name": "t3code_surface-9c9a8c45edaab007.pdb",
+      "bytes": 19116032
+    },
+    {
+      "name": "upstream_parity-00f9ef19a47e1d65.pdb",
+      "bytes": 21008384
+    },
+    {
+      "name": "upstream_parity-48bc30ea8c335abf.pdb",
+      "bytes": 20983808
+    },
+    {
+      "name": "upstream_parity-779adf55331108e1.pdb",
+      "bytes": 25653248
+    },
+    {
+      "name": "watcher-0b3c6dcdbc89774b.pdb",
+      "bytes": 16240640
+    },
+    {
+      "name": "watcher-b139f3dbe5664805.pdb",
+      "bytes": 16338944
+    },
+    {
+      "name": "watcher-d8882bccaea63204.pdb",
+      "bytes": 19894272
+    },
+    {
+      "name": "windows_implement-f9e1ff829ba51303.pdb",
+      "bytes": 2617344
+    },
+    {
+      "name": "windows_interface-c1528f010ce5ad61.pdb",
+      "bytes": 2797568
+    }
+  ],
+  "deletedFiles": 0,
+  "verification": "Destination enumeration verified664 retained PDBs; source directory contains no PDBs. No recursive directory move or deletion."
+}

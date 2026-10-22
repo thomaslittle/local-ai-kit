@@ -15,7 +15,14 @@ test('Node SDK to native Rust service: real scan, unchanged credentials, no fabr
  await mkdir(join(home,'.codex'));await writeFile(join(home,'.codex','auth.json'),'PRIVATE-SENTINEL');
  const ai=await connect(home);
  try{
-  assert.deepEqual((await ai.snapshot.get()).connections,[]);
+  // This host explicitly authorizes autonomous passive inventory. The first
+  // cached read may precede or follow that scan; it must never imply metadata
+  // permission or reveal the fixture's credential content in either ordering.
+  const initial=await ai.snapshot.get();
+  assert.equal(initial.mode,'live');
+  assert.ok(initial.connections.every(c=>c.auth.state==='unknown'));
+  assert.deepEqual(initial.models,[]);assert.deepEqual(initial.accounts,[]);
+  assert.ok(!JSON.stringify(initial).includes('PRIVATE-SENTINEL'));
   await ai.discovery.refresh({level:'passive'});
   const snapshot=await ai.snapshot.get();
   assert.equal(snapshot.mode,'live');assert.ok(snapshot.connections.some(c=>c.providerId==='codex'));
@@ -46,9 +53,13 @@ test('Node typed catalog pages are served by the actual native helper',async()=>
  const home=await mkdtemp(join(tmpdir(),'lai-paged-'));const ai=await connect(home);
  try{
   assert.ok(ai.handshake.methods.includes('models.page'));
+  const before=await ai.snapshot.get({fields:['revision']});
   const page=await ai.models.page({limit:10});
   assert.deepEqual(page.models,[]);assert.equal(page.nextCursor,null);
-  assert.equal(page.revision,(await ai.snapshot.get({fields:['revision']})).revision);
+  const after=await ai.snapshot.get({fields:['revision']});
+  // The empty fixture has one possible bootstrap publication. Keep revision
+  // validation while permitting that publication between independent reads.
+  assert.ok([before.revision,after.revision].includes(page.revision));
   await assert.rejects(ai.models.page({limit:0}),e=>e.code==='INVALID_REQUEST');
  }finally{await ai.close();await rm(home,{recursive:true,force:true});}
 });

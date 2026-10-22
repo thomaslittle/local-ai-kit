@@ -1,0 +1,32 @@
+{
+  "utc": "2026-10-22T21:11:39.321922+00:00",
+  "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241",
+  "cFreeBytes": 44063408128,
+  "dFreeBytes": 606471041024,
+  "ownedRelocation": {
+    "source": "target/debug/deps/*.pdb",
+    "destination": "D:\\lai-task-7a4b270a-20261022\\retained-symbols",
+    "files": 664,
+    "bytes": 54956384256,
+    "deletedFiles": 0,
+    "verified": "All retained destination names/sizes match original relocation receipt; no source PDB remains"
+  },
+  "budgets": {
+    "fixedRetainedSymbolsBytes": 57982058496,
+    "activeTargetAndTmpBytes": 12884901888,
+    "observedStopThresholdBytes": 11811160064,
+    "cFreeReserveBytes": 17179869184,
+    "dFreeReserveBytes": 68719476736,
+    "scope": "Task-owned D target/tmp plus fixed retained-symbol archive. Existing C target is frozen, preserved baseline; shared compiler cache is excluded and not touched."
+  },
+  "frozenExistingCTargetBytes": 29495540151,
+  "retainedSymbolBytes": 54956384256,
+  "activeDBytes": 7925401017,
+  "processOptions": {
+    "jobs": 2,
+    "incremental": false,
+    "devTestSymbols": false,
+    "rustcWrappers": "disabled per process"
+  },
+  "limits": "One-second observed pressure stop is not a filesystem quota. No attribution of other lanes cleanup/free-space changes. No source, credentials, evidence, worktrees or other-owner targets removed."
+}

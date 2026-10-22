@@ -1,0 +1,342 @@
+[
+  {
+    "run": 1,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-01-1.txt"
+  },
+  {
+    "run": 1,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-01-2.txt"
+  },
+  {
+    "run": 1,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-01-3.txt"
+  },
+  {
+    "run": 2,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-02-1.txt"
+  },
+  {
+    "run": 2,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-02-2.txt"
+  },
+  {
+    "run": 2,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-02-3.txt"
+  },
+  {
+    "run": 3,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-03-1.txt"
+  },
+  {
+    "run": 3,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-03-2.txt"
+  },
+  {
+    "run": 3,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-03-3.txt"
+  },
+  {
+    "run": 4,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-04-1.txt"
+  },
+  {
+    "run": 4,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-04-2.txt"
+  },
+  {
+    "run": 4,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-04-3.txt"
+  },
+  {
+    "run": 5,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-05-1.txt"
+  },
+  {
+    "run": 5,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-05-2.txt"
+  },
+  {
+    "run": 5,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-05-3.txt"
+  },
+  {
+    "run": 6,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-06-1.txt"
+  },
+  {
+    "run": 6,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-06-2.txt"
+  },
+  {
+    "run": 6,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-06-3.txt"
+  },
+  {
+    "run": 7,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-07-1.txt"
+  },
+  {
+    "run": 7,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-07-2.txt"
+  },
+  {
+    "run": 7,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-07-3.txt"
+  },
+  {
+    "run": 8,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-08-1.txt"
+  },
+  {
+    "run": 8,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-08-2.txt"
+  },
+  {
+    "run": 8,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-08-3.txt"
+  },
+  {
+    "run": 9,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-09-1.txt"
+  },
+  {
+    "run": 9,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-09-2.txt"
+  },
+  {
+    "run": 9,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-09-3.txt"
+  },
+  {
+    "run": 10,
+    "step": 1,
+    "command": [
+      "node",
+      "--test",
+      "tests/integration/sdk-native.test.mjs",
+      "tests/integration/broker-native.test.mjs"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-10-1.txt"
+  },
+  {
+    "run": 10,
+    "step": 2,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_sdk_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-10-2.txt"
+  },
+  {
+    "run": 10,
+    "step": 3,
+    "command": [
+      "<workspace>\\.venv-build\\Scripts\\python.exe",
+      "tests/integration/test_broker_native.py",
+      "-v"
+    ],
+    "exitCode": 0,
+    "log": "bootstrap-sdk-repeat-10-3.txt"
+  }
+]

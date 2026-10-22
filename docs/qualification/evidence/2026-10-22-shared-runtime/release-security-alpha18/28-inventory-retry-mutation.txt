@@ -1,0 +1,21 @@
+
+running 1 test
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... FAILED
+
+failures:
+
+failures:
+    inventory_retry_after_is_shared_by_background_and_explicit_refreshes
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.26s
+
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+    Finished `test` profile [unoptimized] target(s) in 9.03s
+     Running tests\refresh_lanes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\refresh_lanes-ddb0f22d85337088.exe)
+
+thread 'inventory_retry_after_is_shared_by_background_and_explicit_refreshes' (70060) panicked at crates\lai-service\tests\refresh_lanes.rs:625:5:
+assertion `left == right` failed: background inventory must respect authoritative Retry-After
+  left: 3
+ right: 2
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

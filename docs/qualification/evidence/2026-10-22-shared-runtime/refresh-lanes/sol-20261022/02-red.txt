@@ -1,0 +1,61 @@
+warning: method `refresh_due_usage` is never used
+   --> crates\lai-service\src\metadata.rs:189:25
+    |
+  9 | impl NativeService {
+    | ------------------ method in this implementation
+...
+189 |     pub(crate) async fn refresh_due_usage(
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `lai-service` (lib) generated 1 warning
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.36s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 4 tests
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... FAILED
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... FAILED
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... FAILED
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... FAILED
+
+failures:
+
+---- supported_usage_refreshes_before_slow_metadata_without_reset_inference stdout ----
+
+thread 'supported_usage_refreshes_before_slow_metadata_without_reset_inference' (18528) panicked at crates\lai-service\tests\refresh_lanes.rs:84:69:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes stdout ----
+
+thread 'a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes' (38884) panicked at crates\lai-service\tests\refresh_lanes.rs:134:5:
+assertion `left == right` failed
+  left: String("ok")
+ right: "metadata_ready"
+
+---- closing_clients_reduces_usage_work_and_stop_cancels_owned_probes stdout ----
+
+thread 'closing_clients_reduces_usage_work_and_stop_cancels_owned_probes' (24124) panicked at crates\lai-service\tests\refresh_lanes.rs:186:5:
+assertion `left == right` failed
+  left: 3
+ right: 2
+
+---- usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer stdout ----
+
+thread 'usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer' (13620) panicked at crates\lai-service\tests\refresh_lanes.rs:163:5:
+assertion `left == right` failed
+  left: String("fresh")
+ right: "stale"
+
+
+failures:
+    a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes
+    closing_clients_reduces_usage_work_and_stop_cancels_owned_probes
+    supported_usage_refreshes_before_slow_metadata_without_reset_inference
+    usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

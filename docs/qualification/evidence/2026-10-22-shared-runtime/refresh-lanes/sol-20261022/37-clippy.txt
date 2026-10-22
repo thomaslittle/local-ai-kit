@@ -1,0 +1,6 @@
+    Checking lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Checking lai-transports v0.1.0-alpha.17 (<repo>\crates\lai-transports)
+    Checking lai-kit v0.1.0-alpha.17 (<repo>\crates\lai-kit)
+    Checking lai-control v0.1.0-alpha.17 (<repo>\crates\lai-control)
+    Checking lai-cli v0.1.0-alpha.17 (<repo>\crates\lai-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.55s

@@ -1,0 +1,45 @@
+
+running 9 tests
+test malformed_versions_duplicate_ids_and_values_fail ... ok
+test omitted_capabilities_are_unsupported_not_enabled ... ok
+test unknown_control_type_is_inspectable_not_editable ... ok
+test preserves_native_ids_groups_and_thought_options ... ok
+test mode_and_unclassified_controls_cannot_disable_permissions_silently ... ok
+test legacy_catalog_is_supported_without_inventing_effort ... ok
+test prefers_config_options_over_legacy_modes_and_models ... ok
+test unknown_upstream_fields_do_not_leak_into_catalog ... ok
+test route_identity_and_configuration_changes_invalidate_selections ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 12 tests
+test actual_acp_exchange_preserves_native_config_without_generation ... ok
+test negotiation_mismatch_is_rejected_before_session ... ok
+test peers_without_prompt_image_support_reject_image_turns_before_prompting ... ok
+test approval_is_scoped_and_rejection_reaches_native_agent ... ok
+test native_stream_arrives_before_prompt_response_and_session_reuses_context ... ok
+test native_cancel_completes_without_prompt_retry ... ok
+test file_callbacks_not_advertised_are_denied ... ok
+test provider_switch_during_turn_fails_without_silent_model_fallback ... ok
+test provider_error_message_reaches_diagnostics_with_secrets_redacted ... ok
+test text_only_session_fails_the_turn_when_the_client_uses_a_native_tool ... ok
+test foreign_session_cannot_inject_output ... ok
+test image_blocks_reach_peers_that_advertise_prompt_image_support ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.20s
+
+
+running 4 tests
+test native_grok_login_line_reports_auth_but_not_unpublished_plan_or_costs ... ok
+test health_probes_disable_the_autoupdater_even_when_the_caller_left_it_off ... ok
+test absent_status_and_auth_failure_are_not_active_accounts ... ok
+test unrelated_output_is_not_preserved ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+    Finished `test` profile [unoptimized] target(s) in 2.40s
+     Running tests\acp_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_catalog-325e36a66e980248.exe)
+     Running tests\acp_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_process-0f45c8d158e13905.exe)
+     Running tests\grok.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\grok-d5895d3c9d5874d9.exe)

@@ -1,0 +1,108 @@
+2026-10-22T21:20:36.6748290Z # Subtest: Node SDK shared broker uses independent credentials and one host survives client close
+2026-10-22T21:20:36.6756120Z ok 1 - Node SDK shared broker uses independent credentials and one host survives client close
+2026-10-22T21:20:36.6778470Z   ---
+2026-10-22T21:20:36.6788310Z   duration_ms: 197.789708
+2026-10-22T21:20:36.6805270Z   type: 'test'
+2026-10-22T21:20:36.6814980Z   ...
+2026-10-22T21:20:36.6840170Z # Subtest: Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+2026-10-22T21:20:36.6860630Z not ok 2 - Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+2026-10-22T21:20:36.6867080Z   ---
+2026-10-22T21:20:36.6867900Z   duration_ms: 92.511125
+2026-10-22T21:20:36.6868950Z   type: 'test'
+2026-10-22T21:20:36.6870460Z   location: '/Users/runner/work/local-ai-kit/local-ai-kit/tests/integration/sdk-native.test.mjs:13:1'
+2026-10-22T21:20:36.6872100Z   failureType: 'testCodeFailure'
+2026-10-22T21:20:36.6874260Z   error: |-
+2026-10-22T21:20:36.6875220Z     Expected values to be strictly deep-equal:
+2026-10-22T21:20:36.6876350Z     + actual - expected
+2026-10-22T21:20:36.6877060Z
+2026-10-22T21:20:36.6877960Z     + [
+2026-10-22T21:20:36.6878790Z     +   {
+2026-10-22T21:20:36.6879480Z     +     accountId: null,
+2026-10-22T21:20:36.6880350Z     +     auth: {
+2026-10-22T21:20:36.6881230Z     +       reason: 'AUTH_NOT_CHECKED_PASSIVE_SCAN',
+2026-10-22T21:20:36.6882330Z     +       state: 'unknown'
+2026-10-22T21:20:36.6883200Z     +     },
+2026-10-22T21:20:36.6883890Z     +     diagnostics: [
+2026-10-22T21:20:36.6884970Z     +       'CONFIGURATION_DIRECTORY_PRESENT'
+2026-10-22T21:20:36.6886060Z     +     ],
+2026-10-22T21:20:36.6890270Z     +     displayName: 'Codex · Default profile',
+2026-10-22T21:20:36.7112850Z     +     id: 'connection_c4091d4eff15012f5d8abae0a374a0f2c8c313bf4e3ce6bc34a011f3d31735ad',
+2026-10-22T21:20:36.7114220Z     +     installationId: 'installation_fc44c67b8be094135c06fb6b3ed1a42184307e5a41d226c5a54739fb17ae747f',
+2026-10-22T21:20:36.7114840Z     +     plan: {
+2026-10-22T21:20:36.7115100Z     +       reason: 'PLAN_NOT_REPORTED',
+2026-10-22T21:20:36.7115430Z     +       state: 'unknown'
+2026-10-22T21:20:36.7115710Z     +     },
+2026-10-22T21:20:36.7116220Z     +     profileId: 'profile_a2a2280ed5fb50d243cc6b8587bfd39bb5db1628b18b41f5780ca96d9cc4b63c',
+2026-10-22T21:20:36.7116830Z     +     providerId: 'codex',
+2026-10-22T21:20:36.7117380Z     +     status: 'configuration_only'
+2026-10-22T21:20:36.7117690Z     +   }
+2026-10-22T21:20:36.7117940Z     + ]
+2026-10-22T21:20:36.7118160Z     - []
+2026-10-22T21:20:36.7118440Z
+2026-10-22T21:20:36.7118720Z   code: 'ERR_ASSERTION'
+2026-10-22T21:20:36.7118970Z   name: 'AssertionError'
+2026-10-22T21:20:36.7119280Z   expected:
+2026-10-22T21:20:36.7119470Z   actual:
+2026-10-22T21:20:36.7119770Z     0:
+2026-10-22T21:20:36.7119970Z       accountId: ~
+2026-10-22T21:20:36.7120220Z       auth:
+2026-10-22T21:20:36.7120670Z         reason: 'AUTH_NOT_CHECKED_PASSIVE_SCAN'
+2026-10-22T21:20:36.7121000Z         state: 'unknown'
+2026-10-22T21:20:36.7121380Z       diagnostics:
+2026-10-22T21:20:36.7121690Z         0: 'CONFIGURATION_DIRECTORY_PRESENT'
+2026-10-22T21:20:36.7122300Z       displayName: 'Codex · Default profile'
+2026-10-22T21:20:36.7122880Z       id: 'connection_c4091d4eff15012f5d8abae0a374a0f2c8c313bf4e3ce6bc34a011f3d31735ad'
+2026-10-22T21:20:36.7130950Z       installationId: 'installation_fc44c67b8be094135c06fb6b3ed1a42184307e5a41d226c5a54739fb17ae747f'
+2026-10-22T21:20:36.7131630Z       plan:
+2026-10-22T21:20:36.7131910Z         reason: 'PLAN_NOT_REPORTED'
+2026-10-22T21:20:36.7132270Z         state: 'unknown'
+2026-10-22T21:20:36.7132800Z       profileId: 'profile_a2a2280ed5fb50d243cc6b8587bfd39bb5db1628b18b41f5780ca96d9cc4b63c'
+2026-10-22T21:20:36.7133230Z       providerId: 'codex'
+2026-10-22T21:20:36.7133600Z       status: 'configuration_only'
+2026-10-22T21:20:36.7133860Z   operator: 'deepStrictEqual'
+2026-10-22T21:20:36.7134130Z   stack: |-
+2026-10-22T21:20:36.7134730Z     TestContext.<anonymous> (file:///Users/runner/work/local-ai-kit/local-ai-kit/tests/integration/sdk-native.test.mjs:18:10)
+2026-10-22T21:20:36.7135440Z     process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-10-22T21:20:36.7136020Z     async Test.run (node:internal/test_runner/test:1054:7)
+2026-10-22T21:20:36.7136520Z     async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+2026-10-22T21:20:36.7137010Z   ...
+2026-10-22T21:20:36.7137490Z # Subtest: Node helper defaults to denied and cannot self-authorize over RPC
+2026-10-22T21:20:36.7138080Z ok 3 - Node helper defaults to denied and cannot self-authorize over RPC
+2026-10-22T21:20:36.7138510Z   ---
+2026-10-22T21:20:36.7138740Z   duration_ms: 39.532875
+2026-10-22T21:20:36.7139000Z   type: 'test'
+2026-10-22T21:20:36.7139170Z   ...
+2026-10-22T21:20:36.7139610Z # Subtest: Node empty-home scan stays empty in live mode
+2026-10-22T21:20:36.7140120Z ok 4 - Node empty-home scan stays empty in live mode
+2026-10-22T21:20:36.7140440Z   ---
+2026-10-22T21:20:36.7140700Z   duration_ms: 78.193583
+2026-10-22T21:20:36.7140910Z   type: 'test'
+2026-10-22T21:20:36.7141130Z   ...
+2026-10-22T21:20:36.7264950Z # Subtest: Node typed catalog pages are served by the actual native helper
+2026-10-22T21:20:36.7266360Z ok 5 - Node typed catalog pages are served by the actual native helper
+2026-10-22T21:20:36.7267700Z   ---
+2026-10-22T21:20:36.7268330Z   duration_ms: 42.394917
+2026-10-22T21:20:36.7269070Z   type: 'test'
+2026-10-22T21:20:36.7269770Z   ...
+2026-10-22T21:20:36.7308740Z 1..5
+2026-10-22T21:20:36.7309460Z # tests 5
+2026-10-22T21:20:36.7310130Z # suites 0
+2026-10-22T21:20:36.7310630Z # pass 4
+2026-10-22T21:20:36.7311420Z # fail 1
+2026-10-22T21:20:36.7311900Z # cancelled 0
+2026-10-22T21:20:36.7312440Z # skipped 0
+2026-10-22T21:20:36.7313060Z # todo 0
+2026-10-22T21:20:36.7314710Z # duration_ms 336.081
+2026-10-22T21:20:36.7647510Z Traceback (most recent call last):
+2026-10-22T21:20:36.7738320Z   File "/Users/runner/work/local-ai-kit/local-ai-kit/scripts/test_native_bridge.py", line 21, in <module>
+2026-10-22T21:20:36.7901140Z     if __name__=='__main__':main()
+2026-10-22T21:20:36.8009030Z                             ^^^^^^
+2026-10-22T21:20:36.8049370Z   File "/Users/runner/work/local-ai-kit/local-ai-kit/scripts/test_native_bridge.py", line 18, in main
+2026-10-22T21:20:36.8052320Z     run(['node','--test','tests/integration/sdk-native.test.mjs','tests/integration/broker-native.test.mjs'],env)
+2026-10-22T21:20:36.8053730Z   File "/Users/runner/work/local-ai-kit/local-ai-kit/scripts/test_native_bridge.py", line 9, in run
+2026-10-22T21:20:36.8054590Z     subprocess.run(command,cwd=ROOT,env=env,check=True,timeout=180)
+2026-10-22T21:20:36.8055530Z   File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 571, in run
+2026-10-22T21:20:36.8056280Z     raise CalledProcessError(retcode, process.args,
+2026-10-22T21:20:36.8057670Z subprocess.CalledProcessError: Command '['node', '--test', 'tests/integration/sdk-native.test.mjs', 'tests/integration/broker-native.test.mjs']' returned non-zero exit status 1.
+2026-10-22T21:20:36.8059190Z Command '['/Library/Frameworks/Python.framework/Versions/3.12/bin/python', 'scripts/test_native_bridge.py']' returned non-zero exit status 1.
+2026-10-22T21:20:36.8165370Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,20 @@
+{
+  "mutation": "Replace inventory shared Retry-After delay with one second",
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "lai-service",
+    "--test",
+    "refresh_lanes",
+    "inventory_retry_after",
+    "--",
+    "--nocapture"
+  ],
+  "exitCode": 101,
+  "assertionDetected": true,
+  "originalSha256": "f8b51c33960abc3a97a4565d17a5a9c09e7b5bd5a8d1d9654b0689c613f424ed",
+  "mutantSha256": "58122fd6f0aeb47950e390b3d8aa13d2b8af2abd48bfa162366537375dc8c0d8",
+  "restoredSha256": "f8b51c33960abc3a97a4565d17a5a9c09e7b5bd5a8d1d9654b0689c613f424ed"
+}

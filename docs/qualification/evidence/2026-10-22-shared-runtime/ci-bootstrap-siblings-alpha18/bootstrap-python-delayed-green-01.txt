@@ -1,0 +1,9 @@
+test_default_policy_denies_discovery (__main__.NativeAsync.test_default_policy_denies_discovery) ... ok
+test_native_discovery_and_revocation (__main__.NativeAsync.test_native_discovery_and_revocation) ... ok
+test_sync_facade_scans_empty_home_through_rust (__main__.NativeSync.test_sync_facade_scans_empty_home_through_rust) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.393s
+
+OK
+{"name": "bootstrap-python-delayed-green-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", "tests/integration/test_sdk_native.py", "-v"], "sourceCommit": "e6792159d0cbe1ebcb34574199dbbcdec2b9ba76", "exitCode": 0, "seconds": 1.903, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 8890777948, "finalActiveBytes": 8890658924, "cFreeBytes": 43661672448, "dFreeBytes": 605113159680, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

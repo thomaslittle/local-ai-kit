@@ -1,0 +1,30 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Accounts ────────────────────────────────────────────────────────────────────────────────────────┐
+│› Codex / Codex · Default profile [unknown -] identity hidden/unknown · plan unknown · configurati│
+│Codex / Codex · Additional profile 2 [unknown -] identity hidden/unknown · plan unknown · configur│
+│Claude Code / Claude Code · Default profile [unknown -] identity hidden/unknown · plan unknown · c│
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│         Code          1 connection(s), 0 authenticated                                           │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────────────────────────┐
+│Refreshed                                                                                         │
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                                           │
+│p probe account · a acknowledge · s snooze · x revoke app                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘

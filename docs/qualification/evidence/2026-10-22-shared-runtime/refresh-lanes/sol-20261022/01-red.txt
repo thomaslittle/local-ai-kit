@@ -1,0 +1,55 @@
+   Compiling tokio v1.53.3
+   Compiling lai-store v0.1.0-alpha.17 (<repo>\crates\lai-store)
+   Compiling hyper v1.11.1
+   Compiling tower v0.5.3
+   Compiling tokio-rustls v0.26.5
+   Compiling lai-runtime v0.1.0-alpha.17 (<repo>\crates\lai-runtime)
+   Compiling tower-http v0.6.11
+   Compiling hyper-util v0.1.20
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling lai-chatgpt-auth v0.1.0-alpha.17 (<repo>\crates\lai-chatgpt-auth)
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+warning: method `refresh_due_usage` is never used
+   --> crates\lai-service\src\metadata.rs:189:25
+    |
+  9 | impl NativeService {
+    | ------------------ method in this implementation
+...
+189 |     pub(crate) async fn refresh_due_usage(
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `lai-service` (lib) generated 1 warning
+error[E0599]: no associated function or constant named `normalize` found for struct `lai_contracts::UsageReading` in the current scope
+  --> crates\lai-service\tests\refresh_lanes.rs:40:58
+   |
+40 |             reading: Observation::reported(UsageReading::normalize(UsageInput {
+   |                                                          ^^^^^^^^^ associated function or constant not found in `lai_contracts::UsageReading`
+   |
+help: there is a method `serialize` with a similar name
+   |
+40 -             reading: Observation::reported(UsageReading::normalize(UsageInput {
+40 +             reading: Observation::reported(UsageReading::serialize(UsageInput {
+   |
+
+error[E0277]: the trait bound `DecimalString: From<&str>` is not satisfied
+  --> crates\lai-service\tests\refresh_lanes.rs:41:53
+   |
+41 |                 unit: "requests".into(), used: used.into(), limit: Some("100".into()),
+   |                                                     ^^^^ the trait `From<&str>` is not implemented for `DecimalString`
+   |
+   = note: required for `&str` to implement `Into<DecimalString>`
+
+error[E0277]: the trait bound `DecimalString: From<&str>` is not satisfied
+  --> crates\lai-service\tests\refresh_lanes.rs:41:79
+   |
+41 |                 unit: "requests".into(), used: used.into(), limit: Some("100".into()),
+   |                                                                               ^^^^ the trait `From<&str>` is not implemented for `DecimalString`
+   |
+   = note: required for `&str` to implement `Into<DecimalString>`
+
+Some errors have detailed explanations: E0277, E0599.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `lai-service` (test "refresh_lanes") due to 3 previous errors

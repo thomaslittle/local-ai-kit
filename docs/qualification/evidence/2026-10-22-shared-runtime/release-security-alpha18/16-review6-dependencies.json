@@ -1,0 +1,248 @@
+{
+  "command": "cargo metadata --locked --offline --filter-platform x86_64-pc-windows-msvc --format-version 1",
+  "mode": "Read-only metadata; no build",
+  "sourceCommit": "cf34b3dc8c9daf9a9684da32c9d49b5ca8871a4e",
+  "packages": [
+    {
+      "name": "aws-lc-rs",
+      "version": "1.18.2",
+      "rustVersion": "1.71.0",
+      "license": "ISC AND (Apache-2.0 OR ISC)",
+      "repository": "https://github.com/aws/aws-lc-rs",
+      "features": [
+        "alloc",
+        "aws-lc-sys",
+        "default",
+        "prebuilt-nasm",
+        "ring-io",
+        "ring-sig-verify"
+      ],
+      "vcs": {
+        "git": {
+          "sha1": "9df497501436596d4da77109217806b3af7f56cb"
+        },
+        "path_in_vcs": "aws-lc-rs"
+      },
+      "archiveSha256": "faac5829c2b74c28f830747e7818ccfb684261b5f48a1118b1e2a13d36dfab13",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "aws-lc-sys",
+      "version": "0.46.0",
+      "rustVersion": "1.71.0",
+      "license": "ISC AND (Apache-2.0 OR ISC) AND Apache-2.0 AND MIT AND BSD-3-Clause AND (Apache-2.0 OR ISC OR MIT) AND (Apache-2.0 OR ISC OR MIT-0)",
+      "repository": "https://github.com/aws/aws-lc-rs",
+      "features": [
+        "prebuilt-nasm"
+      ],
+      "vcs": {
+        "git": {
+          "sha1": "9df497501436596d4da77109217806b3af7f56cb"
+        },
+        "path_in_vcs": "aws-lc-sys"
+      },
+      "archiveSha256": "f1622d8446a2d4b2ce0c7eefc73dd43a99779028d5ee5c2dd8073a658ba8a2bc",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "cmake",
+      "version": "0.1.58",
+      "rustVersion": "1.65",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/cmake-rs",
+      "features": [],
+      "vcs": {
+        "git": {
+          "sha1": "63190697197b34e5e5cd3cabf17da4fcab348bef"
+        },
+        "path_in_vcs": ""
+      },
+      "archiveSha256": "c0f78a02292a74a88ac736019ab962ece0bc380e3f977bf72e376c5d78ff0678",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "dunce",
+      "version": "1.0.5",
+      "rustVersion": null,
+      "license": "CC0-1.0 OR MIT-0 OR Apache-2.0",
+      "repository": "https://gitlab.com/kornelski/dunce",
+      "features": [],
+      "vcs": {
+        "git": {
+          "sha1": "1ee29a83526c9f4c3618e1335f0454c878a54dcf"
+        },
+        "path_in_vcs": ""
+      },
+      "archiveSha256": "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "fs_extra",
+      "version": "1.3.0",
+      "rustVersion": null,
+      "license": "MIT",
+      "repository": "https://github.com/webdesus/fs_extra",
+      "features": [],
+      "vcs": {
+        "git": {
+          "sha1": "1754296075e7cc4a25feaa876a3f4b9daccc0b98"
+        }
+      },
+      "archiveSha256": "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "jobserver",
+      "version": "0.1.35",
+      "rustVersion": "1.85",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/jobserver-rs",
+      "features": [],
+      "vcs": {
+        "git": {
+          "sha1": "85ba04e3cf89e5c10e7b82de69f6be6dff9d3ec3"
+        },
+        "path_in_vcs": ""
+      },
+      "archiveSha256": "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "jsonwebtoken",
+      "version": "10.3.0",
+      "rustVersion": "1.85.0",
+      "license": "MIT",
+      "repository": "https://github.com/Keats/jsonwebtoken",
+      "features": [
+        "aws-lc-rs",
+        "aws_lc_rs",
+        "default",
+        "pem",
+        "simple_asn1",
+        "use_pem"
+      ],
+      "vcs": {
+        "git": {
+          "sha1": "abbc3076742c4161347bc6b8bf4aa5eb86e1dc01"
+        },
+        "path_in_vcs": ""
+      },
+      "archiveSha256": "0529410abe238729a60b108898784df8984c87f6054c9c4fcacc47e4803c1ce1",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "rand_core",
+      "version": "0.6.4",
+      "rustVersion": null,
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-random/rand",
+      "features": [
+        "alloc",
+        "getrandom",
+        "std"
+      ],
+      "vcs": {
+        "git": {
+          "sha1": "89a1336b934c68ddce548127c6f8afd910b35a18"
+        },
+        "path_in_vcs": "rand_core"
+      },
+      "archiveSha256": "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "rand_core",
+      "version": "0.10.1",
+      "rustVersion": "1.85",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-random/rand_core",
+      "features": [],
+      "vcs": {
+        "git": {
+          "sha1": "5cd7df496d0bff1d95534ac8b66a2610f5bf7808"
+        },
+        "path_in_vcs": ""
+      },
+      "archiveSha256": "63b8176103e19a2643978565ca18b50549f6101881c443590420e4dc998a3c69",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "signature",
+      "version": "2.2.0",
+      "rustVersion": "1.60",
+      "license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/RustCrypto/traits/tree/master/signature",
+      "features": [
+        "alloc",
+        "std"
+      ],
+      "vcs": {
+        "git": {
+          "sha1": "5adcd4819b380b4aaec2b57c6bf3f2239a109060"
+        },
+        "path_in_vcs": "signature"
+      },
+      "archiveSha256": "77549399552de45a898a580c1b41d445bf730df867cc44e6c0233bbc4b8329de",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "untrusted",
+      "version": "0.7.1",
+      "rustVersion": null,
+      "license": "ISC",
+      "repository": "https://github.com/briansmith/untrusted",
+      "features": [],
+      "vcs": {
+        "git": {
+          "sha1": "c3a0e38470aa35565764a68c65b75b9e2ffd732d"
+        }
+      },
+      "archiveSha256": "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "name": "untrusted",
+      "version": "0.9.0",
+      "rustVersion": null,
+      "license": "ISC",
+      "repository": "https://github.com/briansmith/untrusted",
+      "features": [],
+      "vcs": {
+        "git": {
+          "sha1": "89c8b8415f692d3803d183fc5fbf9ec08a6adcf4"
+        }
+      },
+      "archiveSha256": "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ]
+    }
+  ]
+}

@@ -14,6 +14,9 @@ use std::{sync::Arc, time::Duration};
 const HELP: &str = "Local AI Kit - native discovery and SDK helper
 Usage:
   local-ai-kit serve --ipc LOCAL_ADDRESS [--allow-passive-discovery]
+  local-ai-kit serve --ipc LOCAL_ADDRESS --independent (--token-file ABSOLUTE_PATH | --grants-file ABSOLUTE_PATH)
+      [--admin-token-file ABSOLUTE_PATH] [--idle-timeout SECONDS] [--allow-passive-discovery]
+      [--os-notifications (requires an os-notifications build)]
   local-ai-kit connect --ipc LOCAL_ADDRESS
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
@@ -31,9 +34,16 @@ Usage:
   --billing-declarations ABSOLUTE_JSON declares billing for discovered connections whose provider leaves it unknown; recorded as user-supplied evidence, never verification.
   local-ai-kit --version
 
-Metadata observations are kept in the state directory (metadata-cache.json, no account
-identity, owner-only permissions) and reloaded after a restart as stale-while-revalidate
-data; --no-metadata-cache turns that off.
+Metadata observations are kept in the broker-owned state directory (state.db,
+no account identity, owner-only permissions) and the last ready snapshot is
+reloaded after a restart as stale-while-revalidate data; --no-metadata-cache
+turns that off. A parent-owned broker stops when its trusted control input
+closes. An --independent broker owns its lifetime, publishes a reusable
+owner-only token file for approved applications, and can stop after an idle
+timeout. --grants-file instead mints a distinct reusable credential and stable
+app identity for each manifest entry, so ordinary applications never share the
+owner credential or each other's account scope; an administrator can revoke one
+application and its grant live. It never silently replaces a live listener.
 Serving never scans on startup unless the host passes --warm-metadata (HTTP only,
 with --allow-passive-discovery and a metadata provider grant): the helper then runs
 one passive scan and the already-permitted metadata checks in the background, so
@@ -151,13 +161,21 @@ async fn execute(args: Args) -> Result<()> {
         state_dir,
         chatgpt,
     );
-    if matches!(args.action, Action::Serve)
-        && !args.metadata_providers.is_empty()
-        && !args.no_metadata_cache
-    {
+    #[cfg(feature = "os-notifications")]
+    if args.os_notifications {
+        service.install_os_notifications();
+    }
+    service.enable_autonomous_refresh(args.metadata_providers.clone());
+    service.enable_inventory_refresh(args.allow_passive);
+    if matches!(args.action, Action::Serve) && !args.no_metadata_cache {
         if let Some(directory) = host::default_state_dir(args.home.as_deref()) {
-            service.enable_metadata_cache(directory.join("metadata-cache.json"));
+            if let Err(error) = service.enable_state_store(directory.join("state.db")) {
+                eprintln!("storage: {error}");
+            }
         }
+    }
+    if matches!(args.action, Action::Serve) {
+        service.start_background_tasks();
     }
     let policy = host::policy(&args);
     let grant = host::execution_grant(&args);
@@ -180,7 +198,24 @@ async fn execute(args: Args) -> Result<()> {
             Ok(())
         }
         Action::Serve if args.ipc.is_some() => {
-            broker_cli::serve(service, args.ipc.as_deref().unwrap(), policy, grant).await
+            let lifetime = if args.independent {
+                broker_cli::Lifetime::Independent {
+                    token_file: args.token_file.clone(),
+                    admin_token_file: args.admin_token_file.clone(),
+                    grants_file: args.grants_file.clone(),
+                    idle_timeout: args.idle_timeout_seconds.map(Duration::from_secs),
+                }
+            } else {
+                broker_cli::Lifetime::Parent
+            };
+            broker_cli::serve(
+                service,
+                args.ipc.as_deref().unwrap(),
+                policy,
+                grant,
+                lifetime,
+            )
+            .await
         }
         Action::Serve if args.http => {
             if args.warm_metadata {

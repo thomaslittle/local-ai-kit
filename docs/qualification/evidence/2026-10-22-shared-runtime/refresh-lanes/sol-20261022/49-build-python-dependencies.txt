@@ -1,0 +1,40 @@
+Collecting setuptools==84.0.0 (from -r scripts/requirements-build.txt (line 1))
+  Using cached setuptools-84.0.0-py3-none-any.whl.metadata (6.6 kB)
+Collecting wheel==0.48.0 (from -r scripts/requirements-build.txt (line 2))
+  Downloading wheel-0.48.0-py3-none-any.whl.metadata (2.3 kB)
+Collecting psutil==7.2.2 (from -r scripts/requirements-build.txt (line 3))
+  Downloading psutil-7.2.2-cp37-abi3-win_amd64.whl.metadata (22 kB)
+Collecting playwright==1.63.0 (from -r scripts/requirements-build.txt (line 4))
+  Downloading playwright-1.63.0-py3-none-win_amd64.whl.metadata (3.3 kB)
+Collecting packaging>=24.0 (from wheel==0.48.0->-r scripts/requirements-build.txt (line 2))
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pyee<14,>=13 (from playwright==1.63.0->-r scripts/requirements-build.txt (line 4))
+  Downloading pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.63.0->-r scripts/requirements-build.txt (line 4))
+  Downloading greenlet-3.5.6-cp313-cp313-win_amd64.whl.metadata (3.9 kB)
+Collecting typing-extensions (from pyee<14,>=13->playwright==1.63.0->-r scripts/requirements-build.txt (line 4))
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Using cached setuptools-84.0.0-py3-none-any.whl (818 kB)
+Downloading wheel-0.48.0-py3-none-any.whl (33 kB)
+Downloading psutil-7.2.2-cp37-abi3-win_amd64.whl (137 kB)
+Downloading playwright-1.63.0-py3-none-win_amd64.whl (38.6 MB)
+   ---------------------------------------- 38.6/38.6 MB 10.4 MB/s  0:00:03
+Downloading greenlet-3.5.6-cp313-cp313-win_amd64.whl (324 kB)
+Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Installing collected packages: typing-extensions, setuptools, psutil, packaging, greenlet, wheel, pyee, playwright
+  Attempting uninstall: setuptools
+    Found existing installation: setuptools 80.9.0
+    Uninstalling setuptools-80.9.0:
+      Successfully uninstalled setuptools-80.9.0
+  Attempting uninstall: psutil
+    Found existing installation: psutil 7.0.0
+    Uninstalling psutil-7.0.0:
+      Successfully uninstalled psutil-7.0.0
+  Attempting uninstall: wheel
+    Found existing installation: wheel 0.45.1
+    Uninstalling wheel-0.45.1:
+      Successfully uninstalled wheel-0.45.1
+
+Successfully installed greenlet-3.5.6 packaging-26.3 playwright-1.63.0 psutil-7.2.2 pyee-13.0.1 setuptools-84.0.0 typing-extensions-4.16.0 wheel-0.48.0

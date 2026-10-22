@@ -1,0 +1,24 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics           │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Overview ────────────────────────────────────────────────────────────────────┐
+│Revision       projection_8a58469faf71d42a42ecc59b9982819556ebd8c7a306037c930b│
+│Journal cursor f091f5a9bc0e129fd05559da99183751:2                             │
+│Observed       2026-10-22T13:11:37.452Z                                       │
+│Mode           Live                                                           │
+│Runtime        ok (-)                                                         │
+│Storage        available                                                      │
+│Hydrated       no                                                             │
+│Health         Healthy / 0 open                                               │
+│Inventory      2 providers, 3 connections, 0 authenticated, 3 routes, 0 models│
+│Connected apps 1                                                              │
+│                                                                              │
+│Providers                                                                     │
+│  Codex                2 connection(s), 0 authenticated                       │
+│  Claude Code          1 connection(s), 0 authenticated                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────┐
+│Refreshed                                                                     │
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                       │
+│p probe account · a acknowledge · s snooze · x revoke app                     │
+└──────────────────────────────────────────────────────────────────────────────┘

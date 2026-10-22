@@ -21,6 +21,12 @@ pub struct Args {
     pub no_metadata_cache: bool,
     pub http: bool,
     pub ipc: Option<String>,
+    pub independent: bool,
+    pub token_file: Option<PathBuf>,
+    pub admin_token_file: Option<PathBuf>,
+    pub grants_file: Option<PathBuf>,
+    pub idle_timeout_seconds: Option<u64>,
+    pub os_notifications: bool,
     pub port: u16,
     pub assets: Option<PathBuf>,
     pub allow_execution: bool,
@@ -80,6 +86,12 @@ impl Args {
             no_metadata_cache: false,
             http: false,
             ipc: None,
+            independent: false,
+            token_file: None,
+            admin_token_file: None,
+            grants_file: None,
+            idle_timeout_seconds: None,
+            os_notifications: false,
             port: 4499,
             assets: None,
             allow_execution: false,
@@ -144,6 +156,31 @@ impl Args {
                             .and_then(|s| s.into_string().ok())
                             .ok_or_else(invalid)?,
                     )
+                }
+                "--independent" if matches!(args.action, Action::Serve) => args.independent = true,
+                "--token-file" if matches!(args.action, Action::Serve) => {
+                    args.token_file = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--admin-token-file" if matches!(args.action, Action::Serve) => {
+                    args.admin_token_file = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--grants-file" if matches!(args.action, Action::Serve) => {
+                    args.grants_file = Some(absolute(input.next().ok_or_else(invalid)?)?)
+                }
+                "--os-notifications" if matches!(args.action, Action::Serve) => {
+                    args.os_notifications = true
+                }
+                "--idle-timeout" if matches!(args.action, Action::Serve) => {
+                    let seconds = input
+                        .next()
+                        .and_then(|value| {
+                            value.to_str().and_then(|value| value.parse::<u64>().ok())
+                        })
+                        .ok_or_else(invalid)?;
+                    if !(5..=86_400).contains(&seconds) {
+                        return Err(invalid());
+                    }
+                    args.idle_timeout_seconds = Some(seconds);
                 }
                 "--allow-passive-discovery" if matches!(args.action, Action::Serve) => {
                     args.allow_passive = true
@@ -281,6 +318,15 @@ impl Args {
                     || args.allow_native_policy
                     || args.allow_paid
                     || args.workspace.is_some()))
+            || (args.independent
+                && (args.ipc.is_none()
+                    || (args.token_file.is_none() && args.grants_file.is_none())))
+            || (!args.independent && args.admin_token_file.is_some())
+            || (!args.independent && args.grants_file.is_some())
+            || (!args.independent
+                && (args.token_file.is_some() || args.idle_timeout_seconds.is_some()))
+            || (args.independent && (args.http || stdio))
+            || (args.os_notifications && !cfg!(feature = "os-notifications"))
         {
             return Err(invalid());
         }
@@ -506,6 +552,56 @@ mod additional_provider_tests {
         assert!(args.native_profiles.is_none());
         assert!(!args.allow_execution);
         assert!(parse(&["serve", "--stdio", "--chatgpt-app-name", "bad name"]).is_err());
+    }
+    #[test]
+    fn independent_grants_replace_the_shared_owner_token_and_need_independent_mode() {
+        let parse = |args: &[&str]| Args::parse(args.iter().map(OsString::from));
+        let grants = std::env::temp_dir().join("lai-independent-grants.json");
+        let grants = grants.to_str().unwrap();
+        let args = parse(&[
+            "serve",
+            "--ipc",
+            "lai-grants-test",
+            "--independent",
+            "--grants-file",
+            grants,
+            "--admin-token-file",
+            std::env::temp_dir()
+                .join("lai-admin-token.json")
+                .to_str()
+                .unwrap(),
+        ])
+        .unwrap();
+        assert_eq!(
+            args.grants_file.as_deref(),
+            Some(std::path::Path::new(grants))
+        );
+        assert!(args.token_file.is_none());
+        assert!(
+            parse(&[
+                "serve",
+                "--ipc",
+                "lai-grants-test",
+                "--independent",
+                "--allow-passive-discovery",
+            ])
+            .is_err()
+        );
+        assert!(
+            parse(&[
+                "serve",
+                "--ipc",
+                "lai-grants-test",
+                "--independent",
+                "--token-file",
+                std::env::temp_dir()
+                    .join("lai-owner-token.json")
+                    .to_str()
+                    .unwrap(),
+            ])
+            .is_ok()
+        );
+        assert!(parse(&["serve", "--ipc", "lai-grants-test", "--grants-file", grants,]).is_err());
     }
     #[test]
     fn executable_only_provider_is_repeatable_and_rejects_unknown_or_conflicting_grants() {

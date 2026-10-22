@@ -1,0 +1,62 @@
+[
+  {
+    "run": 1,
+    "exitCode": 0,
+    "seconds": 19.05,
+    "log": "29-refresh-repeat-01.txt"
+  },
+  {
+    "run": 2,
+    "exitCode": 0,
+    "seconds": 2.466,
+    "log": "29-refresh-repeat-02.txt"
+  },
+  {
+    "run": 3,
+    "exitCode": 0,
+    "seconds": 2.505,
+    "log": "29-refresh-repeat-03.txt"
+  },
+  {
+    "run": 4,
+    "exitCode": 0,
+    "seconds": 3.029,
+    "log": "29-refresh-repeat-04.txt"
+  },
+  {
+    "run": 5,
+    "exitCode": 0,
+    "seconds": 2.998,
+    "log": "29-refresh-repeat-05.txt"
+  },
+  {
+    "run": 6,
+    "exitCode": 0,
+    "seconds": 3.264,
+    "log": "29-refresh-repeat-06.txt"
+  },
+  {
+    "run": 7,
+    "exitCode": 0,
+    "seconds": 2.448,
+    "log": "29-refresh-repeat-07.txt"
+  },
+  {
+    "run": 8,
+    "exitCode": 0,
+    "seconds": 2.835,
+    "log": "29-refresh-repeat-08.txt"
+  },
+  {
+    "run": 9,
+    "exitCode": 0,
+    "seconds": 2.872,
+    "log": "29-refresh-repeat-09.txt"
+  },
+  {
+    "run": 10,
+    "exitCode": 0,
+    "seconds": 2.824,
+    "log": "29-refresh-repeat-10.txt"
+  }
+]

@@ -83,6 +83,7 @@ pub fn parse_metadata(
                 "Connection-scoped native account/read; no cross-client linking".into(),
                 source.clone(),
             ),
+            scopes: vec![],
         });
     }
     if kind == "chatgpt" {
@@ -178,6 +179,7 @@ pub fn parse_managed_metadata(
                 "Verified SIWC ID token subject and issued client registration".into(),
                 source.clone(),
             ),
+            scopes: vec![],
         }),
         models: models::parse_models(route, &account_id, native_models, &source)?,
         additional_routes: vec![],

@@ -1,0 +1,2 @@
+    Checking lai-contracts v0.1.0-alpha.18 (<repo>\crates\lai-contracts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.51s

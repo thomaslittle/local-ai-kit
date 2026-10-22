@@ -1,0 +1,24 @@
+┌Local AI Kit · Control Center─────────────────────────────────────────────────┐
+│ Overview │ Accounts │ Models │ Usage │ Issues │ Apps │ Diagnostics           │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Diagnostics ─────────────────────────────────────────────────────────────────┐
+│  OpenCode · local_http · metadata=true text=true qualification=See per-operat│
+│  Muse Code · native_client · metadata=true text=true qualification=See per-op│
+│  Cursor · native_client · metadata=true text=false qualification=See per-oper│
+│  GitHub Copilot · native_client · metadata=false text=false qualification=See│
+│  Pi · native_client · metadata=false text=false qualification=See per-operati│
+│  Ollama · local_http · metadata=true text=true qualification=See per-operatio│
+│  LM Studio · local_http · metadata=true text=true qualification=See per-opera│
+│  openai_api · explicit_api · metadata=true text=true qualification=Local prot│
+│  anthropic_api · explicit_api · metadata=true text=true qualification=Local p│
+│  gemini_api · explicit_api · metadata=true text=true qualification=Local prot│
+│  xai_api · explicit_api · metadata=true text=true qualification=Local protoco│
+│  compatible_api · explicit_api · metadata=true text=true qualification=Local │
+│                                                                              │
+│Diagnostics are contract-filtered and redacted. No provider token, cookie, or │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│Tab switch · ↑/↓ select · r refresh · e export · q quit                       │
+│p probe account · a acknowledge · s snooze · x revoke app                     │
+└──────────────────────────────────────────────────────────────────────────────┘

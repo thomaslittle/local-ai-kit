@@ -1,0 +1,44 @@
+
+running 7 tests
+test normalized_usage_does_not_duplicate_legacy_buckets ... ok
+test private_initialization_fields_and_secrets_do_not_escape ... ok
+test unknown_or_metered_auth_is_not_a_subscription ... ok
+test distinct_profile_same_email_is_not_linked ... ok
+test duplicate_model_values_and_invalid_usage_fail ... ok
+test reported_plan_native_ids_and_effort_are_preserved ... ok
+test unavailable_usage_is_not_zero ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+test claude_catalog_reports_image_input ... ok
+test metadata_control_never_needs_a_user_prompt ... ok
+test effort_change_requires_a_new_native_session ... ok
+test text_only_mode_denies_unexpected_native_tool_requests ... ok
+test cancellation_terminates_without_restarting_native_turn ... ok
+test native_stream_and_whole_message_do_not_duplicate_text ... ok
+test images_are_sent_as_base64_content_blocks_before_the_text ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.15s
+
+   Compiling cc v1.4.7
+   Compiling windows-sys v0.60.2
+   Compiling notify v8.2.0
+   Compiling ring v0.17.14
+   Compiling libsqlite3-sys v0.30.1
+   Compiling file-id v0.2.3
+   Compiling tokio-util v0.7.19
+   Compiling rustls v0.23.45
+   Compiling lai-platform v0.1.0-alpha.18 (<workspace>\crates\lai-platform)
+   Compiling rusqlite v0.32.1
+   Compiling rustls-webpki v0.103.15
+   Compiling lai-discovery v0.1.0-alpha.18 (<workspace>\crates\lai-discovery)
+   Compiling tokio-stream v0.1.19
+   Compiling tokio-rustls v0.26.5
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+    Finished `test` profile [unoptimized] target(s) in 21.01s
+     Running tests\claude_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\claude_metadata-2df2e309981be075.exe)
+     Running tests\claude_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\claude_process-f73c85812ea8f3b4.exe)

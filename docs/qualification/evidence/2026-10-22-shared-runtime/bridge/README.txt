@@ -1,0 +1,1 @@
+The first shared_bridge log is a retained opt-in skip because REMOTIF_AI_KIT_TEST_BINARY was not set. The second log is the real cross-process run with that variable set. Neither run used a live account, TV, LAN listener, inference, or desktop notification.

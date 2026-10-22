@@ -1,4 +1,125 @@
-# Execution ledger — Local AI Kit
+# Execution ledger - Local AI Kit
+
+## October 22 native SDK bootstrap CI follow-up (release held)
+
+Clean source `aeecd15` passes Windows artifact provenance/licenses/SBOM,
+native/npm/Python/React consumers and all enforced 60-second performance targets.
+Latest-head Ubuntu and React Doctor CI passed; macOS executed and failed an
+SDK fixture that assumed the first cached snapshot preceded host-authorized
+background inventory. A delayed local fixture reproduces that failure.
+
+The test now accepts either valid startup ordering while requiring unknown
+auth, no models/accounts and no sentinel disclosure. Existing explicit refresh,
+credential equality, concurrent reads, revocation and default denial remain.
+After removing the diagnostic delay, Node 5/5 and Python 4/4 bridge checks pass.
+R8 accepts the sole source diff with no findings. Production/R6/R7 source hashes
+are unchanged. New source provenance and CI readiness remain gates; release is
+held. See [the receipts and limits](../qualification/evidence/2026-10-22-shared-runtime/ci-bootstrap-alpha18/README.md).
+
+The sibling Python first-read assertion is now aligned too. A combined rerun
+also exposed a page-revision comparison across a bootstrap publication; the
+empty fixture now brackets the page with snapshots and retains generation
+equality at either boundary. Both failures are retained. R9 accepts both test
+diffs with no findings; the final bridge passes Node 5/5 plus Python 4/4, and ten
+consecutive combined runs pass 90 executions with zero failures/retries. No
+production code or timing retry changed. See [the sibling receipts](../qualification/evidence/2026-10-22-shared-runtime/ci-bootstrap-siblings-alpha18/README.md).
+
+## October 22 alpha18 security follow-up (qualification in progress)
+
+After refresh source `cf34b3d` was pushed, default-branch dependency alerts
+identified JWT claim validation and two CSS build parsers. The signed-token
+fixture failed before the claim change; requiring `exp`, `iss`, `aud` and `sub`
+passes. The candidate pins jsonwebtoken 10.3.0 with the ordinary AWS-LC backend,
+source-map-js 1.2.2 and selector parser 7.1.6. Fresh npm installation and audit
+pass with zero vulnerabilities. Independent R6 approves the scoped changes;
+its single guarded Windows auth execution passes 21 tests. No OAuth grant,
+scope or provider account was enabled.
+
+The first isolated-target full run retained a Retry-After fixture failure.
+A deliberately delayed source reproduces that failure as a virtual timeout
+before `RateLimited` delivery. The fixture now holds fake time until the public
+issue proves publication. Its 25 library and 20 integration tests pass, and R7
+accepts the ordering without a Critical or Important finding. Production cache
+and supervisor sources are unchanged from R5. The full Windows rerun passes
+all 24 commands (638 Rust tests plus SDK, generation, integration, browser,
+accessibility and React Doctor checks). The Retry-After mutation fails at the
+intended assertion; restored source then passes ten combined refresh runs,
+450 executions without failures or retries. Formatting, strict Clippy, 638
+all-feature Rust tests, all eight adapter conformance groups and the real C#
+native consumer pass. Qualification peaks at 8.03 GiB active output with no
+pressure stop. Exact-source artifact and remote-readiness checks remain gates;
+release remains held.
+
+Resource recovery relocated exactly 664 owned generated PDBs, 54,956,384,256
+bytes (51.182 GiB), to retained task-owned D: storage; zero files were deleted.
+The unique D: lane has a 54 GiB retained-symbol budget and 12 GiB active-output
+budget, with an 11 GiB observed stop threshold, C:/D: free-space reserves, two
+jobs, no symbols/incremental output and no Rust compiler wrapper per process.
+The initial run inherited global kache output outside its measured target;
+the guard now disables that wrapper without changing global configuration or
+removing shared cache entries. All other targets and live processes are preserved.
+See [the evidence and limits](../qualification/evidence/2026-10-22-shared-runtime/release-security-alpha18/README.md).
+
+## October 22 Sol refresh lanes (local qualification; release held)
+
+Preserved the interrupted `cache.rs` / `metadata.rs` edits; the failed `lib.rs`
+tool call had not applied. Implemented independently admitted inventory,
+metadata and authoritative usage/reset lanes, active/idle interest, bounded fair
+queues, shared coalescing/backoff and owned cancellation. Inventory opt-in is
+separate from provider grants. Timers retain stale readings and quota warnings;
+they never infer a reset or recovery.
+
+Five independent review rounds drove failure-first fixes for journal scope,
+atomic success/error generations, fairness beyond 64 sources, failed-SQLite
+scan staging, and cancellation under the commit mutex. Round 4 accepted the
+runtime but retained a nondeterministic restart-test failure. The test now waits
+for cache flight retirement/publication before advancing fake time. Round 5
+approved the ordering and ran ten default combined suites: 25 library plus 20
+integration tests each, 450 executions, zero failures or retries. No production
+code changed after round 4. Earlier failures and passing retries remain visible.
+
+The alpha18 full `verify.py --profile all` passes all 24 commands on Windows:
+638 Rust tests, 28 selector tests, 68 TypeScript SDK tests, 27 Python SDK tests,
+13 React tests, native bridge/generation/packaging checks, 16 Python browser
+checks, 16 Node browser checks, 34 accessibility checks and React Doctor with no
+issues. All-target/all-feature workspace tests also pass (638 passed, zero failed) in 62. Formatting
+and strict all-target/all-feature Clippy pass. Optimized binaries compile. The
+C# real native HTTP consumer passes using the checksum-verified workspace-local
+.NET 8 SDK with an empty NuGet source configuration. Logs and source hashes are under
+`docs/qualification/evidence/2026-10-22-shared-runtime/refresh-lanes/sol-20261022/`.
+The initial missing-Playwright dependency error, offline npm cache miss, and
+one Windows error32 temporary-directory rename failure are retained. Pinned
+local dependencies were installed; the unchanged six-test resumption retry and
+full rerun pass. The interfering handle was not identified; no antivirus cause
+is asserted and no retry/suppression was added to the product or fixture.
+
+Three real guard mutations previously failed assertions, were restored
+byte-for-byte, and passed. The final default offline scan reports 15 inspected matches: an existing
+synthetic OAuth RSA fixture, two generated type declarations and 12 independently
+recomputed source checksums. The earlier scan 46 reported only the first three. Dispositions retain hashes and reasons; the scanner exit remains
+1 and no ignore rule was added. No signing credential was generated or used.
+
+Current Codex/Claude/Muse adapters provide only profile-bound full operations
+and connection-scoped pools with unknown cross-profile sharing. Coalesce all
+verified routes/apps in that connection; never merge similar identities.
+Verified cross-connection pool operations, actual OS suspend/resume and live
+provider accounts remain unqualified. Sleep/wall-clock fixtures pass. No live
+credential, paid inference, GUI input, audio or OS notification was used here.
+
+Alpha18 version preparation updates Rust/npm packages and the previously
+lagging Python wheel (`0.1.0a11` to `0.1.0a18`); no dependency upgrade was added.
+Latest published release remains `v0.1.0-alpha.17`. Exact-source CI, clean Windows
+release artifact/checksums and consumer release pins remain gates; no merge or
+publication has occurred. Kit/Remotif target main; Crntly targets only
+`feature/gpui-native-rust-studio`. Keep existing GUI recovery/scope/draft receipts
+and consumer changes intact. No parity, bot or rendering work is included.
+Kit owns no GUI lock or Remotif target directory.
+
+## Shared runtime - October 22, 2026
+
+Branch `feat/shared-runtime` (PR [#28](https://github.com/thomaslittle/local-ai-kit/pull/28)), from `556e35e`, merged with `origin/main` after dependency maintenance. Added `lai-store` SQLite state, atomic snapshot/metadata/journal revisions, epoch cursors and bounded replay, persistent health/issues, one notification coordinator, explicit independent broker lifetime with owner/admin token descriptors and stale-endpoint recovery, a public-API-only native Rust control center, Ed25519 update verification/staging/activation/rollback, inventory SDK subscriptions, and repaired upstream classification/report-only CI. Remotif and Crntly shared-broker integrations are in their own worktrees; both authenticated to a real broker process on Windows.
+
+Verified on Windows: 598 Rust tests, 68 TypeScript SDK, 13 React, 27 Python; CI run [39743883610](https://github.com/thomaslittle/local-ai-kit/actions/runs/39743883610) passed Ubuntu/macOS/Windows at code commit `6026590`; `cargo fmt` and workspace clippy; real independent broker/control-center/app-revocation E2E; Remotif and Crntly opt-in cross-process broker tests; release debug bundle and unsigned single-executable update manifest. Deliberately unclaimed: full GUI E2E for both consumers, live provider accounts, signed/published/installed updates, Linux/macOS shared-runtime execution, and per-app isolation in independent mode. See [the acceptance ledger](../qualification/2026-10-22-shared-runtime.md).
 
 ## Readiness review — September 27, 2026
 

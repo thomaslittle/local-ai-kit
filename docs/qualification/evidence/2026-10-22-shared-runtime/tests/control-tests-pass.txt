@@ -1,0 +1,32 @@
+   Compiling lai-control v0.1.0-alpha.17 (C:\Users\User\Sites\local-ai-kit\crates\lai-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.26s
+     Running unittests src\lib.rs (target\debug\deps\lai_control-41a12f5ce4a9a236.exe)
+
+running 5 tests
+test tests::issue_view_exposes_actionable_remediation_without_connection_secrets ... ok
+test tests::destructuring_export_removes_secret_shaped_keys_at_any_depth ... ok
+test tests::issue_and_usage_views_keep_unknown_distinct_from_zero ... ok
+test tests::overview_shows_revision_health_and_explicit_staleness ... ok
+test tests::diagnostics_document_carries_provenance_and_no_secrets ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (target\debug\deps\local_ai_kit_control-6d37784c4a1f39dc.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\e2e.rs (target\debug\deps\e2e-002ea13ffbea5e61.exe)
+
+running 1 test
+test the_control_center_uses_only_the_public_authenticated_api ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Doc-tests lai_control
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

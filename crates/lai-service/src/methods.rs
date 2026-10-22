@@ -2,7 +2,6 @@ use crate::{NativeService, denied, params, unsupported};
 use lai_contracts::{DomainError, ErrorCode, Result, Selection};
 use lai_core::{ClientPolicy, Requirements, resolve, validate_selection};
 use serde_json::{Value, json};
-
 const METHODS: &[&str] = &[
     "runtime.handshake",
     "runtime.health",
@@ -22,6 +21,15 @@ const METHODS: &[&str] = &[
     "grants.request",
     "grants.list",
     "grants.revoke",
+    "health.get",
+    "issues.list",
+    "issues.acknowledge",
+    "issues.snooze",
+    "notifications.poll",
+    "notifications.configure",
+    "notifications.ack",
+    "apps.list",
+    "apps.revoke",
 ];
 impl NativeService {
     fn advertised_methods(&self) -> Vec<&'static str> {
@@ -67,8 +75,17 @@ impl NativeService {
             }
             "runtime.health" => {
                 params::allow(p, &[])?;
+                let (revision, cursor, hydrated, storage) = self.cache.status();
+                let autonomous = self
+                    .refresh_providers
+                    .read()
+                    .map(|providers| !providers.is_empty())
+                    .unwrap_or(false)
+                    || self
+                        .inventory_refresh
+                        .load(std::sync::atomic::Ordering::SeqCst);
                 Ok(
-                    json!({"status":"ok","mode":"live","executionAvailable":self.execution_state.source.is_some(),"metadataAvailable":self.metadata_source.is_some()}),
+                    json!({"status": if storage.is_some() { "degraded" } else { "ok" },"mode":"live","executionAvailable":self.execution_state.source.is_some(),"metadataAvailable":self.metadata_source.is_some(),"revision":revision,"cursor":cursor,"hydrated":hydrated,"storageAvailable":storage.is_none(),"autonomousRefresh":autonomous}),
                 )
             }
             "grants.request" => {
@@ -88,6 +105,67 @@ impl NativeService {
                 let mut clients = self.clients.write().map_err(|_| denied())?;
                 *clients.get_mut(client).ok_or_else(denied)? = ClientPolicy::denied();
                 Ok(json!({"revoked":true}))
+            }
+            "apps.list" => {
+                params::allow(p, &[])?;
+                if !self.policy(client)?.admin {
+                    return Err(denied());
+                }
+                let clients = self.clients.read().map_err(|_| denied())?;
+                let identities = self.app_identities.read().map_err(|_| denied())?;
+                let apps: Vec<Value> = clients
+                    .iter()
+                    .map(|(id, policy)| {
+                        json!({
+                            "id": id,
+                            "app": identities.get(id).cloned().unwrap_or_else(|| id.clone()),
+                            "allowPassiveDiscovery": policy.allow_passive_discovery,
+                            "connectionIds": policy.connection_ids,
+                            "revealIdentity": policy.reveal_identity,
+                            "admin": policy.admin,
+                        })
+                    })
+                    .collect();
+                Ok(json!(apps))
+            }
+            "apps.revoke" => {
+                params::allow(p, &["targetClientId"])?;
+                if !self.policy(client)?.admin {
+                    return Err(denied());
+                }
+                let target = params::text(p, "targetClientId")?.ok_or_else(params::invalid)?;
+                if target == client {
+                    return Err(DomainError::new(
+                        ErrorCode::Conflict,
+                        "Administrative client cannot revoke itself through this method",
+                    ));
+                }
+                if !self
+                    .clients
+                    .read()
+                    .map_err(|_| denied())?
+                    .contains_key(target)
+                {
+                    return Err(DomainError::new(
+                        ErrorCode::NotFound,
+                        "Application is unavailable",
+                    ));
+                }
+                // Revocation is live and application-scoped: the broker grant is
+                // removed first, so the credential cannot reconnect, and every
+                // live connection with the same application identity is swept.
+                // The legacy owner credential keeps per-connection semantics.
+                let app = self.app_identity(target);
+                if app == "ipc-host" {
+                    self.unregister_client(target);
+                    Ok(json!({"revoked":true,"clientId":target,"app":app,"grantsRevoked":false}))
+                } else {
+                    let grants_revoked = self.revoke_app_grant(&app);
+                    let connections = self.unregister_app(&app);
+                    Ok(
+                        json!({"revoked":true,"clientId":target,"app":app,"connections":connections,"grantsRevoked":grants_revoked}),
+                    )
+                }
             }
             "adapters.list" => {
                 params::allow(p, &[])?;

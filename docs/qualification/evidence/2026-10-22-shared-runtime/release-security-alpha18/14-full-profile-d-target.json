@@ -1,0 +1,17 @@
+{
+  "exitCode": 101,
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--no-fail-fast"
+      ],
+      "exitCode": 101,
+      "seconds": 298.645
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.63s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 17 tests
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... FAILED
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... FAILED
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+
+failures:
+
+---- scoped_inventory_events_never_reveal_another_accounts_resource_ids stdout ----
+
+thread 'scoped_inventory_events_never_reveal_another_accounts_resource_ids' (51012) panicked at crates\lai-service\tests\refresh_lanes.rs:609:5:
+scoped journal payload leaked a peer's resource IDs: {"cursor":"local-41394a16a8e1083e:6","events":[{"changes":[{"change":"updated","id":"pool-personal","resource":"quota_pool"},{"change":"updated","id":"pool-work","resource":"quota_pool"}],"cursor":"local-41394a16a8e1083e:4","issuesChanged":false,"observedAt":"2026-10-22T19:14:05.796Z","previousRevision":"3","reason":"freshness_expired","revision":"4","sequence":"4"},{"changes":[{"change":"updated","id":"personal","resource":"connection"},{"change":"updated","id":"route-personal","resource":"route"},{"change":"updated","id":"model-personal","resource":"model"},{"change":"updated","id":"pool-personal","resource":"quota_pool"}],"cursor":"local-41394a16a8e1083e:5","issuesChanged":false,"observedAt":"2026-10-22T19:14:05.848Z","previousRevision":"4","reason":"metadata","revision":"5","sequence":"5"},{"changes":[{"change":"updated","id":"work","resource":"connection"},{"change":"updated","id":"route-work","resource":"route"},{"change":"updated","id":"model-work","resource":"model"},{"change":"updated","id":"pool-work","resource":"quota_pool"}],"cursor":"local-41394a16a8e1083e:6","issuesChanged":false,"observedAt":"2026-10-22T19:14:05.849Z","previousRevision":"5","reason":"metadata","revision":"6","sequence":"6"}],"hasMore":false,"revision":"6","tailCursor":"local-41394a16a8e1083e:6"}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- timer_expiry_preserves_quota_warning_until_authoritative_recovery stdout ----
+
+thread 'timer_expiry_preserves_quota_warning_until_authoritative_recovery' (21284) panicked at crates\lai-service\tests\refresh_lanes.rs:622:5:
+expiry is not proof of quota recovery
+
+
+failures:
+    scoped_inventory_events_never_reveal_another_accounts_resource_ids
+    timer_expiry_preserves_quota_warning_until_authoritative_recovery
+
+test result: FAILED. 15 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.05s
+
+error: test failed, to rerun pass `-p lai-service --test refresh_lanes`

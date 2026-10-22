@@ -1,0 +1,24 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.96s
+     Running tests\refresh_lanes.rs (target\debug\deps\refresh_lanes-6b0e86daf4f2d65c.exe)
+
+running 17 tests
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... ok
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... ok
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.57s

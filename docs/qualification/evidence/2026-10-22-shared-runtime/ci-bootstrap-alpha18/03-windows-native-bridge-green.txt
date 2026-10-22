@@ -1,0 +1,64 @@
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+   Compiling lai-kit v0.1.0-alpha.18 (<workspace>\crates\lai-kit)
+   Compiling lai-transports v0.1.0-alpha.18 (<workspace>\crates\lai-transports)
+   Compiling lai-cli v0.1.0-alpha.18 (<workspace>\crates\lai-cli)
+    Finished `dev` profile [unoptimized] target(s) in 26.08s
+
+> local-ai-kit-workspace@0.1.0-alpha.18 build
+> tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json && tsc -p packages/react/tsconfig.json && tsc -p packages/ui-react/tsconfig.json && tsc -p apps/demo/tsconfig.json
+
+TAP version 13
+# Subtest: Node SDK shared broker uses independent credentials and one host survives client close
+ok 1 - Node SDK shared broker uses independent credentials and one host survives client close
+  ---
+  duration_ms: 1719.7254
+  type: 'test'
+  ...
+# Subtest: Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+ok 2 - Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+  ---
+  duration_ms: 1500.905
+  type: 'test'
+  ...
+# Subtest: Node helper defaults to denied and cannot self-authorize over RPC
+ok 3 - Node helper defaults to denied and cannot self-authorize over RPC
+  ---
+  duration_ms: 124.9823
+  type: 'test'
+  ...
+# Subtest: Node empty-home scan stays empty in live mode
+ok 4 - Node empty-home scan stays empty in live mode
+  ---
+  duration_ms: 149.8321
+  type: 'test'
+  ...
+# Subtest: Node typed catalog pages are served by the actual native helper
+ok 5 - Node typed catalog pages are served by the actual native helper
+  ---
+  duration_ms: 136.4719
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2014.4808
+test_default_policy_denies_discovery (__main__.NativeAsync.test_default_policy_denies_discovery) ... ok
+test_native_discovery_and_revocation (__main__.NativeAsync.test_native_discovery_and_revocation) ... ok
+test_sync_facade_scans_empty_home_through_rust (__main__.NativeSync.test_sync_facade_scans_empty_home_through_rust) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.403s
+
+OK
+test_python_client_uses_the_shared_native_broker_without_provider_logic (__main__.BrokerTest.test_python_client_uses_the_shared_native_broker_without_provider_logic) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.143s
+
+OK
+{"name": "bootstrap-native-bridge-green-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", "scripts/test_native_bridge.py"], "sourceCommit": "aeecd15f9a5a909452c11da0ae396c08cc2799c0", "exitCode": 0, "seconds": 33.754, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 8904886514, "finalActiveBytes": 8890658924, "cFreeBytes": 43740409856, "dFreeBytes": 605113196544, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

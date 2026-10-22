@@ -1,0 +1,2799 @@
+   Compiling lai-contracts v0.1.0-alpha.18 (<workspace>\crates\lai-contracts)
+   Compiling lai-chatgpt-auth v0.1.0-alpha.18 (<workspace>\crates\lai-chatgpt-auth)
+   Compiling lai-platform v0.1.0-alpha.18 (<workspace>\crates\lai-platform)
+   Compiling lai-runtime v0.1.0-alpha.18 (<workspace>\crates\lai-runtime)
+   Compiling lai-discovery v0.1.0-alpha.18 (<workspace>\crates\lai-discovery)
+   Compiling lai-core v0.1.0-alpha.18 (<workspace>\crates\lai-core)
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+   Compiling lai-store v0.1.0-alpha.18 (<workspace>\crates\lai-store)
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+   Compiling lai-transports v0.1.0-alpha.18 (<workspace>\crates\lai-transports)
+   Compiling lai-kit v0.1.0-alpha.18 (<workspace>\crates\lai-kit)
+   Compiling lai-control v0.1.0-alpha.18 (<workspace>\crates\lai-control)
+   Compiling lai-cli v0.1.0-alpha.18 (<workspace>\crates\lai-cli)
+   Compiling lai-update v0.1.0-alpha.18 (<workspace>\crates\lai-update)
+    Finished `test` profile [unoptimized] target(s) in 1m 51s
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_adapters-c02fc930a60fc0b1.exe)
+
+running 15 tests
+test muse::launch::tests::release_versions_match_the_launcher_pattern ... ok
+test muse::launch::tests::read_only_hosts_remove_shell_writes_and_network_tools ... ok
+test muse::launch::tests::uuid_v7_has_version_and_variant_bits ... ok
+test host_mcp::tests::qualified_names_are_exact ... ok
+test host_mcp::tests::resolve_accepts_server_forms_and_unambiguous_bare_names ... ok
+test process::account_identity_tests::only_a_sign_out_update_ends_the_session ... ok
+test opencode::version::tests::accepts_reported_legacy_versions_only ... ok
+test process::account_identity_tests::volatile_account_fields_do_not_change_the_identity ... ok
+test muse::events::tests::frames_for_other_sessions_and_raw_reasoning_are_ignored ... ok
+test execution::codex::direct_namespace_tests::host_namespace_cannot_make_builtin_functions_direct ... ok
+test muse::events::tests::a_queued_turn_ignores_the_turn_muse_is_still_running ... ok
+test muse::events::tests::a_report_turn_for_outliving_work_joins_the_kit_turn ... ok
+test muse::events::tests::approval_twins_ask_once_and_each_stage_asks_again ... ok
+test process::account_identity_tests::a_different_account_or_auth_kind_is_a_new_identity ... ok
+test muse::launch::tests::the_windows_launcher_resolves_to_its_active_binary ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\acp_auth.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_auth-35eee0c066222207.exe)
+
+running 5 tests
+test auth_errors_are_sanitized_and_do_not_reveal_native_urls ... ok
+test existing_clients_without_auth_negotiation_still_use_the_same_driver ... ok
+test explicit_advertised_auth_method_can_reuse_native_login_without_tokens ... ok
+test missing_auth_is_not_treated_as_a_connected_subscription ... ok
+test unadvertised_authentication_methods_are_not_sent_to_the_client ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.86s
+
+     Running tests\acp_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_catalog-6453bd4799d8cdd6.exe)
+
+running 9 tests
+test legacy_catalog_is_supported_without_inventing_effort ... ok
+test malformed_versions_duplicate_ids_and_values_fail ... ok
+test omitted_capabilities_are_unsupported_not_enabled ... ok
+test preserves_native_ids_groups_and_thought_options ... ok
+test mode_and_unclassified_controls_cannot_disable_permissions_silently ... ok
+test unknown_control_type_is_inspectable_not_editable ... ok
+test prefers_config_options_over_legacy_modes_and_models ... ok
+test unknown_upstream_fields_do_not_leak_into_catalog ... ok
+test route_identity_and_configuration_changes_invalidate_selections ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\acp_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_process-35edcc543acffeac.exe)
+
+running 12 tests
+test actual_acp_exchange_preserves_native_config_without_generation ... ok
+test negotiation_mismatch_is_rejected_before_session ... ok
+test peers_without_prompt_image_support_reject_image_turns_before_prompting ... ok
+test approval_is_scoped_and_rejection_reaches_native_agent ... ok
+test provider_error_message_reaches_diagnostics_with_secrets_redacted ... ok
+test file_callbacks_not_advertised_are_denied ... ok
+test provider_switch_during_turn_fails_without_silent_model_fallback ... ok
+test native_stream_arrives_before_prompt_response_and_session_reuses_context ... ok
+test image_blocks_reach_peers_that_advertise_prompt_image_support ... ok
+test native_cancel_completes_without_prompt_retry ... ok
+test foreign_session_cannot_inject_output ... ok
+test text_only_session_fails_the_turn_when_the_client_uses_a_native_tool ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.15s
+
+     Running tests\acp_resume.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\acp_resume-4aff9e5d23b6b340.exe)
+
+running 4 tests
+test missing_load_session_capability_fails_before_exposing_a_resume_id ... ok
+test wrong_or_unavailable_native_session_is_not_recreated_as_a_new_chat ... ok
+test native_peer_cannot_substitute_a_different_session_id ... ok
+test advertised_load_session_can_suspend_without_closing_and_resume_same_native_id ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.60s
+
+     Running tests\billing_declarations.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\billing_declarations-2f5dd0b8b9a86eae.exe)
+
+running 2 tests
+test fills_only_unknown_billing_as_user_supplied_and_needs_matching_provider ... ok
+test rejects_unknown_mixed_duplicate_local_native_and_extra_fields ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\claude_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\claude_metadata-fc38b2a604820193.exe)
+
+running 7 tests
+test unavailable_usage_is_not_zero ... ok
+test distinct_profile_same_email_is_not_linked ... ok
+test reported_plan_native_ids_and_effort_are_preserved ... ok
+test unknown_or_metered_auth_is_not_a_subscription ... ok
+test normalized_usage_does_not_duplicate_legacy_buckets ... ok
+test duplicate_model_values_and_invalid_usage_fail ... ok
+test private_initialization_fields_and_secrets_do_not_escape ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\claude_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\claude_process-7da374dc9b795737.exe)
+
+running 7 tests
+test claude_catalog_reports_image_input ... ok
+test metadata_control_never_needs_a_user_prompt ... ok
+test cancellation_terminates_without_restarting_native_turn ... ok
+test native_stream_and_whole_message_do_not_duplicate_text ... ok
+test effort_change_requires_a_new_native_session ... ok
+test text_only_mode_denies_unexpected_native_tool_requests ... ok
+test images_are_sent_as_base64_content_blocks_before_the_text ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.85s
+
+     Running tests\codex_launch.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_launch-923e958a47abe9bb.exe)
+
+running 5 tests
+test arbitrary_wrapper_and_absent_binary_are_not_executed ... ok
+test direct_native_executable_is_preserved ... ok
+test managed_codex_launch_isolated_and_uses_responses_provider ... ok
+test extensionless_npm_shim_uses_the_native_package_not_a_shell ... ok
+test known_windows_npm_wrapper_resolves_to_packaged_native_binary ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\codex_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_metadata-8f083d623ce5e17e.exe)
+
+running 13 tests
+test no_account_does_not_claim_active_plan_or_model_access ... ok
+test malformed_native_records_fail_closed ... ok
+test absent_effort_and_context_are_not_invented ... ok
+test api_key_auth_is_not_a_chatgpt_subscription ... ok
+test model_input_capability_is_not_image_generation ... ok
+test changed_identity_changes_catalog_revision ... ok
+test duplicate_model_ids_do_not_create_ambiguous_routes ... ok
+test multiple_clients_do_not_merge_accounts_based_on_same_email ... ok
+test legacy_and_multi_bucket_views_are_not_double_counted ... ok
+test actual_plan_and_native_effort_survive_without_model_name_rules ... ok
+test unavailable_usage_is_not_an_empty_remaining_allowance ... ok
+test secrets_private_paths_and_unknown_fields_do_not_escape ... ok
+test unchanged_catalog_keeps_model_revisions_across_probes ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+     Running tests\codex_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\codex_process-67543888af80dd11.exe)
+
+running 12 tests
+test relative_executable_and_loader_hook_environment_are_rejected ... ok
+test startup_account_notice_precedes_authoritative_account_read ... ok
+test account_change_after_initial_read_invalidates_catalog_probe ... ok
+test token_refresh_during_probe_keeps_the_same_account ... ok
+test repeated_pagination_cursor_fails_instead_of_looping ... ok
+test quota_endpoint_failure_keeps_account_catalog_and_redacts_error ... ok
+test unauthenticated_client_does_not_fetch_model_or_usage_catalog ... ok
+test managed_identity_fetches_catalog_without_native_account_or_usage ... ok
+test managed_route_requires_codex_0157_or_newer ... ok
+test unsolicited_execution_request_fails_closed ... ok
+test native_protocol_reads_metadata_without_starting_threads_or_turns ... ok
+test malformed_oversized_and_timed_out_peers_are_bounded ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.97s
+
+     Running tests\command_output.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\command_output-15f0ab1e162746bc.exe)
+
+running 3 tests
+test failed_command_does_not_return_error_text ... ok
+test collects_utf8_status_without_shell ... ok
+test large_output_and_timeout_are_bounded ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.14s
+
+     Running tests\cursor_metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\cursor_metadata-591944885b319c63.exe)
+
+running 7 tests
+test absent_and_corrupt_cache_is_unavailable_not_an_authenticated_account ... ok
+test read_does_not_write_database_sidecars_or_change_original_bytes ... ok
+test cached_identity_and_plan_are_stale_and_never_claim_live_auth ... ok
+test tokens_and_paths_are_not_exported_from_the_allowlisted_cache ... ok
+test large_cursor_database_is_read_through_bounded_indexed_lookups ... ok
+test malformed_cached_values_do_not_become_plan_claims ... ok
+test profiles_remain_distinct_even_when_cached_email_matches ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\endpoint_config.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\endpoint_config-6b0036eeb66ff5ad.exe)
+
+running 5 tests
+test parsing_does_not_require_or_read_an_api_key ... ok
+test opencode_route_billing_configuration_is_explicit_and_transport_stays_local ... ok
+test configuration_rejects_inline_secrets_duplicate_names_and_bad_urls ... ok
+test scope_and_endpoint_identity_are_part_of_connection_id ... ok
+test registered_endpoints_are_inventory_not_authenticated_accounts ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\execution-e4a9b1923bef2991.exe)
+
+running 9 tests
+test changed_model_catalog_cannot_start_generation ... ok
+test token_refresh_mid_turn_keeps_the_session ... ok
+test unsafe_sandbox_response_fails_before_turn ... ok
+test account_switch_aborts_without_retry ... ok
+test native_text_streams_including_events_before_ack ... ok
+test account_is_rechecked_before_submitting_each_turn ... ok
+test native_approval_denial_reaches_client ... ok
+test images_are_sent_as_app_server_image_items_after_the_text ... ok
+test native_cancel_interrupts_without_a_second_turn ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.49s
+
+     Running tests\grok.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\grok-ac744f4e83450882.exe)
+
+running 4 tests
+test health_probes_disable_the_autoupdater_even_when_the_caller_left_it_off ... ok
+test native_grok_login_line_reports_auth_but_not_unpublished_plan_or_costs ... ok
+test absent_status_and_auth_failure_are_not_active_accounts ... ok
+test unrelated_output_is_not_preserved ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\host_mcp.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_mcp-3eaefdcaebc33dc9.exe)
+
+running 14 tests
+test acp_mcp_server_entries_use_http_headers ... ok
+test claude_event_checks_distinguish_host_tools ... ok
+test claude_launch_without_host_servers_is_unchanged ... ok
+test claude_launch_writes_a_private_config_and_keeps_tools_disabled ... ok
+test claude_session_deletes_the_config_on_close ... ok
+test codex_thread_config_attaches_host_server_and_allows_its_tool ... ok
+test codex_refuses_a_host_name_already_configured ... ok
+test acp_host_servers_go_to_session_new_and_host_tools_are_allowed ... ok
+test acp_native_tool_still_fails_the_turn ... ok
+test claude_host_tool_is_allowed_and_reported_neutrally ... ok
+test acp_peer_without_http_mcp_is_refused_typed ... ok
+test codex_non_host_tools_fail_a_text_only_turn ... ok
+test claude_host_server_that_fails_to_connect_fails_the_session ... ok
+test claude_native_tool_still_fails_the_turn ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.34s
+
+     Running tests\host_mcp_live.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_mcp_live-a79fc7f72c7d2701.exe)
+
+running 2 tests
+test live_claude_turn_calls_host_and_native_tools ... ok
+test live_codex_native_tools_and_host_mcp_share_a_session ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\http.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http-565e5b96335a6854.exe)
+
+running 6 tests
+test endpoints_reject_cleartext_remote_userinfo_and_query_credentials ... ok
+test redirects_are_not_followed_and_paths_cannot_escape ... ok
+test native_json_and_credentials_stay_bound_to_the_endpoint ... ok
+test line_stream_preserves_frames_and_rejects_truncated_output ... ok
+test auth_rate_limits_and_large_bodies_return_safe_errors ... ok
+test explicitly_bounded_provider_metadata_reads_allow_large_compressed_catalogs ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests\http_catalogs.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_catalogs-1ba99a598a3be89f.exe)
+
+running 7 tests
+test duplicate_or_malformed_catalogs_fail_without_echoing_secrets ... ok
+test api_models_without_capability_evidence_are_not_automatically_eligible ... ok
+test absent_details_are_not_fake_capabilities_or_allowances ... ok
+test lmstudio_filters_embeddings_and_preserves_native_context ... ok
+test local_capabilities_are_metadata_not_model_name_guesses ... ok
+test google_native_method_metadata_and_anthropic_efforts_are_preserved ... ok
+test route_identity_is_retained_and_api_catalog_is_not_a_subscription ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\http_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_execution-934692033dc4cf97.exe)
+
+running 2 tests
+test probing_never_runs_generation_and_catalog_does_not_claim_paid_access ... ok
+test native_runtime_streams_http_turns_with_owned_history ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\http_frames.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_frames-b31947eec354be52.exe)
+
+running 2 tests
+test provider_errors_do_not_leak_error_bodies_or_execute_tools ... ok
+test provider_frames_preserve_text_and_native_terminal_signals ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\http_images.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_images-b6e0270ecd4712a1.exe)
+
+running 6 tests
+test fixture_base64_matches_bytes ... ok
+test ollama_sends_images_beside_message_content ... ok
+test anthropic_messages_use_base64_image_blocks ... ok
+test gemini_uses_inline_data_parts ... ok
+test responses_api_routes_use_input_image_parts ... ok
+test chat_completions_routes_use_image_url_data_parts ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\muse_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_catalog-e5f36b10a6153e89.exe)
+
+running 8 tests
+test malformed_catalogs_are_protocol_errors ... ok
+test unknown_and_future_efforts_are_not_invented ... ok
+test without_account_read_auth_stays_unknown_not_assumed ... ok
+test an_account_login_is_an_authenticated_subscription_with_native_efforts ... ok
+test fake_and_foreign_catalogs_are_not_live_models ... ok
+test subscription_usage_becomes_plan_and_percent_windows ... ok
+test api_keys_are_metered_and_signed_out_muse_is_unauthenticated ... ok
+test two_accounts_with_the_same_model_have_distinct_revisions ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\muse_live.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_live-cca67fa2b929678f.exe)
+
+running 4 tests
+test live_metadata_reports_account_lane_and_catalog_without_inference ... ok
+test live_echo_turn_streams_text_through_the_runtime ... ok
+test live_echo_session_resumes_after_its_host_exits ... ok
+test live_echo_turn_runs_when_the_host_mcp_server_is_unreachable ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\muse_process.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\muse_process-5b653d224d8c7324.exe)
+
+running 26 tests
+test an_unknown_envelope_version_is_refused ... ok
+test a_workflow_and_the_report_turn_muse_starts_for_it_are_one_kit_turn ... ok
+test host_mcp_servers_attach_as_optional_session_servers ... ok
+test a_changed_catalog_revision_is_stale ... ok
+test effort_and_images_reach_turn_start ... ok
+test another_mcp_servers_tool_fails_the_turn ... ok
+test a_signed_out_turn_is_auth_required_without_leaking_login_codes ... ok
+test host_mcp_needs_the_session_mcp_capability ... ok
+test a_read_only_turn_streams_text_and_usage_and_starts_a_denying_session ... ok
+test an_inaccessible_model_surfaces_muses_access_error ... ok
+test cancellation_interrupts_the_owned_muse_turn ... ok
+test cancelling_during_a_subagent_interrupts_the_parent_turn ... ok
+test metadata_reports_account_lane_catalog_and_efforts_without_a_prompt ... ok
+test consecutive_turns_reuse_the_native_session ... ok
+test a_stream_that_ends_mid_reply_fails_the_turn ... ok
+test a_subagent_approval_is_reviewed_by_the_host ... ok
+test structured_questions_are_declined_and_the_turn_continues ... ok
+test read_only_sessions_allow_muse_read_tools_but_not_the_shell ... ok
+test native_subagents_are_reported_with_their_results ... ok
+test web_hits_reasoning_summaries_todos_and_retries_are_presented ... ok
+test host_tool_calls_are_neutral_tool_events ... ok
+test persistent_sessions_resume_with_their_approval_mode ... ok
+test supervised_approvals_reach_the_host_and_map_to_once_choices ... ok
+test unreviewed_read_only_sessions_decline_requests_and_refuse_the_shell ... ok
+test closing_one_session_leaves_another_running ... ok
+test logged_out_muse_is_unauthenticated_and_cannot_open_a_session ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.86s
+
+     Running tests\native_evidence.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_evidence-777ff5a2bd1c091d.exe)
+
+running 2 tests
+test host_billing_declaration_stays_user_supplied ... ok
+test successful_native_session_proves_auth_but_not_plan ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\native_launch.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_launch-183c97107031b2e0.exe)
+
+running 8 tests
+test unsupported_shell_wrappers_are_never_executed ... ok
+test clients_that_cannot_remove_their_tools_refuse_text_only_sessions ... ok
+test grok_sessions_launch_without_any_native_tool ... ok
+test ide_launcher_is_not_a_google_agent_runtime ... ok
+test custom_auth_is_explicit_and_not_a_token_export ... ok
+test grok_metadata_probes_disable_the_updater_and_text_sessions_do_not ... ok
+test google_acp_requires_native_harness_and_blocked_interactive_browser ... ok
+test grok_custom_profile_is_not_silently_replaced_with_another_account ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\native_profiles.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_profiles-8b1ee5be67adbd65.exe)
+
+running 8 tests
+test stable_ids_include_native_profile_scope_and_executable ... ok
+test native_registration_is_inert_and_retains_distinct_google_clients ... ok
+test credentials_arbitrary_args_and_remote_paths_are_not_configuration_fields ... ok
+test native_billing_declaration_is_not_published_as_verified_access_during_inventory ... ok
+test another_connection_cannot_claim_a_configured_profile ... ok
+test malformed_profiles_and_unsupported_auth_switches_are_rejected ... ok
+test managed_codex_is_inert_isolated_and_stable ... ok
+test managed_codex_can_use_private_executable_only_inventory ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\opencode_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_catalog-4c51902d631c2559.exe)
+
+running 10 tests
+test an_opencode_gateway_without_connected_providers_is_not_authenticated ... ok
+test mismatched_provider_ids_and_duplicate_sources_are_rejected ... ok
+test variants_and_context_are_native_and_unknown_quota_is_not_zero ... ok
+test lookalike_provider_ids_do_not_receive_the_go_subscription_class ... ok
+test opencode_go_is_a_subscription_route_without_a_billing_declaration ... ok
+test billing_declarations_are_per_provider_and_labeled_as_user_supplied ... ok
+test gateway_models_preserve_distinct_vendor_routes ... ok
+test large_official_provider_directory_can_still_filter_to_connected_accounts ... ok
+test managed_server_runs_the_native_binary_never_the_npm_shell_shim ... ok
+test unchanged_gateway_catalog_keeps_model_revisions_across_probes ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+     Running tests\opencode_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_execution-d9f0cff6bb3b3a3e.exe)
+
+running 2 tests
+test permission_echo_is_required_before_any_generation ... ok
+test owns_one_native_session_streams_and_deletes_only_that_session ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\opencode_live.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_live-a16db65597e64989.exe)
+
+running 1 test
+test live_managed_server_runs_one_text_turn ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\opencode_v2.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_v2-9f9f3496e7725593.exe)
+
+running 8 tests
+test rejects_missing_permission_echo_before_prompt ... ok
+test cancellation_interrupts_only_owned_session ... ok
+test text_chunks_are_utf8_bounded ... ok
+test uncertain_delete_responses_keep_owned_id_for_retry ... ok
+test receives_streamed_and_final_only_replies ... ok
+test rejects_delayed_prior_turn_events_without_breaking_fresh_continuations ... ok
+test errors_and_tools_fail_without_approvals ... ok
+test close_can_retry_a_failed_or_cancelled_delete ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests\opencode_v2_catalog.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_v2_catalog-2df062f0c2faea71.exe)
+
+running 5 tests
+test ignores_disabled_and_non_text_models ... ok
+test opencode_go_v2_is_subscription_and_payg_stays_unknown ... ok
+test explicit_billing_does_not_fabricate_authentication ... ok
+test rejects_duplicate_model_and_unknown_provider ... ok
+test retains_route_native_id_and_options_but_never_infers_auth_or_billing ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\opencode_version.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_version-c6a3e840a3d1b532.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\process_tree.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\process_tree-2c376bb7c77807d8.exe)
+
+running 1 test
+test closing_native_peer_stops_owned_descendants_but_not_separate_processes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.11s
+
+     Running tests\resume_native.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\resume_native-e671177b92dc7f0f.exe)
+
+running 12 tests
+test claude_persistence_replaces_no_persistence_with_session_or_resume ... ok
+test claude_resume_requires_the_stored_conversation ... ok
+test opencode_non_persistent_sessions_are_not_resumable ... ok
+test opencode_suspend_keeps_the_session_and_resume_reattaches_it ... ok
+test codex_ephemeral_threads_stay_unresumable ... ok
+test codex_resume_reattaches_the_thread_without_starting_one ... ok
+test managed_codex_changed_identity_rejects_turn_before_native_thread_start ... ok
+test codex_persistent_thread_suspends_to_its_native_id ... ok
+test managed_codex_rotated_token_restarts_and_resumes_same_thread ... ok
+test codex_missing_or_different_thread_is_resume_unavailable ... ok
+test claude_resumed_session_keeps_the_same_id ... ok
+test claude_persistent_session_suspends_to_its_id_after_a_turn ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.05s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_chatgpt_auth-b71358f11d1f76f4.exe)
+
+running 21 tests
+test oauth::tests::discovery_rejects_untrusted_endpoints ... ok
+test oauth::tests::callback_accepts_only_expected_path_and_requires_state ... ok
+test oauth::tests::pinned_chatgpt_oauth_surface_matches_the_t3code_snapshot ... ok
+test oauth::tests::token_response_requires_exact_scope_and_rotates_together ... ok
+test oauth::tests::malformed_registration_is_not_reset_by_auth_actions ... ok
+test tests::constructor_does_not_read_credential_storage ... ok
+test tests::scope_gate_requires_exact_plan_permission ... ok
+test oauth::tests::callback_waits_for_complete_bounded_headers ... ok
+test oauth::tests::es256_identity_tokens_match_the_jwk_curve ... ok
+test oauth::tests::signed_id_requires_issuer_audience_nonce_expiry_and_signature ... ok
+test oauth::tests::callback_rejects_missing_or_changed_client_and_cancelled_attempt ... ok
+test oauth::tests::disabled_plan_sharing_asks_for_consent_on_the_next_attempt ... ok
+test oauth::tests::direct_first_run_disconnect_is_idempotent ... ok
+test oauth::tests::corrupt_key_allows_fresh_sign_in_without_changing_registration ... ok
+test oauth::tests::missing_key_allows_disconnect_to_invalidate_and_clear_local_material ... ok
+test oauth::tests::changed_verified_registration_is_not_reset ... ok
+test oauth::tests::inactive_marker_survives_crash_before_ciphertext_deletion ... ok
+test oauth::tests::status_invalidates_pending_after_another_manager_disconnects ... ok
+test oauth::tests::earliest_refresh_at_does_not_race_a_deferred_renewal ... ok
+test oauth::tests::start_uses_stable_host_fresh_pkce_and_cancellation ... ok
+test oauth::tests::registration_refresh_disconnect_and_account_switch_rejection ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+
+     Running unittests src\main.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit-766448945e2a74c9.exe)
+
+running 10 tests
+test args::tests::warm_up_is_opt_in_and_needs_http_discovery_and_a_metadata_provider ... ok
+test args::additional_provider_tests::managed_chatgpt_registration_is_opt_in_and_needs_no_native_profile_file ... ok
+test args::tests::execution_needs_explicit_workspace_and_metadata_permission ... ok
+test args::additional_provider_tests::executable_only_provider_is_repeatable_and_rejects_unknown_or_conflicting_grants ... ok
+test args::additional_provider_tests::billing_declarations_allow_declared_grok_execution_without_native_profiles ... ok
+test args::tests::explicit_http_serving_and_assets_are_supported ... ok
+test args::additional_provider_tests::native_subscription_execution_requires_an_explicit_profile_file ... ok
+test args::tests::unsafe_or_conflicting_flags_are_rejected ... ok
+test args::additional_provider_tests::grok_metadata_is_explicit_and_does_not_imply_execution ... ok
+test args::additional_provider_tests::independent_grants_replace_the_shared_owner_token_and_need_independent_mode ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\auth_blocker.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit_auth_blocker-d4eb8c46648f3df0.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\native_main.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit_native_host-9d6fffc64c35cf55.exe)
+
+running 10 tests
+test args::additional_provider_tests::grok_metadata_is_explicit_and_does_not_imply_execution ... ok
+test args::additional_provider_tests::billing_declarations_allow_declared_grok_execution_without_native_profiles ... ok
+test args::additional_provider_tests::executable_only_provider_is_repeatable_and_rejects_unknown_or_conflicting_grants ... ok
+test args::additional_provider_tests::independent_grants_replace_the_shared_owner_token_and_need_independent_mode ... ok
+test args::additional_provider_tests::managed_chatgpt_registration_is_opt_in_and_needs_no_native_profile_file ... ok
+test args::additional_provider_tests::native_subscription_execution_requires_an_explicit_profile_file ... ok
+test args::tests::explicit_http_serving_and_assets_are_supported ... ok
+test args::tests::execution_needs_explicit_workspace_and_metadata_permission ... ok
+test args::tests::warm_up_is_opt_in_and_needs_http_discovery_and_a_metadata_provider ... ok
+test args::tests::unsafe_or_conflicting_flags_are_rejected ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\auth_blocker.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\auth_blocker-d6ccf1223e79b575.exe)
+
+running 1 test
+test metadata_browser_controller_never_opens_or_echoes_an_auth_url ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\broker_lifetime.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\broker_lifetime-387af2ad412891f7.exe)
+
+running 2 tests
+test independently_scoped_app_grants_revoke_one_app_without_the_owner_credential ... ok
+test an_independent_broker_survives_consumer_disconnects_and_converges ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.14s
+
+     Running tests\commands.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\commands-ad2c0656ee0ae759.exe)
+
+running 7 tests
+test stdio_defaults_to_no_discovery_authorization ... ok
+test explicit_empty_home_does_not_fall_back_to_personal_profiles ... ok
+test codex_probe_is_advertised_without_running_it_during_startup ... ok
+test scan_calls_native_discovery_without_verifying_credentials ... ok
+test executable_only_scan_omits_legacy_provider_but_keeps_other_profiles ... ok
+test help_and_version_do_not_scan ... ok
+test unknown_or_incomplete_arguments_fail_without_actions ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running tests\endpoints.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\endpoints-04f41df6ad5484b2.exe)
+
+running 3 tests
+test config_with_inline_secret_is_rejected_without_echoing_content ... ok
+test explicit_endpoint_inventory_is_available_through_the_real_helper ... ok
+test metadata_permission_supports_registered_providers_without_starting_them ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running tests\host_modes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_modes-6ef9a4490c352d1a.exe)
+
+running 4 tests
+test broker_endpoint_rejects_tokens_in_argv ... ok
+LocalAccessDenied: Native host registration is unavailable or does not allow this extension
+test connect_mode_does_not_start_a_missing_broker_or_scan ... ok
+test native_host_untrusted_origin_cannot_use_json_as_authorization ... ok
+test native_host_without_registration_rejects_origin ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.93s
+
+     Running tests\native_host.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_host-6b18c082fef4ff2b.exe)
+
+running 2 tests
+test origin_is_checked_again_even_when_manifest_would_normally_filter_it ... ok
+test registered_host_reaches_native_service_without_installing_browser_entries ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.93s
+
+     Running tests\native_profiles.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_profiles-75c79f7e7af705cc.exe)
+
+running 3 tests
+test native_profile_file_rejects_inline_credentials_without_echoing_them ... ok
+test executable_only_provider_rejects_explicit_profile_for_same_provider ... ok
+test native_profile_inventory_is_explicit_and_inert ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\provider_flags.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\provider_flags-9acb811a5d337ad8.exe)
+
+running 3 tests
+test generic_provider_flags_are_explicit_and_repeatable ... ok
+test unsupported_provider_ids_fail_without_launch ... ok
+test muse_metadata_and_execution_grants_are_accepted ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_contracts-855e7bbf75602901.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\api_contracts.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\api_contracts-7495bc5aa3cd1cf5.exe)
+
+running 2 tests
+test public_schema_contains_method_input_and_output_maps ... ok
+test method_shapes_do_not_accept_caller_identity_or_arbitrary_executable ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\contracts.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\contracts-5f8686bb10d988eb.exe)
+
+running 13 tests
+test negative_or_numeric_or_nondecimal_usage_is_rejected ... ok
+test numeric_bounds_are_enforced ... ok
+test identical_native_ids_remain_distinct_across_routes_and_delimiters ... ok
+test invalid_timestamp_is_rejected ... ok
+test unavailable_is_not_unknown ... ok
+test future_native_effort_is_accepted_only_when_advertised ... ok
+test counts_beyond_javascript_precision_stay_exact ... ok
+test money_stays_decimal_and_usage_over_limit_is_not_negative_remaining ... ok
+test known_roundtrips_without_losing_stale_state ... ok
+test unknown_quota_denominator_stays_unknown ... ok
+test unknown_cannot_smuggle_a_value ... ok
+test known_requires_evidence_and_time ... ok
+test schema_is_generated_and_contains_domain_records ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\diagnostic_redaction.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\diagnostic_redaction-93ba5f8512922f08.exe)
+
+running 2 tests
+test diagnostic_detail_retains_provider_reason_and_redacts_credentials ... ok
+test diagnostic_detail_is_bounded_and_removes_control_characters ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\schema.rs (D:\lai-task-7a4b270a-20261022\target\debug\examples\schema-5ec71763701e3760.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_control-4cc0ce3580b72c12.exe)
+
+running 5 tests
+test tests::issue_and_usage_views_keep_unknown_distinct_from_zero ... ok
+test tests::destructuring_export_removes_secret_shaped_keys_at_any_depth ... ok
+test tests::issue_view_exposes_actionable_remediation_without_connection_secrets ... ok
+test tests::overview_shows_revision_health_and_explicit_staleness ... ok
+test tests::diagnostics_document_carries_provenance_and_no_secrets ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ai_kit_control-71fbb936183056f3.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\e2e.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\e2e-faae036ec65728ef.exe)
+
+running 1 test
+test the_control_center_uses_only_the_public_authenticated_api ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_core-4525934b1cdf7ec9.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\included_allowance.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\included_allowance-0502fe0254de717e.exe)
+
+running 4 tests
+test separate_metered_route_still_requires_its_own_billing_consent ... ok
+test fresh_backend_allowance_restoration_is_honored ... ok
+test passed_time_or_stale_denial_is_not_automatic_quota_recovery ... ok
+test explicit_included_usage_denial_blocks_selection_even_with_paid_option_consent ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\opencode_go_billing.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\opencode_go_billing-ddce41fb2c342b89.exe)
+
+running 3 tests
+test metered_api_and_lookalike_routes_keep_their_safeguards ... ok
+test subscribed_go_route_is_eligible_without_declaration_or_paid_opt_in ... ok
+test expired_or_signed_out_auth_blocks_even_a_subscription_route ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\selection_projection.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\selection_projection-227c0cab58b97ca9.exe)
+
+running 14 tests
+test stale_sign_in_stands_until_the_client_reports_otherwise ... ok
+test changed_catalog_revision_cannot_execute_saved_selection ... ok
+test matching_model_name_from_another_route_is_not_interchangeable ... ok
+test api_billing_does_not_inherit_subscription_consent ... ok
+test signed_out_identity_blocks_runtime_selection ... ok
+test native_model_names_do_not_erase_account_routes ... ok
+test unadvertised_options_are_rejected_before_execution ... ok
+test accountless_local_runtime_requires_matching_provider_and_fresh_local_evidence ... ok
+test future_native_effort_is_preserved_and_validated ... ok
+test denied_client_sees_no_account_model_pool_or_profile ... ok
+test unknown_or_conditional_capability_is_not_confirmed ... ok
+test projection_filters_linked_routes_not_just_top_level_connections ... ok
+test projections_do_not_mutate_source ... ok
+test identity_needs_separate_permission ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\sensitive_options.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\sensitive_options-174e7e69439f63a8.exe)
+
+running 2 tests
+test subscription_does_not_authorize_billing_sensitive_option ... ok
+test permission_sensitive_option_needs_a_separate_approval_path ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_discovery-971be115b7ec9c3f.exe)
+
+running 1 test
+test knowledge::tests::official_client_evidence_outranks_tokscale ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\log_tail.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\log_tail-e178e0a24735c55b.exe)
+
+running 10 tests
+test synthetic_gigabyte_log_reads_only_the_bounded_window ... ok
+test cancellation_is_checked_before_any_file_read ... ok
+test truncation_restarts_without_replaying_old_records ... ok
+test cancellation_during_a_poll_preserves_the_callers_saved_offset_and_buffer ... ok
+test line_limit_buffers_complete_records_without_duplicate_file_reads ... ok
+test replacement_rotation_is_detected_even_when_new_file_is_larger ... ok
+test replacement_with_same_anchor_bytes_is_detected_by_file_identity ... ok
+test changed_prefix_detects_rotation_when_identity_and_tail_anchor_are_reused ... ok
+test append_and_partial_records_are_incremental ... ok
+test invalid_budgets_and_oversized_single_records_fail_closed ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\passive.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\passive-055eaa4d14d5c509.exe)
+
+running 19 tests
+test cancellation_before_scan_causes_no_successful_inventory ... ok
+test a_configured_muse_binary_replaces_the_search ... ok
+test cursor_named_binary_remains_a_passive_candidate ... ok
+test multiple_windows_shims_for_one_profile_do_not_duplicate_the_profile ... ok
+test another_providers_agent_binary_is_not_misidentified_as_cursor ... ok
+test credential_presence_is_unchecked_not_authentication_and_is_never_read ... ok
+test muse_is_found_in_its_windows_install_directory_without_reading_it ... ok
+test relative_and_network_profile_roots_are_rejected ... ok
+test executable_only_provider_never_probes_its_profiles_or_publishes_legacy_routes ... ok
+test empty_home_has_no_fabricated_connections_or_models ... ok
+test opencode_configuration_only_keeps_identity_when_data_directory_appears ... ok
+test custom_home_override_is_respected_without_mutating_either_directory ... ok
+test same_client_has_distinct_work_and_personal_profiles ... ok
+test gemini_and_antigravity_are_distinct_routes ... ok
+test user_profile_paths_do_not_escape_the_normalized_snapshot ... ok
+test opencode_xdg_config_and_data_directories_are_one_profile ... ok
+test partial_results_are_emitted_progressively_and_ids_stay_stable ... ok
+test windows_shims_are_detected_as_candidates_without_execution ... ok
+test separate_installation_directories_remain_selectable_connections ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\t3code_surface.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\t3code_surface-29a249116ec9d9a4.exe)
+
+running 2 tests
+test pi_profile_follows_the_t3code_snapshot ... ok
+test pi_configuration_and_off_path_opencode_are_inventory_only ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\upstream_parity.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\upstream_parity-022c6c3e2c643610.exe)
+
+running 7 tests
+test platform_profile_components_stay_split ... ok
+test windows_discovery_paths_keep_native_separators ... ok
+test windows_redirect_ignores_git_bash_home ... ok
+test secure_storage_override_stays_ahead_of_the_tokscale_claude_home ... ok
+test windows_redirect_ignores_posix_and_drive_relative_home ... ok
+test upstream_parity_matches_pinned_tokscale_discovery ... ok
+test adopted_homes_are_discovered_without_reading_session_files ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_kit-554092c2c809f5b5.exe)
+
+running 1 test
+test adapter_info::tests::muse_is_a_native_client_with_mediated_approvals_and_resumption ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\embedded.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\embedded-8efb0ac540ef0ae9.exe)
+
+running 5 tests
+test relative_home_is_rejected_without_creating_a_directory ... ok
+test building_and_reading_do_not_scan_or_probe ... ok
+test denied_and_same_label_clients_are_isolated ... ok
+test one_import_provides_real_passive_discovery ... ok
+test explicit_native_profiles_are_inert_until_scan_and_remain_distinct ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\live_claude_image.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\live_claude_image-2daf54472ba590bb.exe)
+
+running 1 test
+test live_claude_turn_sees_a_staged_image ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\live_persistent_resume.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\live_persistent_resume-5f52590d98490daa.exe)
+
+running 1 test
+test live_claude_conversation_resumes_after_a_helper_restart ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\local_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_execution-bdfac36048f234e2.exe)
+
+running 1 test
+test accountless_ollama_flows_through_discovery_selection_grants_and_streaming ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running unittests examples\inspect.rs (D:\lai-task-7a4b270a-20261022\target\debug\examples\inspect-ed504edc860bb748.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\synthetic_adapter.rs (D:\lai-task-7a4b270a-20261022\target\debug\examples\synthetic_adapter-aa7113cb2d71f666.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_platform-5b9918ac0ae91a6c.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\filesystem.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\filesystem-8b1089ecb900e6aa.exe)
+
+running 8 tests
+test diagnostic_errors_never_embed_private_path ... ok
+test traversal_and_absolute_child_names_are_rejected ... ok
+test detects_missing_file_directory_without_reading_content ... ok
+test unicode_paths_are_not_lossily_reconstructed ... ok
+test invalid_byte_budgets_and_offsets_fail_instead_of_unbounded_read ... ok
+test bounded_directory_listing_is_explicitly_partial ... ok
+test file_identity_uses_birth_time_when_available_and_survives_append ... ok
+test reads_only_requested_byte_window_from_sparse_gigabyte_file ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
+
+     Running tests\watcher.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\watcher-3bd441ea684a6af3.exe)
+
+running 3 tests
+test invalid_roots_fail_without_creating_or_following_them ... ok
+test watches_only_explicit_metadata_names_without_reading_contents ... ok
+test atomic_replacement_and_deletion_invalidate_the_profile ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_runtime-9c4a5dba3688515d.exe)
+
+running 3 tests
+test artifact::tests::expired_results_release_capacity_and_are_not_returned ... ok
+test artifact::tests::result_ids_do_not_cross_session_boundaries ... ok
+test artifact::tests::oversized_results_are_rejected ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\artifacts.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\artifacts-8a11580bbd50dffe.exe)
+
+running 6 tests
+test completed_text_has_owner_scoped_chunked_result ... ok
+test chunk_limits_offsets_and_close_are_enforced ... ok
+test binary_artifacts_are_not_forced_through_utf8 ... ok
+test revocation_removes_owned_artifacts ... ok
+test unregistered_artifact_events_cannot_be_forged ... ok
+test invalid_names_and_media_types_are_rejected ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\cleanup_retry.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\cleanup_retry-55057522354646ec.exe)
+
+running 2 tests
+test failed_turn_cleanup_retains_driver_until_explicit_close_retry ... ok
+test failed_or_timed_out_close_retains_owned_driver_for_retry_and_pruning ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s
+
+     Running tests\empty_journal.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\empty_journal-2ce6a45efce955cc.exe)
+
+running 2 tests
+test a_cursor_ahead_of_an_empty_journal_is_a_gap_not_silent_success ... ok
+test a_new_clients_event_page_has_a_valid_tail_cursor ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\journal_limits.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\journal_limits-3461cf5242caa34d.exe)
+
+running 2 tests
+test closed_sessions_do_not_exhaust_active_capacity ... ok
+test replay_pages_are_bounded_without_losing_events ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\lifecycle.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lifecycle-90468f775c619909.exe)
+
+running 10 tests
+test session_and_events_are_owner_scoped ... ok
+test close_blocks_further_turns ... ok
+test per_turn_guard_is_rechecked ... ok
+test revocation_cancels_owned_work_and_hides_results ... ok
+test error_events_keep_provider_diagnostics_and_redact_credentials ... ok
+test creation_is_not_generation_and_turn_streams_once ... ok
+test duplicate_request_never_runs_twice ... ok
+test cancellation_is_terminal_and_does_not_retry ... ok
+test approval_is_scoped_and_single_use ... ok
+test failed_or_timed_out_suspend_never_reenables_an_uncertain_conversation ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.01s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_service-3d74a862fcdf739b.exe)
+
+running 25 tests
+test cache::backoff_tests::retry_jitter_never_exceeds_the_thirty_second_cap ... ok
+test cache::metadata_freshness_tests::a_recent_authentication_check_stays_fresh_while_the_user_checks_other_profiles ... ok
+test delivery::tests::injected_sink_receives_only_the_projected_decision ... ok
+test health::tests::unknown_is_not_reported_as_expired_and_duplicates_merge ... ok
+test inputs::tests::png_and_jpeg_dimensions_come_from_headers ... ok
+test health::tests::dismissal_is_not_resolution ... ok
+test health::tests::expired_auth_is_actionable_and_recovery_resolves ... ok
+test health::tests::a_missing_resource_does_not_prove_recovery_or_logout ... ok
+test notifications::tests::disabled_notifications_still_expose_inline_health_decisions ... ok
+test execution::lifecycle_tests::revoke_between_native_suspend_and_token_publication_cannot_revive_old_access ... ok
+test notifications::tests::private_content_hides_issue_text ... ok
+test notifications::tests::quiet_hours_suppress_without_marking_delivered ... ok
+test inputs::tests::store_is_owner_and_session_scoped_bounded_and_consumed ... ok
+test cache::refresh_generation_tests::disabling_and_reenabling_inventory_cannot_revive_a_cancelled_timeout ... ok
+test cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit ... ok
+test cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed ... ok
+test cache::refresh_generation_tests::an_uncancelled_owned_timeout_still_publishes_an_honest_failure ... ok
+test cache::refresh_generation_tests::committed_reset_deadline_survives_forward_and_backward_wall_clock_jumps ... ok
+test cache::refresh_generation_tests::immediate_restart_retries_after_the_cancelled_old_inventory_flight_unwinds ... ok
+test resume_token::tests::tokens_round_trip_across_store_instances_and_hide_contents ... ok
+test resume_token::tests::tampered_or_foreign_tokens_are_unavailable ... ok
+test cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work ... ok
+test notifications::tests::duplicate_polls_do_not_emit_twice_and_reminders_are_bounded ... ok
+test inputs::tests::invalid_images_are_rejected_with_typed_errors ... ok
+test inputs::tests::owner_byte_budget_is_enforced ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\boundaries.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\boundaries-a543866bff67baa5.exe)
+
+running 4 tests
+test protocol_mismatch_and_parameter_smuggling_are_rejected ... ok
+test source_failure_does_not_serialize_private_error_text ... ok
+test revocation_during_scan_does_not_restore_authority ... ok
+test cached_reads_remain_responsive_while_scan_runs ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests\catalog_pages.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\catalog_pages-838c166c782144a3.exe)
+
+running 5 tests
+test empty_catalog_returns_a_terminal_page_without_scanning ... ok
+test page_cursors_cannot_move_between_clients_or_route_filters ... ok
+test page_rechecks_scope_and_rejects_changed_catalogs ... ok
+test pages_validate_limits_and_never_return_oversized_frames ... ok
+test paged_catalog_preserves_order_and_every_route_identity ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+     Running tests\chatgpt_auth_scope.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\chatgpt_auth_scope-9cb0aeb8a8b97270.exe)
+
+running 3 tests
+test chatgpt_auth_methods_require_managed_metadata_scope ... ok
+test unrelated_provider_startup_does_not_delay_managed_disconnect ... ok
+test disconnect_waits_for_inflight_managed_create_then_closes_its_session ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\client_lifecycle.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\client_lifecycle-f7ed7f298984af15.exe)
+
+running 3 tests
+test rpc_close_cannot_choose_a_different_owner ... ok
+test closed_clients_do_not_exhaust_the_long_lived_broker ... ok
+test closing_one_app_preserves_the_other_apps_permissions ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\execution-855f1bab45ac7ddf.exe)
+
+running 10 tests
+test request_cannot_supply_native_arguments_or_paths ... ok
+test discovery_permission_does_not_authorize_execution ... ok
+test selection_smuggling_does_not_reach_factory ... ok
+test revocation_during_open_then_regrant_closes_the_unpublished_agent ... ok
+test unknown_workspaces_and_permission_upgrades_are_rejected ... ok
+test long_turn_prompt_reaches_native_agent_unchanged ... ok
+test session_factory_and_events_go_through_public_service ... ok
+test artifacts_are_read_through_the_public_service_and_never_by_path ... ok
+test long_turn_exception_keeps_typed_and_other_method_bounds ... ok
+test turn_prompt_and_serialized_params_have_separate_bounds ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\gateway_routes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\gateway_routes-b7aec473ac86c2a1.exe)
+
+running 3 tests
+test gateway_cannot_attach_model_routes_to_another_account ... ok
+test gateway_metadata_does_not_claim_an_execution_driver_exists ... ok
+test gateway_subroute_keeps_model_vendor_and_billing_identity ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\host_mcp.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\host_mcp-6eccaf6f1385e3f0.exe)
+
+running 8 tests
+test debug_output_redacts_the_bearer_token ... ok
+test handshake_advertises_host_mcp ... ok
+test host_servers_require_the_execution_grant_and_reject_workspace_write ... ok
+test a_host_mcp_allowlist_of_130_tools_fits_session_create ... ok
+test omitted_host_servers_are_backwards_compatible ... ok
+test valid_host_servers_reach_the_adapter_and_are_never_echoed ... ok
+test two_host_servers_can_share_a_256_tool_allowlist ... ok
+test invalid_host_servers_are_refused_before_any_launch ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\image_inputs.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\image_inputs-c4422d44a0f351b3.exe)
+
+running 5 tests
+test handshake_advertises_image_input_and_put_method ... ok
+test inputs_are_owner_and_session_scoped ... ok
+test unsupported_model_or_adapter_fails_the_turn_instead_of_dropping_images ... ok
+test invalid_puts_are_typed_request_errors ... ok
+test staged_image_reaches_a_capable_adapter_once ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\introspection.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\introspection-4d46f03428432f17.exe)
+
+running 3 tests
+test health_describes_configured_runtime_not_a_stale_constant ... ok
+test adapter_listing_is_a_collection_not_fake_single_provider_status ... ok
+test diagnostics_and_grants_separate_available_execution_from_permission ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\long_running.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\long_running-2e9cf735364a4632.exe)
+
+running 1 test
+test cached_metadata_age_does_not_cancel_an_already_authorized_turn ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\metadata.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\metadata-9ecc63a93dc177a1.exe)
+
+running 14 tests
+test one_connection_probe_cannot_overwrite_another_account ... ok
+test failed_metadata_probes_back_off_instead_of_respawning_for_each_caller ... ok
+test discovery_never_runs_client_probe_and_missing_grant_is_denied ... ok
+test provider_scope_must_be_host_set_and_unknown_provider_does_not_spawn ... ok
+test approved_metadata_is_scoped_and_identity_stays_masked ... ok
+test a_corrupt_or_foreign_cache_file_is_preserved_and_rebuilt ... ok
+test repeated_reads_do_not_invent_new_observation_times_or_revisions ... ok
+test concurrent_probes_share_cached_work_without_repeated_client_spawns ... ok
+test observations_survive_a_restart_as_stale_while_revalidate_data_without_identity ... ok
+test revoked_during_probe_cannot_publish_new_metadata ... ok
+test watching_needs_discovery_permission_and_can_be_stopped ... ok
+test provider_retry_after_is_sanitized_preserved_and_expires ... ok
+test explicit_watch_invalidates_changed_metadata_without_running_a_probe ... ok
+test retryable_metadata_failures_use_increasing_bounded_backoff ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.24s
+
+     Running tests\native_policy.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_policy-3c6733efd82e7442.exe)
+
+running 3 tests
+test native_client_policy_needs_separate_host_authorization ... ok
+test native_policy_does_not_bypass_workspace_or_billing_grants ... ok
+test explicit_native_policy_is_preserved_for_the_provider_not_claimed_readonly ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\persistent_resume.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\persistent_resume-e688c9728346bdb7.exe)
+
+running 7 tests
+test handshake_and_routes_advertise_persistent_resume ... ok
+test persistent_requires_a_state_dir_and_a_resumable_route ... ok
+test missing_native_history_is_resume_unavailable_not_a_new_chat ... ok
+test model_revision_changes_are_tolerated_for_the_same_model_id ... ok
+test token_survives_a_helper_restart_and_reattaches_the_same_conversation ... ok
+test identity_changes_refuse_with_resume_unavailable ... ok
+test host_servers_are_resupplied_on_resume_never_stored ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests\refresh_lanes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\refresh_lanes-475b786004a06ae1.exe)
+
+running 20 tests
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test explicit_probe_failure_from_before_a_scan_cannot_stale_the_new_generation ... ok
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test stopping_background_inventory_does_not_cancel_a_foreground_joiners_shared_scan ... ok
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+test duplicate_routes_in_one_verified_quota_scope_share_one_probe_per_tick ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... ok
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... ok
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.48s
+
+     Running tests\resumption.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\resumption-cfcb800a0624655a.exe)
+
+running 6 tests
+test revocation_invalidates_unconsumed_resume_tokens ... ok
+test resume_tokens_are_invalid_after_runtime_restart ... ok
+test active_and_closed_sessions_cannot_be_suspended ... ok
+test resume_tokens_are_opaque_owner_scoped_and_one_time ... ok
+test completed_conversation_can_suspend_and_resume_without_a_fresh_session ... ok
+test resume_revalidates_account_model_route_billing_and_workspace_grant ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\runtime_sync.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\runtime_sync-546642ec81d0c3de.exe)
+
+running 7 tests
+test metadata_advances_the_revision_and_replays_exactly_once ... ok
+test notifications_are_deduplicated_across_clients_and_respect_privacy ... ok
+test an_installed_notification_sink_receives_only_due_decisions ... ok
+test issue_and_snapshot_projection_hide_inaccessible_connections ... ok
+test expiry_creates_actionable_health_and_snooze_does_not_resolve_it ... ok
+test invalidation_is_debounced_then_the_autonomous_lane_rechecks_it ... ok
+test an_older_probe_cannot_overwrite_a_newer_revision ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests\scoped_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\scoped_execution-b33ef8c53c2fb091.exe)
+
+running 1 test
+test connection_scoped_executor_does_not_bless_sibling_account ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\service.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\service-0791f076ede4c969.exe)
+
+running 12 tests
+test unknown_client_cannot_read_or_scan ... ok
+test ungranted_client_cannot_trigger_discovery ... ok
+test duplicate_host_registration_does_not_replace_policy ... ok
+test browser_request_cannot_grant_itself_more_permissions ... ok
+test requests_are_bounded_and_projection_fields_are_allowlisted ... ok
+test construction_handshake_and_snapshot_never_scan ... ok
+test unsupported_methods_and_nonpassive_scans_fail_closed ... ok
+test revocation_immediately_hides_cached_data ... ok
+test request_payload_does_not_choose_caller_identity ... ok
+test native_selection_validation_uses_authorized_catalog ... ok
+test alternate_data_methods_respect_the_same_projection ... ok
+test simultaneous_refreshes_are_singleflight ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\session_auth.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\session_auth-1e6410e836017722.exe)
+
+running 1 test
+test session_start_rereads_live_auth_instead_of_trusting_cached_login ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\session_billing.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\session_billing-ea19dce618dffbdf.exe)
+
+running 1 test
+test host_billing_allowance_does_not_widen_session_consent ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_store-dab2ff204ce18ea8.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\store.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\store-ce4003954de481e6.exe)
+
+running 8 tests
+test an_old_epoch_or_a_future_cursor_is_an_explicit_gap ... ok
+test a_corrupt_database_is_preserved_not_deleted ... ok
+test persisted_metadata_never_contains_account_identity_text ... ok
+test read_only_diagnostics_do_not_create_or_modify_state ... ok
+test a_future_schema_fails_closed ... ok
+test commit_reloads_snapshot_and_replays_the_exact_journal ... ok
+test notification_dedupe_state_survives_a_restart ... ok
+test journal_is_bounded_and_evicts_old_cursors_without_losing_the_snapshot ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_transports-f74d5a10533e06ab.exe)
+
+running 1 test
+test http::auth::lifecycle_tests::expiring_a_pairing_token_releases_only_that_client ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\http.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http-36c95cc37a08ee35.exe)
+
+running 10 tests
+test pairing_cannot_upgrade_grants ... ok
+test foreign_origin_cannot_redeem_a_valid_code ... ok
+test no_bootstrap_token_or_automatic_scan ... ok
+test host_origin_and_query_credentials_are_rejected ... ok
+test single_use_pairing_and_native_rpc ... ok
+test variable_font_assets_are_served_as_woff2 ... ok
+test same_origin_pairing_code_endpoint_returns_current_code_without_consuming_it ... ok
+test client_routes_serve_index_and_everything_else_stays_strict ... ok
+test malformed_requests_and_body_limits_are_enforced ... ok
+test repeated_pair_and_revoke_does_not_exhaust_broker_client_slots ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+     Running tests\local_ipc.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\local_ipc-7986126003c89ee4.exe)
+
+running 8 tests
+test endpoint_rejects_network_names_and_ambiguous_addresses ... ok
+test an_independent_owner_credential_can_open_more_than_one_connection ... ok
+test another_broker_cannot_take_over_a_live_endpoint ... ok
+test unauthorized_connections_cannot_query_and_keys_are_single_use ... ok
+test permissions_are_per_connection_and_revocation_is_local ... ok
+test two_clients_share_inventory_and_closing_one_does_not_stop_broker ... ok
+test scoped_app_grants_isolate_accounts_and_revocation_removes_the_grant ... ok
+test an_idle_independent_broker_releases_its_endpoint ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.91s
+
+     Running tests\native_messaging.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\native_messaging-945bc4b503d71639.exe)
+
+running 6 tests
+test oversized_input_is_rejected_before_allocating_payload ... ok
+test missing_or_unregistered_origins_never_touch_the_service ... ok
+test partial_header_and_body_are_protocol_errors ... ok
+test invalid_utf8_and_json_fail_without_echoing_payload ... ok
+test multiline_json_remains_one_native_request ... ok
+test real_service_roundtrip_uses_native_length_prefix_not_text_lines ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\stdio.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\stdio-9f227be2cbbbdd1b.exe)
+
+running 8 tests
+test protocol_mismatch_never_unlocks_discovery ... ok
+test unfinished_and_oversized_lines_fail_closed ... ok
+test handshake_is_required_before_a_scan ... ok
+test real_service_negotiates_and_returns_empty_live_snapshot ... ok
+test notifications_cannot_trigger_work ... ok
+test malformed_frames_and_batches_have_jsonrpc_errors ... ok
+test string_ids_and_typed_domain_errors_are_preserved ... ok
+test responses_are_correlated_without_blocking_cached_reads ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\streaming.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\streaming-26716a0f20cdb6c4.exe)
+
+running 2 tests
+test native_stdio_subscriptions_stream_after_ack_and_unsubscribe ... ok
+test native_sse_is_an_authorized_service_stream ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running unittests src\lib.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\lai_update-9748d7e8bfd14d17.exe)
+
+running 4 tests
+test tests::signature_checksum_platform_and_downgrade_are_all_required ... ok
+test tests::a_failed_staging_copy_never_touches_the_installed_binary ... ok
+test tests::an_old_crash_marker_is_preserved_but_does_not_block_activation ... ok
+test tests::staged_activation_refuses_a_live_session_and_rolls_back ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+TAP version 13
+# 5000-model index + search: 10.07ms
+# Subtest: accountless local runtimes require matching providers and fresh local billing
+ok 1 - accountless local runtimes require matching providers and fresh local billing
+  ---
+  duration_ms: 3.2446
+  type: 'test'
+  ...
+# Subtest: route identity and delimiter collisions stay distinct
+ok 2 - route identity and delimiter collisions stay distinct
+  ---
+  duration_ms: 0.2093
+  type: 'test'
+  ...
+# Subtest: four routes to same native model remain four candidates
+ok 3 - four routes to same native model remain four candidates
+  ---
+  duration_ms: 0.243
+  type: 'test'
+  ...
+# Subtest: authenticated subscription can be eligible without promising free use
+ok 4 - authenticated subscription can be eligible without promising free use
+  ---
+  duration_ms: 0.1644
+  type: 'test'
+  ...
+# Subtest: API billing requires consent; local and included routes do not inherit it
+ok 5 - API billing requires consent; local and included routes do not inherit it
+  ---
+  duration_ms: 0.3234
+  type: 'test'
+  ...
+# Subtest: unknown billing is not treated as included allowance
+ok 6 - unknown billing is not treated as included allowance
+  ---
+  duration_ms: 0.1485
+  type: 'test'
+  ...
+# Subtest: expired authentication dominates stale catalogs
+ok 7 - expired authentication dominates stale catalogs
+  ---
+  duration_ms: 0.2145
+  type: 'test'
+  ...
+# Subtest: stale authentication does not authorize execution
+ok 8 - stale authentication does not authorize execution
+  ---
+  duration_ms: 0.1065
+  type: 'test'
+  ...
+# Subtest: unknown required capability does not satisfy filter
+ok 9 - unknown required capability does not satisfy filter
+  ---
+  duration_ms: 0.4812
+  type: 'test'
+  ...
+# Subtest: conditional capability is not unconditionally eligible
+ok 10 - conditional capability is not unconditionally eligible
+  ---
+  duration_ms: 0.3944
+  type: 'test'
+  ...
+# Subtest: unknown capability evidence cannot become confirmed support
+ok 11 - unknown capability evidence cannot become confirmed support
+  ---
+  duration_ms: 0.1883
+  type: 'test'
+  ...
+# Subtest: search indexes native ID, provider and connection
+ok 12 - search indexes native ID, provider and connection
+  ---
+  duration_ms: 0.1319
+  type: 'test'
+  ...
+# Subtest: provider grouping preserves all access routes
+ok 13 - provider grouping preserves all access routes
+  ---
+  duration_ms: 0.1693
+  type: 'test'
+  ...
+# Subtest: missing route or connection is excluded and diagnosed by the index
+ok 14 - missing route or connection is excluded and diagnosed by the index
+  ---
+  duration_ms: 0.1073
+  type: 'test'
+  ...
+# Subtest: duplicate identifiers fail rather than silently replace billing identities
+ok 15 - duplicate identifiers fail rather than silently replace billing identities
+  ---
+  duration_ms: 0.316
+  type: 'test'
+  ...
+# Subtest: native future effort is allowed and guessed effort is not
+ok 16 - native future effort is allowed and guessed effort is not
+  ---
+  duration_ms: 0.17
+  type: 'test'
+  ...
+# Subtest: numeric options enforce step, range, finite numbers and type
+ok 17 - numeric options enforce step, range, finite numbers and type
+  ---
+  duration_ms: 0.1498
+  type: 'test'
+  ...
+# Subtest: boolean, text and unknown option types are handled without guessing
+ok 18 - boolean, text and unknown option types are handled without guessing
+  ---
+  duration_ms: 0.0868
+  type: 'test'
+  ...
+# Subtest: changing model clears unsupported saved options visibly, without selecting defaults
+ok 19 - changing model clears unsupported saved options visibly, without selecting defaults
+  ---
+  duration_ms: 0.6374
+  type: 'test'
+  ...
+# Subtest: model disappearance returns no selection rather than routing elsewhere
+ok 20 - model disappearance returns no selection rather than routing elsewhere
+  ---
+  duration_ms: 0.1166
+  type: 'test'
+  ...
+# Subtest: valid selections retain exact route, native options and revision
+ok 21 - valid selections retain exact route, native options and revision
+  ---
+  duration_ms: 0.1198
+  type: 'test'
+  ...
+# Subtest: route/model mismatch cannot pick a different account
+ok 22 - route/model mismatch cannot pick a different account
+  ---
+  duration_ms: 0.0899
+  type: 'test'
+  ...
+# Subtest: selection does not mutate frozen catalogs or saved options
+ok 23 - selection does not mutate frozen catalogs or saved options
+  ---
+  duration_ms: 0.4773
+  type: 'test'
+  ...
+# Subtest: shared pool appears once without combining unknown allowances
+ok 24 - shared pool appears once without combining unknown allowances
+  ---
+  duration_ms: 0.1372
+  type: 'test'
+  ...
+# Subtest: 5000 models are indexed and queried without per-row catalog scans
+ok 25 - 5000 models are indexed and queried without per-row catalog scans
+  ---
+  duration_ms: 11.4861
+  type: 'test'
+  ...
+# Subtest: explicit backend denial of included usage is not overridden by paid fallback or elapsed reset time
+ok 26 - explicit backend denial of included usage is not overridden by paid fallback or elapsed reset time
+  ---
+  duration_ms: 0.5888
+  type: 'test'
+  ...
+# Subtest: exact account phrases outrank incidental substrings without collapsing routes
+ok 27 - exact account phrases outrank incidental substrings without collapsing routes
+  ---
+  duration_ms: 0.2236
+  type: 'test'
+  ...
+# Subtest: search ranking remains stable for equal matches and empty searches
+ok 28 - search ranking remains stable for equal matches and empty searches
+  ---
+  duration_ms: 0.4885
+  type: 'test'
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 247.2033
+TAP version 13
+# Subtest: result bytes are fetched only on explicit invocation
+ok 1 - result bytes are fetched only on explicit invocation
+  ---
+  duration_ms: 1.3591
+  type: 'test'
+  ...
+# Subtest: chunks preserve offsets and cannot silently change session or artifact identity
+ok 2 - chunks preserve offsets and cannot silently change session or artifact identity
+  ---
+  duration_ms: 0.942
+  type: 'test'
+  ...
+# Subtest: missing final state and malformed base64 fail without producing partial downloads
+ok 3 - missing final state and malformed base64 fail without producing partial downloads
+  ---
+  duration_ms: 0.3664
+  type: 'test'
+  ...
+# Subtest: explicit bundle verifies bytes and returns the same approved native path
+ok 4 - explicit bundle verifies bytes and returns the same approved native path
+  ---
+  duration_ms: 19.9057
+  type: 'test'
+  ...
+# Subtest: changed binaries fail checksum validation
+ok 5 - changed binaries fail checksum validation
+  ---
+  duration_ms: 9.9018
+  type: 'test'
+  ...
+# Subtest: another architecture is not silently executed
+ok 6 - another architecture is not silently executed
+  ---
+  duration_ms: 7.7884
+  type: 'test'
+  ...
+# Subtest: missing and oversized manifests fail with sanitized errors
+ok 7 - missing and oversized manifests fail with sanitized errors
+  ---
+  duration_ms: 7.0378
+  type: 'test'
+  ...
+# Subtest: relative directories and malformed manifests cannot select other executables
+ok 8 - relative directories and malformed manifests cannot select other executables
+  ---
+  duration_ms: 11.038
+  type: 'test'
+  ...
+# Subtest: construction never loads a catalog and paginated reads preserve all models
+ok 9 - construction never loads a catalog and paginated reads preserve all models
+  ---
+  duration_ms: 3.4071
+  type: 'test'
+  ...
+# Subtest: changed catalog is rejected rather than combining different account snapshots
+ok 10 - changed catalog is rejected rather than combining different account snapshots
+  ---
+  duration_ms: 0.7223
+  type: 'test'
+  ...
+# Subtest: repeated cursors or model IDs cannot cause endless reads
+ok 11 - repeated cursors or model IDs cannot cause endless reads
+  ---
+  duration_ms: 0.3782
+  type: 'test'
+  ...
+# Subtest: legacy runtimes retain the existing explicit snapshot path
+ok 12 - legacy runtimes retain the existing explicit snapshot path
+  ---
+  duration_ms: 1.4208
+  type: 'test'
+  ...
+# Subtest: host model limits are enforced without returning truncated successful data
+ok 13 - host model limits are enforced without returning truncated successful data
+  ---
+  duration_ms: 0.3706
+  type: 'test'
+  ...
+# Subtest: managed auth calls use the advertised nested RPCs only
+ok 14 - managed auth calls use the advertised nested RPCs only
+  ---
+  duration_ms: 3.0105
+  type: 'test'
+  ...
+# Subtest: SDK close releases the native client once before closing its transport
+ok 15 - SDK close releases the native client once before closing its transport
+  ---
+  duration_ms: 2.7411
+  type: 'test'
+  ...
+# Subtest: a failed remote cleanup still closes the transport without leaking native errors
+ok 16 - a failed remote cleanup still closes the transport without leaking native errors
+  ---
+  duration_ms: 0.357
+  type: 'test'
+  ...
+# Subtest: constructing a transport has no I/O
+ok 17 - constructing a transport has no I/O
+  ---
+  duration_ms: 1.9351
+  type: 'test'
+  ...
+# Subtest: pairing code helper reads the current code without credentials or caching
+ok 18 - pairing code helper reads the current code without credentials or caching
+  ---
+  duration_ms: 21.2618
+  type: 'test'
+  ...
+# Subtest: pairing code helper rejects malformed responses and remote hosts
+ok 19 - pairing code helper rejects malformed responses and remote hosts
+  ---
+  duration_ms: 1.2487
+  type: 'test'
+  ...
+# Subtest: pairing code issue helper explicitly rotates by POST without auth
+ok 20 - pairing code issue helper explicitly rotates by POST without auth
+  ---
+  duration_ms: 0.4688
+  type: 'test'
+  ...
+# Subtest: request uses header auth, exact method/params and no cookies or redirects
+ok 21 - request uses header auth, exact method/params and no cookies or redirects
+  ---
+  duration_ms: 1.354
+  type: 'test'
+  ...
+# Subtest: nonlocal endpoints, URL credentials, query secrets and header injection are rejected
+ok 22 - nonlocal endpoints, URL credentials, query secrets and header injection are rejected
+  ---
+  duration_ms: 0.4292
+  type: 'test'
+  ...
+# Subtest: malformed or mismatched envelopes are rejected
+ok 23 - malformed or mismatched envelopes are rejected
+  ---
+  duration_ms: 2.2524
+  type: 'test'
+  ...
+# Subtest: provider error details are not reflected into SDK errors
+ok 24 - provider error details are not reflected into SDK errors
+  ---
+  duration_ms: 1.1618
+  type: 'test'
+  ...
+# Subtest: safe retry metadata is exposed without provider details
+ok 25 - safe retry metadata is exposed without provider details
+  ---
+  duration_ms: 0.8115
+  type: 'test'
+  ...
+# Subtest: no automatic retry on HTTP or ambiguous transport failure
+ok 26 - no automatic retry on HTTP or ambiguous transport failure
+  ---
+  duration_ms: 0.6349
+  type: 'test'
+  ...
+# Subtest: response bytes are bounded before JSON parsing
+ok 27 - response bytes are bounded before JSON parsing
+  ---
+  duration_ms: 1.2381
+  type: 'test'
+  ...
+# Subtest: outgoing request bytes are bounded without sending
+ok 28 - outgoing request bytes are bounded without sending
+  ---
+  duration_ms: 0.7238
+  type: 'test'
+  ...
+# Subtest: aborted request sends nothing
+ok 29 - aborted request sends nothing
+  ---
+  duration_ms: 0.2076
+  type: 'test'
+  ...
+# Subtest: timeout aborts a hung request and never retries
+ok 30 - timeout aborts a hung request and never retries
+  ---
+  duration_ms: 25.168
+  type: 'test'
+  ...
+# Subtest: close aborts active requests and rejects future requests
+ok 31 - close aborts active requests and rejects future requests
+  ---
+  duration_ms: 0.509
+  type: 'test'
+  ...
+# Subtest: client handshake rejects a mismatched protocol major and closes transport
+ok 32 - client handshake rejects a mismatched protocol major and closes transport
+  ---
+  duration_ms: 0.3486
+  type: 'test'
+  ...
+# Subtest: client methods call exact RPC names, without auto discovery or execution
+ok 33 - client methods call exact RPC names, without auto discovery or execution
+  ---
+  duration_ms: 0.7043
+  type: 'test'
+  ...
+# Subtest: image inputs stage through inputs.put and advertise their runtime capability
+ok 34 - image inputs stage through inputs.put and advertise their runtime capability
+  ---
+  duration_ms: 0.5944
+  type: 'test'
+  ...
+# Subtest: SSE handles split UTF8, comments, CRLF and multiline data
+ok 35 - SSE handles split UTF8, comments, CRLF and multiline data
+  ---
+  duration_ms: 1.5828
+  type: 'test'
+  ...
+# Subtest: SSE never emits an incomplete event at EOF
+ok 36 - SSE never emits an incomplete event at EOF
+  ---
+  duration_ms: 0.199
+  type: 'test'
+  ...
+# Subtest: SSE frame limits include unterminated lines
+ok 37 - SSE frame limits include unterminated lines
+  ---
+  duration_ms: 1.9587
+  type: 'test'
+  ...
+# Subtest: authenticated event stream uses safe cursor and explicit gap error
+ok 38 - authenticated event stream uses safe cursor and explicit gap error
+  ---
+  duration_ms: 1.1726
+  type: 'test'
+  ...
+# Subtest: plain text HTTP failures never disclose body content
+ok 39 - plain text HTTP failures never disclose body content
+  ---
+  duration_ms: 0.46
+  type: 'test'
+  ...
+# Subtest: explicit native port carries handshake and data without ambient chrome access
+ok 40 - explicit native port carries handshake and data without ambient chrome access
+  ---
+  duration_ms: 3.9782
+  type: 'test'
+  ...
+# Subtest: native errors are typed and never echo provider strings
+ok 41 - native errors are typed and never echo provider strings
+  ---
+  duration_ms: 0.8257
+  type: 'test'
+  ...
+# Subtest: port disconnect rejects in-flight calls and releases listeners
+ok 42 - port disconnect rejects in-flight calls and releases listeners
+  ---
+  duration_ms: 0.4472
+  type: 'test'
+  ...
+# Subtest: oversized messages fail before posting and cancellation does not replay
+ok 43 - oversized messages fail before posting and cancellation does not replay
+  ---
+  duration_ms: 5.9879
+  type: 'test'
+  ...
+# Subtest: event subscription installs before same-tick updates and preserves unrelated calls
+ok 44 - event subscription installs before same-tick updates and preserves unrelated calls
+  ---
+  duration_ms: 1.3958
+  type: 'test'
+  ...
+# Subtest: malformed native replies fail the connection instead of accepting untrusted payloads
+ok 45 - malformed native replies fail the connection instead of accepting untrusted payloads
+  ---
+  duration_ms: 0.4717
+  type: 'test'
+  ...
+# Subtest: explicit local process round trips through the same public client
+ok 46 - explicit local process round trips through the same public client
+  ---
+  duration_ms: 86.1061
+  type: 'test'
+  ...
+# Subtest: concurrent requests are correlated instead of relying on completion order
+ok 47 - concurrent requests are correlated instead of relying on completion order
+  ---
+  duration_ms: 105.5617
+  type: 'test'
+  ...
+# Subtest: prompts and arbitrary strings are data, not executable shell arguments
+ok 48 - prompts and arbitrary strings are data, not executable shell arguments
+  ---
+  duration_ms: 60.5874
+  type: 'test'
+  ...
+# Subtest: relative executable or working directory is rejected
+ok 49 - relative executable or working directory is rejected
+  ---
+  duration_ms: 0.7427
+  type: 'test'
+  ...
+# Subtest: inherited NODE_OPTIONS is not injected into the helper
+ok 50 - inherited NODE_OPTIONS is not injected into the helper
+  ---
+  duration_ms: 61.0882
+  type: 'test'
+  ...
+# Subtest: request timeout does not retry and transport can still answer another request
+ok 51 - request timeout does not retry and transport can still answer another request
+  ---
+  duration_ms: 90.5361
+  type: 'test'
+  ...
+# Subtest: request AbortSignal rejects without replay or fallback
+ok 52 - request AbortSignal rejects without replay or fallback
+  ---
+  duration_ms: 7.1991
+  type: 'test'
+  ...
+# Subtest: malformed peer output fails the transport closed
+ok 53 - malformed peer output fails the transport closed
+  ---
+  duration_ms: 55.7054
+  type: 'test'
+  ...
+# Subtest: oversized unterminated stdout is bounded
+ok 54 - oversized unterminated stdout is bounded
+  ---
+  duration_ms: 60.4415
+  type: 'test'
+  ...
+# Subtest: peer exit rejects in-flight operations
+ok 55 - peer exit rejects in-flight operations
+  ---
+  duration_ms: 62.1406
+  type: 'test'
+  ...
+# Subtest: events in same stdout chunk as subscribe response are not lost
+ok 56 - events in same stdout chunk as subscribe response are not lost
+  ---
+  duration_ms: 66.2023
+  type: 'test'
+  ...
+# Subtest: event consumer overflow fails explicitly instead of dropping output
+ok 57 - event consumer overflow fails explicitly instead of dropping output
+  ---
+  duration_ms: 73.5497
+  type: 'test'
+  ...
+# Subtest: close is idempotent and does not leave pending requests
+ok 58 - close is idempotent and does not leave pending requests
+  ---
+  duration_ms: 6.8111
+  type: 'test'
+  ...
+# Subtest: stderr is drained but not returned or logged
+ok 59 - stderr is drained but not returned or logged
+  ---
+  duration_ms: 83.367
+  type: 'test'
+  ...
+# Subtest: server event gap fails only its subscription and preserves request transport
+ok 60 - server event gap fails only its subscription and preserves request transport
+  ---
+  duration_ms: 71.7376
+  type: 'test'
+  ...
+# Subtest: concurrent successful probes share the newest snapshot instead of cancelling each other
+ok 61 - concurrent successful probes share the newest snapshot instead of cancelling each other
+  ---
+  duration_ms: 6.4244
+  type: 'test'
+  ...
+# Subtest: construction, subscription and reads do not start discovery or any request
+ok 62 - construction, subscription and reads do not start discovery or any request
+  ---
+  duration_ms: 0.3055
+  type: 'test'
+  ...
+# Subtest: concurrent snapshot loads share one public SDK request
+ok 63 - concurrent snapshot loads share one public SDK request
+  ---
+  duration_ms: 0.279
+  type: 'test'
+  ...
+# Subtest: only explicit scan and probe calls enrich data
+ok 64 - only explicit scan and probe calls enrich data
+  ---
+  duration_ms: 1.3228
+  type: 'test'
+  ...
+# Subtest: a late request cannot repopulate a disposed store
+ok 65 - a late request cannot repopulate a disposed store
+  ---
+  duration_ms: 1.061
+  type: 'test'
+  ...
+# Subtest: authorization failures clear old account data and normalize the error
+ok 66 - authorization failures clear old account data and normalize the error
+  ---
+  duration_ms: 0.3876
+  type: 'test'
+  ...
+# Subtest: the store owns immutable data instead of mutating host input
+ok 67 - the store owns immutable data instead of mutating host input
+  ---
+  duration_ms: 0.7611
+  type: 'test'
+  ...
+# Subtest: store uses paged catalogs when the runtime advertises models.page
+ok 68 - store uses paged catalogs when the runtime advertises models.page
+  ---
+  duration_ms: 1.1105
+  type: 'test'
+  ...
+1..68
+# tests 68
+# suites 0
+# pass 68
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1098.0597
+test_exact_native_file_is_verified_without_spawning (test_bundle.Bundles.test_exact_native_file_is_verified_without_spawning) ... ok
+test_modified_bytes_and_wrong_platform_are_rejected (test_bundle.Bundles.test_modified_bytes_and_wrong_platform_are_rejected) ... ok
+test_relative_path_and_missing_manifest_have_safe_errors (test_bundle.Bundles.test_relative_path_and_missing_manifest_have_safe_errors) ... ok
+test_symlink_is_not_followed (test_bundle.Bundles.test_symlink_is_not_followed) ... ok
+test_cancelled_task_does_not_break_later_requests (test_client.AsyncTests.test_cancelled_task_does_not_break_later_requests) ... ok
+test_close_idempotent (test_client.AsyncTests.test_close_idempotent) ... ok
+test_concurrent_responses_keep_identity (test_client.AsyncTests.test_concurrent_responses_keep_identity) ... ok
+test_environment_does_not_inherit_loader_hooks (test_client.AsyncTests.test_environment_does_not_inherit_loader_hooks) ... ok
+test_events_after_ack_are_not_lost (test_client.AsyncTests.test_events_after_ack_are_not_lost) ... ok
+test_inputs_put_is_gated_by_handshake (test_client.AsyncTests.test_inputs_put_is_gated_by_handshake) ... ok
+test_invalid_paths_before_spawn (test_client.AsyncTests.test_invalid_paths_before_spawn) ... ok
+test_malformed_output_fails_closed (test_client.AsyncTests.test_malformed_output_fails_closed) ... ok
+test_method_not_advertised_is_unavailable (test_client.AsyncTests.test_method_not_advertised_is_unavailable) ... ok
+test_native_error_is_redacted (test_client.AsyncTests.test_native_error_is_redacted) ... ok
+test_outgoing_limit (test_client.AsyncTests.test_outgoing_limit) ... ok
+test_peer_exit_rejects_pending_requests (test_client.AsyncTests.test_peer_exit_rejects_pending_requests) ... ok
+test_retry_metadata_is_preserved_without_private_error_details (test_client.AsyncTests.test_retry_metadata_is_preserved_without_private_error_details) ... ok
+test_same_client_handshake_and_snapshot (test_client.AsyncTests.test_same_client_handshake_and_snapshot) ... ok
+test_slow_consumer_gets_gap_not_silent_loss (test_client.AsyncTests.test_slow_consumer_gets_gap_not_silent_loss) ... ok
+test_text_not_interpreted_by_shell (test_client.AsyncTests.test_text_not_interpreted_by_shell) ... ok
+test_timeout_does_not_retry (test_client.AsyncTests.test_timeout_does_not_retry) ... ok
+test_unterminated_output_limit (test_client.AsyncTests.test_unterminated_output_limit) ... ok
+test_import_has_no_process_or_network_side_effect (test_client.SyncTests.test_import_has_no_process_or_network_side_effect) ... ok
+test_sync_facade_uses_same_async_transport (test_client.SyncTests.test_sync_facade_uses_same_async_transport) ... ok
+test_closing_releases_native_owner_before_transport (test_client_close.Close.test_closing_releases_native_owner_before_transport) ... ok
+test_failed_remote_cleanup_does_not_leak_or_prevent_shutdown (test_client_close.Close.test_failed_remote_cleanup_does_not_leak_or_prevent_shutdown) ... ok
+test_gap_does_not_kill_unrelated_requests (test_events_error.EventsError.test_gap_does_not_kill_unrelated_requests) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 1.284s
+
+OK
+test_open_ended_rpc_results_remain_any_without_breaking_generation (test_client_stub.ClientStubs.test_open_ended_rpc_results_remain_any_without_breaking_generation) ... ok
+test_external_references_are_not_silently_accepted (test_contracts.GeneratedTypes.test_external_references_are_not_silently_accepted) ... ok
+test_outputs_are_deterministic (test_contracts.GeneratedTypes.test_outputs_are_deterministic) ... ok
+test_python_types_import_and_preserve_forward_references (test_contracts.GeneratedTypes.test_python_types_import_and_preserve_forward_references) ... ok
+test_typescript_preserves_required_optional_and_decimal_strings (test_contracts.GeneratedTypes.test_typescript_preserves_required_optional_and_decimal_strings) ... ok
+test_union_values_and_nested_shapes_are_not_erased (test_contracts.GeneratedTypes.test_union_values_and_nested_shapes_are_not_erased) ... ok
+test_unsafe_definition_names_fail_instead_of_generating_code (test_contracts.GeneratedTypes.test_unsafe_definition_names_fail_instead_of_generating_code) ... ok
+test_api_documents_actual_http_routes_and_authenticated_rpc (test_protocol.ProtocolDocuments.test_api_documents_actual_http_routes_and_authenticated_rpc) ... ok
+test_component_refs_are_rewritten_without_remote_fetches (test_protocol.ProtocolDocuments.test_component_refs_are_rewritten_without_remote_fetches) ... ok
+test_manifest_preserves_method_names_and_schema_refs (test_protocol.ProtocolDocuments.test_manifest_preserves_method_names_and_schema_refs) ... ok
+test_manifest_rejects_mismatched_method_maps (test_protocol.ProtocolDocuments.test_manifest_rejects_mismatched_method_maps) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.005s
+
+OK
+
+> local-ai-kit-workspace@0.1.0-alpha.18 build
+> tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json && tsc -p packages/react/tsconfig.json && tsc -p packages/ui-react/tsconfig.json && tsc -p apps/demo/tsconfig.json
+
+
+> local-ai-kit-workspace@0.1.0-alpha.18 test:react
+> npm run build && node --test packages/react/tests/*.test.mjs packages/ui-react/tests/*.test.mjs
+
+
+> local-ai-kit-workspace@0.1.0-alpha.18 build
+> tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json && tsc -p packages/react/tsconfig.json && tsc -p packages/ui-react/tsconfig.json && tsc -p apps/demo/tsconfig.json
+
+TAP version 13
+# Subtest: server rendering does not read an account or start a request
+ok 1 - server rendering does not read an account or start a request
+  ---
+  duration_ms: 9.1552
+  type: 'test'
+  ...
+# Subtest: mounted hooks update only after an explicit public SDK action
+ok 2 - mounted hooks update only after an explicit public SDK action
+  ---
+  duration_ms: 32.765
+  type: 'test'
+  ...
+# Subtest: rerenders and subscription teardown never trigger scans
+ok 3 - rerenders and subscription teardown never trigger scans
+  ---
+  duration_ms: 10.1225
+  type: 'test'
+  ...
+# Subtest: hooks require an explicit provider rather than discovering a machine on their own
+ok 4 - hooks require an explicit provider rather than discovering a machine on their own
+  ---
+  duration_ms: 0.7646
+  type: 'test'
+  ...
+# Subtest: all eight selectors render explicit mode and a searchable model surface without a client
+ok 5 - all eight selectors render explicit mode and a searchable model surface without a client
+  ---
+  duration_ms: 33.9214
+  type: 'test'
+  ...
+# Subtest: provider rail is the default and retains the selected route identity
+ok 6 - provider rail is the default and retains the selected route identity
+  ---
+  duration_ms: 68.7461
+  type: 'test'
+  ...
+# Subtest: native future effort is selectable and no control is invented when options are absent
+ok 7 - native future effort is selectable and no control is invented when options are absent
+  ---
+  duration_ms: 4.7962
+  type: 'test'
+  ...
+# Subtest: billing-sensitive options are not changed without the host approval callback
+ok 8 - billing-sensitive options are not changed without the host approval callback
+  ---
+  duration_ms: 4.3145
+  type: 'test'
+  ...
+# Subtest: large catalogs mount a bounded window and keyboard End reaches the last model
+ok 9 - large catalogs mount a bounded window and keyboard End reaches the last model
+  ---
+  duration_ms: 42.2074
+  type: 'test'
+  ...
+# Subtest: unknown metadata and names are escaped, not treated as executable markup
+ok 10 - unknown metadata and names are escaped, not treated as executable markup
+  ---
+  duration_ms: 4.4162
+  type: 'test'
+  ...
+# Subtest: a disabled route cannot be selected unless inspection is explicitly enabled
+ok 11 - a disabled route cannot be selected unless inspection is explicitly enabled
+  ---
+  duration_ms: 14.4964
+  type: 'test'
+  ...
+# Subtest: controlled selections are not overwritten when a native descriptor changes
+ok 12 - controlled selections are not overwritten when a native descriptor changes
+  ---
+  duration_ms: 17.9726
+  type: 'test'
+  ...
+# Subtest: late sensitive-option approval cannot change a different model selection
+ok 13 - late sensitive-option approval cannot change a different model selection
+  ---
+  duration_ms: 5.2367
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1857.5253
+   Compiling tokio v1.53.3
+   Compiling hyper v1.11.1
+   Compiling hyper-util v0.1.20
+   Compiling tower v0.5.3
+   Compiling tokio-rustls v0.26.5
+   Compiling hyper-rustls v0.27.10
+   Compiling tower-http v0.6.11
+   Compiling tokio-util v0.7.19
+   Compiling lai-runtime v0.1.0-alpha.18 (<workspace>\crates\lai-runtime)
+   Compiling reqwest v0.12.28
+   Compiling process-wrap v10.0.1
+   Compiling lai-chatgpt-auth v0.1.0-alpha.18 (<workspace>\crates\lai-chatgpt-auth)
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+   Compiling axum v0.8.9
+   Compiling interprocess v2.4.6
+   Compiling lai-kit v0.1.0-alpha.18 (<workspace>\crates\lai-kit)
+   Compiling lai-transports v0.1.0-alpha.18 (<workspace>\crates\lai-transports)
+   Compiling lai-cli v0.1.0-alpha.18 (<workspace>\crates\lai-cli)
+    Finished `dev` profile [unoptimized] target(s) in 30.41s
+
+> local-ai-kit-workspace@0.1.0-alpha.18 build
+> tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json && tsc -p packages/react/tsconfig.json && tsc -p packages/ui-react/tsconfig.json && tsc -p apps/demo/tsconfig.json
+
+TAP version 13
+# Subtest: Node SDK shared broker uses independent credentials and one host survives client close
+ok 1 - Node SDK shared broker uses independent credentials and one host survives client close
+  ---
+  duration_ms: 958.8468
+  type: 'test'
+  ...
+# Subtest: Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+ok 2 - Node SDK to native Rust service: real scan, unchanged credentials, no fabricated metadata
+  ---
+  duration_ms: 863.1172
+  type: 'test'
+  ...
+# Subtest: Node helper defaults to denied and cannot self-authorize over RPC
+ok 3 - Node helper defaults to denied and cannot self-authorize over RPC
+  ---
+  duration_ms: 48.6763
+  type: 'test'
+  ...
+# Subtest: Node empty-home scan stays empty in live mode
+ok 4 - Node empty-home scan stays empty in live mode
+  ---
+  duration_ms: 57.7976
+  type: 'test'
+  ...
+# Subtest: Node typed catalog pages are served by the actual native helper
+ok 5 - Node typed catalog pages are served by the actual native helper
+  ---
+  duration_ms: 45.7488
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1118.7395
+test_default_policy_denies_discovery (__main__.NativeAsync.test_default_policy_denies_discovery) ... ok
+test_native_discovery_and_revocation (__main__.NativeAsync.test_native_discovery_and_revocation) ... ok
+test_sync_facade_scans_empty_home_through_rust (__main__.NativeSync.test_sync_facade_scans_empty_home_through_rust) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.170s
+
+OK
+test_python_client_uses_the_shared_native_broker_without_provider_logic (__main__.BrokerTest.test_python_client_uses_the_shared_native_broker_without_provider_logic) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.099s
+
+OK
+   Compiling syn v2.0.119
+   Compiling tokio v1.53.3
+   Compiling tracing-attributes v0.1.31
+   Compiling hyper v1.11.1
+   Compiling tracing v0.1.44
+   Compiling windows-interface v0.59.3
+   Compiling windows-implement v0.60.2
+   Compiling hyper-util v0.1.20
+   Compiling windows-core v0.62.2
+   Compiling tower v0.5.3
+   Compiling tokio-rustls v0.26.5
+   Compiling tower-http v0.6.11
+   Compiling hyper-rustls v0.27.10
+   Compiling tokio-util v0.7.19
+   Compiling windows-future v0.3.2
+   Compiling reqwest v0.12.28
+   Compiling lai-platform v0.1.0-alpha.18 (<workspace>\crates\lai-platform)
+   Compiling windows-numerics v0.3.1
+   Compiling windows-collections v0.3.2
+   Compiling windows v0.62.2
+   Compiling lai-discovery v0.1.0-alpha.18 (<workspace>\crates\lai-discovery)
+   Compiling lai-runtime v0.1.0-alpha.18 (<workspace>\crates\lai-runtime)
+   Compiling process-wrap v10.0.1
+   Compiling lai-chatgpt-auth v0.1.0-alpha.18 (<workspace>\crates\lai-chatgpt-auth)
+   Compiling axum-core v0.5.6
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+   Compiling axum v0.8.9
+   Compiling lai-kit v0.1.0-alpha.18 (<workspace>\crates\lai-kit)
+    Finished `dev` profile [unoptimized] target(s) in 26.55s
+     Running `D:\lai-task-7a4b270a-20261022\target\debug\examples\synthetic_adapter.exe`
+PASS synthetic adapter: public contracts, option, quota, session, stream, artifact, and close; no inference
+test_empty_negative_and_nonfinite_samples_are_rejected (test_benchmark.Measurements.test_empty_negative_and_nonfinite_samples_are_rejected) ... ok
+test_nearest_rank_quantiles_are_measured_not_target_values (test_benchmark.Measurements.test_nearest_rank_quantiles_are_measured_not_target_values) ... ok
+test_single_measurement_has_exact_quantiles (test_benchmark.Measurements.test_single_measurement_has_exact_quantiles) ... ok
+test_existing_installation_is_never_overwritten (test_native_host.NativeHost.test_existing_installation_is_never_overwritten) ... ok
+test_generated_registration_is_explicit_and_has_exact_origin (test_native_host.NativeHost.test_generated_registration_is_explicit_and_has_exact_origin) ... ok
+test_install_receipt_checksums_all_owned_payloads (test_native_host.NativeHost.test_install_receipt_checksums_all_owned_payloads) ... ok
+test_invalid_extension_identifiers_fail_before_creating_files (test_native_host.NativeHost.test_invalid_extension_identifiers_fail_before_creating_files) ... ok
+test_cycles_do_not_repeat_package_work (test_peer_packages.Peers.test_cycles_do_not_repeat_package_work) ... ok
+test_dependency_names_cannot_escape_the_installed_tree (test_peer_packages.Peers.test_dependency_names_cannot_escape_the_installed_tree) ... ok
+test_missing_peer_is_an_error_not_a_forced_install (test_peer_packages.Peers.test_missing_peer_is_an_error_not_a_forced_install) ... ok
+test_offline_peers_include_their_actual_installed_dependencies (test_peer_packages.Peers.test_offline_peers_include_their_actual_installed_dependencies) ... ok
+test_archive_is_deterministic_and_records_no_absolute_paths (test_release_support.ReleaseBundles.test_archive_is_deterministic_and_records_no_absolute_paths) ... ok
+test_changed_missing_or_unlisted_files_are_not_valid (test_release_support.ReleaseBundles.test_changed_missing_or_unlisted_files_are_not_valid) ... ok
+test_linked_files_are_never_followed (test_release_support.ReleaseBundles.test_linked_files_are_never_followed) ... ok
+test_manifest_file_is_not_self_hashed (test_release_support.ReleaseBundles.test_manifest_file_is_not_self_hashed) ... ok
+test_manifest_has_exact_bytes_hashes_and_no_private_paths (test_release_support.ReleaseBundles.test_manifest_has_exact_bytes_hashes_and_no_private_paths) ... ok
+test_traversal_absolute_and_duplicate_separator_paths_are_rejected (test_release_support.ReleaseBundles.test_traversal_absolute_and_duplicate_separator_paths_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.175s
+
+OK
+PASS project hygiene: no implementation stubs, local Markdown links, package privacy and notices
+
+> local-ai-kit-workspace@0.1.0-alpha.18 build
+> tsc -p packages/selector-core/tsconfig.json && tsc -p packages/sdk-typescript/tsconfig.json && tsc -p packages/react/tsconfig.json && tsc -p packages/ui-react/tsconfig.json && tsc -p apps/demo/tsconfig.json
+
+
+> local-ai-kit-workspace@0.1.0-alpha.18 doctor
+> npm run doctor -w @local-ai-kit/demo
+
+
+> @local-ai-kit/demo@0.1.0-alpha.18 doctor
+> react-doctor . --no-telemetry --no-supply-chain --blocking warning
+
+
+Agent guidance
+  - Treat React Doctor diagnostics as starting hypotheses. Read the relevant code before confirming or suppressing each finding.
+  - For each group, decide true positive, false positive, or needs-human-review, then assign high/medium/low confidence.
+  - Do not suppress a finding without evidence from the file in question. Confidence requires code context.
+  - Understand the root cause before editing. Fix the underlying code instead of changing react-doctor config or suppressing rules unless explicitly asked.
+  - Investigate deeply where relevant: race conditions, security-sensitive flows, state propagation, multi-file refactors, and downstream dependency chains.
+  - Ignore pure style preferences, theoretical issues without real impact, missing features, and unrelated pre-existing code.
+  - Start with high-confidence fixes that preserve behavior. Leave low-confidence or product-dependent changes as notes.
+  - Run `npx react-doctor@latest --verbose --scope changed` before and after changes, plus relevant tests after each focused batch.
+  - When available, spawn subagents or isolated worktrees for independent rule families, then review and merge only the best safe fixes.
+  - Split unrelated, broad, or behavior-changing work into separate PRs/branches instead of one large cleanup.
+  - When one rule spans dozens of files (a migration-scale change), fix a representative sample first, confirm the recipe holds, and get the code owner's sign-off before changing the rest. Don't mass-fix a broad pattern in one unreviewed pass.
+  - For confirmed issues that cannot be fixed now, create GitHub issues with the rule, file/line, confidence, impact, and proposed fix.
+  - If a fix needs an API, UX, or architecture decision, stop and ask before editing.
+
+✔ Scanned 59 files in 5.2s
+
+React Doctor — @local-ai-kit/demo
+Score disabled by --no-score. Want something custom to your company? Contact us at https://react.doctor/enterprise.
+
+✔ No issues found!
+
+  ────────────────────────────────────────────────────────────
+
+  Docs: https://react.doctor/docs
+  Learn more about fixing issues, setting up CI/CD, and
+  configuring rules with a config file
+
+  GitHub: https://github.com/millionco/react-doctor
+  Report issues and star the repository!
+
+vite v8.3.3 building client environment for production...
+transforming...
+✓ 5929 modules transformed.
+rendering chunks...
+computing gzip size...
+apps/demo/dist/assets/opencode-DU73DG4q.svg                          0.17 kB │ gzip:   0.16 kB
+apps/demo/dist/assets/anthropic-W1w-yK9X.svg                         0.31 kB │ gzip:   0.24 kB
+apps/demo/dist/assets/xai-7cnKJMM-.svg                               0.31 kB │ gzip:   0.25 kB
+apps/demo/dist/assets/antigravity-BAH-yPU0.svg                       0.35 kB │ gzip:   0.26 kB
+apps/demo/dist/assets/claude-code-CajiOsTm.svg                       0.37 kB │ gzip:   0.26 kB
+apps/demo/dist/assets/local-egnq7KbL.svg                             0.54 kB │ gzip:   0.23 kB
+apps/demo/dist/assets/gemini-kFVmEWLu.svg                            0.59 kB │ gzip:   0.32 kB
+apps/demo/dist/assets/grok-qbrXCWGf.svg                              0.69 kB │ gzip:   0.44 kB
+apps/demo/dist/assets/lmstudio-DeZBdeiz.svg                          1.19 kB │ gzip:   0.36 kB
+apps/demo/dist/assets/codex-FFHylYVJ.svg                             1.31 kB │ gzip:   0.69 kB
+apps/demo/dist/index.html                                            1.36 kB │ gzip:   0.57 kB
+apps/demo/dist/assets/openai-Bg7CkSBB.svg                            1.63 kB │ gzip:   0.86 kB
+apps/demo/dist/assets/claude-ESF_yOly.svg                            1.64 kB │ gzip:   0.87 kB
+apps/demo/dist/assets/ollama-DwEu0v6U.svg                            3.23 kB │ gzip:   1.55 kB
+apps/demo/dist/assets/outfit-latin-ext-wght-normal-DdQaqQDo.woff2   14.80 kB
+apps/demo/dist/assets/outfit-latin-wght-normal-Bc-8i84L.woff2       32.29 kB
+apps/demo/dist/assets/index-999Kj5H_.css                           173.42 kB │ gzip:  26.46 kB
+apps/demo/dist/assets/utils-CciNXvPB.js                              0.09 kB │ gzip:   0.10 kB
+apps/demo/dist/assets/rolldown-runtime-hePW80VL.js                   0.71 kB │ gzip:   0.42 kB
+apps/demo/dist/assets/section-CZuqXREd.js                            1.09 kB │ gzip:   0.63 kB
+apps/demo/dist/assets/Check.es-MLj1PII8.js                           1.62 kB │ gzip:   0.61 kB
+apps/demo/dist/assets/IconBase.es-CsL_f1Y0.js                        2.39 kB │ gzip:   1.17 kB
+apps/demo/dist/assets/connect-dialog-XlxeN2lb.js                     2.76 kB │ gzip:   1.34 kB
+apps/demo/dist/assets/resolve-CxaNak6I.js                            2.89 kB │ gzip:   1.38 kB
+apps/demo/dist/assets/diagnostics-fewaQBtQ.js                        3.05 kB │ gzip:   1.56 kB
+apps/demo/dist/assets/dialog-DSFHpmIi.js                             3.18 kB │ gzip:   1.14 kB
+apps/demo/dist/assets/ArrowsClockwise.es-DsLrh7u5.js                 3.36 kB │ gzip:   1.21 kB
+apps/demo/dist/assets/palette-Ck-AZ9v1.js                            3.79 kB │ gzip:   1.81 kB
+apps/demo/dist/assets/CursorClick.es-stVmzb-5.js                     5.33 kB │ gzip:   1.78 kB
+apps/demo/dist/assets/ShieldCheck.es-CMkdKdHw.js                     6.42 kB │ gzip:   1.80 kB
+apps/demo/dist/assets/model-picker-DoQTADQ4.js                       9.72 kB │ gzip:   4.10 kB
+apps/demo/dist/assets/example-data--dlkdsfD.js                      12.72 kB │ gzip:   5.05 kB
+apps/demo/dist/assets/overview-CiWv0BQS.js                          15.39 kB │ gzip:   5.56 kB
+apps/demo/dist/assets/usage-DPnWyunR.js                             15.64 kB │ gzip:   5.85 kB
+apps/demo/dist/assets/connections-aBxU7Zkg.js                       18.64 kB │ gzip:   6.96 kB
+apps/demo/dist/assets/command-B-fT04zC.js                           51.38 kB │ gzip:  17.33 kB
+apps/demo/dist/assets/vendor-router-GMBqecC6.js                     80.17 kB │ gzip:  28.13 kB
+apps/demo/dist/assets/playground-BiLVSMlh.js                       203.75 kB │ gzip:  61.12 kB
+apps/demo/dist/assets/vendor-ui-ipylCsBo.js                        205.04 kB │ gzip:  68.20 kB
+apps/demo/dist/assets/vendor-react-DnZfEcQD.js                     219.00 kB │ gzip:  68.36 kB
+apps/demo/dist/assets/index-CkXGeTnT.js                            301.36 kB │ gzip:  80.49 kB
+apps/demo/dist/assets/usage-charts-CPjSjGzx.js                     367.60 kB │ gzip: 107.67 kB
+
+✓ built in 4.19s
+Built native-served demo assets: apps/demo/dist
+Built generic browser extension in dist/browser-extension (not installed).
+    Finished `dev` profile [unoptimized] target(s) in 0.45s
+TAP version 13
+# Subtest: fixture server listens on loopback and requires explicit authenticated RPC
+ok 1 - fixture server listens on loopback and requires explicit authenticated RPC
+  ---
+  duration_ms: 45.8317
+  type: 'test'
+  ...
+# Subtest: actual HTTP SDK talks to fixture service, never fallback account data
+ok 2 - actual HTTP SDK talks to fixture service, never fallback account data
+  ---
+  duration_ms: 24.9306
+  type: 'test'
+  ...
+# Subtest: host and cross-origin requests are rejected even with valid token
+ok 3 - host and cross-origin requests are rejected even with valid token
+  ---
+  duration_ms: 10.0155
+  type: 'test'
+  ...
+# Subtest: unknown static paths do not expose arbitrary repository files
+ok 4 - unknown static paths do not expose arbitrary repository files
+  ---
+  duration_ms: 9.9219
+  type: 'test'
+  ...
+# Subtest: HTTP errors and diagnostics never echo authentication headers
+ok 5 - HTTP errors and diagnostics never echo authentication headers
+  ---
+  duration_ms: 11.607
+  type: 'test'
+  ...
+# Subtest: body limits and invalid JSON reject without fixture actions
+ok 6 - body limits and invalid JSON reject without fixture actions
+  ---
+  duration_ms: 11.6496
+  type: 'test'
+  ...
+# Subtest: SSE authorization is required and the SDK receives actual turn events
+ok 7 - SSE authorization is required and the SDK receives actual turn events
+  ---
+  duration_ms: 302.0698
+  type: 'test'
+  ...
+# Subtest: exact client routes serve the SPA entry and nothing else falls back to it
+ok 8 - exact client routes serve the SPA entry and nothing else falls back to it
+  ---
+  duration_ms: 20.4477
+  type: 'test'
+  ...
+# Subtest: missing static assets report a build hint
+ok 9 - missing static assets report a build hint
+  ---
+  duration_ms: 3.803
+  type: 'test'
+  ...
+# Subtest: self-hosted woff2 fonts are served with the font mime type
+ok 10 - self-hosted woff2 fonts are served with the font mime type
+  ---
+  duration_ms: 5.0632
+  type: 'test'
+  ...
+# Subtest: fixture server announces itself as the synthetic runtime so the plain URL boots the showcase
+ok 11 - fixture server announces itself as the synthetic runtime so the plain URL boots the showcase
+  ---
+  duration_ms: 4.0342
+  type: 'test'
+  ...
+# Subtest: fixture snapshot always declares synthetic mode and evidence
+ok 12 - fixture snapshot always declares synthetic mode and evidence
+  ---
+  duration_ms: 4.2758
+  type: 'test'
+  ...
+# Subtest: fixture handshake advertises only implemented methods
+ok 13 - fixture handshake advertises only implemented methods
+  ---
+  duration_ms: 1.1636
+  type: 'test'
+  ...
+# Subtest: fixture snapshot projection does not run discovery
+ok 14 - fixture snapshot projection does not run discovery
+  ---
+  duration_ms: 0.6937
+  type: 'test'
+  ...
+# Subtest: duplicate native model names retain separate routes
+ok 15 - duplicate native model names retain separate routes
+  ---
+  duration_ms: 0.7633
+  type: 'test'
+  ...
+# Subtest: shared pools and missing denominators remain explicit
+ok 16 - shared pools and missing denominators remain explicit
+  ---
+  duration_ms: 0.8289
+  type: 'test'
+  ...
+# Subtest: session creation requires explicit fixture grant
+ok 17 - session creation requires explicit fixture grant
+  ---
+  duration_ms: 2.7832
+  type: 'test'
+  ...
+# Subtest: stale selections fail before a simulated turn
+ok 18 - stale selections fail before a simulated turn
+  ---
+  duration_ms: 1.1927
+  type: 'test'
+  ...
+# Subtest: unsupported option is not coerced to a default
+ok 19 - unsupported option is not coerced to a default
+  ---
+  duration_ms: 1.0082
+  type: 'test'
+  ...
+# Subtest: simulated turns require explicit billing acceptance on API route
+ok 20 - simulated turns require explicit billing acceptance on API route
+  ---
+  duration_ms: 1.2945
+  type: 'test'
+  ...
+# Subtest: stream, cancellation and final events use public event shape
+ok 21 - stream, cancellation and final events use public event shape
+  ---
+  duration_ms: 8.5531
+  type: 'test'
+  ...
+# Subtest: tool approval pauses, denial does not perform an action
+ok 22 - tool approval pauses, denial does not perform an action
+  ---
+  duration_ms: 2.1646
+  type: 'test'
+  ...
+# Subtest: revoking a grant blocks subsequent turns
+ok 23 - revoking a grant blocks subsequent turns
+  ---
+  duration_ms: 1.6425
+  type: 'test'
+  ...
+# Subtest: redacted diagnostics cannot expose a native path or provider secret
+ok 24 - redacted diagnostics cannot expose a native path or provider secret
+  ---
+  duration_ms: 0.3764
+  type: 'test'
+  ...
+# Subtest: closed sessions cannot be reconfigured and turn history is bounded
+ok 25 - closed sessions cannot be reconfigured and turn history is bounded
+  ---
+  duration_ms: 7.5937
+  type: 'test'
+  ...
+# Subtest: event cursors beyond exact integer range are rejected
+ok 26 - event cursors beyond exact integer range are rejected
+  ---
+  duration_ms: 0.2742
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 567.0791
+................
+----------------------------------------------------------------------
+Ran 16 tests in 23.251s
+
+OK
+TAP version 13
+# Subtest: live catalog excludes unauthenticated and stale subscription profiles but keeps local runtime models
+ok 1 - live catalog excludes unauthenticated and stale subscription profiles but keeps local runtime models
+  ---
+  duration_ms: 1.1194
+  type: 'test'
+  ...
+# Subtest: synthetic example records are left untouched by the live catalog filter
+ok 2 - synthetic example records are left untouched by the live catalog filter
+  ---
+  duration_ms: 0.1046
+  type: 'test'
+  ...
+# Subtest: provider capability failures are readable and never expose raw codes
+ok 3 - provider capability failures are readable and never expose raw codes
+  ---
+  duration_ms: 1.0757
+  type: 'test'
+  ...
+# Subtest: session failures explain normalized codes and ignore provider supplied messages
+ok 4 - session failures explain normalized codes and ignore provider supplied messages
+  ---
+  duration_ms: 0.3212
+  type: 'test'
+  ...
+# Subtest: debug details retain provider diagnostics while redacting credentials and bounding output
+ok 5 - debug details retain provider diagnostics while redacting credentials and bounding output
+  ---
+  duration_ms: 1.4311
+  type: 'test'
+  ...
+# Subtest: connection labels distinguish verified, stale, unchecked and local non-account runtimes
+ok 6 - connection labels distinguish verified, stale, unchecked and local non-account runtimes
+  ---
+  duration_ms: 0.8889
+  type: 'test'
+  ...
+# Subtest: live demo authorizes every supported provider in its isolated workspace without enabling paid use
+ok 7 - live demo authorizes every supported provider in its isolated workspace without enabling paid use
+  ---
+  duration_ms: 1.2489
+  type: 'test'
+  ...
+# Subtest: registered ACP profiles join the live demo provider grant when configured
+ok 8 - registered ACP profiles join the live demo provider grant when configured
+  ---
+  duration_ms: 0.1163
+  type: 'test'
+  ...
+# Subtest: real native host requires explicit pairing, then discovers real empty-home metadata
+ok 9 - real native host requires explicit pairing, then discovers real empty-home metadata
+  ---
+  duration_ms: 1146.4673
+  type: 'test'
+  ...
+# Subtest: pairing automatically checks metadata and reports an outcome for every detected connection
+ok 10 - pairing automatically checks metadata and reports an outcome for every detected connection
+  ---
+  duration_ms: 580.0792
+  type: 'test'
+  ...
+# Subtest: live selector empty states are useful and stay inside the viewport
+ok 11 - live selector empty states are useful and stay inside the viewport
+  ---
+  duration_ms: 2680.3646
+  type: 'test'
+  ...
+# Subtest: pairing is the preferred path; example data is an explicit, labeled choice that leads back to pairing
+ok 12 - pairing is the preferred path; example data is an explicit, labeled choice that leads back to pairing
+  ---
+  duration_ms: 678.3359
+  type: 'test'
+  ...
+# Subtest: pairing rejects an incorrect code without revealing accounts
+ok 13 - pairing rejects an incorrect code without revealing accounts
+  ---
+  duration_ms: 452.609
+  type: 'test'
+  ...
+# Subtest: pairing can recover after reload by explicitly issuing a replacement code
+ok 14 - pairing can recover after reload by explicitly issuing a replacement code
+  ---
+  duration_ms: 991.8051
+  type: 'test'
+  ...
+# Subtest: OpenCode live-demo registration keeps its generated password out of the endpoint file
+ok 15 - OpenCode live-demo registration keeps its generated password out of the endpoint file
+  ---
+  duration_ms: 1.6962
+  type: 'test'
+  ...
+# Subtest: server readiness requires both accepted credentials and rejected anonymous access
+ok 16 - server readiness requires both accepted credentials and rejected anonymous access
+  ---
+  duration_ms: 0.4271
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6971.963
+TAP version 13
+# Subtest: showroom rail: no automated WCAG A/AA violations
+ok 1 - showroom rail: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1772.8495
+  type: 'test'
+  ...
+# Subtest: showroom compact: no automated WCAG A/AA violations
+ok 2 - showroom compact: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1475.0219
+  type: 'test'
+  ...
+# Subtest: showroom palette: no automated WCAG A/AA violations
+ok 3 - showroom palette: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1517.2954
+  type: 'test'
+  ...
+# Subtest: showroom capability: no automated WCAG A/AA violations
+ok 4 - showroom capability: no automated WCAG A/AA violations
+  ---
+  duration_ms: 2319.8559
+  type: 'test'
+  ...
+# Subtest: showroom compare: no automated WCAG A/AA violations
+ok 5 - showroom compare: no automated WCAG A/AA violations
+  ---
+  duration_ms: 2023.231
+  type: 'test'
+  ...
+# Subtest: showroom allowance: no automated WCAG A/AA violations
+ok 6 - showroom allowance: no automated WCAG A/AA violations
+  ---
+  duration_ms: 2163.9264
+  type: 'test'
+  ...
+# Subtest: showroom preset: no automated WCAG A/AA violations
+ok 7 - showroom preset: no automated WCAG A/AA violations
+  ---
+  duration_ms: 2163.8848
+  type: 'test'
+  ...
+# Subtest: showroom mobile: no automated WCAG A/AA violations
+ok 8 - showroom mobile: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1294.0864
+  type: 'test'
+  ...
+# Subtest: showroom Overview: no automated WCAG A/AA violations
+ok 9 - showroom Overview: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1464.3392
+  type: 'test'
+  ...
+# Subtest: showroom Connections: no automated WCAG A/AA violations
+ok 10 - showroom Connections: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1581.4113
+  type: 'test'
+  ...
+# Subtest: showroom Models: no automated WCAG A/AA violations
+ok 11 - showroom Models: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1367.7531
+  type: 'test'
+  ...
+# Subtest: showroom Usage: no automated WCAG A/AA violations
+ok 12 - showroom Usage: no automated WCAG A/AA violations
+  ---
+  duration_ms: 1339.1541
+  type: 'test'
+  ...
+# Subtest: showroom Playground: no automated WCAG A/AA violations
+ok 13 - showroom Playground: no automated WCAG A/AA violations
+  ---
+  duration_ms: 881.6497
+  type: 'test'
+  ...
+# Subtest: showroom Diagnostics: no automated WCAG A/AA violations
+ok 14 - showroom Diagnostics: no automated WCAG A/AA violations
+  ---
+  duration_ms: 851.4303
+  type: 'test'
+  ...
+# Subtest: showroom presents only authenticated profiles as connected
+ok 15 - showroom presents only authenticated profiles as connected
+  ---
+  duration_ms: 358.1665
+  type: 'test'
+  ...
+# Subtest: overview and connections distinguish stale evidence from never-verified profiles
+ok 16 - overview and connections distinguish stale evidence from never-verified profiles
+  ---
+  duration_ms: 541.5666
+  type: 'test'
+  ...
+# Subtest: detected client disclosure remains open across page rerenders unless the user closes it
+ok 17 - detected client disclosure remains open across page rerenders unless the user closes it
+  ---
+  duration_ms: 1834.2745
+  type: 'test'
+  ...
+# Subtest: local runtimes and confirmed unauthenticated profiles have separate live states
+ok 18 - local runtimes and confirmed unauthenticated profiles have separate live states
+  ---
+  duration_ms: 349.1781
+  type: 'test'
+  ...
+# Subtest: live connections expose an explicit bulk metadata check
+ok 19 - live connections expose an explicit bulk metadata check
+  ---
+  duration_ms: 762.0449
+  type: 'test'
+  ...
+# Subtest: detected profiles with completed checks are not labeled as still unchecked
+ok 20 - detected profiles with completed checks are not labeled as still unchecked
+  ---
+  duration_ms: 331.1952
+  type: 'test'
+  ...
+# Subtest: showroom keeps revision details in the exact-payload disclosure
+ok 21 - showroom keeps revision details in the exact-payload disclosure
+  ---
+  duration_ms: 733.0358
+  type: 'test'
+  ...
+# Subtest: showroom explains why a route misses a required capability
+ok 22 - showroom explains why a route misses a required capability
+  ---
+  duration_ms: 1393.5617
+  type: 'test'
+  ...
+# Subtest: showroom selectors with a populated catalog stay within responsive viewports
+ok 23 - showroom selectors with a populated catalog stay within responsive viewports
+  ---
+  duration_ms: 3373.8189
+  type: 'test'
+  ...
+# Subtest: without any native runtime the demo falls back to labeled example data and offers pairing
+ok 24 - without any native runtime the demo falls back to labeled example data and offers pairing
+  ---
+  duration_ms: 258.4677
+  type: 'test'
+  ...
+# Subtest: showroom raises no Content Security Policy violations on any page or popup
+ok 25 - showroom raises no Content Security Policy violations on any page or popup
+  ---
+  duration_ms: 2669.0192
+  type: 'test'
+  ...
+# Subtest: showroom rendered text has no common mojibake markers
+ok 26 - showroom rendered text has no common mojibake markers
+  ---
+  duration_ms: 1474.7622
+  type: 'test'
+  ...
+# Subtest: packaged React rail: no automated WCAG A/AA violations
+ok 27 - packaged React rail: no automated WCAG A/AA violations
+  ---
+  duration_ms: 939.0724
+  type: 'test'
+  ...
+# Subtest: packaged React compact: no automated WCAG A/AA violations
+ok 28 - packaged React compact: no automated WCAG A/AA violations
+  ---
+  duration_ms: 576.6738
+  type: 'test'
+  ...
+# Subtest: packaged React palette: no automated WCAG A/AA violations
+ok 29 - packaged React palette: no automated WCAG A/AA violations
+  ---
+  duration_ms: 768.3037
+  type: 'test'
+  ...
+# Subtest: packaged React capability: no automated WCAG A/AA violations
+ok 30 - packaged React capability: no automated WCAG A/AA violations
+  ---
+  duration_ms: 878.4615
+  type: 'test'
+  ...
+# Subtest: packaged React compare: no automated WCAG A/AA violations
+ok 31 - packaged React compare: no automated WCAG A/AA violations
+  ---
+  duration_ms: 875.1085
+  type: 'test'
+  ...
+# Subtest: packaged React allowance: no automated WCAG A/AA violations
+ok 32 - packaged React allowance: no automated WCAG A/AA violations
+  ---
+  duration_ms: 873.8106
+  type: 'test'
+  ...
+# Subtest: packaged React preset: no automated WCAG A/AA violations
+ok 33 - packaged React preset: no automated WCAG A/AA violations
+  ---
+  duration_ms: 950.5572
+  type: 'test'
+  ...
+# Subtest: packaged React mobile: no automated WCAG A/AA violations
+ok 34 - packaged React mobile: no automated WCAG A/AA violations
+  ---
+  duration_ms: 817.732
+  type: 'test'
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 36828.0705
+Profile completed: all
+{"name": "full-profile-security-02", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["./.venv-build/Scripts/python.exe", "scripts/verify.py", "--profile", "all"], "sourceCommit": "cf34b3dc8c9daf9a9684da32c9d49b5ca8871a4e", "exitCode": 0, "seconds": 391.486, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 5653038064, "finalActiveBytes": 5651138025, "cFreeBytes": 44761518080, "dFreeBytes": 608960282624, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

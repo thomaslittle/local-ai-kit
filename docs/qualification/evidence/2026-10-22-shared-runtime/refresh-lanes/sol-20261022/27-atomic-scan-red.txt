@@ -1,0 +1,31 @@
+   Compiling lai-service v0.1.0-alpha.17 (<repo>\crates\lai-service)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.58s
+     Running unittests src\lib.rs (target\debug\deps\lai_service-d9ef0122999d599e.exe)
+
+running 4 tests
+test cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit ... FAILED
+test cache::refresh_generation_tests::a_failure_cannot_publish_after_a_generation_change_even_if_a_prior_check_passed ... ok
+test cache::refresh_generation_tests::committed_reset_deadline_survives_forward_and_backward_wall_clock_jumps ... ok
+test cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work ... FAILED
+
+failures:
+
+---- cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit stdout ----
+
+thread 'cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit' (72524) panicked at crates\lai-service\src\cache.rs:1544:52:
+called `Result::unwrap_err()` on an `Ok` value: ()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work stdout ----
+
+thread 'cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work' (32748) panicked at crates\lai-service\src\cache.rs:1527:9:
+the old visible connection must keep its native location after a rejected commit
+
+
+failures:
+    cache::refresh_generation_tests::cancellation_after_the_outer_check_rejects_inventory_success_and_failure_at_commit
+    cache::refresh_generation_tests::rejected_scan_commit_preserves_locations_metadata_generations_and_dirty_work
+
+test result: FAILED. 2 passed; 2 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p lai-service --lib`

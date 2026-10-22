@@ -79,10 +79,41 @@ fn fills_only_unknown_billing_as_user_supplied_and_needs_matching_provider() {
         EvidenceSource::new(EvidenceKind::OfficialProtocol, "grok", "status"),
     );
     let mut known = report("connection_g", reported.clone());
+    known.additional_routes[0].billing = reported.clone();
     d.apply("grok", &mut known);
     assert_eq!(
         known.billing, reported,
         "reported billing is never replaced"
+    );
+    assert!(
+        !known
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic == "BILLING_DECLARED_BY_HOST"),
+        "a declaration that changed nothing must not add its marker"
+    );
+    let mut classified = report(
+        "connection_go",
+        Observation::reported(
+            BillingMode::Subscription,
+            EvidenceSource::new(EvidenceKind::OfficialProtocol, "opencode", "reported"),
+        ),
+    );
+    classified.additional_routes[0].billing = Observation::reported(
+        BillingMode::Subscription,
+        EvidenceSource::new(EvidenceKind::Derived, "opencode", "Go provider id"),
+    );
+    let go = BillingDeclarations::parse(
+        r#"{"declarations":[{"connectionId":"connection_go","providerId":"opencode","billing":"subscription"}]}"#,
+    )
+    .unwrap();
+    go.apply("opencode", &mut classified);
+    assert!(
+        !classified
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic == "BILLING_DECLARED_BY_HOST"),
+        "an already-classified Go route must not look host-declared"
     );
 
     assert_eq!(

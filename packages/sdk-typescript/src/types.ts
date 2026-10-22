@@ -1,6 +1,6 @@
 /** Protocol transport types. Provider domain records remain canonical in Rust. */
 export interface CallOptions { signal?: AbortSignal; timeoutMs?: number }
-export interface EventQuery { sessionId?: string; after?: string }
+export interface EventQuery { sessionId?: string; after?: string; scope?: 'inventory' }
 export interface Transport {
   request<T = unknown>(method: string, params?: unknown, options?: CallOptions): Promise<T>;
   subscribe?<T = unknown>(query?: EventQuery, options?: CallOptions): AsyncIterable<T>;

@@ -875,6 +875,7 @@ async fn validate_id(
         )
     })?;
     let mut validation = Validation::new(algorithm);
+    validation.set_required_spec_claims(&["exp", "iss", "aud", "sub"]);
     validation.leeway = IDENTITY_LEEWAY_SECONDS;
     validation.set_issuer(&[&endpoints.issuer]);
     validation.set_audience(&[client_id]);
@@ -1668,6 +1669,27 @@ mod tests {
                     .code,
                 "IDENTITY_INVALID"
             );
+        }
+        // A signed token still needs every standard claim this flow checks.
+        // jsonwebtoken's validation flags alone do not require claim presence.
+        for claim in ["iss", "aud", "exp", "sub"] {
+            for replacement in [None, Some(json!(null)), Some(json!(true)), Some(json!(42))] {
+                let mut claims = json!({"iss":endpoints.issuer,"aud":"oaiapp_test",
+                    "sub":"sub-1","nonce":"nonce-1","exp":now()+3600});
+                match replacement {
+                    Some(value) => claims[claim] = value,
+                    None => {
+                        claims.as_object_mut().unwrap().remove(claim);
+                    }
+                }
+                let token = encode(&header, &claims, &key).unwrap();
+                assert!(
+                    validate_id(&http, &endpoints, &token, "oaiapp_test", Some("nonce-1"))
+                        .await
+                        .is_err(),
+                    "missing or invalid {claim} must fail identity validation"
+                );
+            }
         }
         let mut tampered = valid.into_bytes();
         let last = tampered.len() - 2;

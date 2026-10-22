@@ -1,0 +1,42 @@
+{
+  "tool": "gitleaks",
+  "version": "8.30.1",
+  "license": "MIT",
+  "source": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
+  "archiveSha256": "d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e",
+  "positiveControl": {
+    "exitCode": 1,
+    "rule": "github-pat",
+    "synthetic": true,
+    "network": false
+  },
+  "sourceScan": {
+    "exitCode": 1,
+    "files": 791,
+    "bytes": 5352827,
+    "findings": [
+      {
+        "RuleID": "private-key",
+        "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
+        "File": "crates\\lai-chatgpt-auth\\tests\\fixtures\\test-rsa.pem",
+        "StartLine": 1,
+        "EndLine": 28
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "packages\\sdk-typescript\\src\\generated.ts",
+        "StartLine": 39,
+        "EndLine": 39
+      },
+      {
+        "RuleID": "generic-api-key",
+        "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+        "File": "packages\\sdk-typescript\\src\\generated.ts",
+        "StartLine": 41,
+        "EndLine": 41
+      }
+    ]
+  },
+  "limits": "Working tree tracked and nonignored untracked repository files only; no git history, ignored builds, credentials or consumer trees. Default rules, empty ignore file, inline allow comments disabled. No online validation. Raw reports stay ignored. This is a detection check, not proof of absence."
+}

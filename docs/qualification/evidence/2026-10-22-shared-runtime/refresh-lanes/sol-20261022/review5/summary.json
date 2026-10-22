@@ -1,0 +1,102 @@
+{
+  "started": "2026-10-22T15:57:26.001244-04:00",
+  "head": "bf3e67b326f3b9076979415a52bac10dc1178360",
+  "branch": "feat/shared-runtime",
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "lai-service",
+    "--lib",
+    "--test",
+    "refresh_lanes"
+  ],
+  "default_test_scheduling": true,
+  "timeout_seconds_per_run": 90,
+  "runs": [
+    {
+      "run": 1,
+      "exit": 0,
+      "seconds": 32.765,
+      "log": "combined-01.txt",
+      "sha256": "ef29e5afcf28503468da0579f8c0a850f7186fb0a2db9cbd02ed04b956a2f844",
+      "rawSha256": "4511be266fdbe5b31ecdd3bb8280d67929ef03ec6cbc3a6be4aa3a93a8b66798"
+    },
+    {
+      "run": 2,
+      "exit": 0,
+      "seconds": 2.44,
+      "log": "combined-02.txt",
+      "sha256": "3ccc43521242c06f5ccab42cea98cd231ecb230db09ffcaad2cfca4d01e9d83a",
+      "rawSha256": "7a2857ab136aa0223ab86645d6719a7c7ec27b6105196c4b111fe08b6ea277c7"
+    },
+    {
+      "run": 3,
+      "exit": 0,
+      "seconds": 2.184,
+      "log": "combined-03.txt",
+      "sha256": "3f379dbf482e1028a81de1c2cd6544a6951c98d16b17605ea7beb18f57d0d7e5",
+      "rawSha256": "c76fcc8728875beadbfb9a339c78c3b5d01e28b71bab94e8657d95918358baaa"
+    },
+    {
+      "run": 4,
+      "exit": 0,
+      "seconds": 2.057,
+      "log": "combined-04.txt",
+      "sha256": "5f337401f4dd47daef60b03eb843fdb10b9a398ae1938e7b76f9a50f6e4b93ff",
+      "rawSha256": "408ec5cb927b21c7ed200a6027faa1eedea6cc3cfed5ee247b8e477f4f50699d"
+    },
+    {
+      "run": 5,
+      "exit": 0,
+      "seconds": 2.122,
+      "log": "combined-05.txt",
+      "sha256": "a983dd53f8d81f67cb07129d593902a4a45611a18e88c421a198124453a064cc",
+      "rawSha256": "1caf6b5ce7d78ad074b6a95ad380b03abb1a65b20c2651a2db917be459afac72"
+    },
+    {
+      "run": 6,
+      "exit": 0,
+      "seconds": 1.899,
+      "log": "combined-06.txt",
+      "sha256": "be863efa6fb52cfb8c643fd5ec6dee766326e88a850c15375102e461d0acd5f2",
+      "rawSha256": "9b157acd9fb00f0acfd6d75e9dd56f5e7f6880814053329fde3aa7312c927206"
+    },
+    {
+      "run": 7,
+      "exit": 0,
+      "seconds": 2.189,
+      "log": "combined-07.txt",
+      "sha256": "15dad608bbc26f44be24554a5396a09bcf5f1ff7ef05d92bb80035bfff4ea1a9",
+      "rawSha256": "9ac6217146e7eb86562737042629507e3bcd46d8e8dd7fc6e0e8ef7ee07f9c69"
+    },
+    {
+      "run": 8,
+      "exit": 0,
+      "seconds": 2.174,
+      "log": "combined-08.txt",
+      "sha256": "95d96737db314c2ac4046b65c9103123a25be168b3cf042701cdca127f211be2",
+      "rawSha256": "276f1485a278ecb5ab6cca138badb1ecc7258f6bc86e8bade7e74d7aae1eb9ae"
+    },
+    {
+      "run": 9,
+      "exit": 0,
+      "seconds": 2.273,
+      "log": "combined-09.txt",
+      "sha256": "5ab204553e23938ff5ec39eccc0dfa54e1bc6fead4bf51be0338c1c38f21460c",
+      "rawSha256": "c9433d657965f250961bd15cd9e92b92c2a6857db5dc1e34954a2f5d716db635"
+    },
+    {
+      "run": 10,
+      "exit": 0,
+      "seconds": 2.496,
+      "log": "combined-10.txt",
+      "sha256": "403714da6f75cf540268a69e288c73d414ee239ad3e3ecd8a5ba500a9db61a49",
+      "rawSha256": "a8c270e591056aa71932b26af1ec5182e5f0d99a5875a66505e56cc0487ae6e3"
+    }
+  ],
+  "source_changes": [],
+  "ended": "2026-10-22T15:58:19.511838-04:00",
+  "logTransformation": "Repository root paths replaced by <repo>; rawSha256 identifies retained ignored originals."
+}

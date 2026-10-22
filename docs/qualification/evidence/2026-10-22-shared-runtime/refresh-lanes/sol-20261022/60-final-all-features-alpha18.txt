@@ -1,0 +1,11 @@
+   Compiling lai-adapters v0.1.0-alpha.18 (<repo>\crates\lai-adapters)
+   Compiling lai-service v0.1.0-alpha.18 (<repo>\crates\lai-service)
+   Compiling lai-transports v0.1.0-alpha.18 (<repo>\crates\lai-transports)
+   Compiling lai-kit v0.1.0-alpha.18 (<repo>\crates\lai-kit)
+   Compiling lai-control v0.1.0-alpha.18 (<repo>\crates\lai-control)
+   Compiling lai-cli v0.1.0-alpha.18 (<repo>\crates\lai-cli)
+error: failed to remove file `<repo>\target\debug\local-ai-kit.exe`
+
+Caused by:
+  Access is denied. (os error 5)
+warning: build failed, waiting for other jobs to finish...

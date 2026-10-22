@@ -1,0 +1,67 @@
+   Compiling windows-sys v0.61.2
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.154
+   Compiling serde v1.0.229
+   Compiling mio v1.2.3
+   Compiling socket2 v0.6.5
+   Compiling schemars v1.2.3
+   Compiling tokio v1.53.3
+   Compiling chrono v0.4.45
+   Compiling lai-contracts v0.1.0-alpha.18 (<workspace>\crates\lai-contracts)
+   Compiling winapi-util v0.1.11
+   Compiling hyper v1.11.1
+   Compiling same-file v1.0.6
+   Compiling tower v0.5.3
+   Compiling hyper-util v0.1.20
+   Compiling walkdir v2.5.0
+   Compiling tokio-rustls v0.26.5
+   Compiling serde_urlencoded v0.7.1
+   Compiling notify v8.2.0
+   Compiling hyper-rustls v0.27.10
+   Compiling tower-http v0.6.11
+   Compiling tempfile v3.27.0
+   Compiling reqwest v0.12.28
+   Compiling jsonwebtoken v10.3.0
+   Compiling lai-platform v0.1.0-alpha.18 (<workspace>\crates\lai-platform)
+   Compiling lai-chatgpt-auth v0.1.0-alpha.18 (<workspace>\crates\lai-chatgpt-auth)
+   Compiling lai-discovery v0.1.0-alpha.18 (<workspace>\crates\lai-discovery)
+   Compiling lai-store v0.1.0-alpha.18 (<workspace>\crates\lai-store)
+   Compiling lai-runtime v0.1.0-alpha.18 (<workspace>\crates\lai-runtime)
+   Compiling lai-core v0.1.0-alpha.18 (<workspace>\crates\lai-core)
+   Compiling lai-service v0.1.0-alpha.18 (<workspace>\crates\lai-service)
+    Finished `test` profile [unoptimized] target(s) in 32.58s
+     Running tests\refresh_lanes.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\refresh_lanes-ddb0f22d85337088.exe)
+
+running 20 tests
+retry diagnostic: source returns RateLimited at Instant { t: 4612124677.289352603s }
+retry diagnostic: calls=2 issues=[{"evidence":[{"code":"RateLimited","freshness":"fresh","message":"Native inventory is unavailable","observedAt":"2026-10-22T20:53:00.122Z","source":{"adapterId":"lai-service","adapterVersion":"0.1.0-alpha.18","kind":"derived","reference":"inventory refresh"},"verification":"observed"}],"fingerprint":"inventory","firstSeenAt":"2026-10-22T20:53:00.122Z","id":"issue_dd30654f9d97b8f1a2da92926067f7f7c29d6ec4990aa889e5ff9f89cefa0b53","kind":"adapter_failure","lastSeenAt":"2026-10-22T20:53:00.122Z","occurrences":1,"remediation":[{"description":"The runtime retries with bounded backoff.","kind":"retry_later","label":"Retry later","requiresUserAction":false}],"severity":"warning","state":"open","summary":"Last-known inventory remains stale until a successful reconciliation.","title":"Inventory could not be refreshed"}] at Instant { t: 4612124677.289352603s }
+test stopping_background_inventory_does_not_cancel_a_foreground_joiners_shared_scan ... ok
+test sleep_resume_coalesces_missed_intervals_instead_of_replaying_poll_ticks ... ok
+test explicit_probe_failure_from_before_a_scan_cannot_stale_the_new_generation ... ok
+test failed_inventory_retains_stale_observations_and_a_typed_refresh_error ... ok
+test cancelling_a_background_scan_signals_only_its_owned_source ... ok
+test a_provider_reset_deadline_only_requests_an_authoritative_observation ... ok
+test stopping_background_work_drops_owned_probes_and_does_not_publish_late_data ... ok
+retry diagnostic: calls=2 issues=[{"evidence":[{"code":"RateLimited","freshness":"fresh","message":"Native inventory is unavailable","observedAt":"2026-10-22T20:53:00.122Z","source":{"adapterId":"lai-service","adapterVersion":"0.1.0-alpha.18","kind":"derived","reference":"inventory refresh"},"verification":"observed"}],"fingerprint":"inventory","firstSeenAt":"2026-10-22T20:53:00.122Z","id":"issue_dd30654f9d97b8f1a2da92926067f7f7c29d6ec4990aa889e5ff9f89cefa0b53","kind":"adapter_failure","lastSeenAt":"2026-10-22T20:53:00.122Z","occurrences":1,"remediation":[{"description":"The runtime retries with bounded backoff.","kind":"retry_later","label":"Retry later","requiresUserAction":false}],"severity":"warning","state":"open","summary":"Last-known inventory remains stale until a successful reconciliation.","title":"Inventory could not be refreshed"}] at Instant { t: 4612124732.300352603s }
+test a_slow_provider_does_not_block_a_healthy_connection_or_duplicate_probes ... ok
+test withdrawing_host_probe_permission_discards_in_flight_reports ... ok
+test idle_usage_expiry_publishes_a_stale_event_without_inventing_zero ... ok
+retry diagnostic: calls=2 issues=[{"evidence":[{"code":"RateLimited","freshness":"fresh","message":"Native inventory is unavailable","observedAt":"2026-10-22T20:53:00.122Z","source":{"adapterId":"lai-service","adapterVersion":"0.1.0-alpha.18","kind":"derived","reference":"inventory refresh"},"verification":"observed"}],"fingerprint":"inventory","firstSeenAt":"2026-10-22T20:53:00.122Z","id":"issue_dd30654f9d97b8f1a2da92926067f7f7c29d6ec4990aa889e5ff9f89cefa0b53","kind":"adapter_failure","lastSeenAt":"2026-10-22T20:53:00.122Z","occurrences":1,"remediation":[{"description":"The runtime retries with bounded backoff.","kind":"retry_later","label":"Retry later","requiresUserAction":false}],"severity":"warning","state":"open","summary":"Last-known inventory remains stale until a successful reconciliation.","title":"Inventory could not be refreshed"}] at Instant { t: 4612124787.311352603s }
+test supported_usage_refreshes_before_slow_metadata_without_reset_inference ... ok
+test duplicate_routes_in_one_verified_quota_scope_share_one_probe_per_tick ... ok
+test scoped_inventory_events_never_reveal_another_accounts_resource_ids ... ok
+test timer_expiry_preserves_quota_warning_until_authoritative_recovery ... ok
+retry diagnostic: calls=2 issues=[{"evidence":[{"code":"RateLimited","freshness":"fresh","message":"Native inventory is unavailable","observedAt":"2026-10-22T20:53:00.122Z","source":{"adapterId":"lai-service","adapterVersion":"0.1.0-alpha.18","kind":"derived","reference":"inventory refresh"},"verification":"observed"}],"fingerprint":"inventory","firstSeenAt":"2026-10-22T20:53:00.122Z","id":"issue_dd30654f9d97b8f1a2da92926067f7f7c29d6ec4990aa889e5ff9f89cefa0b53","kind":"adapter_failure","lastSeenAt":"2026-10-22T20:53:00.122Z","occurrences":1,"remediation":[{"description":"The runtime retries with bounded backoff.","kind":"retry_later","label":"Retry later","requiresUserAction":false}],"severity":"warning","state":"open","summary":"Last-known inventory remains stale until a successful reconciliation.","title":"Inventory could not be refreshed"}] at Instant { t: 4612124842.322352603s }
+retry diagnostic: calls=2 issues=[{"evidence":[{"code":"RateLimited","freshness":"fresh","message":"Native inventory is unavailable","observedAt":"2026-10-22T20:53:00.122Z","source":{"adapterId":"lai-service","adapterVersion":"0.1.0-alpha.18","kind":"derived","reference":"inventory refresh"},"verification":"observed"}],"fingerprint":"inventory","firstSeenAt":"2026-10-22T20:53:00.122Z","id":"issue_dd30654f9d97b8f1a2da92926067f7f7c29d6ec4990aa889e5ff9f89cefa0b53","kind":"adapter_failure","lastSeenAt":"2026-10-22T20:53:00.122Z","occurrences":1,"remediation":[{"description":"The runtime retries with bounded backoff.","kind":"retry_later","label":"Retry later","requiresUserAction":false}],"severity":"warning","state":"open","summary":"Last-known inventory remains stale until a successful reconciliation.","title":"Inventory could not be refreshed"}] at Instant { t: 4612124897.333352603s }
+test usage_backoff_retains_stale_data_and_does_not_stale_a_healthy_peer ... ok
+retry diagnostic: calls=2 issues=[{"evidence":[{"code":"RateLimited","freshness":"fresh","message":"Native inventory is unavailable","observedAt":"2026-10-22T20:53:00.122Z","source":{"adapterId":"lai-service","adapterVersion":"0.1.0-alpha.18","kind":"derived","reference":"inventory refresh"},"verification":"observed"}],"fingerprint":"inventory","firstSeenAt":"2026-10-22T20:53:00.122Z","id":"issue_dd30654f9d97b8f1a2da92926067f7f7c29d6ec4990aa889e5ff9f89cefa0b53","kind":"adapter_failure","lastSeenAt":"2026-10-22T20:53:00.122Z","occurrences":1,"remediation":[{"description":"The runtime retries with bounded backoff.","kind":"retry_later","label":"Retry later","requiresUserAction":false}],"severity":"warning","state":"open","summary":"Last-known inventory remains stale until a successful reconciliation.","title":"Inventory could not be refreshed"}] at Instant { t: 4612124952.344352603s }
+retry diagnostic: calls=2 issues=[{"evidence":[{"code":"RateLimited","freshness":"fresh","message":"Native inventory is unavailable","observedAt":"2026-10-22T20:53:00.122Z","source":{"adapterId":"lai-service","adapterVersion":"0.1.0-alpha.18","kind":"derived","reference":"inventory refresh"},"verification":"observed"}],"fingerprint":"inventory","firstSeenAt":"2026-10-22T20:53:00.122Z","id":"issue_dd30654f9d97b8f1a2da92926067f7f7c29d6ec4990aa889e5ff9f89cefa0b53","kind":"adapter_failure","lastSeenAt":"2026-10-22T20:53:00.122Z","occurrences":1,"remediation":[{"description":"The runtime retries with bounded backoff.","kind":"retry_later","label":"Retry later","requiresUserAction":false}],"severity":"warning","state":"open","summary":"Last-known inventory remains stale until a successful reconciliation.","title":"Inventory could not be refreshed"}] at Instant { t: 4612125007.355352603s }
+test inventory_reconciles_without_metadata_and_keeps_application_scope ... ok
+test inventory_retry_after_is_shared_by_background_and_explicit_refreshes ... ok
+test closing_clients_reduces_usage_work_and_stop_cancels_owned_probes ... ok
+test metadata_uses_slow_cadence_and_interest_expires_on_an_idle_open_socket ... ok
+test healthy_work_beyond_sixty_four_failed_connections_and_usage_both_progress ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.64s
+
+{"name": "retry-diagnostic-01", "threadId": "7a4b270a-3512-4710-ad7e-3b4751818241", "command": ["cargo", "test", "--locked", "-p", "lai-service", "--test", "refresh_lanes", "--", "--nocapture"], "sourceCommit": "cf34b3dc8c9daf9a9684da32c9d49b5ca8871a4e", "exitCode": 0, "seconds": 36.474, "target": "D:\\lai-task-7a4b270a-20261022\\target", "activeBudgetBytes": 12884901888, "stopThresholdBytes": 11811160064, "peakObservedActiveBytes": 3287112504, "finalActiveBytes": 3287112504, "cFreeBytes": 45006094336, "dFreeBytes": 611328954368, "pressureStop": null, "finalPressure": null, "jobs": 2, "debugSymbols": false, "incremental": false, "rustcWrapper": "disabled per process; shared cache untouched", "scope": "Owned target and temporary files only; fixed retained-symbol archive excluded from active budget"}

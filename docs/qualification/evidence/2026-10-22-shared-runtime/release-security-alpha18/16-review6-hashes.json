@@ -1,0 +1,46 @@
+{
+  "sourceCommit": "cf34b3dc8c9daf9a9684da32c9d49b5ca8871a4e",
+  "branch": "feat/shared-runtime",
+  "scope": "Round 6 post-cf34b3d dirty delta; file byte hashes after single guarded auth execution",
+  "files": [
+    {
+      "path": "crates/lai-service/src/cache.rs",
+      "sha256": "f8b51c33960abc3a97a4565d17a5a9c09e7b5bd5a8d1d9654b0689c613f424ed"
+    },
+    {
+      "path": "crates/lai-chatgpt-auth/src/oauth.rs",
+      "sha256": "f6553abf71fbf95600a3e74d1e7a709b11bbbd21cc9e43dc08747eb064b3c295"
+    },
+    {
+      "path": "crates/lai-chatgpt-auth/Cargo.toml",
+      "sha256": "3fd1daf2af81d58fce3ed7dba791c77de69df30826fd5e26760fda165f674880"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "603d573ce2939e2d9e680a2bcb5c498341c8070fd40a2ea0b207ddb8b091047f"
+    },
+    {
+      "path": "package.json",
+      "sha256": "02f45e3c1d3f1455970ccad474b66b23efb0c0d208e714a9b51c0fd67012c370"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "a59ca5069c6ca30104ed8613ef1f4f0353a02dfd2dc3971b53af666f45506c28"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "bb35bec01a9bad96ae56ac09ea654bd13a45be8766748787bb6b2584a8b22ac0"
+    },
+    {
+      "path": "scripts/test_dotnet.py",
+      "sha256": "255ce9460dc1aeb8329b8f86ee8bbcb2fb86a7f5028e19574ecd7f3cce9ca690"
+    },
+    {
+      "path": "scripts/test_live_demo.mjs",
+      "sha256": "e3132f5c308cb85796c7fa99f6d0c7f62a3c08d44e3f8eaf7e29bed66895d2c0"
+    }
+  ],
+  "authLogSha256": "2a8ca2cbd079108ecc4336fa72e3f516928848fa517a246350acc52606f3bb20",
+  "guardReceipt": "D:/lai-task-7a4b270a-20261022/guard-receipts/reviewer-r6-auth-01.json",
+  "guardReceiptSha256": "76bf8ec3013558df576e3ef44a8d40161d1e49a7a1cfb95fc992f5c5c2c1ddbe"
+}

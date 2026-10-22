@@ -1,10 +1,11 @@
 import { LocalAIError } from './errors.ts';
 import type { CallOptions, Handshake, Transport } from './types.ts';
-import type { MethodInputs, MethodOutputs, Snapshot, Event } from './generated.ts';
+import type { MethodInputs, MethodOutputs, Snapshot, Event, InventoryChange } from './generated.ts';
 const families = {
   runtime: ['health', 'closeClient'], discovery: ['refresh', 'watch', 'cancel'], snapshot: ['get'],
   connections: ['list', 'setupInstructions', 'authenticate', 'probe'], models: ['list', 'page'], usage: ['read'], capabilities: ['read'],
   selection: ['resolve', 'validate'], grants: ['request', 'list', 'revoke'],
+  health: ['get'], issues: ['list', 'acknowledge', 'snooze'], notifications: ['poll', 'configure', 'ack'], apps: ['list', 'revoke'],
   sessions: ['create', 'get', 'suspend', 'resume', 'updateOptions', 'close'], inputs: ['put'], turns: ['start', 'cancel'], approvals: ['respond'],
   artifacts: ['read'], diagnostics: ['report'], adapters: ['list'],
 } as const;
@@ -28,8 +29,11 @@ export type LocalAIClient = Omit<Families, 'snapshot'> & {
   } };
   snapshot: SnapshotMethods;
   handshake: Readonly<Handshake>;
+  inventory: {
+    subscribe(query?: { after?: string }, options?: CallOptions): AsyncIterable<InventoryChange>;
+  };
   close(): Promise<void>;
-  events: { subscribe<T = Event>(query?: { sessionId?: string; after?: string }, options?: CallOptions): AsyncIterable<T> };
+  events: { subscribe<T = Event>(query?: { sessionId?: string; after?: string; scope?: 'inventory' }, options?: CallOptions): AsyncIterable<T> };
 };
 export async function createLocalAI(options: { transport: Transport; clientName?: string; signal?: AbortSignal }): Promise<LocalAIClient> {
   const transport = options.transport;
@@ -74,6 +78,11 @@ export async function createLocalAI(options: { transport: Transport; clientName?
       requireAvailable('events.subscribe');
       if (!transport.subscribe) throw new LocalAIError('CAPABILITY_UNSUPPORTED');
       yield* transport.subscribe<T>(query, call);
+    } }),
+    inventory: Object.freeze({ async *subscribe<T = InventoryChange>(query: { after?: string } = {}, call: CallOptions = {}) {
+      requireAvailable('events.subscribe');
+      if (!transport.subscribe) throw new LocalAIError('CAPABILITY_UNSUPPORTED');
+      yield* transport.subscribe<T>({ scope: 'inventory', ...query }, call);
     } }),
   }) as unknown as LocalAIClient;
 }

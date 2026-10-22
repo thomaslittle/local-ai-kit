@@ -1,0 +1,57 @@
+
+running 5 tests
+test parsing_does_not_require_or_read_an_api_key ... ok
+test opencode_route_billing_configuration_is_explicit_and_transport_stays_local ... ok
+test configuration_rejects_inline_secrets_duplicate_names_and_bad_urls ... ok
+test scope_and_endpoint_identity_are_part_of_connection_id ... ok
+test registered_endpoints_are_inventory_not_authenticated_accounts ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test endpoints_reject_cleartext_remote_userinfo_and_query_credentials ... ok
+test redirects_are_not_followed_and_paths_cannot_escape ... ok
+test line_stream_preserves_frames_and_rejects_truncated_output ... ok
+test native_json_and_credentials_stay_bound_to_the_endpoint ... ok
+test auth_rate_limits_and_large_bodies_return_safe_errors ... ok
+test explicitly_bounded_provider_metadata_reads_allow_large_compressed_catalogs ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+
+running 7 tests
+test api_models_without_capability_evidence_are_not_automatically_eligible ... ok
+test lmstudio_filters_embeddings_and_preserves_native_context ... ok
+test local_capabilities_are_metadata_not_model_name_guesses ... ok
+test duplicate_or_malformed_catalogs_fail_without_echoing_secrets ... ok
+test absent_details_are_not_fake_capabilities_or_allowances ... ok
+test google_native_method_metadata_and_anthropic_efforts_are_preserved ... ok
+test route_identity_is_retained_and_api_catalog_is_not_a_subscription ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 2 tests
+test probing_never_runs_generation_and_catalog_does_not_claim_paid_access ... ok
+test native_runtime_streams_http_turns_with_owned_history ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+
+running 2 tests
+test provider_errors_do_not_leak_error_bodies_or_execute_tools ... ok
+test provider_frames_preserve_text_and_native_terminal_signals ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling lai-adapters v0.1.0-alpha.18 (<workspace>\crates\lai-adapters)
+    Finished `test` profile [unoptimized] target(s) in 6.74s
+     Running tests\endpoint_config.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\endpoint_config-d5cf1dd857a92169.exe)
+     Running tests\http.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http-ddf1d8ade6b93545.exe)
+     Running tests\http_catalogs.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_catalogs-d1fa46b1a5a06fc2.exe)
+     Running tests\http_execution.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_execution-ee56318417d62946.exe)
+     Running tests\http_frames.rs (D:\lai-task-7a4b270a-20261022\target\debug\deps\http_frames-9d5a10b01698356b.exe)

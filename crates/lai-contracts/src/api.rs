@@ -380,6 +380,26 @@ pub struct ValidationResult {
     pub mode: DataMode,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NotificationAckParams {
+    pub issue_id: String,
+    pub dedupe_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AppRevokeParams {
+    pub target_client_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct HealthView {
+    pub summary: HealthSummary,
+    pub issues: Vec<Issue>,
+}
+
 /// This is the superset of compiled public methods, not a grant or an assertion of live provider support.
 #[derive(JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -459,6 +479,24 @@ pub struct MethodInputs {
     adapters: EmptyParams,
     #[serde(rename = "diagnostics.report")]
     diagnostics: EmptyParams,
+    #[serde(rename = "health.get")]
+    health_view: EmptyParams,
+    #[serde(rename = "issues.list")]
+    issues_list: EmptyParams,
+    #[serde(rename = "issues.acknowledge")]
+    issues_acknowledge: IssueUpdateParams,
+    #[serde(rename = "issues.snooze")]
+    issues_snooze: IssueUpdateParams,
+    #[serde(rename = "notifications.poll")]
+    notifications_poll: EmptyParams,
+    #[serde(rename = "notifications.configure")]
+    notifications_configure: NotificationPreferences,
+    #[serde(rename = "notifications.ack")]
+    notifications_ack: NotificationAckParams,
+    #[serde(rename = "apps.list")]
+    apps_list: EmptyParams,
+    #[serde(rename = "apps.revoke")]
+    apps_revoke: AppRevokeParams,
 }
 #[derive(JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -538,4 +576,22 @@ pub struct MethodOutputs {
     adapters: Vec<AdapterDescriptor>,
     #[serde(rename = "diagnostics.report")]
     diagnostics: Value,
+    #[serde(rename = "health.get")]
+    health_view: HealthView,
+    #[serde(rename = "issues.list")]
+    issues_list: Vec<Issue>,
+    #[serde(rename = "issues.acknowledge")]
+    issues_acknowledge: IssueUpdateResult,
+    #[serde(rename = "issues.snooze")]
+    issues_snooze: IssueUpdateResult,
+    #[serde(rename = "notifications.poll")]
+    notifications_poll: Vec<NotificationDecision>,
+    #[serde(rename = "notifications.configure")]
+    notifications_configure: NotificationPreferences,
+    #[serde(rename = "notifications.ack")]
+    notifications_ack: Value,
+    #[serde(rename = "apps.list")]
+    apps_list: Value,
+    #[serde(rename = "apps.revoke")]
+    apps_revoke: Value,
 }
