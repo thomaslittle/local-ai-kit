@@ -2,11 +2,11 @@
 
 Pinned commit: `cfafb4bb54d244e4612f5681aad3832ea64cb0fb`
 
-Compared `main` `066c8fc0cd04c97988ff8892e440189545ac6994` and nightly `v0.1.2-nightly.20261021.3473` (`1688f965682d331da16a8c39f049592361f69c8d`) against nightly pin `e3b35d1b2440b104f0bc2e357377c348121234dd`.
+Compared `main` `8d3b061121fe65669d5d43d011b48cd3027a4108` and nightly `v0.1.2-nightly.20261022.3512` (`3b95e7831b11b17627dff16843bc087bfca397ec`) against nightly pin `e3b35d1b2440b104f0bc2e357377c348121234dd`.
 
 Watched areas: local model providers, cloud CLI providers, installed CLI detection, and ChatGPT OAuth. This report does not change Local AI Kit behavior.
 
-## main (cfafb4bb54d2..066c8fc0cd04)
+## main (cfafb4bb54d2..8d3b061121fe)
 
 ```diff
  .github/workflows/release.yml                      |  133 ++-
@@ -34,8 +34,8 @@ Watched areas: local model providers, cloud CLI providers, installed CLI detecti
  apps/server/src/cloud/publicConfig.ts              |    5 +
  apps/server/src/cloud/relayResponse.test.ts        |   88 +-
  apps/server/src/cloud/relayResponse.ts             |   48 +-
- apps/server/src/cloud/selfUpdate.test.ts           |  129 +--
- apps/server/src/cloud/selfUpdate.ts                |   96 +-
+ apps/server/src/cloud/selfUpdate.test.ts           |  217 ++--
+ apps/server/src/cloud/selfUpdate.ts                |  116 ++-
  .../server/src/cloud/serviceLauncherClient.test.ts |   20 +-
  apps/server/src/cloud/serviceLauncherClient.ts     |   13 +-
  apps/server/src/cloud/servicePreflight.test.ts     |   15 -
@@ -57,7 +57,7 @@ Watched areas: local model providers, cloud CLI providers, installed CLI detecti
  .../src/provider/Drivers/ClaudeSkills.test.ts      |  501 ++++++----
  apps/server/src/provider/Drivers/ClaudeSkills.ts   |  274 +++++-
  .../src/provider/Drivers/CodexDriver.test.ts       |   81 +-
- apps/server/src/provider/Drivers/CodexDriver.ts    |  453 ++++-----
+ apps/server/src/provider/Drivers/CodexDriver.ts    |  454 ++++-----
  .../src/provider/Drivers/CodexHomeLayout.test.ts   |   94 +-
  .../server/src/provider/Drivers/CodexHomeLayout.ts |    3 +-
  .../src/provider/Drivers/CodexManagedProvider.ts   |   51 +-
@@ -68,7 +68,7 @@ Watched areas: local model providers, cloud CLI providers, installed CLI detecti
  .../server/src/provider/Drivers/codexUsage.test.ts |  304 +++++-
  apps/server/src/provider/Drivers/codexUsage.ts     |  209 +++-
  docs/internals/providers.md                        |    3 +-
- docs/operations/release.md                         |    6 +-
+ docs/operations/release.md                         |    8 +-
  .../server/AcpRegistryRuntimeCoordinator.test.ts   |   78 +-
  .../src/server/AcpRegistrySupport.test.ts          |  264 -----
  .../src/server/AcpRegistrySupport.ts               |   39 +-
@@ -108,7 +108,7 @@ Watched areas: local model providers, cloud CLI providers, installed CLI detecti
  .../provider-muse/src/server/usageLimits.test.ts   |   60 ++
  packages/provider-muse/src/server/usageLimits.ts   |   48 +
  packages/provider-opencode/src/server/driver.ts    |  615 ++++++------
- 99 files changed, 7901 insertions(+), 7733 deletions(-)
+ 99 files changed, 8011 insertions(+), 7734 deletions(-)
 
 diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
 index 972b85c84..6a80220c2 100644
@@ -263,11 +263,11 @@ index 972b85c84..6a80220c2 100644
        # and none of its tests touch the runtime. Only the non-server `test`
 @@ -521,7 +554,11 @@ jobs:
        # Runs t3#build (which depends on @t3tools/web#build) and
-       # @t3tools/desktop#build, so apps/ser
+       # @t3tools/desktop#build, so apps/s
 … diff truncated …
 ```
 
-## nightly (v0.1.2-nightly.20261021.3473)
+## nightly (v0.1.2-nightly.20261022.3512)
 
 ```diff
  .github/workflows/release.yml                      |  133 ++-
@@ -318,7 +318,7 @@ index 972b85c84..6a80220c2 100644
  .../src/provider/Drivers/ClaudeSkills.test.ts      |  501 ++++++----
  apps/server/src/provider/Drivers/ClaudeSkills.ts   |  274 +++++-
  .../src/provider/Drivers/CodexDriver.test.ts       |   81 +-
- apps/server/src/provider/Drivers/CodexDriver.ts    |  453 ++++-----
+ apps/server/src/provider/Drivers/CodexDriver.ts    |  454 ++++-----
  .../src/provider/Drivers/CodexHomeLayout.test.ts   |   94 +-
  .../server/src/provider/Drivers/CodexHomeLayout.ts |    3 +-
  .../src/provider/Drivers/CodexManagedProvider.ts   |   51 +-
@@ -329,7 +329,7 @@ index 972b85c84..6a80220c2 100644
  .../server/src/provider/Drivers/codexUsage.test.ts |  304 +++++-
  apps/server/src/provider/Drivers/codexUsage.ts     |  209 +++-
  docs/internals/providers.md                        |    3 +-
- docs/operations/release.md                         |    6 +-
+ docs/operations/release.md                         |    8 +-
  .../server/AcpRegistryRuntimeCoordinator.test.ts   |   78 +-
  .../src/server/AcpRegistrySupport.test.ts          |  264 -----
  .../src/server/AcpRegistrySupport.ts               |   39 +-
@@ -369,7 +369,7 @@ index 972b85c84..6a80220c2 100644
  .../provider-muse/src/server/usageLimits.test.ts   |   60 ++
  packages/provider-muse/src/server/usageLimits.ts   |   48 +
  packages/provider-opencode/src/server/driver.ts    |  615 ++++++------
- 99 files changed, 7906 insertions(+), 7734 deletions(-)
+ 99 files changed, 7908 insertions(+), 7735 deletions(-)
 
 diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
 index 972b85c84..6a80220c2 100644
