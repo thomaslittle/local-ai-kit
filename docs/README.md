@@ -8,6 +8,8 @@ New here? Start with the [root README](../README.md), then the [prompt-app guide
 |---|---|
 | Desktop/prompt apps: select a route and model, grant access, stream, follow up | [prompt-app.md](integration/prompt-app.md) |
 | Native helper CLI, SDK bridge, transports | [native-helper.md](integration/native-helper.md), [pairing.md](integration/pairing.md), [shared-broker.md](integration/shared-broker.md), [browser-extension.md](integration/browser-extension.md) |
+| Shared runtime lifetime, snapshots, health, notifications | [shared-broker.md](integration/shared-broker.md), [ADR-001](design/ADR-001-shared-runtime.md), [shared-runtime plan](implementation/SHARED-RUNTIME-PLAN.md) |
+| Signed/staged runtime updates | [updates.md](integration/updates.md) |
 | Installing a built bundle (helper, npm tarballs, wheel) | [distribution.md](integration/distribution.md) |
 | Registering Gemini CLI / Antigravity / Grok; billing declarations | [native-profiles.md](integration/native-profiles.md) |
 | ChatGPT managed sign-in | [chatgpt-managed-auth.md](integration/chatgpt-managed-auth.md) |
@@ -27,7 +29,8 @@ New here? Start with the [root README](../README.md), then the [prompt-app guide
 ## Design and security
 
 - [Architecture specification](design/architecture.md) (original design; see the support matrix for current status).
-- [Threat model](security/threat-model.md) and the [security policy](../SECURITY.md).
+- [ADR-001: one durable, permissioned local AI runtime](design/ADR-001-shared-runtime.md).
+- [Threat model](security/threat-model.md), [shared-runtime security review](security/SHARED-RUNTIME-REVIEW.md), and the [security policy](../SECURITY.md).
 - [Source audit](design/source-audit.md) and [third-party notices](../THIRD_PARTY_NOTICES.md).
 - [Historical implementation plan](design/implementation-plan.md).
 

@@ -2,23 +2,32 @@
 
 `local-ai-kit serve --ipc ADDRESS --allow-passive-discovery` runs one local service. Use a simple local pipe name on Windows and an absolute socket path inside your private application directory on Unix. Windows uses an owner-only pipe security descriptor and rejects remote pipe clients. Unix sockets use mode 0600. An existing listener is not unlinked or replaced.
 
-The broker's stdin/stdout are a **trusted parent application control channel**, not a log: stdout returns an initial JSON descriptor with `address`, an expiring one-use `token`, and `protocolVersion`. The host may send `{"action":"authorize"}` on stdin to issue another independent client credential. Do not publish or log this control output. Closing the parent control input stops the broker; closing an application connection does not.
+## Lifetime modes
+
+**Parent-owned (default).** The broker's stdin/stdout are a **trusted parent application control channel**, not a log: stdout returns an initial JSON descriptor with `address`, an expiring one-use `token`, and `protocolVersion`. The host may send `{"action":"authorize"}` on stdin to issue another independent client credential. Do not publish or log this control output. Closing the parent control input stops the broker; closing an application connection does not.
+
+**Independent.** `serve --ipc ADDRESS --independent --token-file ABSOLUTE_PATH [--idle-timeout SECONDS]` owns its own lifetime. It publishes an owner-only JSON descriptor with a reusable token, stays alive when every consumer disconnects, and stops after the idle timeout when configured. Endpoint binding is the single-instance boundary: a second launch fails with `CONFLICT`; it never replaces or unlinks a live endpoint. The token file is the owner-credential boundary, not a per-application grant. Use embedded/parent mode when you need distinct per-app scopes and one-use credentials. The token file is removed on graceful shutdown.
 
 Applications connect using the native `connect --ipc ADDRESS` bridge. The token travels as the first JSON-RPC frame over stdin, never a command-line argument. The bridge does not start a broker automatically.
 
 ```ts
 import {createLocalAI} from '@local-ai-kit/sdk';
-import {openBrokerTransport} from '@local-ai-kit/sdk/node';
-const ai = await createLocalAI({transport: await openBrokerTransport({
+import {openSharedBrokerTransport} from '@local-ai-kit/sdk/node';
+// Starts one independent broker only if no live instance is reachable.
+const ai = await createLocalAI({transport: await openSharedBrokerTransport({
   executable: approvedBinaryPath,
-  address: privateDescriptor.address,
-  token: privateDescriptor.token,
+  address: 'local-ai-kit-user',
+  tokenFile: 'C:/Users/me/AppData/Local/local-ai-kit/broker-token.json',
+  startArgs: ['--allow-passive-discovery', '--allow-metadata', 'codex'],
 })});
 await ai.discovery.refresh({level:'passive'});
-const snapshot = await ai.snapshot.get();
-await ai.close(); // Other applications remain connected.
+const env = await ai.snapshot.get();
+console.log(env.revision, env.cursor, env.health, env.issues);
+const stop = ai.inventory.subscribe({after: env.cursor});
+await ai.close(); // Other applications and the independent broker remain.
 ```
 
-Python: `AsyncStdioTransport.open_broker(executable=..., address=..., token=...)` followed by `AsyncClient.connect(transport)`. Embedded Rust hosts can call `Broker::authorize(policy, execution_grant)` separately for each application. Each application has independently revocable scopes; no protocol request can grant itself broader access. Disconnect unregisters that client. Tokens expire after five minutes and are consumed once. The CLI parent determines its clients' common maximum policy; embedded hosts can use distinct policies.
+Python: `AsyncStdioTransport.open_broker(executable=..., address=..., token=...)` followed by `AsyncClient.connect(transport)`, or `client.subscribe_inventory(after=snapshot['cursor'])`. Embedded Rust hosts can call `Broker::authorize(policy, execution_grant)` separately for each application, or `Broker::authorize_shared` for an owner-scoped independent broker. Each application has independently revocable scopes; no protocol request can grant itself broader access. Disconnect unregisters that client. Parent tokens expire after five minutes and are consumed once; the independent owner token is valid for the broker's lifetime.
 
-Verified on Windows with two independent SDK helper processes, one shared scan, denied third-client access, one-use credentials, duplicate broker rejection, and client-specific revocation. Unix socket code must be qualified separately on Unix before claiming platform execution evidence. No implicit installation, telemetry, remote relay, or cross-user brokerage.
+Verified on Windows with two independent SDK helper processes, one shared scan, denied third-client access, one-use credentials, duplicate broker rejection, client-specific revocation, independent lifetime across consumer disconnects, duplicate-launch convergence, idle shutdown, and a control-center process using only the public API. Unix socket code must be qualified separately on Unix before claiming platform execution evidence. No implicit installation, telemetry, remote relay, or cross-user brokerage.
+

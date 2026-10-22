@@ -1,0 +1,160 @@
+# ADR-001: One durable, permissioned local AI runtime
+
+- **Status:** accepted and implemented (fixture/platform evidence in the
+  [shared-runtime acceptance ledger](../qualification/2026-10-22-shared-runtime.md))
+- **Date:** 2026-10-22
+- **Supersedes:** the implicit "one broker, metadata JSON cache" behavior
+  described in earlier handoffs. It does not replace the public contracts.
+
+## Context
+
+Local AI Kit already had a Rust discovery engine, a shared broker, scoped
+client policies, single-flight discovery, per-connection metadata caching,
+backoff, and file-watch invalidation. Inspection found five integration gaps:
+
+1. A broker started for one parent stopped when that parent closed its control
+   input, so independently launched applications could not reliably converge.
+2. Filesystem invalidation removed metadata but did not schedule a re-read, so
+   the cache could remain empty until a UI request.
+3. Metadata publication did not advance the inventory revision or emit a
+   shared change record; each consumer had to re-read the entire snapshot.
+4. Warm startup restored per-connection metadata but not the ready-to-serve
+   snapshot, health, issues, or notification delivery state.
+5. There was no persistent, actionable health model, no single notification
+   coordinator, and no broker-owned upgrade/rollback path.
+
+The provider remains authoritative for authentication, entitlement, quota, and
+billing. This runtime is authoritative only for its own observations.
+
+## Decisions
+
+### D1. Keep the Rust core and add broker-owned SQLite
+
+`lai-store` is a new crate used only by `lai-service`. It commits normalized,
+sanitized observations, the last ready snapshot, monotonic revisions, a bounded
+journal, issue state, and delivery deduplication state in one SQLite file with
+WAL. Clients never open SQL. The database is local disk state, not a network
+share. A damaged database is renamed to `state.corrupt-<timestamp>` and a
+visible recovery issue is raised; it is never silently erased. A future schema
+fails closed.
+
+Metadata is sanitized before persistence: account labels and identity sources
+become `NOT_PERSISTED`. Raw provider tokens are never stored, logged, or
+exported; provider credentials stay with native clients or supported secure
+storage.
+
+### D2. Explicit broker lifetime, never an accidental second scanner
+
+`serve --ipc` remains parent-owned and one-use by default. A second explicit
+mode, `serve --ipc ADDRESS --independent --token-file PATH`, owns its lifetime,
+publishes a reusable owner-only token descriptor, and supports an optional idle
+timeout. Endpoint binding is the single-instance race boundary: a competing
+launch fails with `CONFLICT` and must connect to the existing broker. Closing a
+consumer closes only its bridge.
+
+The SDK helper `openSharedBrokerTransport` reads the descriptor, tries the live
+broker first, and starts it only when absent. If a shared broker is configured
+but unreachable, consumers must report that failure; they must not silently
+start a managed full scanner. Embedded and managed-helper modes remain for
+compatibility.
+
+Independent mode uses an owner-scoped reusable credential file because there is
+no trusted parent process to issue one-use grants. Per-application grants and
+revocation remain available in embedded/parent mode and through the host
+`apps.list` / `apps.revoke` administrative surface. The owner token file is not
+a per-app boundary; the directory and pipe ACLs are the boundary.
+
+### D3. Revisions, epochs, and a bounded journal
+
+Every committed inventory change gets a monotonic revision and a
+`<epoch>:<sequence>` cursor. The epoch changes on a fresh database process
+lifetime. `snapshot.get` returns the committed cursor. Clients subscribe with
+`events.read({"scope":"inventory","after":cursor})`; the transport keeps the
+same subscription framing used by session events. A cursor from a previous
+epoch, ahead of the tail, or before the bounded journal produces a typed
+`EVENT_GAP`; the only recovery is a full snapshot resynchronization. Events are
+published after commit, never before.
+
+### D4. Three refresh lanes and stale-while-revalidate
+
+- Slow inventory/catalog/capability reconciliation (`discovery.refresh`).
+- Targeted metadata/auth refresh after a debounced local change, an explicit
+  probe, or expiry. The autonomous lane probes only host-authorized providers,
+  coalesces dirty connections, and uses bounded concurrency and backoff.
+- Provider-supported usage/reset observations remain part of metadata/catalog
+  probes; a timer never declares a reset.
+
+A failed provider does not block another provider or erase last-known data.
+File invalidation marks data stale immediately and schedules a re-read; it does
+not claim a logout. A failed probe keeps the last observation visible as stale
+with a typed refresh error. Persisted startup data is always labeled stale and
+reverified, never treated as a current session or credential.
+
+### D5. Typed health, one notification coordinator
+
+`Issue` is persistent and stable across restarts: kind, severity, state,
+affected provider/connection/account/route/pool/window, first/last observation,
+evidence, remediation, snooze, and resolution. Dismissal and snooze do not mark
+an issue resolved; resolution requires a later verified observation. Transient
+failures are debounced and failures remain inline even when OS notifications are
+disabled.
+
+`notifications.poll` is the only delivery decision authority. It applies
+severity, enablement, quiet hours, privacy, snooze, reminders, and durable
+deduplication. Crash recovery cannot guarantee exactly-once OS delivery; the
+contract says best-effort with a stable dedupe key.
+
+### D6. Control center is a native Rust TUI over the public API
+
+The repository has no existing desktop UI shell; adding a GPUI/egui stack just
+for a reference consumer would couple the core to a new UI dependency. A
+lightweight Rust terminal UI (`lai-control`) consumes the authenticated broker
+protocol only: snapshot, health, apps, adapters, refresh, probe, issue
+acknowledge/snooze, revoke, and redacted export. It never opens SQLite and never
+calls a provider. The UI is optional; the broker runs headless. Tray/OS
+notification integration belongs to a host application using the coordinator.
+
+### D7. Upstream knowledge is still normalized, reviewed evidence
+
+Sources have separate responsibilities: official provider protocols for
+authoritative semantics; T3 for executable resolution/platform environment;
+Tokscale for storage paths/migrations; OpenUsage for additional path knowledge
+after review; OpenCode for local model-server discovery; Quotio only for
+verified, appropriately licensed complementary adapters. Released builds never
+clone or execute upstream code. Upstream reports are artifacts/branches, not
+automatic adapter updates. Provider-relevant changes are classified separately
+from release/relay/docs noise, and lost watched coverage is an explicit failure.
+
+### D8. Updates are signed, staged, and coordinated
+
+Checksums are integrity, not publisher authentication. `lai-update` verifies an
+Ed25519 signature over canonical manifest JSON, platform, protocol family,
+version monotonicity, archive size/checksum, and staged bytes. Activation takes
+an exclusive session lease and an activation lock, backs up the previous
+binary, replaces atomically, and supports explicit rollback. Signing
+credentials, publication, and installation are separate approval gates.
+
+## Consequences
+
+- Consumers get a fast cached snapshot immediately, then a small change signal,
+  then a full snapshot only when they choose or when a cursor gap requires it.
+- A database migration is now a release concern; schema versions fail closed.
+- Independent mode's reusable owner token is weaker than per-app grants; hosts
+  that need per-app isolation should use the parent/embedded broker. This is
+  documented, not hidden.
+- The control center is intentionally small. A richer native UI can be added
+  later without changing the broker contract.
+- Live provider qualification is still separate from fixture tests and platform
+  execution. No claim in this ADR turns a fixture into a live account.
+
+## Upgrade strategy
+
+1. Protocol 1.x is additive for clients. New methods/fields are advertised by
+   `runtime.handshake`; unknown methods return `CAPABILITY_UNSUPPORTED`.
+2. SQLite schema versions are integer-gated. A newer store is not opened by an
+   older runtime. Migrations run in one transaction and preserve a backup.
+3. A replacement executable is installed only after signature/checksum/platform
+   checks and while no session lease is held. The previous binary remains in
+   `backups/` for explicit rollback.
+4. Consumers may pin a known-good helper or connect to a shared broker; a
+   provider-adapter fix does not require every consumer to ship at once.
