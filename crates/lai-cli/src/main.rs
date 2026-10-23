@@ -252,7 +252,12 @@ async fn execute(args: Args) -> Result<()> {
             }
             lai_transports::serve_io(
                 tokio::io::stdin(),
-                tokio::io::stdout(),
+                lai_transports::stdio_stdout().map_err(|_| {
+                    DomainError::new(
+                        ErrorCode::ProviderUnavailable,
+                        "Protocol output worker unavailable",
+                    )
+                })?,
                 service,
                 "stdio-owner".into(),
                 Default::default(),

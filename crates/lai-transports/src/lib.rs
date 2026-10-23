@@ -2,6 +2,7 @@
 pub mod http;
 pub mod local_ipc;
 pub mod native_messaging;
+mod stdio_output;
 mod wire;
 use lai_contracts::{ErrorCode, Result};
 use lai_service::NativeService;
@@ -11,6 +12,7 @@ use std::{
     sync::Arc,
     time::Duration,
 };
+pub use stdio_output::stdout as stdio_stdout;
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     task::JoinSet,
@@ -47,12 +49,17 @@ async fn send<W: AsyncWrite + Unpin>(
         .map_err(|_| error(ErrorCode::InvalidRequest))?;
     }
     bytes.push(b'\n');
+    let started = std::time::Instant::now();
+    let mut stage = "write";
     tokio::time::timeout(options.write_timeout, async {
         writer.write_all(&bytes).await?;
+        stage="flush";
         writer.flush().await
     })
     .await
-    .map_err(|_| error(ErrorCode::Timeout))?
+    .map_err(|_| lai_contracts::DomainError::new(ErrorCode::Timeout, format!(
+        "Native transport output deadline exceeded: stage={stage} response_bytes={} elapsed_ms={}",bytes.len(),started.elapsed().as_millis()
+    )))?
     .map_err(|_| error(ErrorCode::ProviderUnavailable))
 }
 
@@ -178,5 +185,106 @@ struct ClientLifetime {
 impl Drop for ClientLifetime {
     fn drop(&mut self) {
         self.service.close_client(&self.client);
+    }
+}
+
+#[cfg(test)]
+mod stdio_write_tests {
+    use super::*;
+    use std::{
+        pin::Pin,
+        task::{Context, Poll},
+    };
+    struct BlockedWriter {
+        flush_only: bool,
+    }
+    impl AsyncWrite for BlockedWriter {
+        fn poll_write(
+            self: Pin<&mut Self>,
+            _: &mut Context<'_>,
+            bytes: &[u8],
+        ) -> Poll<std::io::Result<usize>> {
+            if self.flush_only {
+                Poll::Ready(Ok(bytes.len()))
+            } else {
+                Poll::Pending
+            }
+        }
+        fn poll_flush(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+            Poll::Pending
+        }
+        fn poll_shutdown(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+    }
+    #[tokio::test]
+    async fn timeout_identifies_write_or_flush_without_payload_contents() {
+        for (flush_only, stage) in [(false, "write"), (true, "flush")] {
+            let value = serde_json::json!({"id":"PRIVATE_SENTINEL","result":"PRIVATE_SENTINEL"});
+            let expected = serde_json::to_vec(&value).unwrap().len() + 1;
+            let options = StdioOptions {
+                write_timeout: Duration::from_millis(10),
+                ..Default::default()
+            };
+            let problem = send(&mut BlockedWriter { flush_only }, value, &options)
+                .await
+                .unwrap_err();
+            assert_eq!(problem.code, ErrorCode::Timeout);
+            assert!(
+                problem.message.contains(&format!("stage={stage}")),
+                "{}",
+                problem.message
+            );
+            assert!(
+                problem
+                    .message
+                    .contains(&format!("response_bytes={expected}"))
+            );
+            assert!(!problem.message.contains("PRIVATE_SENTINEL"));
+        }
+    }
+    #[test]
+    fn stdout_progresses_while_provider_blocking_pool_is_busy() {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .max_blocking_threads(1)
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async {
+            let (started, ready) = std::sync::mpsc::channel();
+            let busy = tokio::task::spawn_blocking(move || {
+                started.send(()).unwrap();
+                std::thread::sleep(Duration::from_millis(200));
+            });
+            ready.recv_timeout(Duration::from_secs(1)).unwrap();
+            let mut writer = stdio_stdout().unwrap();
+            let result = tokio::time::timeout(Duration::from_millis(50), async {
+                writer.write_all(b"\n").await.unwrap();
+                writer.flush().await.unwrap();
+            })
+            .await;
+            busy.await.unwrap();
+            assert!(
+                result.is_ok(),
+                "stdout was queued behind provider blocking work despite a draining consumer"
+            );
+        });
+    }
+    #[tokio::test]
+    async fn large_response_drains_through_small_pipe() {
+        let (mut writer, mut reader) = tokio::io::duplex(1024);
+        let value = serde_json::json!({"id":1,"result":"x".repeat(262144)});
+        let expected = serde_json::to_vec(&value).unwrap().len() + 1;
+        let drain = tokio::spawn(async move {
+            let mut bytes = Vec::new();
+            reader.read_to_end(&mut bytes).await.unwrap();
+            bytes.len()
+        });
+        send(&mut writer, value, &StdioOptions::default())
+            .await
+            .unwrap();
+        drop(writer);
+        assert_eq!(drain.await.unwrap(), expected);
     }
 }

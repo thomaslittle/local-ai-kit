@@ -4,6 +4,10 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Fixed
+
+- Direct stdio protocol output uses a bounded dedicated worker so provider blocking-pool work cannot starve stdout. Output deadlines remain enforced; timeout diagnostics contain only write/flush stage, response byte count and elapsed time.
+
 ## [0.1.0-alpha.18] - 2026-10-22
 
 ### Added
