@@ -1,0 +1,2225 @@
+{
+  "description": "Fictional independent wire examples. IDs and descriptors are illustrative, not usable account credentials or observed provider facts.",
+  "methods": {
+    "adapters.list": {
+      "summary": "Inspect static adapter implementation descriptors.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": [
+        {
+          "id": "opencode",
+          "name": "OpenCode",
+          "integration": "local_http",
+          "passiveDiscovery": true,
+          "metadata": true,
+          "textSessions": true,
+          "nativeToolApproval": false,
+          "cancellation": true,
+          "persistentResumption": false,
+          "qualification": "See per-operation qualification reports; no account capability implied",
+          "limitations": [
+            "Plan and account quota depend on what the native interface reports"
+          ]
+        }
+      ],
+      "notes": [
+        "Static implementation coverage is not proof of installation, authentication, model access or successful live execution. Consult the support matrix."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "approvals.respond": {
+      "summary": "Answer one pending, owned approval exactly once.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "approvalId": "approval_example",
+        "allow": false
+      },
+      "result": {
+        "allowed": false
+      },
+      "notes": [
+        "Deny is the safe sample. Approval applies only to the referenced native action; it is not a permanent permission expansion."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "NOT_FOUND",
+          "when": "The approval is absent, already answered, or no longer pending."
+        }
+      ]
+    },
+    "apps.list": {
+      "summary": "List connected application identities and policy summaries.",
+      "authority": "A separately host-installed administrative client policy; ordinary app tokens are insufficient.",
+      "params": {},
+      "result": [
+        {
+          "id": "client_admin",
+          "app": "control-center",
+          "allowPassiveDiscovery": true,
+          "connectionIds": [],
+          "revealIdentity": false,
+          "admin": true
+        },
+        {
+          "id": "client_peer",
+          "app": "example-peer",
+          "allowPassiveDiscovery": true,
+          "connectionIds": [
+            "connection_example"
+          ],
+          "revealIdentity": false,
+          "admin": false
+        }
+      ],
+      "notes": [
+        "Never distribute the administrative token to ordinary consumers. Returned id is a live client-connection id; app groups its stable application identity."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "apps.revoke": {
+      "summary": "Administratively revoke a connected application and its grant.",
+      "authority": "A separate administrative policy, targeting a client ID returned by apps.list.",
+      "params": {
+        "targetClientId": "client_peer"
+      },
+      "result": {
+        "revoked": true,
+        "clientId": "client_peer",
+        "app": "example-peer",
+        "connections": 1,
+        "grantsRevoked": true
+      },
+      "notes": [
+        "For app-scoped independent grants this removes the reusable app grant and sweeps its live connections. Legacy owner credentials retain per-connection semantics."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "NOT_FOUND",
+          "when": "The target client is unavailable."
+        },
+        {
+          "code": "CONFLICT",
+          "when": "The administrator attempted to revoke itself through this method."
+        }
+      ]
+    },
+    "artifacts.read": {
+      "summary": "Read one bounded chunk of an owned in-memory result artifact.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example",
+        "artifactId": "artifact_example",
+        "offset": "0",
+        "maxBytes": 1024
+      },
+      "result": {
+        "artifactId": "artifact_example",
+        "sessionId": "session_example",
+        "displayName": "example.txt",
+        "mediaType": "text/plain",
+        "totalBytes": "6",
+        "offset": "0",
+        "nextOffset": "6",
+        "dataBase64": "SGVsbG8K",
+        "eof": true
+      },
+      "notes": [
+        "offset/nextOffset/totalBytes are wire strings. Never replace artifact IDs with file paths; returned content must be treated as untrusted."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "NOT_FOUND",
+          "when": "The artifact expired or is unavailable."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "auth.chatgpt.cancel": {
+      "summary": "Cancel one owned managed login attempt.",
+      "authority": "A host-enabled managed ChatGPT profile, an auth manager, and metadata permission for codex_managed.",
+      "params": {
+        "loginId": "login_example"
+      },
+      "result": {},
+      "notes": [],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "auth.chatgpt.disconnect": {
+      "summary": "Disconnect the host-managed profile and retire its sessions.",
+      "authority": "A host-enabled managed ChatGPT profile, an auth manager, and metadata permission for codex_managed.",
+      "params": {},
+      "result": {},
+      "notes": [
+        "This is a mutating sign-out action; no automatic sign-out/re-sign-in is a recovery policy. Native clients keep ownership of their own unrelated credentials."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "auth.chatgpt.start": {
+      "summary": "Begin an explicitly requested managed sign-in flow.",
+      "authority": "A host-enabled managed ChatGPT profile, an auth manager, and metadata permission for codex_managed.",
+      "params": {},
+      "result": {
+        "loginId": "login_example",
+        "authUrl": "https://auth.example.invalid/authorize"
+      },
+      "notes": [
+        "Use the runtime-returned URL for that exact login attempt; the example.invalid URL is inert and deliberately unusable.",
+        "Starting sign-in is an operator action. It is not part of discovery, metadata refresh, docs tests or the quickstart."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "auth.chatgpt.status": {
+      "summary": "Read host-managed ChatGPT sign-in state.",
+      "authority": "A host-enabled managed ChatGPT profile, an auth manager, and metadata permission for codex_managed.",
+      "params": {},
+      "result": {
+        "state": "signed_out",
+        "loginId": null,
+        "email": null,
+        "errorCode": null
+      },
+      "notes": [
+        "This is a separately opted-in managed profile, not a browser-cookie or subscription-token import API."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "capabilities.read": {
+      "summary": "Read descriptors for one visible toolkit model ID.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "modelId": "model_example"
+      },
+      "result": [
+        {
+          "id": "generation.text",
+          "support": "supported",
+          "origin": "model",
+          "evidence": {
+            "state": "known",
+            "value": "Synthetic descriptor only",
+            "source": {
+              "kind": "synthetic",
+              "adapterId": "documentation-fixture",
+              "adapterVersion": "0.1.0-alpha.18",
+              "reference": "Fictional documentation example"
+            },
+            "observedAt": "2026-10-22T12:00:00.000Z",
+            "freshness": "fresh",
+            "verification": "reported"
+          },
+          "conditions": []
+        }
+      ],
+      "notes": [
+        "Use the toolkit model id from the current snapshot/page, not nativeId. A supported descriptor does not replace route, grant or billing checks."
+      ],
+      "errors": [
+        {
+          "code": "NOT_FOUND",
+          "when": "The model is absent from the client projection."
+        },
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "connections.list": {
+      "summary": "List visible installed/configured connections.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": [
+        {
+          "id": "connection_example",
+          "providerId": "opencode",
+          "installationId": "installation_example",
+          "profileId": "profile_example",
+          "displayName": "Example connection",
+          "accountId": "account_example",
+          "auth": {
+            "state": "known",
+            "value": "authenticated",
+            "source": {
+              "kind": "synthetic",
+              "adapterId": "documentation-fixture",
+              "adapterVersion": "0.1.0-alpha.18",
+              "reference": "Fictional documentation example"
+            },
+            "observedAt": "2026-10-22T12:00:00.000Z",
+            "freshness": "fresh",
+            "verification": "reported"
+          },
+          "plan": {
+            "state": "unknown",
+            "reason": "Not reported in this synthetic example"
+          },
+          "status": "ready",
+          "diagnostics": []
+        }
+      ],
+      "notes": [
+        "An installation or unchecked authentication observation is not a verified login. This is a cached read, not a provider probe."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "connections.probe": {
+      "summary": "Refresh one permitted connection through its metadata adapter.",
+      "authority": "The connection must be visible and the host must permit its metadata provider or exact connection.",
+      "params": {
+        "connectionId": "connection_example"
+      },
+      "result": {
+        "status": "updated",
+        "connectionId": "connection_example"
+      },
+      "notes": [
+        "The result can be status:cached when evidence is still fresh. Re-read the snapshot for actual field observations.",
+        "A probe may launch an approved client, use its login and contact metadata services. It is not an inference/tool grant."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "RATE_LIMITED",
+          "when": "Probe concurrency/backoff or provider Retry-After applies."
+        },
+        {
+          "code": "TIMEOUT",
+          "when": "The metadata provider deadline expires."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "diagnostics.report": {
+      "summary": "Read bounded diagnostic counts and limitations.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": {
+        "mode": "synthetic",
+        "connections": 1,
+        "models": 1,
+        "quotaPools": 1,
+        "executionAvailable": true,
+        "metadataAvailable": true,
+        "limitations": [
+          "Passive discovery alone does not verify authentication or plan access.",
+          "Adapter implementation is not a live account qualification."
+        ]
+      },
+      "notes": [
+        "This result is intentionally open in the canonical schema. Do not log provider payloads, credentials, private paths or raw transport frames."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "discovery.refresh": {
+      "summary": "Request an explicit passive inventory reconciliation.",
+      "authority": "Host-granted passive discovery; no provider metadata or execution consent is implied.",
+      "params": {
+        "level": "passive"
+      },
+      "result": {
+        "revision": "3",
+        "mode": "live"
+      },
+      "notes": [
+        "Only passive is currently supported. Omitting level uses passive; other levels return a typed unsupported error.",
+        "Concurrent refresh callers share the inventory flight. This is not a quota probe or inference request."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "TIMEOUT",
+          "when": "The bounded inventory scan did not finish."
+        },
+        {
+          "code": "STORAGE_UNAVAILABLE",
+          "when": "A durable inventory commit could not be installed."
+        }
+      ]
+    },
+    "discovery.watch": {
+      "summary": "Enable or disable permitted local metadata invalidation watching.",
+      "authority": "Host-granted passive discovery and an existing discovered watch-root set.",
+      "params": {
+        "enabled": true
+      },
+      "result": {
+        "watching": true
+      },
+      "notes": [
+        "Watching invalidates cached evidence; it does not grant provider probes. Separately host-authorized autonomous lanes may refresh invalidated data.",
+        "Disable with enabled:false. Client close/revocation removes that client watcher."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "CONFLICT",
+          "when": "Enable is requested before passive discovery established watch roots."
+        }
+      ]
+    },
+    "events.read": {
+      "summary": "Read a bounded page of owned session events.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example",
+        "after": "0"
+      },
+      "result": {
+        "events": [
+          {
+            "sessionId": "session_example",
+            "turnId": "turn_example",
+            "sequence": "1",
+            "timestamp": "2026-10-22T12:00:00.000Z",
+            "adapterId": "documentation-fixture",
+            "schemaVersion": "1.0",
+            "payload": {
+              "type": "text_delta",
+              "text": "Hello from a synthetic example."
+            }
+          }
+        ],
+        "cursor": "1",
+        "tailCursor": "1",
+        "hasMore": false
+      },
+      "notes": [
+        "Session after is a decimal sequence string. Runtime tailCursor/hasMore are additional fields beyond the canonical EventPage minimum.",
+        "The inventory scope uses a different cursor and result type; see the [alpha18 inventory contract gap](../integration/api-reference.md#inventory-events-and-contract-gap)."
+      ],
+      "errors": [
+        {
+          "code": "EVENT_GAP",
+          "when": "The cursor is ahead, expired or no longer replayable."
+        },
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "events.subscribe": {
+      "summary": "Subscribe to owned native-stream events.",
+      "authority": "A handshaken native-stream transport advertising subscriptions and permission for the underlying events.read query.",
+      "params": {
+        "sessionId": "session_example",
+        "after": "0"
+      },
+      "result": {
+        "subscriptionId": "subscription-1"
+      },
+      "notes": [
+        "The stdio/local-IPC native stream implements this operation; HTTP uses GET /v1/events for session SSE, not this RPC.",
+        "events.event and events.error notifications carry this subscriptionId. Preserve the processed cursor and unsubscribe explicitly."
+      ],
+      "errors": [
+        {
+          "code": "RATE_LIMITED",
+          "when": "The native connection already has 16 subscriptions."
+        },
+        {
+          "code": "EVENT_GAP",
+          "when": "The requested event cursor cannot be replayed."
+        },
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "events.unsubscribe": {
+      "summary": "Remove one subscription on this native connection.",
+      "authority": "The same native-stream connection that created the subscription.",
+      "params": {
+        "subscriptionId": "subscription-1"
+      },
+      "result": {
+        "unsubscribed": true
+      },
+      "notes": [],
+      "errors": [
+        {
+          "code": "NOT_FOUND",
+          "when": "The subscription ID is unknown on this connection."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "grants.list": {
+      "summary": "Inspect this connection’s effective policy summary.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": {
+        "allowPassiveDiscovery": true,
+        "connectionIds": [
+          "connection_example"
+        ],
+        "revealIdentity": false,
+        "execution": false
+      },
+      "notes": [
+        "The open result reports whether an execution grant exists, not every field of that grant. It does not return credentials."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "grants.request": {
+      "summary": "Request host approval without mutating permissions.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "scopes": [
+          "metadata"
+        ],
+        "connectionIds": [
+          "connection_example"
+        ],
+        "allowPaid": false
+      },
+      "result": {
+        "status": "requires_host_approval"
+      },
+      "notes": [
+        "The host must separately decide and install a grant through trusted configuration/API. This RPC cannot self-authorize, even when its response succeeds."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "grants.revoke": {
+      "summary": "Revoke this client connection’s policy and owned work.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": {
+        "revoked": true
+      },
+      "notes": [
+        "This is not administrative revocation of a reusable broker app credential. Use an authorized apps.revoke action to prevent app reconnection.",
+        "HTTP also invalidates the current paired bearer token. Do not automatically re-pair or restore a denied grant."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "health.get": {
+      "summary": "Read the projected health summary and actionable issues.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": {
+        "summary": {
+          "status": "degraded",
+          "openIssues": 1,
+          "hydrated": false,
+          "worstSeverity": "warning",
+          "checkedAt": "2026-10-22T12:00:00.000Z"
+        },
+        "issues": [
+          {
+            "id": "issue_example",
+            "fingerprint": "example-usage-unavailable",
+            "kind": "usage_unavailable",
+            "severity": "warning",
+            "state": "open",
+            "title": "Usage not reported",
+            "summary": "Synthetic example: no authoritative usage observation is available.",
+            "firstSeenAt": "2026-10-22T12:00:00.000Z",
+            "lastSeenAt": "2026-10-22T12:00:00.000Z",
+            "occurrences": 1,
+            "connectionId": "connection_example",
+            "providerId": "opencode",
+            "evidence": [
+              {
+                "code": "USAGE_UNKNOWN",
+                "message": "Synthetic example only",
+                "observedAt": "2026-10-22T12:00:00.000Z",
+                "source": {
+                  "kind": "synthetic",
+                  "adapterId": "documentation-fixture",
+                  "adapterVersion": "0.1.0-alpha.18",
+                  "reference": "Fictional documentation example"
+                },
+                "freshness": "fresh",
+                "verification": "reported"
+              }
+            ],
+            "remediation": []
+          }
+        ]
+      },
+      "notes": [
+        "Hydrated or stale evidence remains marked. A dismissed/snoozed warning is not authoritative recovery."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "inputs.put": {
+      "summary": "Stage a bounded image for one owned session.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example",
+        "mediaType": "image/png",
+        "dataBase64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIAAAUAAXpeqz8AAAAASUVORK5CYII=",
+        "displayName": "synthetic-one-pixel.png"
+      },
+      "result": {
+        "inputId": "input_example",
+        "byteLength": 68,
+        "width": 1,
+        "height": 1
+      },
+      "notes": [
+        "The sample is an actual one-pixel synthetic PNG. This stages bytes locally; generation begins only after an explicitly granted turns.start.",
+        "Input references are session-scoped and consumed by the turn; never pass arbitrary file paths."
+      ],
+      "errors": [
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        },
+        {
+          "code": "FRAME_TOO_LARGE",
+          "when": "The image exceeds input dimensions or byte limits."
+        },
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "issues.acknowledge": {
+      "summary": "Mark a visible issue as seen without resolving its cause.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "issueId": "issue_example"
+      },
+      "result": {
+        "issue": {
+          "id": "issue_example",
+          "fingerprint": "example-usage-unavailable",
+          "kind": "usage_unavailable",
+          "severity": "warning",
+          "state": "acknowledged",
+          "title": "Usage not reported",
+          "summary": "Synthetic example: no authoritative usage observation is available.",
+          "firstSeenAt": "2026-10-22T12:00:00.000Z",
+          "lastSeenAt": "2026-10-22T12:00:00.000Z",
+          "occurrences": 1,
+          "connectionId": "connection_example",
+          "providerId": "opencode",
+          "evidence": [
+            {
+              "code": "USAGE_UNKNOWN",
+              "message": "Synthetic example only",
+              "observedAt": "2026-10-22T12:00:00.000Z",
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              },
+              "freshness": "fresh",
+              "verification": "reported"
+            }
+          ],
+          "remediation": []
+        }
+      },
+      "notes": [
+        "Acknowledgement is not provider recovery and does not make unhealthy evidence healthy."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "issues.list": {
+      "summary": "List only issues visible in the current policy projection.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": [
+        {
+          "id": "issue_example",
+          "fingerprint": "example-usage-unavailable",
+          "kind": "usage_unavailable",
+          "severity": "warning",
+          "state": "open",
+          "title": "Usage not reported",
+          "summary": "Synthetic example: no authoritative usage observation is available.",
+          "firstSeenAt": "2026-10-22T12:00:00.000Z",
+          "lastSeenAt": "2026-10-22T12:00:00.000Z",
+          "occurrences": 1,
+          "connectionId": "connection_example",
+          "providerId": "opencode",
+          "evidence": [
+            {
+              "code": "USAGE_UNKNOWN",
+              "message": "Synthetic example only",
+              "observedAt": "2026-10-22T12:00:00.000Z",
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              },
+              "freshness": "fresh",
+              "verification": "reported"
+            }
+          ],
+          "remediation": []
+        }
+      ],
+      "notes": [
+        "Issue IDs are not grants and do not expose inaccessible resources."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "issues.snooze": {
+      "summary": "Suppress a visible issue’s reminders until a deadline.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "issueId": "issue_example",
+        "until": "2026-10-23T12:00:00.000Z"
+      },
+      "result": {
+        "issue": {
+          "id": "issue_example",
+          "fingerprint": "example-usage-unavailable",
+          "kind": "usage_unavailable",
+          "severity": "warning",
+          "state": "snoozed",
+          "title": "Usage not reported",
+          "summary": "Synthetic example: no authoritative usage observation is available.",
+          "firstSeenAt": "2026-10-22T12:00:00.000Z",
+          "lastSeenAt": "2026-10-22T12:00:00.000Z",
+          "occurrences": 1,
+          "connectionId": "connection_example",
+          "providerId": "opencode",
+          "evidence": [
+            {
+              "code": "USAGE_UNKNOWN",
+              "message": "Synthetic example only",
+              "observedAt": "2026-10-22T12:00:00.000Z",
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              },
+              "freshness": "fresh",
+              "verification": "reported"
+            }
+          ],
+          "remediation": [],
+          "snoozedUntil": "2026-10-23T12:00:00.000Z"
+        }
+      },
+      "notes": [
+        "Omitting until uses the current runtime default of 24 hours. Snooze does not clear the issue or change quota."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "models.list": {
+      "summary": "Read cached models, optionally restricted to a route.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "routeId": "route_example"
+      },
+      "result": [
+        {
+          "id": "model_example",
+          "routeId": "route_example",
+          "nativeId": "example/model",
+          "name": "Fictional model",
+          "revision": "fixture-r1",
+          "isDefault": true,
+          "capabilities": [
+            {
+              "id": "generation.text",
+              "support": "supported",
+              "origin": "model",
+              "evidence": {
+                "state": "known",
+                "value": "Synthetic descriptor only",
+                "source": {
+                  "kind": "synthetic",
+                  "adapterId": "documentation-fixture",
+                  "adapterVersion": "0.1.0-alpha.18",
+                  "reference": "Fictional documentation example"
+                },
+                "observedAt": "2026-10-22T12:00:00.000Z",
+                "freshness": "fresh",
+                "verification": "reported"
+              },
+              "conditions": []
+            }
+          ],
+          "options": [
+            {
+              "id": "fixture_mode",
+              "label": "Example native mode",
+              "scope": "session",
+              "revision": "fixture-r1",
+              "control": {
+                "type": "select",
+                "choices": [
+                  {
+                    "value": "native_choice_a",
+                    "label": "Example choice A"
+                  },
+                  {
+                    "value": "native_choice_b",
+                    "label": "Example choice B"
+                  }
+                ],
+                "defaultValue": "native_choice_a"
+              },
+              "currentValue": "native_choice_a",
+              "billingSensitive": false,
+              "permissionSensitive": false,
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              }
+            }
+          ],
+          "contextWindow": {
+            "state": "unknown",
+            "reason": "Not reported in this synthetic example"
+          }
+        }
+      ],
+      "notes": [
+        "An empty list is not proof that a provider has no models; metadata may be unknown, unavailable, stale or scoped out."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "FRAME_TOO_LARGE",
+          "when": "A large response exceeds the transport bound; use models.page."
+        }
+      ]
+    },
+    "models.page": {
+      "summary": "Read one bounded page of cached models.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "routeId": "route_example",
+        "limit": 16
+      },
+      "result": {
+        "revision": "3",
+        "models": [
+          {
+            "id": "model_example",
+            "routeId": "route_example",
+            "nativeId": "example/model",
+            "name": "Fictional model",
+            "revision": "fixture-r1",
+            "isDefault": true,
+            "capabilities": [
+              {
+                "id": "generation.text",
+                "support": "supported",
+                "origin": "model",
+                "evidence": {
+                  "state": "known",
+                  "value": "Synthetic descriptor only",
+                  "source": {
+                    "kind": "synthetic",
+                    "adapterId": "documentation-fixture",
+                    "adapterVersion": "0.1.0-alpha.18",
+                    "reference": "Fictional documentation example"
+                  },
+                  "observedAt": "2026-10-22T12:00:00.000Z",
+                  "freshness": "fresh",
+                  "verification": "reported"
+                },
+                "conditions": []
+              }
+            ],
+            "options": [
+              {
+                "id": "fixture_mode",
+                "label": "Example native mode",
+                "scope": "session",
+                "revision": "fixture-r1",
+                "control": {
+                  "type": "select",
+                  "choices": [
+                    {
+                      "value": "native_choice_a",
+                      "label": "Example choice A"
+                    },
+                    {
+                      "value": "native_choice_b",
+                      "label": "Example choice B"
+                    }
+                  ],
+                  "defaultValue": "native_choice_a"
+                },
+                "currentValue": "native_choice_a",
+                "billingSensitive": false,
+                "permissionSensitive": false,
+                "source": {
+                  "kind": "synthetic",
+                  "adapterId": "documentation-fixture",
+                  "adapterVersion": "0.1.0-alpha.18",
+                  "reference": "Fictional documentation example"
+                }
+              }
+            ],
+            "contextWindow": {
+              "state": "unknown",
+              "reason": "Not reported in this synthetic example"
+            }
+          }
+        ],
+        "nextCursor": null
+      },
+      "notes": [
+        "Runtime limit is 1–500 rows (default 100), tighter than the schema integer bounds; a page is also bounded near 240 KiB.",
+        "Treat nextCursor as opaque and check the revision across every page and before/after surrounding metadata reads. Never mix different generations."
+      ],
+      "errors": [
+        {
+          "code": "SELECTION_STALE",
+          "when": "The selection or catalog cursor no longer matches the projected revision."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        },
+        {
+          "code": "FRAME_TOO_LARGE",
+          "when": "One model descriptor alone exceeds the page byte budget."
+        }
+      ]
+    },
+    "notifications.ack": {
+      "summary": "Acknowledge a notification decision identifier.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "issueId": "issue_example",
+        "dedupeKey": "example-dedupe-key"
+      },
+      "result": {
+        "acknowledged": true
+      },
+      "notes": [
+        "The current implementation validates the IDs and acknowledges the call. Coordinator delivery state, not this response, owns durable deduplication."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "notifications.configure": {
+      "summary": "Set the per-install notification coordinator preferences.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "enabled": false
+      },
+      "result": {
+        "enabled": false,
+        "minimumSeverity": "warning",
+        "quietHoursStartMinute": null,
+        "quietHoursEndMinute": null,
+        "reminderAfterSeconds": 86400,
+        "privateContent": false
+      },
+      "notes": [
+        "These preferences are per-install, not a per-app entitlement. Quiet-hour minute values must be below 1440.",
+        "Actual OS delivery requires a separately compiled/host-installed notification sink and explicit host opt-in. This sample disables decisions rather than enabling OS access."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "notifications.poll": {
+      "summary": "Read deduplicated notification decisions.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": [],
+      "notes": [
+        "Polling can deliver decisions through an already host-installed sink. Do not create duplicate OS notifications independently in every app."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "runtime.closeClient": {
+      "summary": "Release this client and its owned sessions.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": {
+        "closed": true
+      },
+      "notes": [
+        "This does not stop an independent broker or revoke a reusable app descriptor. The host must also close its transport; SDK close helpers do that."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "runtime.handshake": {
+      "summary": "Negotiate protocol, compiled methods, and runtime-level capabilities.",
+      "authority": "The transport must already establish its trusted caller identity; this grants no new access.",
+      "params": {
+        "protocolVersion": "1.0",
+        "clientName": "example-metadata-app"
+      },
+      "result": {
+        "protocolVersion": "1.0",
+        "runtimeVersion": "0.1.0-alpha.18",
+        "methods": [
+          "runtime.handshake",
+          "runtime.health",
+          "snapshot.get",
+          "discovery.refresh",
+          "connections.list",
+          "models.page",
+          "runtime.closeClient"
+        ],
+        "capabilities": []
+      },
+      "notes": [
+        "The example method list is illustrative, not a promise that every runtime advertises the same subset. A method can be advertised and still require a grant.",
+        "Compare protocolVersion separately from runtimeVersion; package alpha versions are not protocol versions.",
+        "The helper may already have host-authorized background inventory before the first snapshot. Handshake itself does not discover anything."
+      ],
+      "errors": [
+        {
+          "code": "PROTOCOL_INCOMPATIBLE",
+          "when": "The requested protocol major or version syntax is incompatible."
+        },
+        {
+          "code": "CONFLICT",
+          "when": "Stdio receives a second handshake on the same connection."
+        }
+      ]
+    },
+    "runtime.health": {
+      "summary": "Read service availability and implementation flags.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": {
+        "status": "ok",
+        "mode": "live",
+        "executionAvailable": true,
+        "metadataAvailable": true,
+        "revision": "3",
+        "cursor": "example-epoch:3",
+        "hydrated": false,
+        "storageAvailable": true,
+        "autonomousRefresh": true
+      },
+      "notes": [
+        "executionAvailable and metadataAvailable describe registered drivers, not caller permission, account login or provider health. Extra fields shown here are current implementation extensions to RuntimeHealth."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    },
+    "selection.resolve": {
+      "summary": "Resolve candidate selections from current cached requirements.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "requiredCapabilities": [
+          "generation.text"
+        ],
+        "allowPaidFallback": false,
+        "eligibleOnly": true
+      },
+      "result": [
+        {
+          "selection": {
+            "routeId": "route_example",
+            "modelId": "model_example",
+            "revision": "fixture-r1",
+            "options": {}
+          },
+          "connectionId": "connection_example",
+          "eligible": true,
+          "reasons": []
+        }
+      ],
+      "notes": [
+        "Requirements filter candidates; they do not grant execution, change billing routes or validate live access. Native option values remain descriptor-driven."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "selection.validate": {
+      "summary": "Validate a selection against the current projected catalog.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {
+        "selection": {
+          "routeId": "route_example",
+          "modelId": "model_example",
+          "revision": "fixture-r1",
+          "options": {}
+        },
+        "allowPaid": false
+      },
+      "result": {
+        "valid": true,
+        "mode": "synthetic"
+      },
+      "notes": [
+        "Validation is a point-in-time check. sessions.create and turns.start recheck authority and selection; successful validation is not a reservation."
+      ],
+      "errors": [
+        {
+          "code": "SELECTION_STALE",
+          "when": "The selection or catalog cursor no longer matches the projected revision."
+        },
+        {
+          "code": "CAPABILITY_UNKNOWN",
+          "when": "Required capability/evidence is not known."
+        },
+        {
+          "code": "OPTION_UNSUPPORTED",
+          "when": "The chosen native option/value is unsupported."
+        },
+        {
+          "code": "BILLING_CONSENT_REQUIRED",
+          "when": "The route/options require separate paid consent."
+        }
+      ]
+    },
+    "sessions.close": {
+      "summary": "Close only this client’s owned session.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example"
+      },
+      "result": {
+        "closed": true
+      },
+      "notes": [
+        "Close releases session inputs and owned work. It is not a request to stop a peer application or independent broker."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "NOT_FOUND",
+          "when": "The session is absent or unavailable."
+        }
+      ]
+    },
+    "sessions.create": {
+      "summary": "Create one explicitly granted execution session.",
+      "authority": "A negotiated driver, approved connection/provider, mapped workspace, valid selection and separate paid/tool grants where needed.",
+      "params": {
+        "selection": {
+          "routeId": "route_example",
+          "modelId": "model_example",
+          "revision": "fixture-r1",
+          "options": {}
+        },
+        "workspaceId": "default",
+        "allowPaid": false,
+        "permissionMode": "read_only",
+        "reviewRequests": false
+      },
+      "result": {
+        "id": "session_example",
+        "connectionId": "connection_example",
+        "selection": {
+          "routeId": "route_example",
+          "modelId": "model_example",
+          "revision": "fixture-r1",
+          "options": {}
+        },
+        "state": "ready",
+        "createdAt": "2026-10-22T12:00:00.000Z",
+        "nativeResumption": true
+      },
+      "notes": [
+        "workspaceId is a host-installed mapping, never an arbitrary filesystem path. This request can launch a provider client; it is excluded from the metadata-only quickstart.",
+        "persistent:true and hostMcpServers have additional capability/security requirements. See the session and host-MCP guides."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "SELECTION_STALE",
+          "when": "The selection or catalog cursor no longer matches the projected revision."
+        },
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "BILLING_CONSENT_REQUIRED",
+          "when": "Billing-sensitive access lacks separate consent."
+        },
+        {
+          "code": "INTEGRATION_RESTRICTED",
+          "when": "The adapter cannot enforce the requested policy."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "sessions.get": {
+      "summary": "Inspect one session owned by this client.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example"
+      },
+      "result": {
+        "id": "session_example",
+        "connectionId": "connection_example",
+        "selection": {
+          "routeId": "route_example",
+          "modelId": "model_example",
+          "revision": "fixture-r1",
+          "options": {}
+        },
+        "state": "ready",
+        "createdAt": "2026-10-22T12:00:00.000Z",
+        "nativeResumption": true
+      },
+      "notes": [],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "NOT_FOUND",
+          "when": "The owned session no longer exists."
+        }
+      ]
+    },
+    "sessions.resume": {
+      "summary": "Resume an adapter-supported native conversation.",
+      "authority": "Current execution/workspace/route grants matching the runtime-issued resume token.",
+      "params": {
+        "resumeToken": "<opaque-resume-token>"
+      },
+      "result": {
+        "id": "session_resumed",
+        "connectionId": "connection_example",
+        "selection": {
+          "routeId": "route_example",
+          "modelId": "model_example",
+          "revision": "fixture-r1",
+          "options": {}
+        },
+        "state": "ready",
+        "createdAt": "2026-10-22T12:00:00.000Z",
+        "nativeResumption": true
+      },
+      "notes": [
+        "Use the returned opaque token; never synthesize one or substitute a transcript. No fresh-session fallback or automatic turn replay occurs.",
+        "Host MCP credentials are not sealed into tokens and must be supplied again when needed. Durable restart support is separately capability-gated."
+      ],
+      "errors": [
+        {
+          "code": "RESUME_UNAVAILABLE",
+          "when": "The token, identity, route, model, workspace or native history is no longer valid."
+        },
+        {
+          "code": "CONFLICT",
+          "when": "The same native conversation is already attached."
+        },
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "sessions.suspend": {
+      "summary": "Detach a supported native conversation and obtain a resume token.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example"
+      },
+      "result": {
+        "resumeToken": "<opaque-resume-token>"
+      },
+      "notes": [
+        "A token may be helper-lifetime-only. Persistence across helper restart requires the negotiated persistent-resumption capability and a persistent session.",
+        "A failed suspend leaves native state uncertain; do not assume the old session remains safely usable."
+      ],
+      "errors": [
+        {
+          "code": "CAPABILITY_UNSUPPORTED",
+          "when": "The operation or selected adapter capability is unavailable."
+        },
+        {
+          "code": "CONFLICT",
+          "when": "The session state is not suspendable."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "sessions.updateOptions": {
+      "summary": "Update provider-native session option values.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example",
+        "options": {
+          "fixture_mode": "native_choice_b"
+        }
+      },
+      "result": {
+        "id": "session_example",
+        "connectionId": "connection_example",
+        "selection": {
+          "routeId": "route_example",
+          "modelId": "model_example",
+          "revision": "fixture-r1",
+          "options": {
+            "fixture_mode": "native_choice_b"
+          }
+        },
+        "state": "ready",
+        "createdAt": "2026-10-22T12:00:00.000Z",
+        "nativeResumption": true
+      },
+      "notes": [
+        "fixture_mode/native_choice_b are fictional descriptors, not universal controls. Use the exact current provider-native descriptor IDs and values."
+      ],
+      "errors": [
+        {
+          "code": "OPTION_UNSUPPORTED",
+          "when": "The option/value/scope does not match current descriptors."
+        },
+        {
+          "code": "SELECTION_STALE",
+          "when": "The selection or catalog cursor no longer matches the projected revision."
+        },
+        {
+          "code": "CONFLICT",
+          "when": "A running or unusable session cannot update options."
+        }
+      ]
+    },
+    "snapshot.get": {
+      "summary": "Read the cached, permission-projected inventory.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": {
+        "protocolVersion": "1.0",
+        "revision": "3",
+        "observedAt": "2026-10-22T12:00:00.000Z",
+        "mode": "synthetic",
+        "cursor": "example-epoch:3",
+        "providers": [
+          {
+            "id": "opencode",
+            "name": "OpenCode (fixture)",
+            "kind": "native"
+          }
+        ],
+        "installations": [
+          {
+            "id": "installation_example",
+            "providerId": "opencode",
+            "environmentId": "environment_example",
+            "locationHint": "Example installation (not a filesystem path)",
+            "version": {
+              "state": "unknown",
+              "reason": "Not reported in this synthetic example"
+            }
+          }
+        ],
+        "profiles": [
+          {
+            "id": "profile_example",
+            "installationId": "installation_example",
+            "label": "Example profile"
+          }
+        ],
+        "accounts": [
+          {
+            "id": "account_example",
+            "providerId": "opencode",
+            "displayLabel": {
+              "state": "known",
+              "value": "Example account",
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              },
+              "observedAt": "2026-10-22T12:00:00.000Z",
+              "freshness": "fresh",
+              "verification": "reported"
+            },
+            "identitySource": {
+              "state": "known",
+              "value": "Synthetic fixture",
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              },
+              "observedAt": "2026-10-22T12:00:00.000Z",
+              "freshness": "fresh",
+              "verification": "reported"
+            },
+            "scopes": [
+              {
+                "kind": "workspace",
+                "id": {
+                  "state": "known",
+                  "value": "workspace_example",
+                  "source": {
+                    "kind": "synthetic",
+                    "adapterId": "documentation-fixture",
+                    "adapterVersion": "0.1.0-alpha.18",
+                    "reference": "Fictional documentation example"
+                  },
+                  "observedAt": "2026-10-22T12:00:00.000Z",
+                  "freshness": "fresh",
+                  "verification": "reported"
+                },
+                "label": {
+                  "state": "known",
+                  "value": "Example scope",
+                  "source": {
+                    "kind": "synthetic",
+                    "adapterId": "documentation-fixture",
+                    "adapterVersion": "0.1.0-alpha.18",
+                    "reference": "Fictional documentation example"
+                  },
+                  "observedAt": "2026-10-22T12:00:00.000Z",
+                  "freshness": "fresh",
+                  "verification": "reported"
+                }
+              }
+            ]
+          }
+        ],
+        "connections": [
+          {
+            "id": "connection_example",
+            "providerId": "opencode",
+            "installationId": "installation_example",
+            "profileId": "profile_example",
+            "displayName": "Example connection",
+            "accountId": "account_example",
+            "auth": {
+              "state": "known",
+              "value": "authenticated",
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              },
+              "observedAt": "2026-10-22T12:00:00.000Z",
+              "freshness": "fresh",
+              "verification": "reported"
+            },
+            "plan": {
+              "state": "unknown",
+              "reason": "Not reported in this synthetic example"
+            },
+            "status": "ready",
+            "diagnostics": []
+          }
+        ],
+        "routes": [
+          {
+            "id": "route_example",
+            "connectionId": "connection_example",
+            "providerId": "opencode",
+            "displayName": "Example route",
+            "billing": {
+              "state": "known",
+              "value": "subscription",
+              "source": {
+                "kind": "synthetic",
+                "adapterId": "documentation-fixture",
+                "adapterVersion": "0.1.0-alpha.18",
+                "reference": "Fictional documentation example"
+              },
+              "observedAt": "2026-10-22T12:00:00.000Z",
+              "freshness": "fresh",
+              "verification": "reported"
+            },
+            "capabilities": [
+              {
+                "id": "generation.text",
+                "support": "supported",
+                "origin": "model",
+                "evidence": {
+                  "state": "known",
+                  "value": "Synthetic descriptor only",
+                  "source": {
+                    "kind": "synthetic",
+                    "adapterId": "documentation-fixture",
+                    "adapterVersion": "0.1.0-alpha.18",
+                    "reference": "Fictional documentation example"
+                  },
+                  "observedAt": "2026-10-22T12:00:00.000Z",
+                  "freshness": "fresh",
+                  "verification": "reported"
+                },
+                "conditions": []
+              }
+            ],
+            "catalogRevision": "fixture-r1"
+          }
+        ],
+        "models": [
+          {
+            "id": "model_example",
+            "routeId": "route_example",
+            "nativeId": "example/model",
+            "name": "Fictional model",
+            "revision": "fixture-r1",
+            "isDefault": true,
+            "capabilities": [
+              {
+                "id": "generation.text",
+                "support": "supported",
+                "origin": "model",
+                "evidence": {
+                  "state": "known",
+                  "value": "Synthetic descriptor only",
+                  "source": {
+                    "kind": "synthetic",
+                    "adapterId": "documentation-fixture",
+                    "adapterVersion": "0.1.0-alpha.18",
+                    "reference": "Fictional documentation example"
+                  },
+                  "observedAt": "2026-10-22T12:00:00.000Z",
+                  "freshness": "fresh",
+                  "verification": "reported"
+                },
+                "conditions": []
+              }
+            ],
+            "options": [
+              {
+                "id": "fixture_mode",
+                "label": "Example native mode",
+                "scope": "session",
+                "revision": "fixture-r1",
+                "control": {
+                  "type": "select",
+                  "choices": [
+                    {
+                      "value": "native_choice_a",
+                      "label": "Example choice A"
+                    },
+                    {
+                      "value": "native_choice_b",
+                      "label": "Example choice B"
+                    }
+                  ],
+                  "defaultValue": "native_choice_a"
+                },
+                "currentValue": "native_choice_a",
+                "billingSensitive": false,
+                "permissionSensitive": false,
+                "source": {
+                  "kind": "synthetic",
+                  "adapterId": "documentation-fixture",
+                  "adapterVersion": "0.1.0-alpha.18",
+                  "reference": "Fictional documentation example"
+                }
+              }
+            ],
+            "contextWindow": {
+              "state": "unknown",
+              "reason": "Not reported in this synthetic example"
+            }
+          }
+        ],
+        "quotaPools": [
+          {
+            "id": "pool_example",
+            "accountId": "account_example",
+            "connectionIds": [
+              "connection_example"
+            ],
+            "routeIds": [
+              "route_example"
+            ],
+            "sharing": "unknown",
+            "windows": [
+              {
+                "id": "window_example",
+                "label": "Provider window (unknown)",
+                "reading": {
+                  "state": "unknown",
+                  "reason": "Not reported in this synthetic example"
+                }
+              }
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "id": "issue_example",
+            "fingerprint": "example-usage-unavailable",
+            "kind": "usage_unavailable",
+            "severity": "warning",
+            "state": "open",
+            "title": "Usage not reported",
+            "summary": "Synthetic example: no authoritative usage observation is available.",
+            "firstSeenAt": "2026-10-22T12:00:00.000Z",
+            "lastSeenAt": "2026-10-22T12:00:00.000Z",
+            "occurrences": 1,
+            "connectionId": "connection_example",
+            "providerId": "opencode",
+            "evidence": [
+              {
+                "code": "USAGE_UNKNOWN",
+                "message": "Synthetic example only",
+                "observedAt": "2026-10-22T12:00:00.000Z",
+                "source": {
+                  "kind": "synthetic",
+                  "adapterId": "documentation-fixture",
+                  "adapterVersion": "0.1.0-alpha.18",
+                  "reference": "Fictional documentation example"
+                },
+                "freshness": "fresh",
+                "verification": "reported"
+              }
+            ],
+            "remediation": []
+          }
+        ],
+        "health": {
+          "status": "degraded",
+          "openIssues": 1,
+          "hydrated": false,
+          "worstSeverity": "warning",
+          "checkedAt": "2026-10-22T12:00:00.000Z"
+        },
+        "diagnostics": []
+      },
+      "notes": [
+        "fields is an optional projection of top-level field names. The full Snapshot schema describes an unprojected result; a projection returns only requested keys.",
+        "Reads renew activity interest but do not invoke discovery or widen grants. Previously authorized background lanes can publish concurrently.",
+        "For large catalogs omit models and combine revision-consistent models.page calls; see the [catalog guide](../integration/catalog-pages.md)."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "INVALID_REQUEST",
+          "when": "The request fails runtime validation."
+        }
+      ]
+    },
+    "turns.cancel": {
+      "summary": "Request cancellation of a toolkit-owned turn.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "turnId": "turn_example"
+      },
+      "result": {
+        "cancelled": true
+      },
+      "notes": [
+        "Cancel is not a refund, rollback, or global process kill. Transport abort alone does not imply this request was accepted."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "NOT_FOUND",
+          "when": "The turn is unavailable."
+        },
+        {
+          "code": "TIMEOUT",
+          "when": "The provider did not acknowledge cancellation in time."
+        }
+      ]
+    },
+    "turns.start": {
+      "summary": "Start one explicit model turn in an owned session.",
+      "authority": "A negotiated execution driver, an existing host execution grant, and ownership of the referenced session/turn.",
+      "params": {
+        "sessionId": "session_example",
+        "requestId": "example-user-action-1",
+        "prompt": "This is a fictional example; do not execute it automatically."
+      },
+      "result": {
+        "turnId": "turn_example"
+      },
+      "notes": [
+        "This can consume account allowance. The example is documentation only and is never run by the quickstart or docs validation.",
+        "The wire request id, requestId, sessionId and returned turnId are separate identities. Do not automatically replay an ambiguous turn after timeout or reconnect."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        },
+        {
+          "code": "SELECTION_STALE",
+          "when": "The selection or catalog cursor no longer matches the projected revision."
+        },
+        {
+          "code": "CONFLICT",
+          "when": "The session is busy or a request identity conflicts."
+        },
+        {
+          "code": "RATE_LIMITED",
+          "when": "The provider/runtime cannot admit the turn."
+        },
+        {
+          "code": "PROVIDER_UNAVAILABLE",
+          "when": "The approved provider/runtime cannot complete the operation."
+        }
+      ]
+    },
+    "usage.read": {
+      "summary": "Read visible quota pools and provider usage observations.",
+      "authority": "An authenticated, handshaken client; only its policy-projected data is visible.",
+      "params": {},
+      "result": [
+        {
+          "id": "pool_example",
+          "accountId": "account_example",
+          "connectionIds": [
+            "connection_example"
+          ],
+          "routeIds": [
+            "route_example"
+          ],
+          "sharing": "unknown",
+          "windows": [
+            {
+              "id": "window_example",
+              "label": "Provider window (unknown)",
+              "reading": {
+                "state": "unknown",
+                "reason": "Not reported in this synthetic example"
+              }
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Unknown is not zero. Pool sharing must be explicitly verified; similar account labels do not establish a shared allowance.",
+        "A reset deadline may schedule another observation but cannot replenish an allowance locally."
+      ],
+      "errors": [
+        {
+          "code": "LOCAL_ACCESS_DENIED",
+          "when": "The client is not authorized for the referenced scope or object."
+        }
+      ]
+    }
+  },
+  "schemaExamples": {
+    "Account": {
+      "id": "account_example",
+      "providerId": "opencode",
+      "displayLabel": {
+        "state": "known",
+        "value": "Example account",
+        "source": {
+          "kind": "synthetic",
+          "adapterId": "documentation-fixture",
+          "adapterVersion": "0.1.0-alpha.18",
+          "reference": "Fictional documentation example"
+        },
+        "observedAt": "2026-10-22T12:00:00.000Z",
+        "freshness": "fresh",
+        "verification": "reported"
+      },
+      "identitySource": {
+        "state": "known",
+        "value": "Synthetic fixture",
+        "source": {
+          "kind": "synthetic",
+          "adapterId": "documentation-fixture",
+          "adapterVersion": "0.1.0-alpha.18",
+          "reference": "Fictional documentation example"
+        },
+        "observedAt": "2026-10-22T12:00:00.000Z",
+        "freshness": "fresh",
+        "verification": "reported"
+      },
+      "scopes": [
+        {
+          "kind": "workspace",
+          "id": {
+            "state": "known",
+            "value": "workspace_example",
+            "source": {
+              "kind": "synthetic",
+              "adapterId": "documentation-fixture",
+              "adapterVersion": "0.1.0-alpha.18",
+              "reference": "Fictional documentation example"
+            },
+            "observedAt": "2026-10-22T12:00:00.000Z",
+            "freshness": "fresh",
+            "verification": "reported"
+          },
+          "label": {
+            "state": "known",
+            "value": "Example scope",
+            "source": {
+              "kind": "synthetic",
+              "adapterId": "documentation-fixture",
+              "adapterVersion": "0.1.0-alpha.18",
+              "reference": "Fictional documentation example"
+            },
+            "observedAt": "2026-10-22T12:00:00.000Z",
+            "freshness": "fresh",
+            "verification": "reported"
+          }
+        }
+      ]
+    },
+    "Capability": {
+      "id": "generation.text",
+      "support": "supported",
+      "origin": "model",
+      "evidence": {
+        "state": "known",
+        "value": "Synthetic descriptor only",
+        "source": {
+          "kind": "synthetic",
+          "adapterId": "documentation-fixture",
+          "adapterVersion": "0.1.0-alpha.18",
+          "reference": "Fictional documentation example"
+        },
+        "observedAt": "2026-10-22T12:00:00.000Z",
+        "freshness": "fresh",
+        "verification": "reported"
+      },
+      "conditions": []
+    },
+    "Connection": {
+      "id": "connection_example",
+      "providerId": "opencode",
+      "installationId": "installation_example",
+      "profileId": "profile_example",
+      "displayName": "Example connection",
+      "accountId": "account_example",
+      "auth": {
+        "state": "known",
+        "value": "authenticated",
+        "source": {
+          "kind": "synthetic",
+          "adapterId": "documentation-fixture",
+          "adapterVersion": "0.1.0-alpha.18",
+          "reference": "Fictional documentation example"
+        },
+        "observedAt": "2026-10-22T12:00:00.000Z",
+        "freshness": "fresh",
+        "verification": "reported"
+      },
+      "plan": {
+        "state": "unknown",
+        "reason": "Not reported in this synthetic example"
+      },
+      "status": "ready",
+      "diagnostics": []
+    },
+    "Model": {
+      "id": "model_example",
+      "routeId": "route_example",
+      "nativeId": "example/model",
+      "name": "Fictional model",
+      "revision": "fixture-r1",
+      "isDefault": true,
+      "capabilities": [
+        {
+          "id": "generation.text",
+          "support": "supported",
+          "origin": "model",
+          "evidence": {
+            "state": "known",
+            "value": "Synthetic descriptor only",
+            "source": {
+              "kind": "synthetic",
+              "adapterId": "documentation-fixture",
+              "adapterVersion": "0.1.0-alpha.18",
+              "reference": "Fictional documentation example"
+            },
+            "observedAt": "2026-10-22T12:00:00.000Z",
+            "freshness": "fresh",
+            "verification": "reported"
+          },
+          "conditions": []
+        }
+      ],
+      "options": [
+        {
+          "id": "fixture_mode",
+          "label": "Example native mode",
+          "scope": "session",
+          "revision": "fixture-r1",
+          "control": {
+            "type": "select",
+            "choices": [
+              {
+                "value": "native_choice_a",
+                "label": "Example choice A"
+              },
+              {
+                "value": "native_choice_b",
+                "label": "Example choice B"
+              }
+            ],
+            "defaultValue": "native_choice_a"
+          },
+          "currentValue": "native_choice_a",
+          "billingSensitive": false,
+          "permissionSensitive": false,
+          "source": {
+            "kind": "synthetic",
+            "adapterId": "documentation-fixture",
+            "adapterVersion": "0.1.0-alpha.18",
+            "reference": "Fictional documentation example"
+          }
+        }
+      ],
+      "contextWindow": {
+        "state": "unknown",
+        "reason": "Not reported in this synthetic example"
+      }
+    },
+    "OptionDescriptor": {
+      "id": "fixture_mode",
+      "label": "Example native mode",
+      "scope": "session",
+      "revision": "fixture-r1",
+      "control": {
+        "type": "select",
+        "choices": [
+          {
+            "value": "native_choice_a",
+            "label": "Example choice A"
+          },
+          {
+            "value": "native_choice_b",
+            "label": "Example choice B"
+          }
+        ],
+        "defaultValue": "native_choice_a"
+      },
+      "currentValue": "native_choice_a",
+      "billingSensitive": false,
+      "permissionSensitive": false,
+      "source": {
+        "kind": "synthetic",
+        "adapterId": "documentation-fixture",
+        "adapterVersion": "0.1.0-alpha.18",
+        "reference": "Fictional documentation example"
+      }
+    },
+    "QuotaPool": {
+      "id": "pool_example",
+      "accountId": "account_example",
+      "connectionIds": [
+        "connection_example"
+      ],
+      "routeIds": [
+        "route_example"
+      ],
+      "sharing": "unknown",
+      "windows": [
+        {
+          "id": "window_example",
+          "label": "Provider window (unknown)",
+          "reading": {
+            "state": "unknown",
+            "reason": "Not reported in this synthetic example"
+          }
+        }
+      ]
+    },
+    "Observation": {
+      "state": "known",
+      "value": "Example observed string",
+      "source": {
+        "kind": "synthetic",
+        "adapterId": "documentation-fixture",
+        "adapterVersion": "0.1.0-alpha.18",
+        "reference": "Fictional documentation example"
+      },
+      "observedAt": "2026-10-22T12:00:00.000Z",
+      "freshness": "fresh",
+      "verification": "reported"
+    },
+    "UsageReading": {
+      "unit": "requests",
+      "used": "3",
+      "limit": null,
+      "remaining": null,
+      "usedFraction": null
+    },
+    "DomainError": {
+      "code": "RATE_LIMITED",
+      "message": "Provider metadata is temporarily unavailable",
+      "retryable": true,
+      "retryAfterMs": 1000
+    },
+    "InventoryChange": {
+      "sequence": "3",
+      "cursor": "example-epoch:3",
+      "revision": "3",
+      "previousRevision": "2",
+      "observedAt": "2026-10-22T12:00:00.000Z",
+      "reason": "metadata_updated",
+      "changes": [
+        {
+          "resource": "connection",
+          "id": "connection_example",
+          "change": "updated"
+        }
+      ],
+      "issuesChanged": false
+    }
+  },
+  "runtimeExtensions": {
+    "inventory-events": {
+      "method": "events.read",
+      "params": {
+        "scope": "inventory",
+        "after": "example-epoch:2"
+      },
+      "result": {
+        "events": [
+          {
+            "sequence": "3",
+            "cursor": "example-epoch:3",
+            "revision": "3",
+            "previousRevision": "2",
+            "observedAt": "2026-10-22T12:00:00.000Z",
+            "reason": "metadata_updated",
+            "changes": [
+              {
+                "resource": "connection",
+                "id": "connection_example",
+                "change": "updated"
+              }
+            ],
+            "issuesChanged": false
+          }
+        ],
+        "cursor": "example-epoch:3",
+        "tailCursor": "example-epoch:3",
+        "hasMore": false,
+        "revision": "3"
+      },
+      "note": "Implemented alpha18 runtime extension. Generated EventsParams omits scope and EventPage describes session events, not this InventoryEventPage. Do not claim canonical request validation passes."
+    }
+  }
+}

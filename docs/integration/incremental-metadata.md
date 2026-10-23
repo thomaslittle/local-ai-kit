@@ -27,7 +27,7 @@ The toolkit does **not** infer quota, token cost, or plan access merely because 
 
 ## Metadata refresh and failure backoff
 
-Connection probes remain single-flight per connection. Successful metadata is cached and field evidence becomes stale rather than silently refreshed in the background.
+Connection probes remain single-flight per connection. Successful metadata is cached and field evidence becomes stale at expiry. Separately host-authorized background inventory, metadata and supported-usage lanes can request new observations; cached reads and interest hints never grant that authority. See the [API Reference](api-reference.md#discovery-scopes-and-explicit-authority) and [shared-broker guide](shared-broker.md#autonomous-refresh-and-subscriber-hints).
 
 Retryable failures use bounded exponential backoff starting near 250 ms, capped at 30 seconds, with deterministic per-connection jitter. An upstream `Retry-After` value takes precedence and is bounded to 24 hours. Nonretryable failures retain a short negative cache to prevent tight loops.
 
@@ -38,4 +38,4 @@ Only safe retry information crosses the public API:
 
 Provider response bodies, URLs, headers, tokens, local paths, and raw error messages are discarded before caching/serialization. TypeScript and Python SDK errors expose the same safe fields and never retry a request automatically. In particular, a generation/turn request is never replayed merely because an error is retryable.
 
-OS metadata notifications invalidate cached evidence only. They do not launch a client, probe quota, or run inference; the host still explicitly chooses when to refresh.
+OS metadata notifications invalidate cached evidence only. The notification itself does not launch a client, probe quota or run inference. Independently authorized refresh scheduling or an explicit permitted probe can then reconcile the invalidated data.

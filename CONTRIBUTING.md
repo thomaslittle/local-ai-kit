@@ -36,6 +36,7 @@ cargo build --locked -p lai-cli
 | Format and lint (CI enforces both) | `cargo fmt --all --check` and `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | JS/TS packages | `npm run test:unit`, `npm run test:sdk`, `npm run test:react` |
 | Generated contracts are current | `npm run check:generated` (regenerate with `python scripts/generate_contracts.py`) |
+| API reference/examples/links without a Rust build | `python scripts/generate_api_reference.py --check` and `python -m unittest discover -s tests/generation` |
 | Project hygiene (stubs, broken links, package privacy) | `python scripts/check_project.py` |
 | React Doctor (must report zero warnings or errors) | `npm run doctor` |
 | Everything CI runs | `python scripts/verify.py --profile all` |

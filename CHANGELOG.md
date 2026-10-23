@@ -4,6 +4,10 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Added
+
+- Prominent API Reference with a safe isolated quickstart, generated method/schema/HTTP documentation, validated synthetic wire examples, transport and permission lifecycle, and explicit inventory-event schema limitations. Canonical contract generation and lightweight documentation checks detect reference drift.
+
 ## [0.1.0-alpha.18] - 2026-10-22
 
 ### Added

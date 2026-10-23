@@ -274,7 +274,7 @@ def client_stub(schema):
 
 def render_files(schema):
     manifest, api = protocol_documents(schema)
-    return {
+    files = {
         'protocol/methods.json': json.dumps(manifest, indent=2, sort_keys=True) + '\n',
         'protocol/openapi.json': json.dumps(api, indent=2, sort_keys=True) + '\n',
         'protocol/contracts.schema.json': json.dumps(schema, indent=2, ensure_ascii=True, sort_keys=True) + '\n',
@@ -282,6 +282,10 @@ def render_files(schema):
         'packages/sdk-python/src/local_ai_kit/generated.py': python_types(schema),
         'packages/sdk-python/src/local_ai_kit/client.pyi': client_stub(schema),
     }
+    from generate_api_reference import CONTENT, render_files as render_reference
+    content = json.loads((ROOT / CONTENT).read_text(encoding='utf-8'))
+    files.update(render_reference(schema, manifest, api, content))
+    return files
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

@@ -11,6 +11,10 @@ Local AI Kit is a Rust toolkit with an embedded library, a standalone native hel
 
 > **Alpha.** The native service, supported execution adapters, SDKs, selectors, and installable bundles work, but the API can still change between `0.1.0-alpha.N` releases. Nothing is published to npm, PyPI, or crates.io yet; use [GitHub release bundles](https://github.com/thomaslittle/local-ai-kit/releases) or build from source. Provider coverage is operation-specific: read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) before relying on a provider.
 
+## API Reference
+
+**[Read the API Reference](docs/integration/api-reference.md)** for a safe end-to-end quickstart, transport/pairing lifecycle, permissions, inventory and event semantics, and recovery. Browse **[all methods with request/response examples](docs/reference/methods.md)**, the **[wire schemas](docs/reference/schemas.md)**, and **[HTTP routes](docs/reference/http.md)**. These pages are generated from the canonical contracts with validated synthetic examples.
+
 ## What it does
 
 - **Passive discovery.** Finds installed AI clients and profiles (Codex, Claude Code, Grok, Gemini CLI, Antigravity, OpenCode, Muse Code, Pi, Cursor, GitHub Copilot, Ollama, LM Studio, and API routes you configure) from metadata only. No scanning at import time, no secrets read, no network calls.
@@ -113,7 +117,8 @@ try {
 | Python | [`examples/python`](examples/python/), [Python SDK](packages/sdk-python/) |
 | React | [`examples/react`](examples/react/), [React hooks](packages/react/), [UI selectors](packages/ui-react/) |
 | C# over HTTP, Tauri, browser extension | [`examples/dotnet-http`](examples/dotnet-http/), [`examples/tauri`](examples/tauri/), [`examples/browser-extension`](examples/browser-extension/) |
-| Wire protocol, OpenAPI, JSON Schema | [Generated API](docs/integration/generated-api.md), [`protocol/`](protocol/) |
+| API guide, method examples, wire schemas, HTTP routes | [API Reference](docs/integration/api-reference.md), [methods](docs/reference/methods.md), [schemas](docs/reference/schemas.md), [HTTP](docs/reference/http.md) |
+| Contract generation, OpenAPI, JSON Schema | [Generated API](docs/integration/generated-api.md), [`protocol/`](protocol/) |
 | Add a provider adapter | [Adapter authoring guide](docs/adapters/AUTHORING.md) |
 
 ## Repository layout
