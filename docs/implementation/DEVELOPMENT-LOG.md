@@ -363,3 +363,27 @@ verifies that a reported v2 executable never starts that server. Existing
 fake gateway catalog and loopback reply tests remain green. Full OpenCode 2
 communication is a separate adapter follow-up; this guard does not claim
 that support. No upstream implementation was copied for this checkpoint.
+
+
+## 2026-10-23 — isolated Remotif stdio output scheduling fix
+
+A non-generative regression demonstrated that Tokio stdout queued behind a busy
+blocking pool misses the transport deadline even with a draining consumer. The
+CLI bounds that pool; Windows native-process reaping uses it as well. Direct-stdio
+output now has its own bounded worker, with one in-flight operation and 64 KiB
+chunks. The existing output deadline is retained. Timeout messages expose only
+write/flush stage, serialized response size and elapsed time, never payloads or
+request/account identity. The synthetic regression failed before the change and
+passed afterward; existing chunked-drain, backpressure-stage and cancellation
+checks were preserved. The owner subsequently stopped further unit-test work;
+remaining verification uses the actual isolated Remotif app and TV workflow.
+
+A separate app-data/runtime copy used the candidate without replacing or restarting
+a shared runtime. The exact previously authorized Luna route returned a full draft
+through the normal Refine draft UI. Scene admission correctly rejected a generated
+base/fallback color mismatch; correcting that authored field allowed validation and
+native review. Actual TV Confirm applied revision 15; live motion, Watch navigation
+and installed-app launch/Back were captured. Original failure evidence is retained.
+A separately reviewed native Undo restored revision 16 with the exact complete-document
+digest of the saved revision-14 baseline. This
+is Windows/Remotif evidence, not qualification of other providers or platforms.

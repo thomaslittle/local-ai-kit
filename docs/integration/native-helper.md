@@ -24,6 +24,14 @@ Imports, handshake, and cached snapshot reads do not scan. `--allow-passive-disc
 
 Stdio uses bounded UTF-8 newline JSON-RPC. The host supplies caller identity; request parameters cannot grant permissions or choose an arbitrary executable. Handshake precedes other operations. Subscribe to native events only when advertised. Large model catalogs can be read with [bounded pages](catalog-pages.md).
 
+Direct CLI stdio output runs on a dedicated bounded worker rather than Tokio's
+provider blocking pool. The existing five-second output deadline still closes an
+unresponsive connection. A timeout reports only `stage`, `response_bytes` and
+`elapsed_ms`; it never includes request IDs, prompts, account data or response
+contents. Do not increase a consumer's request timeout to compensate for an
+output-worker failure. A timed-out OS write may finish before the owned worker
+exits; cancellation drops the output channel and does not enqueue another frame.
+
 ## TypeScript
 
 ```ts
