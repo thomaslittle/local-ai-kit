@@ -6,6 +6,7 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ### Added
 
+- Source-only usage-only remote MCP handler and private plugin/config templates for direct cached quota reads, reusing the scoped producer. Optional owner-side read-only SQLite export is disabled pending explicit permission; no endpoint, credential, grant or deployment is created.
 - In-process cached-usage producer and explicit T3 environment/client-session binding, plus a native Effect toolkit source integration. The producer observes an already-maintained SDK cache; tool reads use only its scoped projection. Live cache selection, account mapping, T3 registration and deployment remain explicit operator steps.
 - Optional TypeScript SDK cache-only usage MCP façade and bounded stdio adapter, with explicit account/connection scope, canonical quota windows, redacted provenance, conservative freshness and a synthetic endpoint demonstration. Reads do not connect, poll, probe, refresh, consume provider inference or renew interest; actual dot access remains separately approved setup.
 

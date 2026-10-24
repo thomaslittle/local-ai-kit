@@ -17,6 +17,10 @@
       "types": "./dist/cached-usage-host.d.ts",
       "default": "./dist/cached-usage-host.js"
     },
+    "./mcp/remote": {
+      "types": "./dist/cached-usage-remote.d.ts",
+      "default": "./dist/cached-usage-remote.js"
+    },
     "./mcp/node": {
       "types": "./node/cached-usage-mcp.d.mts",
       "default": "./node/cached-usage-mcp.mjs"
