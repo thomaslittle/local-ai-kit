@@ -2,6 +2,27 @@
 
 Guidance for AI coding agents (and humans who like checklists) working in this repository. Read [CONTRIBUTING.md](CONTRIBUTING.md) first; this file adds the constraints that matter most when you are working autonomously.
 
+## Owner implementation direction (2026-10-24)
+
+Applies to every coding agent working in this repository, including OpenAI-backed
+agents. For implementation scope and verification effort, this direction
+supersedes older blanket test-first, full-suite or multi-configuration requirements
+here and in linked guides; safety and permission boundaries remain unchanged.
+
+- Deliver small, working, user-visible product increments. Code volume, speculative
+  scaffolding and test infrastructure are not substitutes for a working product.
+- Verify the changed user flow with focused visual end-to-end/in-app checks using
+  the existing surface and harness. For a non-UI slice, exercise its smallest
+  relevant consuming flow. Stop when the bounded result is demonstrated.
+- No exhaustive unit-test campaigns, new CI, or repetitive qualification or
+  certification loops. Rerun only after a relevant change or a diagnosed failure
+  that warrants the retry, not merely to produce another green report.
+- Keep essential build, authorization/security and data-integrity checks narrow
+  and proportional to the change. Never bypass safeguards or claim untested
+  behavior works; distinguish fixture evidence from live behavior.
+- Reuse existing infrastructure. Avoid duplicate harnesses, extra services and
+  unnecessary worker fan-out. Do not expand scope to unrelated cleanup or checks.
+
 ## Read before changing code
 
 1. [README.md](README.md) for what the project is and how to build it.
