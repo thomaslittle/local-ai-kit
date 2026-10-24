@@ -91,3 +91,23 @@ before adding those app scopes. Do not run inference to inspect status or usage.
 A passive shared consumer should read the broker cache without automatically
 probing every connection. Actual generation remains untested until separately
 requested and executed; model context capacity is not provider quota.
+
+## Separately approved metadata access
+
+After approval for existing Codex, Claude Code and OpenCode sign-ins, the owner
+can add `"probeProviderIds": ["codex", "claude_code", "opencode"]` to each approved
+app entry, gracefully stop the broker, then restart the same command with
+`--allow-metadata codex --allow-metadata claude_code --allow-metadata opencode`.
+Descriptor paths stay the same; their credentials rotate on restart. This allows
+supported account/catalog/usage metadata and normal native credential refresh,
+not session execution. Never add an execution grant merely to show a catalog.
+
+The October 24 Fedora execution needed the existing Unix executable-symlink
+fix (`5bd139d`, integrated as `2daa749`) to discover the installed native Codex
+and Claude Code commands. The focused discovery-to-probe fixture passed, then
+real authorized metadata checks reported authenticated Codex and primary Claude
+profiles. A separate Claude profile remained `needs_auth`; its catalog aliases
+must not be mistaken for authenticated readiness. OpenCode 2.1.4 was detected
+but rejected as `PROTOCOL_INCOMPATIBLE`: discovered-process startup currently
+requires 1.x. Do not remove that version check or invoke incompatible flags.
+These results qualify metadata only, not generation or all consumer GUI flows.

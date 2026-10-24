@@ -1,5 +1,27 @@
 # Development log — Local AI Kit
 
+## October 24 authorized Linux metadata continuation
+
+Explicit owner permission enabled metadata-only Codex, Claude Code and OpenCode
+checks using existing native sign-ins. The first real probes exposed Unix
+executable symlinks as configuration-only installations. Reused source fix
+`5bd139d` as `2daa749`, preserving the cached-usage work and both historical logs.
+The focused `lai-kit` Unix discovery-to-probe fixture passed (one test), helper
+build and formatting passed, and a versioned user-local candidate replaced the
+owned broker through SIGINT/restart. Its source-build SHA256 is
+`d4675775665da2bb0cdde79ecfa61f10053101feb6be2a61faea0df6942172fe`.
+
+Platform-executed, live metadata only: Codex and primary Claude Code reported
+authenticated readiness and published seven native Codex models/five Claude
+aliases. An additional Claude profile remained `needs_auth` with unverified
+aliases; preserve its route/profile identity. Official-protocol usage readings
+were returned and reported to the owner without committing live account data.
+OpenCode 2.1.4 remains metadata-incompatible with the discovered-process adapter's
+explicit 1.x contract. No generation, new OAuth grants, provider account-scope
+changes, paid fallback, remote endpoint or plugin activation was performed.
+The broker retains separate app descriptors and metadata-only permissions;
+consumer GUI integration is owned by the respective application owners.
+
 ## October 24 Fedora local helper bring-up
 
 Platform-executed on Fedora from source `b0df201`: pinned Rust 1.97.1
