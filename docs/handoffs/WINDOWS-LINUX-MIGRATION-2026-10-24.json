@@ -427,7 +427,17 @@
           "category": "sanitized personal paths in documentation"
         }
       ],
-      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-0-grok-freebuff-20261024.md"
+      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-0-grok-freebuff-20261024.md",
+      "indexCoverage": {
+        "indexCommit": "038030cefdd3dc3ae4f31845c4fc19ea4f7390d6",
+        "indexTree": "c50de6cf80003386c00bf0aad92aa2ad59c94e09",
+        "baseTree": "c50de6cf80003386c00bf0aad92aa2ad59c94e09",
+        "indexedEntries": 562,
+        "indexedEntriesIdenticalToBase": 562,
+        "indexEqualsBase": true,
+        "stagedChangedPaths": [],
+        "uniquelyStagedPathsNotEqualToBaseOrOriginalWorkingSnapshot": []
+      }
     },
     {
       "stashAtAudit": "stash@{1}",
@@ -516,7 +526,17 @@
       ],
       "excludedPaths": [],
       "sanitizedPaths": [],
-      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-1-platform-contracts-20261024.md"
+      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-1-platform-contracts-20261024.md",
+      "indexCoverage": {
+        "indexCommit": "41300c665667be6a94d41a0c7679b0ba58a58901",
+        "indexTree": "5709903c7f3eae79158ad20e1aaef35cfc9d9400",
+        "baseTree": "5709903c7f3eae79158ad20e1aaef35cfc9d9400",
+        "indexedEntries": 92,
+        "indexedEntriesIdenticalToBase": 92,
+        "indexEqualsBase": true,
+        "stagedChangedPaths": [],
+        "uniquelyStagedPathsNotEqualToBaseOrOriginalWorkingSnapshot": []
+      }
     },
     {
       "stashAtAudit": "stash@{2}",
@@ -565,7 +585,17 @@
       ],
       "excludedPaths": [],
       "sanitizedPaths": [],
-      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-2-offline-scaffolds-20261024.md"
+      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-2-offline-scaffolds-20261024.md",
+      "indexCoverage": {
+        "indexCommit": "9ba15664844faf3b8079765d03f035e673ea7294",
+        "indexTree": "03ce90857b705b33d385013b3253ced97cbc9c47",
+        "baseTree": "03ce90857b705b33d385013b3253ced97cbc9c47",
+        "indexedEntries": 17,
+        "indexedEntriesIdenticalToBase": 17,
+        "indexEqualsBase": true,
+        "stagedChangedPaths": [],
+        "uniquelyStagedPathsNotEqualToBaseOrOriginalWorkingSnapshot": []
+      }
     }
   ],
   "extraCheckpointRefs": [
@@ -728,7 +758,7 @@
     },
     {
       "path": "raw stash merge/index/untracked objects",
-      "category": "Original stash plumbing remains local; only reviewed source snapshots published. Original stagedness is not reproduced."
+      "category": "Original stash plumbing remains local; only reviewed source snapshots published. Original stagedness is not reproduced. Index/base equality is now proved for all three stashes; no unique staged bytes, deletions or modes are omitted."
     }
   ],
   "ignoredLocalHelperPaths": [
@@ -750,12 +780,20 @@
   ],
   "unresolved": [
     "Historical stash code is intentionally unqualified and may conflict with current source.",
-    "Original stash index/stagedness and private Windows runtime state are not migrated.",
+    "Raw stash index/stagedness objects and private Windows runtime state are not migrated; tree equality proves there are no distinct staged source versions to lose.",
     "Live Kit/dot account scope, host selection, credential/access setup and deployment remain unapproved."
   ],
   "previousSourceQualification": {
     "PR32": "3c439561efb058658c8bc96666ca67d6bfde9074; all three platform CI jobs passed",
     "PR33": "8355636855cea7e63e5e980f33e8e80fb36d3217; all three platform CI jobs passed",
     "preservation": "Documentation/checkpoint commits have no new feature validation claim."
+  },
+  "stashIndexCompleteness": {
+    "proof": "docs/handoffs/WINDOWS-STASH-INDEX-COVERAGE-2026-10-24.json",
+    "checkedAt": "2026-10-24T05:35:41.291170+00:00",
+    "method": "Compare complete Git tree entries (path/mode/type/blob ID) for stash base, second-parent index, original working tree and published source snapshot; no stash apply/drop or feature tests.",
+    "uniqueStagedPaths": 0,
+    "additionalCheckpointRefsRequired": false,
+    "result": "All three index trees exactly equal their original base trees. No staged source version, staged deletion or staged mode change is omitted by retaining source snapshots rather than raw stash index objects."
   }
 }

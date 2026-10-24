@@ -47,6 +47,18 @@ The checkpoints preserve 45, 15 and 7 changed paths respectively, including rele
 
 Secret/private-data scan found no blocking credential files in the 67 changed source/document paths. One stashed document, `docs/upstream/tokscale.md`, has personal paths replaced with `<WINDOWS_OR_USER_LOCAL_PATH>`. Source fixtures/comments initially flagged by the path detector were unchanged already-public base lines. No other stashed source path was excluded.
 
+## Stash index completeness proof
+
+[Exact tree IDs and comparisons](WINDOWS-STASH-INDEX-COVERAGE-2026-10-24.json) were recorded in one bounded preservation audit. All three second-parent index trees exactly equal their respective base trees. Comparison includes path, mode, object type and blob ID, including staged deletions and executable-mode changes.
+
+| Stash | Index/base tree (exactly equal) | Entries | Staged changes |
+|---|---|---:|---:|
+| `stash@{0}` | `c50de6cf80003386c00bf0aad92aa2ad59c94e09` | 562 | 0 |
+| `stash@{1}` | `5709903c7f3eae79158ad20e1aaef35cfc9d9400` | 92 | 0 |
+| `stash@{2}` | `03ce90857b705b33d385013b3253ced97cbc9c47` | 17 | 0 |
+
+There are **zero uniquely staged source versions**, so no additional staged-source checkpoint refs are necessary. Every indexed entry is inherited from its already-recoverable base; the separate working/untracked source checkpoints retain the stashed changes. Raw index-object/stagedness omission therefore loses no distinct staged source bytes. Original stashes and worktrees remain untouched. No source content, credential/runtime data, feature tests or builds were added by this check.
+
 ## Exclusions and unresolved items
 
 - `.verification/**`: Local-only raw receipts/logs, one-off already-applied transformation/recording helpers, superseded RED fixture and machine-specific guards; essential resume facts consolidated in committed handoffs.
