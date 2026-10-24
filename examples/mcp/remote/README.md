@@ -128,6 +128,7 @@ It creates only a temporary synthetic SQLite file and in-memory Request objects;
 no listener, endpoint, live credentials/grants, real cache read or provider calls.
 Checks inert construction, owner-export denial by default, auth-before-cache,
 inert initialization/list, scoped stale/unknown data, explicitly unmapped account,
-preserved resets, denied refresh/origin, revocation and unchanged database bytes.
+preserved resets, denied refresh/origin, revocation (including requests revoked during body upload) and unchanged
+database bytes.
 The owned fixture is removed afterward. This is not deployed HTTPS/plugin/live
 qualification, and does not replace the candidate's required CI.

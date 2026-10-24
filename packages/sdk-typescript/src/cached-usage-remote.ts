@@ -67,6 +67,8 @@ export function createCachedUsageRemoteMcp(options: CachedUsageRemoteOptions) {
         for(const chunk of chunks){input.set(chunk,offset);offset+=chunk.byteLength;}
         packet=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(input));
       } catch { return response(400); }
+      // Uploads can outlive their authorization; retirement must precede dispatch/cache access.
+      if (revoked) return response(403);
       if (!object(packet) || packet.jsonrpc!=='2.0' || typeof packet.method!=='string'
           || (packet.params!==undefined && !object(packet.params))) return response(400);
       if (!Object.hasOwn(packet,'id')) return response(202); // Notifications never read usage.

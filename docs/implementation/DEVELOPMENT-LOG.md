@@ -1,5 +1,24 @@
 # Development log — Local AI Kit
 
+## October 24 Linux cached-usage revocation follow-up
+
+Implemented a second revocation check after asynchronous request-body decoding.
+The existing synthetic consuming flow reproduced a revoked upload returning 200;
+after the fix it returns 403 without another cache read. Fixture-tested and
+platform-executed on Linux with Node 24.22.1 and 22.23.4 using
+`node --experimental-strip-types examples/mcp/remote/inert-check.mjs`: one
+synthetic cache read, zero provider requests/listeners/live credentials or grants,
+and unchanged fixture database bytes. No live cache, account mapping, deployment
+or plugin activation was performed; these remain unqualified and approval-gated.
+SDK strict no-emit type-check, project hygiene/local links and whitespace checks
+also pass. `npm ci --ignore-scripts --no-audit --no-fund` installed the locked
+workspace dependencies without changing the lockfile. CI for this continuation
+is unverified.
+
+Shared user-local Node 24.22.1/npm 11.19.1 and Bun 1.4.4 setup is available;
+Node 22.23.4/npm 10.9.9 is retained for consumers requiring npm 10. Official
+release archive SHA256 checks passed. No other application source was edited.
+
 ## October 23 cache-only usage MCP candidate
 
 The optional SDK façade exposes `kit_usage_cached` over an existing cache with

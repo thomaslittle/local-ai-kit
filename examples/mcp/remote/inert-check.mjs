@@ -52,8 +52,19 @@ try {
  const rejected=await route.handle(request({method:'tools/call',params:{name:'kit_usage_cached',arguments:{refresh:true}}}));
  assert.equal((await rejected.json()).error.code,-32602);assert.equal(reads,1);
  assert.equal((await route.handle(request({method:'tools/list'},true,{origin:'https://other.example.invalid'}))).status,403);
+ // Revoke while an authenticated request is still uploading its body.
+ let bodyController,bodyRequested;
+ const readingBody=new Promise(resolve=>{bodyRequested=resolve;});
+ const body=new ReadableStream({start(controller){bodyController=controller;},pull(){bodyRequested();}},{highWaterMark:0});
+ const pending=route.handle(new Request('https://usage.example.invalid/mcp/kit-usage',{
+  method:'POST',headers:{'content-type':'application/json',accept:'application/json','x-fixture-proof':'yes'},body,duplex:'half'}));
+ await readingBody;route.revoke();
+ bodyController.enqueue(new TextEncoder().encode(JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/call',params:{name:'kit_usage_cached',arguments:{}}})));
+ bodyController.close();
+ assert.equal((await pending).status,403,'revocation during upload must deny the pending request');
+ assert.equal(reads,1,'revoked upload must not read the cache');
  route.revoke();assert.equal((await route.handle(request({method:'tools/list'}))).status,403);assert.equal(reads,1);
  assert.equal(await hash(),before,'read-only cache must not change database bytes');
  console.log(JSON.stringify({result:'PASS',mode:'synthetic',cacheReads:reads,providerRequests:0,listeners:0,liveCredentialsOrGrants:0,
-  checked:['inert construction','auth-before-cache','initialize/list inert','scoped stale/unknown usage','explicitly unmapped account','no reset inference','no refresh','origin check','revocation','database bytes unchanged']}));
+  checked:['inert construction','auth-before-cache','initialize/list inert','scoped stale/unknown usage','explicitly unmapped account','no reset inference','no refresh','origin check','revocation','revocation during upload','database bytes unchanged']}));
 } finally {await unlink(path);await rmdir(directory);}

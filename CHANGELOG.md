@@ -4,6 +4,10 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Fixed
+
+- Remote cached-usage MCP requests revoked during body upload are denied before dispatch or cache access.
+
 ### Added
 
 - Source-only usage-only remote MCP handler and private plugin/config templates for direct cached quota reads, reusing the scoped producer. Optional owner-side read-only SQLite export is disabled pending explicit permission; no endpoint, credential, grant or deployment is created.
