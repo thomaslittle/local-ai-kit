@@ -6,6 +6,7 @@ New here? Start with the [root README](../README.md), then the [prompt-app guide
 
 | Topic | Document |
 |---|---|
+| Cache-only scoped usage for MCP/dot; no provider calls on reads | [cached-usage-mcp.md](integration/cached-usage-mcp.md) |
 | Desktop/prompt apps: select a route and model, grant access, stream, follow up | [prompt-app.md](integration/prompt-app.md) |
 | Native helper CLI, SDK bridge, transports | [native-helper.md](integration/native-helper.md), [pairing.md](integration/pairing.md), [shared-broker.md](integration/shared-broker.md), [browser-extension.md](integration/browser-extension.md) |
 | Shared runtime lifetime, snapshots, health, notifications | [shared-broker.md](integration/shared-broker.md), [ADR-001](design/ADR-001-shared-runtime.md), [shared-runtime plan](implementation/SHARED-RUNTIME-PLAN.md) |

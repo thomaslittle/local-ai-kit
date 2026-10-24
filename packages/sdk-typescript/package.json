@@ -9,6 +9,14 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./mcp": {
+      "types": "./dist/cached-usage-mcp.d.ts",
+      "default": "./dist/cached-usage-mcp.js"
+    },
+    "./mcp/node": {
+      "types": "./node/cached-usage-mcp.d.mts",
+      "default": "./node/cached-usage-mcp.mjs"
+    },
     "./node": {
       "types": "./node/index.d.mts",
       "default": "./node/index.mjs"

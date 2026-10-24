@@ -1,0 +1,108 @@
+{
+  "state": "cached",
+  "mode": "synthetic",
+  "revision": "fixture-1",
+  "observedAt": "2020-01-01T00:00:00Z",
+  "quotaPools": [
+    {
+      "id": "pool-codex",
+      "accountId": "account-codex",
+      "connectionIds": [
+        "connection-codex"
+      ],
+      "routeIds": [
+        "route-codex"
+      ],
+      "sharing": "unknown",
+      "windows": [
+        {
+          "id": "window-known",
+          "label": "Usage window",
+          "reading": {
+            "state": "known",
+            "observedAt": "2020-01-01T00:00:00Z",
+            "verification": "reported",
+            "freshness": "stale",
+            "expiresAt": "2020-01-01T00:00:00Z",
+            "source": {
+              "kind": "synthetic",
+              "adapterId": "documentation-fixture",
+              "adapterVersion": "0.1.0"
+            },
+            "value": {
+              "unit": "percent",
+              "used": "95",
+              "limit": "100",
+              "remaining": "5",
+              "usedFraction": 0.95
+            }
+          },
+          "resetsAt": "2020-01-01T00:00:00Z",
+          "durationSeconds": 18000
+        },
+        {
+          "id": "window-unknown",
+          "label": "Usage window",
+          "reading": {
+            "state": "unknown",
+            "reason": "USAGE_UNKNOWN",
+            "checkedAt": "2020-01-01T00:00:00Z"
+          },
+          "resetsAt": null,
+          "durationSeconds": null
+        }
+      ]
+    },
+    {
+      "id": "pool-claude",
+      "accountId": "account-claude",
+      "connectionIds": [
+        "connection-claude"
+      ],
+      "routeIds": [
+        "route-claude"
+      ],
+      "sharing": "unknown",
+      "windows": [
+        {
+          "id": "window-unsupported",
+          "label": "Usage window",
+          "reading": {
+            "state": "unavailable",
+            "reason": "CAPABILITY_UNSUPPORTED",
+            "checkedAt": "2020-01-01T00:00:00Z"
+          },
+          "resetsAt": null,
+          "durationSeconds": null
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection-codex",
+      "providerId": "codex"
+    },
+    {
+      "id": "connection-claude",
+      "providerId": "claude"
+    }
+  ],
+  "mappings": [
+    {
+      "consumerAccountId": "example-consumer-account",
+      "kitAccountId": "account-codex",
+      "state": "explicit"
+    }
+  ],
+  "unmappedAccountIds": [
+    "account-claude"
+  ],
+  "contextCounters": "not_reported",
+  "noticeCodes": [
+    "CACHE_ONLY",
+    "MISSING_WINDOWS_ARE_UNKNOWN",
+    "NO_ACCOUNT_MAPPING_INFERENCE",
+    "NO_RESET_RECOVERY_INFERENCE"
+  ]
+}

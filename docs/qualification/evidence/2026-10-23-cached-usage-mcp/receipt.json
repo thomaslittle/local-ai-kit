@@ -1,0 +1,36 @@
+{
+  "baseCommit": "9a40e503c82e3efc15991382322ccf30bc00f806",
+  "platform": "Windows x86_64",
+  "nodeVersion": "v22.20.0",
+  "endpointJourney": {
+    "passed": 1,
+    "failed": 0,
+    "syntheticCases": 4,
+    "seconds": 0.43280430000000003,
+    "command": "node --test tests/integration/cached-usage-mcp.test.mjs",
+    "toolReadClientRequests": 0
+  },
+  "typeCheck": "tsc -p packages/sdk-typescript/tsconfig.json --noEmit passed",
+  "focusedSdkEmit": {
+    "files": 26,
+    "bytes": 81760,
+    "location": "task-owned D: output",
+    "inertCompiledExport": "passed"
+  },
+  "quotaPoolsSchema": "canonical usage.read result passed",
+  "providerInference": false,
+  "actualBrokerConnection": false,
+  "persistentAccessCreated": false,
+  "actualConsumerAccountMapping": "unknown/unconfigured",
+  "sourceSha256": {
+    "packages/sdk-typescript/src/cached-usage-mcp.ts": "8f91aee6ce5dec6c7cb1a5d6d8cdd189547da9ad243c1fdda31b2f52a4f8b1b5",
+    "packages/sdk-typescript/src/live.ts": "a76f321e92b345f68619f16d7274d92a1442d3a6bb94f37f90b5f9fa11120c64",
+    "packages/sdk-typescript/node/cached-usage-mcp.mjs": "80776e4ef6ed3b0bbe92ee953887c2949e93e3c2423c5c92b6ed7c5fb581049e",
+    "packages/sdk-typescript/node/cached-usage-mcp.d.mts": "e65b12834de584edf6489aa5f36761ec3b91dd80c499cac67e306de8373bbf0c",
+    "packages/sdk-typescript/package.json": "ea38cb75778e420edfeca1cc47620a1bdfed726706ee1a86044eec5fd0ec8e75",
+    "examples/mcp/cached-usage-demo.mjs": "3ae49a1df581472f2ee1b436682ab0526089440eb6ecfc2a71c06d643dc3b273",
+    "tests/integration/cached-usage-mcp.test.mjs": "a3991ddadaa8a61667704f46762519d454573b26a35660e53a4b63d265d6c47f",
+    "scripts/verify.py": "bd3ef5f4251fce5809b7e1f2dbf4d685c28f4d7f2e66371be3db5f73fe4dec2f",
+    "protocol/contracts.schema.json": "f74919afac2458fceba525a9603d7a4ddb87606a28ec0d45d96cca7fc20f95d0"
+  }
+}

@@ -4,6 +4,10 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Added
+
+- Optional TypeScript SDK cache-only usage MCP façade and bounded stdio adapter, with explicit account/connection scope, canonical quota windows, redacted provenance, conservative freshness and a synthetic endpoint demonstration. Reads do not connect, poll, probe, refresh, consume provider inference or renew interest; actual dot access remains separately approved setup.
+
 ## [0.1.0-alpha.18] - 2026-10-22
 
 ### Added
