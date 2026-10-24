@@ -16,7 +16,9 @@ The current consumer contract is runtime `0.1.0-alpha.18`, protocol `1.0`.
 A source build is not the published release artifact: consumers that pin a
 SHA256 must explicitly configure the hash of the approved source-built file,
 while retaining version/protocol/hash validation. Do not bypass those checks.
-Install the executable in a versioned user-local directory and expose
+Strip the installed helper (`strip -o DEST target/debug/local-ai-kit`): an
+unstripped debug build is about 217 MB, and consumers such as Haiwire cap helper
+size at 64 MiB. Install the executable in a versioned user-local directory and expose
 `$HOME/.local/bin/local-ai-kit`; give consumers an absolute path when their GUI
 environment does not inherit that PATH. No root install is needed.
 

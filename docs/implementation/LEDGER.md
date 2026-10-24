@@ -1,5 +1,37 @@
 # Execution ledger - Local AI Kit
 
+## October 24 app-scoped Claude execution
+
+With owner approval, the local broker gained per-app Claude Code execution
+grants for Remotif, Crntly and Haiwire. Each grant covers only the authenticated
+primary Claude Code connection (subscription billing). `workspaceId: "default"`
+maps to a dedicated empty owner-only directory per app. Requests are read-only,
+with paid, writes, native-policy and native-review all false. No Codex or
+other-provider execution was granted. The broker was gracefully restarted with
+`--allow-execution claude_code`. Each app's `grants.list` reported
+`execution: true`.
+
+Live-qualified generation, one turn per consumer, no retries counted:
+- **Crntly:** its own Compose client over the broker, headless, with no tools,
+  selected "Haiku 5.5" on the primary route. The turn completed with a 5-character
+  output in about 1.9 s.
+- **Remotif:** its own Kit client code, headless, selected "Haiku 4.5" on the
+  primary route. `selection.validate` passed, `session-1` was created and `turn-2`
+  completed with a 5-character output. Its in-app picker then showed both Haiku
+  rows on the primary profile as runnable and the `needs_auth` row as not runnable,
+  without starting a turn.
+- **Haiwire:** not run. Haiwire has no broker generation path by design (its
+  Kit integration is metadata-only), and adding one needs an owner ADR decision.
+
+Defect found by a consumer: the user-local `2daa749` helper is an unstripped
+debug build (about 217 MB), and Haiwire rejects helpers over 64 MiB. It
+displayed this as "Helper version incompatible". A stripped copy of the same
+build (31.4 MB, SHA256
+`655e670f31e31529e06e75d8c7ba7e313e5fdd79fca85c1af5ce6ba218fd1a26`) let Haiwire
+reach Ready with 25 models over 4 connections, matching the broker. The stripped
+copy is now published in a separate versioned runtime directory. The running
+broker and the `~/.local/bin` link were left on the debug build.
+
 ## October 24 first shared-broker consumer catalog
 
 Platform-executed on Fedora against the running metadata-only broker (helper
