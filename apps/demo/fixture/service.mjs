@@ -14,14 +14,19 @@ export function createFixtureService({snapshot:provided,turnError=null}={}){
   history.push(event);if(history.length>256)history.shift();for(const listener of listeners)listener(clone(event));
  }
  function getSession(sessionId){const session=sessions.get(sessionId);if(!session)error('NOT_FOUND');return session;}
- function validate(selection,allowPaid=false){
+ const HOST_BILLING=new Set(['subscription','api_metered','prepaid_credits','local']);
+ function validate(selection,allowPaid=false,declaration=null){
   if(!selection||typeof selection!=='object'||!selection.options||typeof selection.options!=='object'||Array.isArray(selection.options))error('INVALID_REQUEST');
+  if(declaration!==null&&!HOST_BILLING.has(declaration))error('INVALID_REQUEST');
   const result=reconcileSelection(catalog,selection);
   if(!result.selection)error(result.reason==='ROUTE_MISMATCH'?'SESSION_ROUTE_MISMATCH':'NOT_FOUND');
   if(result.removedOptions.length)error('OPTION_UNSUPPORTED');
   if(result.needsReview)error('SELECTION_STALE');
   const candidate=resolveCandidates(catalog,{allowPaidFallback:allowPaid,requiredCapabilities:['generation.text']}).find(c=>c.model.id===selection.modelId);
-  if(!candidate?.eligible)error(candidate?.reasons[0]?.split(':')[0]??'CAPABILITY_UNKNOWN');
+  if(!candidate)error('CAPABILITY_UNKNOWN');
+  const metered=declaration==='api_metered'||declaration==='prepaid_credits';
+  const reasons=candidate.reasons.filter(reason=>!(reason==='BILLING_UNKNOWN'&&declaration&&(!metered||allowPaid)));
+  if(reasons.length)error(reasons[0]?.split(':')[0]??'CAPABILITY_UNKNOWN');
   return candidate;
  }
  function authorized(connectionId,allowPaid=false){return [...grants.values()].some(g=>g.connectionIds.includes(connectionId)&&g.scopes.includes('execution')&&(!allowPaid||g.allowPaid));}
@@ -47,7 +52,7 @@ export function createFixtureService({snapshot:provided,turnError=null}={}){
   'adapters.list':()=>snapshot.providers.map(p=>({id:p.id,classification:'synthetic',liveQualified:false})),
   'discovery.refresh':p=>{if(p.level&&p.level!=='passive')error('CAPABILITY_UNSUPPORTED');snapshot.revision=`fixture-${++refreshes+1}`;return {scanId:id('fixture-scan'),mode:'synthetic',revision:snapshot.revision};},
   'selection.resolve':p=>resolveCandidates(catalog,p).map(c=>({selection:{routeId:c.route.id,modelId:c.model.id,revision:c.model.revision,options:{}},eligible:c.eligible,reasons:c.reasons})),
-  'selection.validate':p=>{validate(p.selection,p.allowPaid===true);return {valid:true,mode:'synthetic'};},
+  'selection.validate':p=>{validate(p.selection,p.allowPaid===true,p.billingDeclaration??null);return {valid:true,mode:'synthetic'};},
   'grants.request':p=>{
    if(!Array.isArray(p.connectionIds)||!Array.isArray(p.scopes)||p.connectionIds.some(id=>!snapshot.connections.some(c=>c.id===id))||p.scopes.some(s=>!['execution','metadata'].includes(s)))error('INVALID_REQUEST');
    if(grants.size>=32)error('RESOURCE_LIMIT');const grant={id:id('grant'),connectionIds:p.connectionIds,scopes:p.scopes,allowPaid:p.allowPaid===true,mode:'synthetic'};grants.set(grant.id,grant);return grant;
@@ -55,15 +60,16 @@ export function createFixtureService({snapshot:provided,turnError=null}={}){
   'grants.list':()=>[...grants.values()],
   'grants.revoke':p=>{const grant=grants.get(p.grantId);if(!grant)error('NOT_FOUND');grants.delete(grant.id);for(const turn of turns.values()){const s=getSession(turn.sessionId);if(!turn.done&&grant.connectionIds.includes(s.connectionId))complete(turn,'cancelled');}return {revoked:true};},
   'sessions.create':p=>{
-   const candidate=validate(p.selection,p.allowPaid===true);if(!authorized(candidate.connection.id,p.allowPaid===true))error('LOCAL_ACCESS_DENIED');if(sessions.size>=32)error('RESOURCE_LIMIT');
-   const session={id:id('session'),connectionId:candidate.connection.id,selection:clone(p.selection),state:'ready',nativeResumption:false,createdAt:new Date().toISOString(),allowPaid:p.allowPaid===true};sessions.set(session.id,session);return session;
+   const declaration=p.billingDeclaration??null;
+   const candidate=validate(p.selection,p.allowPaid===true,declaration);if(!authorized(candidate.connection.id,p.allowPaid===true))error('LOCAL_ACCESS_DENIED');if(sessions.size>=32)error('RESOURCE_LIMIT');
+   const session={id:id('session'),connectionId:candidate.connection.id,selection:clone(p.selection),state:'ready',nativeResumption:false,createdAt:new Date().toISOString(),allowPaid:p.allowPaid===true,billingDeclaration:declaration};sessions.set(session.id,session);return session;
   },
   'sessions.get':p=>getSession(p.sessionId),
   'sessions.close':p=>{const s=getSession(p.sessionId);const turn=turns.get(s.turnId);if(turn&&!turn.done)complete(turn,'cancelled');s.state='closed';return {closed:true};},
-  'sessions.updateOptions':p=>{const s=getSession(p.sessionId);if(['running','awaiting_approval','closed'].includes(s.state))error('CONFLICT');const selection={...s.selection,options:p.options};validate(selection,s.allowPaid);s.selection=selection;return s;},
+  'sessions.updateOptions':p=>{const s=getSession(p.sessionId);if(['running','awaiting_approval','closed'].includes(s.state))error('CONFLICT');const selection={...s.selection,options:p.options};validate(selection,s.allowPaid,s.billingDeclaration??null);s.selection=selection;return s;},
   'turns.start':p=>{
    const session=getSession(p.sessionId);if(!authorized(session.connectionId,session.allowPaid))error('LOCAL_ACCESS_DENIED');if(['running','awaiting_approval','closed'].includes(session.state))error('CONFLICT');
-   if(turns.size>=128)error('RESOURCE_LIMIT');if(typeof p.prompt!=='string'||p.prompt.length>8192)error('INVALID_REQUEST');validate(session.selection,session.allowPaid);
+   if(turns.size>=128)error('RESOURCE_LIMIT');if(typeof p.prompt!=='string'||p.prompt.length>8192)error('INVALID_REQUEST');validate(session.selection,session.allowPaid,session.billingDeclaration??null);
    const turn={id:id('turn'),sessionId:session.id,done:false,timer:null};turns.set(turn.id,turn);session.turnId=turn.id;
    if(p.simulateApproval){session.state='awaiting_approval';const approvalId=id('approval');approvals.set(approvalId,turn);emit(session,{type:'approval_request',approvalId,action:'Read a synthetic resource',detail:'Simulation only: no filesystem access occurs.'});}
    else if(turnError){turn.done=true;session.state='error';emit(session,{type:'error',code:turnError.code??'PROVIDER_UNAVAILABLE',message:turnError.message??'fixture provider error'});emit(session,{type:'state',state:'error'});emit(session,{type:'final',status:'error'});}

@@ -64,7 +64,7 @@ impl ScanEnvironment {
         for key in ["HOME", "USERPROFILE", "PATH"]
             .into_iter()
             .chain(LOCATION_KEYS.iter().copied())
-            .chain(DISCOVERY_OVERRIDE_KEYS.iter().copied())
+            .chain(override_keys())
         {
             if let Some(value) = std::env::var_os(key).and_then(|value| value.into_string().ok()) {
                 vars.insert(key.to_string(), value);
@@ -97,7 +97,7 @@ impl ScanEnvironment {
                 .filter(|p| valid_root(p))
                 .collect();
         }
-        for key in DISCOVERY_OVERRIDE_KEYS {
+        for key in override_keys() {
             if let Some(value) = present(vars, key) {
                 env.overrides
                     .insert((*key).to_string(), expand(&env.home, PathBuf::from(value)));
@@ -123,7 +123,7 @@ impl ScanEnvironment {
                 "Scan roots must be absolute local paths",
             ));
         }
-        if self.overrides.len() > 32 || self.search_path.len() > 128 {
+        if self.overrides.len() > 64 || self.search_path.len() > 128 {
             return Err(DomainError::new(
                 ErrorCode::InvalidRequest,
                 "Scan environment exceeds configured bounds",
@@ -191,6 +191,12 @@ fn expand(home: &Path, path: PathBuf) -> PathBuf {
     } else {
         path
     }
+}
+fn override_keys() -> impl Iterator<Item = &'static str> {
+    DISCOVERY_OVERRIDE_KEYS
+        .iter()
+        .copied()
+        .chain(crate::catalog::env_vars().iter().copied())
 }
 pub(crate) fn valid_root(path: &Path) -> bool {
     let text = path.as_os_str().to_string_lossy();

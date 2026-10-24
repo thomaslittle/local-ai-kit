@@ -175,6 +175,7 @@ impl Client {
         let mut data = String::new();
         let mut emitted = String::new();
         let mut assistants = BTreeSet::new();
+        let mut ignored_parts = BTreeSet::new();
         let mut saw_unidentified_delta = false;
         loop {
             let line=tokio::select!{r=stream.line()=>r?,_=cx.cancelled()=>{self.abort(&id).await;return Err(DomainError::new(ErrorCode::Cancelled,"Session cancelled"));}}.ok_or_else(invalid)?;
@@ -194,6 +195,17 @@ impl Client {
             let event: Value =
                 serde_json::from_str(&std::mem::take(&mut data)).map_err(|_| invalid())?;
             let p = &event["properties"];
+            // Reasoning and tool parts also emit `field: "text"` deltas. The
+            // part announcement arrives first and names the real type.
+            if event["type"] == "message.part.updated" && p["part"]["sessionID"] == id {
+                if let Some(part_id) = p["part"]["id"].as_str() {
+                    if p["part"]["type"] == "text" {
+                        ignored_parts.remove(part_id);
+                    } else if p["part"]["type"].is_string() {
+                        ignored_parts.insert(part_id.to_owned());
+                    }
+                }
+            }
             if event["type"] == "message.updated"
                 && p["info"]["sessionID"] == id
                 && p["info"]["role"] == "assistant"
@@ -217,6 +229,12 @@ impl Client {
             }
             match event["type"].as_str() {
                 Some("message.part.delta") if p["field"] == "text" => {
+                    if p["partID"]
+                        .as_str()
+                        .is_some_and(|part| ignored_parts.contains(part))
+                    {
+                        continue;
+                    }
                     let message = sid(&p["messageID"])?;
                     if !assistants.contains(&message) {
                         saw_unidentified_delta = true;

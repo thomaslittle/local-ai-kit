@@ -39,6 +39,7 @@ export const initialState: DemoState = {
   required: [],
   onlyEligible: false,
   allowPaid: false,
+  billingDeclaration: null,
   favorites: [],
   sensitiveConsent: false,
   mobileStep: 0,
@@ -405,7 +406,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     const startEpoch = epoch;
     const selection = structuredClone(current.selection);
     const previousStatus = current.sessionStatus;
-    const context = JSON.stringify({ selection, workspaceId: current.workspaceId, allowPaid: current.allowPaid, mode: current.mode });
+    const context = JSON.stringify({ selection, workspaceId: current.workspaceId, allowPaid: current.allowPaid, billingDeclaration: current.billingDeclaration, mode: current.mode });
     const promptText = current.prompt;
     const userMessage: ChatMessage | null = promptText.trim()
       ? { id: newMessageId('user'), role: 'user', text: promptText, status: 'sent' }
@@ -419,6 +420,12 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
       const model = resolved.find((candidate) => candidate.route.id === selection.routeId && candidate.model.id === selection.modelId);
       if (!model) throw Object.assign(new Error('SELECTION_STALE'), { code: 'SELECTION_STALE' });
       const latest = get();
+      const billingUnknown = model.route.billing.state !== 'known';
+      if (billingUnknown && !latest.billingDeclaration) {
+        throw Object.assign(new Error('BILLING_CONSENT_REQUIRED'), { code: 'BILLING_CONSENT_REQUIRED' });
+      }
+      const metered = latest.billingDeclaration === 'api_metered' || latest.billingDeclaration === 'prepaid_credits';
+      const allowPaid = latest.allowPaid || (billingUnknown && metered);
       const reuse = latest.sessionId && sessionContext === context && (previousStatus === 'Ready' || previousStatus === 'Completed');
       let session;
       if (reuse && latest.sessionId) {
@@ -426,12 +433,13 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
       } else {
         if (latest.sessionId) await active.sessions.close({ sessionId: latest.sessionId });
         if (latest.mode === 'synthetic') {
-          await active.grants.request({ connectionIds: [model.connection.id], scopes: ['execution'], allowPaid: latest.allowPaid });
+          await active.grants.request({ connectionIds: [model.connection.id], scopes: ['execution'], allowPaid });
         }
         // Live sessions bind a host-granted workspace and stay read-only; synthetic ones need neither.
         session = await active.sessions.create({
           selection,
-          allowPaid: latest.allowPaid,
+          allowPaid,
+          ...(billingUnknown && latest.billingDeclaration ? { billingDeclaration: latest.billingDeclaration } : {}),
           ...(latest.mode === 'live' ? { workspaceId: latest.workspaceId, permissionMode: 'read_only' } : {}),
         } as SessionCreateParams);
         sessionContext = context;

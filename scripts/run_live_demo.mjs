@@ -10,7 +10,7 @@ import {liveDemoExecutionArgs} from './live_demo_policy.mjs';
 
 const assets=resolve(process.env.LAI_DEMO_ASSETS??'apps/demo/dist');
 const port=String(process.env.LAI_DEMO_PORT??4499);
-const metadataProviders=['codex','claude_code','grok','gemini_cli','antigravity','opencode','ollama','lmstudio','cursor','openai_api','anthropic_api','gemini_api','xai_api','compatible_api'];
+const metadataProviders=['codex','claude_code','grok','gemini_cli','antigravity','opencode','ollama','lmstudio','cursor','freebuff','openai_api','anthropic_api','gemini_api','xai_api','compatible_api'];
 const demoFlags=process.argv.slice(2);
 if(demoFlags.length){
  console.error('Usage: npm run dev (this script is the helper launcher that `npm run dev` starts)');

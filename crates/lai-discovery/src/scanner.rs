@@ -99,11 +99,14 @@ impl<F: LocalFilesystem> Scanner<F> {
         let mut installations = BTreeSet::new();
         for definition in definitions() {
             cancelled(cancel)?;
-            result.snapshot.providers.push(Provider {
-                id: definition.id.into(),
-                name: definition.name.into(),
-                kind: "local_client".into(),
-            });
+            let mut provider_emitted = definition.emit_when_absent;
+            if provider_emitted {
+                result.snapshot.providers.push(Provider {
+                    id: definition.id.into(),
+                    name: definition.name.into(),
+                    kind: "local_client".into(),
+                });
+            }
             let mut binaries = BTreeSet::new();
             for directory in &directories {
                 for command in definition.commands {
@@ -255,6 +258,14 @@ impl<F: LocalFilesystem> Scanner<F> {
                     };
                     if executables.len() > 1 {
                         label = format!("{label} · Installation {}", installation_index + 1);
+                    }
+                    if !provider_emitted {
+                        result.snapshot.providers.push(Provider {
+                            id: definition.id.into(),
+                            name: definition.name.into(),
+                            kind: "local_client".into(),
+                        });
+                        provider_emitted = true;
                     }
                     result.snapshot.profiles.push(Profile {
                         id: profile_id.clone(),

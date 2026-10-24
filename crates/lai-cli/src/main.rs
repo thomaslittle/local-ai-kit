@@ -24,6 +24,7 @@ Usage:
       [--warm-metadata] [--no-metadata-cache]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode.
+  Metadata-only providers: cursor, freebuff.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
   --native-profiles ABSOLUTE_JSON explicitly registers Gemini CLI, Antigravity ACP, or Grok native profiles; the file contains paths/labels, never tokens.
   --billing-declarations ABSOLUTE_JSON declares billing for discovered connections whose provider leaves it unknown; recorded as user-supplied evidence, never verification.

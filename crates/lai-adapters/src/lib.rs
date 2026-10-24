@@ -16,6 +16,8 @@ pub mod opencode;
 
 pub mod cursor;
 
+pub mod freebuff;
+
 pub mod native_clients;
 
 /// Semantic revision input for option descriptors. Revisions pin a host's

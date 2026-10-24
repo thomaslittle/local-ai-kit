@@ -199,7 +199,7 @@ SelectionParams = TypedDict('SelectionParams', {'allowPaid': NotRequired[bool], 
 
 Session = TypedDict('Session', {'connectionId': Required[str], 'createdAt': Required['Timestamp'], 'id': Required[str], 'nativeResumption': Required[bool], 'selection': Required['Selection'], 'state': Required['SessionState']}, total=False)
 
-SessionCreateParams = TypedDict('SessionCreateParams', {'allowPaid': NotRequired[bool], 'hostMcpServers': NotRequired[List['HostMcpServer']], 'permissionMode': NotRequired[Union[str, None]], 'persistent': NotRequired[bool], 'reviewRequests': NotRequired[bool], 'selection': Required['Selection'], 'workspaceId': Required[str]}, total=False)
+SessionCreateParams = TypedDict('SessionCreateParams', {'allowPaid': NotRequired[bool], 'billingDeclaration': NotRequired[Union['BillingMode', None]], 'hostMcpServers': NotRequired[List['HostMcpServer']], 'permissionMode': NotRequired[Union[str, None]], 'persistent': NotRequired[bool], 'reviewRequests': NotRequired[bool], 'selection': Required['Selection'], 'workspaceId': Required[str]}, total=False)
 
 SessionOptionsParams = TypedDict('SessionOptionsParams', {'options': Required[Dict[str, Any]], 'sessionId': Required[str]}, total=False)
 

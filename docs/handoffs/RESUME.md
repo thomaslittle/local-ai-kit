@@ -1,6 +1,6 @@
 # Resume — Local AI Kit
 
-Work branch for the Tokscale discovery source: `grok-tokscale-upstream-discovery`, cut from `origin/main`. `main` is not updated by that branch. Tokscale commit `1d9a9395418efc6952944b794097935d7d6fa1e8` is a pinned knowledge source, not a runtime dependency. The daily watcher opens a review pull request and does not merge or change production discovery by itself. See [docs/upstream/tokscale.md](../upstream/tokscale.md).
+Work branch for the Tokscale discovery source: `grok-tokscale-upstream-discovery`, cut from `origin/main`. `main` is not updated by that branch. Tokscale commit `1d9a9395418efc6952944b794097935d7d6fa1e8` is a pinned knowledge source, not a runtime dependency. The daily watcher opens a review pull request and does not merge or change production discovery by itself.   Passive scan covers the whole pinned Tokscale client table, not only the original priority adapters. Freebuff's model catalog is read from the local client without an account sign-in check; credentials are not read and text execution is not implemented. The playground can declare billing for a route that did not report one; that statement does not replace a provider-reported mode, and metered declarations still need host `--allow-paid-options`. See [docs/upstream/tokscale.md](../upstream/tokscale.md).
 
 Work branch: `feature/initial-implementation`. `main` remains unchanged. Inspect local and remote HEAD before writing; do not force-push or recreate completed work.
 

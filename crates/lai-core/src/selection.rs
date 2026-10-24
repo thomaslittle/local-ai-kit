@@ -26,7 +26,58 @@ pub fn is_accountless_local_route(route: &AccessRoute, connection: &Connection) 
         && route.billing.value() == Some(&BillingMode::Local)
         && matches!(&connection.auth, Observation::Unknown { reason, .. } if reason == "LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH")
 }
-fn access(route: &AccessRoute, connection: &Connection, paid: bool) -> Result<()> {
+/// Account clients whose billing is a plan, never a local runtime.
+const ACCOUNT_CLIENTS: &[&str] = &["gemini_cli", "antigravity", "grok"];
+fn catalog_without_account(connection: &Connection) -> bool {
+    matches!(
+        &connection.auth,
+        Observation::Known {
+            value: AuthState::Unchecked,
+            source,
+            ..
+        } if source
+            .reference
+            .as_deref()
+            .is_some_and(|reference| reference.contains("account sign-in is not required"))
+    )
+}
+fn declared_billing<'a>(
+    route: &AccessRoute,
+    connection: &Connection,
+    declared: Option<&'a BillingMode>,
+) -> Result<Option<&'a BillingMode>> {
+    let Some(mode) = declared else {
+        return Ok(None);
+    };
+    if matches!(mode, BillingMode::Unknown | BillingMode::Mixed) {
+        return Err(error(
+            ErrorCode::InvalidRequest,
+            "Billing declaration must name subscription, local, metered, or prepaid billing",
+        ));
+    }
+    if *mode == BillingMode::Local
+        && ACCOUNT_CLIENTS
+            .iter()
+            .any(|id| route.provider_id == *id || connection.provider_id == *id)
+    {
+        return Err(error(
+            ErrorCode::InvalidRequest,
+            "This account client cannot be declared as local compute",
+        ));
+    }
+    // A declaration fills unreported billing only. A reported value, including a
+    // stale one, stays the provider's observation.
+    if route.billing.value().is_some() {
+        return Ok(None);
+    }
+    Ok(Some(mode))
+}
+fn access(
+    route: &AccessRoute,
+    connection: &Connection,
+    paid: bool,
+    declared: Option<&BillingMode>,
+) -> Result<()> {
     // Like native hosts (T3 Code), the last observed sign-in stands until the
     // client reports otherwise: stale "authenticated" evidence is accepted and
     // the client itself refuses if the login lapsed. Signed-out, expired or
@@ -34,6 +85,12 @@ fn access(route: &AccessRoute, connection: &Connection, paid: bool) -> Result<()
     if connection.auth.value() != Some(&AuthState::Authenticated)
         && !is_accountless_local_route(route, connection)
     {
+        if catalog_without_account(connection) {
+            return Err(error(
+                ErrorCode::CapabilityUnsupported,
+                "This client reports a model catalog and does not run turns",
+            ));
+        }
         return Err(error(
             ErrorCode::AuthRequired,
             "Current authentication is not verified",
@@ -50,7 +107,8 @@ fn access(route: &AccessRoute, connection: &Connection, paid: bool) -> Result<()
             "Provider denied included usage; refresh allowance evidence before retrying",
         ));
     }
-    match route.billing.fresh_value() {
+    let declared = declared_billing(route, connection, declared)?;
+    match route.billing.fresh_value().or(declared) {
         Some(BillingMode::Subscription | BillingMode::Local) => Ok(()),
         Some(BillingMode::ApiMetered | BillingMode::PrepaidCredits | BillingMode::Mixed)
             if paid =>
@@ -135,7 +193,7 @@ pub fn resolve(snapshot: &Snapshot, requirements: &Requirements) -> Vec<Candidat
             continue;
         }
         let mut reasons = Vec::new();
-        if let Err(e) = access(route, connection, requirements.allow_paid_fallback) {
+        if let Err(e) = access(route, connection, requirements.allow_paid_fallback, None) {
             reasons.push(code_string(&e.code));
         }
         if requirements.required_capabilities.len() > 64 {
@@ -184,6 +242,16 @@ pub fn validate_selection<'a>(
     selection: &Selection,
     paid: bool,
 ) -> Result<&'a Model> {
+    validate_selection_with(snapshot, selection, paid, None)
+}
+/// `declared` is a host statement for this check. It fills billing that the
+/// provider left unknown and never replaces a reported mode.
+pub fn validate_selection_with<'a>(
+    snapshot: &'a Snapshot,
+    selection: &Selection,
+    paid: bool,
+    declared: Option<BillingMode>,
+) -> Result<&'a Model> {
     let model = snapshot
         .models
         .iter()
@@ -202,7 +270,7 @@ pub fn validate_selection<'a>(
         ));
     }
     let (route, connection) = route(snapshot, model)?;
-    access(route, connection, paid)?;
+    access(route, connection, paid, declared.as_ref())?;
     capability(model, route, "generation.text")?;
     for (id, value) in &selection.options {
         let descriptor = model.options.iter().find(|d| d.id == *id).ok_or_else(|| {

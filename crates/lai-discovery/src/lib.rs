@@ -1,4 +1,5 @@
 //! Explicit passive inventory. No client launches, secret reads, or network calls.
+mod catalog;
 mod environment;
 pub mod knowledge;
 pub mod log_tail;

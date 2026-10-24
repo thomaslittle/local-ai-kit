@@ -108,6 +108,10 @@ pub struct SessionCreateParams {
     pub review_requests: bool,
     #[serde(default)]
     pub allow_paid: bool,
+    /// Host statement used only when the selected route did not report billing.
+    /// It does not replace a provider-reported mode.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub billing_declaration: Option<BillingMode>,
     /// Host-owned loopback MCP servers attached to a native-client session.
     /// The agent may call only the listed tools; its own tools stay disabled.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

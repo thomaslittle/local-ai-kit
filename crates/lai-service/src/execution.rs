@@ -1,7 +1,7 @@
 //! Host-authorized execution. RPC callers cannot select executables, credentials, or arbitrary roots.
 use crate::{NativeService, denied, params, unsupported};
 use lai_contracts::*;
-use lai_core::{project_snapshot, validate_selection};
+use lai_core::{project_snapshot, validate_selection_with};
 use lai_discovery::LocatedClient;
 use lai_runtime::{Agent, BoxFuture, Runtime};
 use serde_json::Value;
@@ -72,6 +72,9 @@ struct SessionContext {
     host_mcp_servers: Vec<HostMcpServer>,
     persistent: bool,
     billing: Option<BillingMode>,
+    /// Host statement captured at session open. Later turns reuse it when the
+    /// route still has no reported billing.
+    declared_billing: Option<BillingMode>,
 }
 #[derive(Clone)]
 struct ResumeRecord {
@@ -351,6 +354,16 @@ impl NativeService {
             .map(|(_, allowed)| *allowed)
             .ok_or_else(denied)
     }
+    fn session_declared_billing(&self, client: &str, session: &str) -> Result<Option<BillingMode>> {
+        Ok(self
+            .execution_state
+            .session_context
+            .read()
+            .map_err(|_| denied())?
+            .get(session)
+            .filter(|context| context.owner == client)
+            .and_then(|context| context.declared_billing.clone()))
+    }
     fn execution_grant(&self, client: &str) -> Result<ExecutionGrant> {
         self.execution_state
             .grants
@@ -401,10 +414,11 @@ impl NativeService {
         self.refresh_for_session(client, &request.selection.route_id)
             .await;
         let snapshot = self.projected(client)?;
-        let model = validate_selection(
+        let model = validate_selection_with(
             &snapshot,
             &request.selection,
             request.allow_paid && grant.allow_paid,
+            request.billing_declaration.clone(),
         )?
         .clone();
         let route = snapshot
@@ -606,6 +620,7 @@ impl NativeService {
                 host_mcp_servers: request.host_mcp_servers.clone(),
                 persistent: request.persistent,
                 billing: route.billing.value().cloned(),
+                declared_billing: request.billing_declaration.clone(),
             };
             let session = self.execution_state.runtime.insert(
                 client,
@@ -714,6 +729,7 @@ impl NativeService {
                         review_requests: context.review_requests,
                         allow_paid: context.allow_paid,
                         billing: context.billing.clone(),
+                        declared_billing: context.declared_billing.clone(),
                         native_session_id,
                         issued_at: now_seconds(),
                     })?;
@@ -814,6 +830,7 @@ impl NativeService {
                     permission_mode: record.context.permission_mode.clone(),
                     review_requests: record.context.review_requests,
                     allow_paid: record.context.allow_paid,
+                    billing_declaration: record.context.declared_billing.clone(),
                     host_mcp_servers: if request.host_mcp_servers.is_empty() {
                         record.context.host_mcp_servers.clone()
                     } else {
@@ -903,11 +920,12 @@ impl NativeService {
                 let session = self.check_session(client, &request.session_id)?;
                 let mut selected = session.selection;
                 selected.options = request.options.clone();
-                validate_selection(
+                validate_selection_with(
                     &self.projected(client)?,
                     &selected,
                     self.execution_grant(client)?.allow_paid
                         && self.accepted_paid(client, &request.session_id)?,
+                    self.session_declared_billing(client, &request.session_id)?,
                 )?;
                 serde_json::to_value(runtime.update_options(
                     client,
@@ -932,11 +950,12 @@ impl NativeService {
                 let request: Start = decode(p)?;
                 let session = self.check_session(client, &request.session_id)?;
                 let snapshot = self.projected(client)?;
-                let model = validate_selection(
+                let model = validate_selection_with(
                     &snapshot,
                     &session.selection,
                     self.execution_grant(client)?.allow_paid
                         && self.accepted_paid(client, &request.session_id)?,
+                    self.session_declared_billing(client, &request.session_id)?,
                 )?;
                 let images = if request.inputs.is_empty() {
                     Vec::new()
@@ -1086,6 +1105,7 @@ impl NativeService {
             permission_mode: token.permission_mode.clone(),
             review_requests: token.review_requests,
             allow_paid: token.allow_paid,
+            billing_declaration: token.declared_billing.clone(),
             host_mcp_servers: request.host_mcp_servers,
             persistent: true,
         };
@@ -1158,6 +1178,7 @@ mod lifecycle_tests {
                 host_mcp_servers: vec![],
                 persistent: false,
                 billing: Some(BillingMode::Local),
+                declared_billing: None,
             },
         }
     }

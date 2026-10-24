@@ -30,9 +30,10 @@ From the pinned Tokscale revision, Local AI Kit adopts discovery facts:
 - XDG data and config roots, including OpenCode's data directory
 - Windows `HOME` only when it is an absolute native path
 - blank environment values treated as unset
-- native path separators, so a Windows profile is not stored as `C:\Users\User/.codex/sessions`
+- native path separators, so a Windows profile is not stored as `<WINDOWS_OR_USER_LOCAL_PATH>`
 - Antigravity CLI (`antigravity-cli`) versus the home-rooted extension directory
 - GitHub Copilot's `~/.copilot` profile
+- every other client in the pinned table, as a passive profile directory (z.ai is Tokscale's `zcode` home `~/.zcode`; freebuff is `FREEBUFF_DATA_DIR` or `~/.config/manicode`)
 - session-store relatives used only to notice when an upstream layout moves
 
 The audited pin, watched paths, and adapter coverage are in [upstream/tokscale/lock.json](../../upstream/tokscale/lock.json). The extracted client table is [snapshot.json](../../upstream/tokscale/snapshot.json). How each client maps onto a Local AI Kit adapter is [mappings.json](../../upstream/tokscale/mappings.json).
@@ -40,6 +41,8 @@ The audited pin, watched paths, and adapter coverage are in [upstream/tokscale/l
 ## What we do not consume
 
 Tokscale is a usage and session aggregator. Local AI Kit is not a token-usage dashboard. We do not import Tokscale pricing, dashboards, token totals, submission infrastructure, leaderboards, or TUI code.
+
+Those extra clients are detection only. Finding a directory does not open session files, check a sign-in, or add an execution adapter. A client with no directory on the machine stays out of the connections list.
 
 Two Tokscale paths are intentionally not installations:
 
@@ -111,13 +114,13 @@ Platform: Windows
 Scenario: windows-normal
 
 Tokscale resolves:
-C:\Users\User\.codex-next\sessions
+<WINDOWS_OR_USER_LOCAL_PATH>
 
 Local AI Kit resolves:
-C:\Users\User\.codex
+<WINDOWS_OR_USER_LOCAL_PATH>
 ```
 
-`C:\Users\User\.codex\sessions` inside `C:\Users\User\.codex` passes. A Windows path that still contains a `/` from a relative literal, such as `C:\Users\User/.codex/sessions`, fails the native-separator test. The harness does not require the two projects to share an API, and it does not require Cursor's Tokscale usage cache to equal Cursor's installation directory.
+`<WINDOWS_OR_USER_LOCAL_PATH>` inside `<WINDOWS_OR_USER_LOCAL_PATH>` passes. A Windows path that still contains a `/` from a relative literal, such as `<WINDOWS_OR_USER_LOCAL_PATH>`, fails the native-separator test. The harness does not require the two projects to share an API, and it does not require Cursor's Tokscale usage cache to equal Cursor's installation directory.
 
 ## Example: a Codex path move
 

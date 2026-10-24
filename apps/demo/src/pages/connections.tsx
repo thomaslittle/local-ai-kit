@@ -12,7 +12,7 @@ import { Section } from '@/components/common/section';
 import { compactIdentity, known } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useActions, useDemo } from '@/state/context';
-import { isLocalRuntimeProvider } from '../../lib/catalog_visibility.mjs';
+import { catalogWithoutAccountAuth, isLocalRuntimeProvider } from '../../lib/catalog_visibility.mjs';
 import { connectionAuthLabel } from '../../lib/profile_auth.mjs';
 
 const authState = (connection: Connection) => (connection.auth.state === 'known' ? connection.auth : null);
@@ -183,8 +183,9 @@ export default function ConnectionsPage() {
   const verified = connections.filter(isAuthenticated);
   const previous = connections.filter(wasAuthenticated);
   const local = connections.filter((connection) => isLocalRuntimeProvider(connection));
+  const openCatalog = connections.filter((connection) => catalogWithoutAccountAuth(connection));
   const signedOut = connections.filter(isSignedOut);
-  const detected = connections.filter((connection) => !isAuthenticated(connection) && !wasAuthenticated(connection) && !isLocalRuntimeProvider(connection) && !isSignedOut(connection));
+  const detected = connections.filter((connection) => !isAuthenticated(connection) && !wasAuthenticated(connection) && !isLocalRuntimeProvider(connection) && !catalogWithoutAccountAuth(connection) && !isSignedOut(connection));
   const uncheckedDetected = detected.filter((connection) => !probeResults[connection.id]);
 
   return (
@@ -207,6 +208,11 @@ export default function ConnectionsPage() {
       {local.length ? (
         <Section title="Local runtimes" description="Local model servers do not have account authentication. Their routes appear when the server reports a real model catalog.">
           <CardGrid list={local} snapshot={snapshot} testId="local-runtimes" />
+        </Section>
+      ) : null}
+      {openCatalog.length ? (
+        <Section title="Model catalogs without account sign-in" description="These clients report models without a signed-in account. A listed model is not permission to run a turn.">
+          <CardGrid list={openCatalog} snapshot={snapshot} testId="open-catalog-profiles" />
         </Section>
       ) : null}
       {signedOut.length ? (

@@ -2573,6 +2573,17 @@
             "default": false,
             "type": "boolean"
           },
+          "billingDeclaration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BillingMode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Host statement used only when the selected route did not report billing.\nIt does not replace a provider-reported mode."
+          },
           "hostMcpServers": {
             "description": "Host-owned loopback MCP servers attached to a native-client session.\nThe agent may call only the listed tools; its own tools stay disabled.",
             "items": {

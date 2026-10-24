@@ -11,7 +11,7 @@ const messages={
  OPTION_UNSUPPORTED:'The selected model no longer accepts one of its configured options. Review the model options and retry.',
  SELECTION_STALE:'The selected account or model changed before the turn started. Refresh the catalog and select it again.',
  RATE_LIMITED:'The provider rate limit has been reached. Wait for it to reset or choose another eligible route.',
- BILLING_CONSENT_REQUIRED:'The selected route requires billing consent. Review the route and explicitly allow paid use before retrying.',
+ BILLING_CONSENT_REQUIRED:'This route did not report billing, or it needs separate billing consent. Declare the billing mode under the prompt, then retry.',
  APPROVAL_REQUIRED:'The provider requested an approval that the runtime could not complete. Retry and respond to the approval prompt.',
  SESSION_ROUTE_MISMATCH:'The session is bound to a different account or route. Start a new session from the current selection.',
  EVENT_GAP:'Some session events were missed. Start a new session to get a complete result.',

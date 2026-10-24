@@ -9,11 +9,12 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
                 | "claude_code"
                 | "grok"
                 | "gemini_cli"
-                | "antigravity"
+                |             "antigravity"
                 | "cursor"
                 | "ollama"
                 | "lmstudio"
                 | "opencode"
+                | "freebuff"
         );
         let execution = matches!(
             def.id,
@@ -43,7 +44,12 @@ pub fn descriptors() -> Vec<AdapterDescriptor> {
             persistent_resumption: matches!(def.id, "gemini_cli" | "antigravity" | "grok"),
             qualification: "See per-operation qualification reports; no account capability implied"
                 .into(),
-            limitations: if metadata {
+            limitations: if def.id == "freebuff" {
+                vec![
+                    "Model ids are read from the local Freebuff catalog. Credentials are not read. Text execution is not implemented."
+                        .into(),
+                ]
+            } else if metadata {
                 vec!["Plan and account quota depend on what the native interface reports".into()]
             } else {
                 vec![

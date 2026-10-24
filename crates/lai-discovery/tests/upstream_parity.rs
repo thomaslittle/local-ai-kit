@@ -75,6 +75,7 @@ fn tokscale_path(
         "xdg-data" => env.data_home.clone(),
         "config" => join_relative(&env.home, ".config/tokscale"),
         "app-data" => env.app_data.clone(),
+        "reasonix" => join_relative(&env.home, ".reasonix"),
         "env" => {
             let name = root["var"].as_str().unwrap();
             let fallback = root["fallback"].as_str().unwrap();
@@ -131,6 +132,18 @@ fn upstream_parity_matches_pinned_tokscale_discovery() {
         assert!(
             clients.contains_key(identifier),
             "{identifier} left the snapshot"
+        );
+    }
+    let mapped = mappings["clients"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .cloned()
+        .collect::<std::collections::BTreeSet<_>>();
+    for identifier in clients.keys() {
+        assert!(
+            mapped.contains(identifier),
+            "{identifier} is in the Tokscale pin but the scanner has no mapping"
         );
     }
 
@@ -297,18 +310,8 @@ fn windows_redirect_ignores_git_bash_home() {
 #[test]
 fn windows_discovery_paths_keep_native_separators() {
     let env = ScanEnvironment::for_home(PathBuf::from(r"C:\Users\User"), HostPlatform::Windows);
-    for provider in [
-        "codex",
-        "claude_code",
-        "gemini_cli",
-        "antigravity",
-        "opencode",
-        "cursor",
-        "github_copilot",
-        "ollama",
-        "grok",
-        "lmstudio",
-    ] {
+    for definition in definitions() {
+        let provider = definition.id;
         for root in profile_roots(provider, &env) {
             let text = root.to_string_lossy();
             assert!(
@@ -358,6 +361,9 @@ fn adopted_homes_are_discovered_without_reading_session_files() {
     let home = root.path().join("home");
     let gemini = root.path().join("gemini-home");
     fs::create_dir_all(home.join(".copilot")).unwrap();
+    fs::create_dir_all(home.join(".zcode")).unwrap();
+    fs::create_dir_all(home.join(".config/manicode")).unwrap();
+    fs::create_dir_all(home.join(".openclaw")).unwrap();
     fs::create_dir_all(gemini.join("antigravity-cli/conversations")).unwrap();
     fs::create_dir_all(gemini.join("tmp")).unwrap();
     fs::write(
@@ -380,6 +386,21 @@ fn adopted_homes_are_discovered_without_reading_session_files() {
         homes
             .iter()
             .any(|(id, path)| id == "github_copilot" && path.ends_with(".copilot"))
+    );
+    assert!(
+        homes
+            .iter()
+            .any(|(id, path)| id == "zcode" && path.ends_with(".zcode"))
+    );
+    assert!(
+        homes
+            .iter()
+            .any(|(id, path)| id == "freebuff" && path.ends_with("manicode"))
+    );
+    assert!(
+        homes
+            .iter()
+            .any(|(id, path)| id == "openclaw" && path.ends_with(".openclaw"))
     );
     assert!(
         homes

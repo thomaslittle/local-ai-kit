@@ -39,6 +39,9 @@ pub(crate) struct DurableResume {
     pub review_requests: bool,
     pub allow_paid: bool,
     pub billing: Option<BillingMode>,
+    /// Host billing statement from the session that was suspended.
+    #[serde(default)]
+    pub declared_billing: Option<BillingMode>,
     pub native_session_id: String,
     pub issued_at: u64,
 }
@@ -193,6 +196,7 @@ mod tests {
             review_requests: false,
             allow_paid: false,
             billing: Some(BillingMode::Subscription),
+            declared_billing: None,
             native_session_id: "native-secret-session".into(),
             issued_at: 1,
         }

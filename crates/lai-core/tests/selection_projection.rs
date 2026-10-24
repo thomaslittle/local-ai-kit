@@ -137,6 +137,76 @@ fn unknown_or_conditional_capability_is_not_confirmed() {
     }
 }
 #[test]
+fn catalog_without_account_sign_in_does_not_ask_for_authentication() {
+    let mut s = fixture();
+    s.connections[0].auth = Observation::reported(
+        AuthState::Unchecked,
+        EvidenceSource::new(
+            EvidenceKind::Synthetic,
+            "freebuff",
+            "Freebuff local model catalog; account sign-in is not required",
+        ),
+    );
+    let error = validate_selection(&s, &selection(), false).unwrap_err();
+    assert_eq!(error.code, ErrorCode::CapabilityUnsupported);
+    assert!(!error.message.contains("authentication"));
+}
+#[test]
+fn host_declaration_fills_unknown_billing_and_does_not_replace_a_report() {
+    let mut unknown = fixture();
+    unknown.routes[0].billing = Observation::unknown("BILLING_NOT_REPORTED");
+    assert_eq!(
+        validate_selection(&unknown, &selection(), false)
+            .unwrap_err()
+            .code,
+        ErrorCode::BillingConsentRequired
+    );
+    assert!(
+        validate_selection_with(
+            &unknown,
+            &selection(),
+            false,
+            Some(BillingMode::Subscription)
+        )
+        .is_ok()
+    );
+    assert_eq!(
+        validate_selection_with(&unknown, &selection(), false, Some(BillingMode::ApiMetered))
+            .unwrap_err()
+            .code,
+        ErrorCode::BillingConsentRequired
+    );
+    assert!(
+        validate_selection_with(&unknown, &selection(), true, Some(BillingMode::ApiMetered)).is_ok()
+    );
+    let mut reported = fixture();
+    reported.routes[0].billing = Observation::reported(
+        BillingMode::ApiMetered,
+        EvidenceSource::new(EvidenceKind::Synthetic, "test", "reported meter"),
+    );
+    assert_eq!(
+        validate_selection_with(
+            &reported,
+            &selection(),
+            false,
+            Some(BillingMode::Subscription)
+        )
+        .unwrap_err()
+        .code,
+        ErrorCode::BillingConsentRequired
+    );
+    let mut account = fixture();
+    account.connections[0].provider_id = "grok".into();
+    account.routes[0].provider_id = "grok".into();
+    account.routes[0].billing = Observation::unknown("BILLING_NOT_REPORTED");
+    assert_eq!(
+        validate_selection_with(&account, &selection(), false, Some(BillingMode::Local))
+            .unwrap_err()
+            .code,
+        ErrorCode::InvalidRequest
+    );
+}
+#[test]
 fn api_billing_does_not_inherit_subscription_consent() {
     let mut s = fixture();
     s.routes[0].billing = Observation::reported(

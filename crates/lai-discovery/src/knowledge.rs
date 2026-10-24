@@ -66,7 +66,7 @@ fn official(provider: &str, detail: &str) -> EvidenceSource {
 }
 
 pub fn discovery_rules() -> Vec<DiscoveryRule> {
-    vec![
+    let mut rules = vec![
         DiscoveryRule {
             id: "codex-home",
             provider_id: "codex",
@@ -233,7 +233,18 @@ pub fn discovery_rules() -> Vec<DiscoveryRule> {
             summary: "Relative discovery literals are stored with native separators",
             evidence: tokscale("paths", "clients.rs join_home component push"),
         },
-    ]
+    ];
+    for (id, _name) in crate::catalog::discovery_ids() {
+        rules.push(DiscoveryRule {
+            id,
+            provider_id: id,
+            role: RuleRole::ProfileHome,
+            basis: RuleBasis::UpstreamOss,
+            summary: "Pinned Tokscale profile directory",
+            evidence: tokscale(id, "clients.rs"),
+        });
+    }
+    rules
 }
 
 pub fn profile_roots(provider_id: &str, env: &ScanEnvironment) -> Vec<PathBuf> {
@@ -276,7 +287,7 @@ pub fn profile_roots(provider_id: &str, env: &ScanEnvironment) -> Vec<PathBuf> {
         "lmstudio" => overridden(env, &["LM_STUDIO_HOME"], || {
             vec![join_relative(&env.home, ".lmstudio")]
         }),
-        _ => vec![],
+        other => crate::catalog::profile_roots(other, env),
     }
 }
 
@@ -288,7 +299,7 @@ pub fn has_profile_override(provider_id: &str, env: &ScanEnvironment) -> bool {
         "grok" => &["GROK_HOME"],
         "opencode" => &["OPENCODE_CONFIG_DIR"],
         "lmstudio" => &["LM_STUDIO_HOME"],
-        _ => &[],
+        other => return crate::catalog::has_override(other, env),
     };
     keys.iter().any(|key| env.overrides.contains_key(*key))
 }
@@ -305,7 +316,7 @@ pub fn session_stores(provider_id: &str, profile: &Path) -> Vec<PathBuf> {
         "opencode" => &["storage/message"],
         "github_copilot" => &["session-store.db", "otel", "data.db"],
         "lmstudio" => &["server-logs"],
-        _ => &[],
+        other => return crate::catalog::session_stores(other, profile),
     };
     relatives
         .iter()

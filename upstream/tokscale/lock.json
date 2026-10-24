@@ -16,17 +16,290 @@
     "crates/tokscale-core/src/sessions"
   ],
   "coverage": [
-    {"upstreamClient": "codex", "localAdapter": "codex", "status": "adopted"},
-    {"upstreamClient": "claude", "localAdapter": "claude_code", "status": "adopted"},
-    {"upstreamClient": "gemini", "localAdapter": "gemini_cli", "status": "adopted"},
-    {"upstreamClient": "antigravity-cli", "localAdapter": "antigravity", "status": "adopted"},
-    {"upstreamClient": "antigravity-extension", "localAdapter": "antigravity", "status": "adopted"},
-    {"upstreamClient": "antigravity", "localAdapter": "antigravity", "status": "excluded-tokscale-cache"},
-    {"upstreamClient": "opencode", "localAdapter": "opencode", "status": "adopted"},
-    {"upstreamClient": "cursor", "localAdapter": "cursor", "status": "intentionally-different"},
-    {"upstreamClient": "copilot", "localAdapter": "github_copilot", "status": "adopted"},
-    {"upstreamClient": "grok", "localAdapter": "grok", "status": "adopted"},
-    {"upstreamClient": "lmstudio", "localAdapter": "lmstudio", "status": "adopted"},
-    {"upstreamClient": null, "localAdapter": "ollama", "status": "local-only"}
+    {
+      "upstreamClient": "opencode",
+      "localAdapter": "opencode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "claude",
+      "localAdapter": "claude_code",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "codex",
+      "localAdapter": "codex",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "cursor",
+      "localAdapter": "cursor",
+      "status": "intentionally-different"
+    },
+    {
+      "upstreamClient": "gemini",
+      "localAdapter": "gemini_cli",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "amp",
+      "localAdapter": "amp",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "droid",
+      "localAdapter": "droid",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "openclaw",
+      "localAdapter": "openclaw",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "pi",
+      "localAdapter": "pi",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "kimi",
+      "localAdapter": "kimi",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "qwen",
+      "localAdapter": "qwen",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "roocode",
+      "localAdapter": "roocode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "kilocode",
+      "localAdapter": "kilocode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "mux",
+      "localAdapter": "mux",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "kilo",
+      "localAdapter": "kilo",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "crush",
+      "localAdapter": "crush",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "hermes",
+      "localAdapter": "hermes",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "copilot",
+      "localAdapter": "github_copilot",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "goose",
+      "localAdapter": "goose",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "codebuff",
+      "localAdapter": "codebuff",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "antigravity",
+      "localAdapter": "antigravity",
+      "status": "intentionally-different"
+    },
+    {
+      "upstreamClient": "zed",
+      "localAdapter": "zed",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "kiro",
+      "localAdapter": "kiro",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "trae",
+      "localAdapter": "trae",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "warp",
+      "localAdapter": "warp",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "cline",
+      "localAdapter": "cline",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "gjc",
+      "localAdapter": "gjc",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "grok",
+      "localAdapter": "grok",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "jcode",
+      "localAdapter": "jcode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "commandcode",
+      "localAdapter": "commandcode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "micode",
+      "localAdapter": "micode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "antigravity-cli",
+      "localAdapter": "antigravity",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "junie",
+      "localAdapter": "junie",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "zcode",
+      "localAdapter": "zcode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "opencodereview",
+      "localAdapter": "opencodereview",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "codebuddy",
+      "localAdapter": "codebuddy",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "workbuddy",
+      "localAdapter": "workbuddy",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "devin-cli",
+      "localAdapter": "devin-cli",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "devin-desktop",
+      "localAdapter": "devin-desktop",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "senpi",
+      "localAdapter": "senpi",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "augment",
+      "localAdapter": "augment",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "kimchi",
+      "localAdapter": "kimchi",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "reasonix",
+      "localAdapter": "reasonix",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "prime-agent",
+      "localAdapter": "prime-agent",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "freebuff",
+      "localAdapter": "freebuff",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "cherrystudio",
+      "localAdapter": "cherrystudio",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "dsh",
+      "localAdapter": "dsh",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "mcode",
+      "localAdapter": "mcode",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "fx",
+      "localAdapter": "fx",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "omp",
+      "localAdapter": "omp",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "lmstudio",
+      "localAdapter": "lmstudio",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "unsloth",
+      "localAdapter": "unsloth",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "hindsight",
+      "localAdapter": "hindsight",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "micode-desktop",
+      "localAdapter": "micode-desktop",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "muse",
+      "localAdapter": "muse",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": "antigravity-extension",
+      "localAdapter": "antigravity",
+      "status": "adopted"
+    },
+    {
+      "upstreamClient": null,
+      "localAdapter": "ollama",
+      "status": "local-only"
+    }
   ]
 }

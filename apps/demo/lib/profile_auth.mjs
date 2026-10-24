@@ -4,7 +4,11 @@ export function connectionAuthLabel(connection){
   if(auth.value==='authenticated')return auth.freshness==='stale'?'Previously authenticated':'Authenticated';
   if(auth.value==='unauthenticated')return 'Not authenticated';
   if(auth.value==='expired')return 'Expired';
-  if(auth.value==='unchecked')return 'Not checked';
+  if(auth.value==='unchecked'){
+   return String(auth.source?.reference??'').includes('account sign-in is not required')
+    ? 'Account sign-in not required'
+    : 'Not checked';
+  }
  }
  if(auth.reason==='LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH')return 'Local runtime · account auth not applicable';
  if(auth.reason==='OPENCODE_UPSTREAM_CREDENTIALS_NOT_VALIDATED')return 'Credentials configured · authentication not verified';

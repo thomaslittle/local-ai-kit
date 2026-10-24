@@ -181,6 +181,16 @@ async fn probe_metadata(
                 "Cursor metadata worker unavailable",
             )
         })?,
+        "freebuff" => tokio::task::spawn_blocking(move || {
+            lai_adapters::freebuff::read_catalog(&located, &connection, &route)
+        })
+        .await
+        .map_err(|_| {
+            DomainError::new(
+                ErrorCode::ProviderUnavailable,
+                "Freebuff metadata worker unavailable",
+            )
+        })?,
         _ => Err(DomainError::new(
             ErrorCode::CapabilityUnsupported,
             "No metadata adapter registered",
@@ -313,6 +323,12 @@ fn build_execution(
                             ));
                         }
                         return Ok(http_provider::executor(config.kind, client, input.model));
+                    }
+                    if input.located.provider_id == "freebuff" {
+                        return Err(DomainError::new(
+                            ErrorCode::CapabilityUnsupported,
+                            "Freebuff reports a local model catalog and does not run turns",
+                        ));
                     }
                     if input.located.provider_id == "opencode" {
                         if !input.host_mcp_servers.is_empty() {

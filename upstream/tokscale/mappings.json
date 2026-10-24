@@ -56,6 +56,231 @@
       "localAdapter": "lmstudio",
       "parity": "contained",
       "note": "LM_STUDIO_HOME or ~/.lmstudio. Tokscale reads server-logs/ for usage; Local AI Kit only locates the home."
+    },
+    "amp": {
+      "localAdapter": "amp",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "droid": {
+      "localAdapter": "droid",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "openclaw": {
+      "localAdapter": "openclaw",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "pi": {
+      "localAdapter": "pi",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "kimi": {
+      "localAdapter": "kimi",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "qwen": {
+      "localAdapter": "qwen",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "roocode": {
+      "localAdapter": "roocode",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "kilocode": {
+      "localAdapter": "kilocode",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "mux": {
+      "localAdapter": "mux",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "kilo": {
+      "localAdapter": "kilo",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "crush": {
+      "localAdapter": "crush",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "hermes": {
+      "localAdapter": "hermes",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "goose": {
+      "localAdapter": "goose",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "codebuff": {
+      "localAdapter": "codebuff",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "zed": {
+      "localAdapter": "zed",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "kiro": {
+      "localAdapter": "kiro",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "trae": {
+      "localAdapter": "trae",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "warp": {
+      "localAdapter": "warp",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "cline": {
+      "localAdapter": "cline",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "gjc": {
+      "localAdapter": "gjc",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "jcode": {
+      "localAdapter": "jcode",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "commandcode": {
+      "localAdapter": "commandcode",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "micode": {
+      "localAdapter": "micode",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "junie": {
+      "localAdapter": "junie",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "zcode": {
+      "localAdapter": "zcode",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "opencodereview": {
+      "localAdapter": "opencodereview",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "codebuddy": {
+      "localAdapter": "codebuddy",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "workbuddy": {
+      "localAdapter": "workbuddy",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "devin-cli": {
+      "localAdapter": "devin-cli",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "devin-desktop": {
+      "localAdapter": "devin-desktop",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "senpi": {
+      "localAdapter": "senpi",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "augment": {
+      "localAdapter": "augment",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "kimchi": {
+      "localAdapter": "kimchi",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "reasonix": {
+      "localAdapter": "reasonix",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "prime-agent": {
+      "localAdapter": "prime-agent",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "freebuff": {
+      "localAdapter": "freebuff",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "cherrystudio": {
+      "localAdapter": "cherrystudio",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "dsh": {
+      "localAdapter": "dsh",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "mcode": {
+      "localAdapter": "mcode",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "fx": {
+      "localAdapter": "fx",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "omp": {
+      "localAdapter": "omp",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "unsloth": {
+      "localAdapter": "unsloth",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "hindsight": {
+      "localAdapter": "hindsight",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "micode-desktop": {
+      "localAdapter": "micode-desktop",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
+    },
+    "muse": {
+      "localAdapter": "muse",
+      "parity": "contained",
+      "note": "Passive profile from the pinned Tokscale client table. No metadata or execution adapter. Session files are not opened."
     }
   },
   "localOnly": [

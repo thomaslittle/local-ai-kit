@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { Field, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
@@ -26,7 +27,7 @@ import { ModelPicker } from '@/components/model-picker';
 import { reasonLabel } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useActions, useDemo, useSelectedCandidate } from '@/state/context';
-import type { ChatMessage, SessionStatus } from '@/state/types';
+import type { ChatMessage, DemoState, SessionStatus } from '@/state/types';
 import { ConfigurationPanel } from '@/pages/selectors/configuration-panel';
 
 /* Chat composition follows shadcn-ui/chatbot-template (MIT): an Empty state with
@@ -43,6 +44,17 @@ const SUGGESTIONS: { label: string; prompt: string }[] = [
 ];
 
 const BUSY: SessionStatus[] = ['Starting', 'Running', 'Awaiting approval'];
+
+const BILLING_CHOICES: { value: NonNullable<DemoState['billingDeclaration']>; label: string }[] = [
+  { value: 'subscription', label: 'Subscription (included in the account)' },
+  { value: 'api_metered', label: 'Metered API' },
+  { value: 'prepaid_credits', label: 'Prepaid credits' },
+  { value: 'local', label: 'Local compute' },
+];
+
+function billingUnreported(candidate: ReturnType<typeof useSelectedCandidate>): boolean {
+  return candidate != null && candidate.route.billing.state !== 'known';
+}
 
 function statusDot(status: SessionStatus): string {
   if (BUSY.includes(status)) return 'bg-primary motion-safe:animate-pulse';
@@ -273,6 +285,42 @@ function ChatCard() {
   );
 }
 
+function BillingDeclarationField() {
+  const actions = useActions();
+  const candidate = useSelectedCandidate();
+  const billingDeclaration = useDemo((state) => state.billingDeclaration);
+  if (!billingUnreported(candidate)) return null;
+  return (
+    <Field className="max-w-sm">
+      <FieldLabel htmlFor="billing-declaration">Billing was not reported</FieldLabel>
+      <FieldDescription>
+        Declare how this route is billed before the turn. The statement is yours. Metered and prepaid declarations also need the host started with --allow-paid-options.
+      </FieldDescription>
+      <Select
+        items={BILLING_CHOICES}
+        value={billingDeclaration}
+        onValueChange={(next) => {
+          const choice = BILLING_CHOICES.find((item) => item.value === next);
+          if (choice) actions.patch({ billingDeclaration: choice.value });
+        }}
+      >
+        <SelectTrigger id="billing-declaration" aria-label="Declared billing mode" className="w-full">
+          <SelectValue placeholder="Choose a billing mode" />
+        </SelectTrigger>
+        <SelectContent alignItemWithTrigger={false}>
+          <SelectGroup>
+            {BILLING_CHOICES.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </Field>
+  );
+}
+
 function ConsentFields() {
   const actions = useActions();
   const live = useDemo((state) => state.mode !== 'synthetic');
@@ -281,6 +329,7 @@ function ConsentFields() {
   const workspaceId = useDemo((state) => state.workspaceId);
   return (
     <div className="grid gap-3">
+      <BillingDeclarationField />
       <CheckRow
         label={live ? 'Allow this live request to use the selected account' : 'Allow this simulated session'}
         checked={grantConsent}
@@ -309,9 +358,12 @@ function SessionButtons() {
   const resumeToken = useDemo((state) => state.resumeToken);
   const grantConsent = useDemo((state) => state.grantConsent);
   const hasSelection = useDemo((state) => state.selection !== null);
+  const billingDeclaration = useDemo((state) => state.billingDeclaration);
+  const candidate = useSelectedCandidate();
+  const needsDeclaration = billingUnreported(candidate) && billingDeclaration === null;
   return (
     <div className="mt-5 flex flex-wrap items-center gap-2.5">
-      <Button disabled={busy || !methods.includes('turns.start') || !grantConsent || !hasSelection} onClick={() => void actions.startTurn()}>
+      <Button disabled={busy || !methods.includes('turns.start') || !grantConsent || !hasSelection || needsDeclaration} onClick={() => void actions.startTurn()}>
         {live ? 'Run live turn' : 'Simulate turn'}
       </Button>
       <Button variant="outline" disabled={!busy || !turnId} onClick={() => void actions.cancelTurn()}>

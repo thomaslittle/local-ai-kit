@@ -75,6 +75,8 @@ export interface DemoState {
   required: string[];
   onlyEligible: boolean;
   allowPaid: boolean;
+  /** Host statement for a route whose billing was not reported. */
+  billingDeclaration: 'subscription' | 'api_metered' | 'prepaid_credits' | 'local' | null;
   favorites: string[];
   sensitiveConsent: boolean;
   mobileStep: number;

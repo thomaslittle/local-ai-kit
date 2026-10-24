@@ -145,7 +145,7 @@ impl Args {
                                 "grok",
                             ]
                             .contains(&v.as_str())
-                                || (flag == "--allow-metadata" && v == "cursor")
+                                || (flag == "--allow-metadata" && matches!(v.as_str(), "cursor" | "freebuff"))
                         })
                         .ok_or_else(invalid)?;
                     if flag == "--allow-metadata" {

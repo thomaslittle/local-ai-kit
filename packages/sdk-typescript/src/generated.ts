@@ -126,7 +126,7 @@ export type SelectionParams = { "allowPaid"?: boolean; "selection": Selection; }
 
 export type Session = { "connectionId": string; "createdAt": Timestamp; "id": string; "nativeResumption": boolean; "selection": Selection; "state": SessionState; };
 
-export type SessionCreateParams = { "allowPaid"?: boolean; "hostMcpServers"?: Array<HostMcpServer>; "permissionMode"?: string | null; "persistent"?: boolean; "reviewRequests"?: boolean; "selection": Selection; "workspaceId": string; };
+export type SessionCreateParams = { "allowPaid"?: boolean; "billingDeclaration"?: BillingMode | null; "hostMcpServers"?: Array<HostMcpServer>; "permissionMode"?: string | null; "persistent"?: boolean; "reviewRequests"?: boolean; "selection": Selection; "workspaceId": string; };
 
 export type SessionOptionsParams = { "options": { [key: string]: unknown; }; "sessionId": string; };
 

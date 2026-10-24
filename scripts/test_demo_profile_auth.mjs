@@ -8,4 +8,5 @@ test('connection labels distinguish verified, stale, unchecked and local non-acc
  assert.equal(connectionAuthLabel({auth:{state:'unknown',reason:'LOCAL_RUNTIME_HAS_NO_ACCOUNT_AUTH'}}),'Local runtime · account auth not applicable');
  assert.equal(connectionAuthLabel({auth:{state:'unknown',reason:'OPENCODE_UPSTREAM_CREDENTIALS_NOT_VALIDATED'}}),'Credentials configured · authentication not verified');
  assert.equal(connectionAuthLabel({auth:{state:'unknown',reason:'NOT_CHECKED'}}),'Not checked');
+ assert.equal(connectionAuthLabel({auth:{state:'known',value:'unchecked',freshness:'fresh',source:{reference:'Freebuff local model catalog; account sign-in is not required'}}}),'Account sign-in not required');
 });
