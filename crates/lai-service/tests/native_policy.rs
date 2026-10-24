@@ -37,6 +37,7 @@ fn setup(trust: bool) -> (NativeService, Arc<AtomicUsize>) {
             locations: BTreeMap::from([(
                 "personal".into(),
                 LocatedClient {
+                    executable_identity: None,
                     provider_id: "test".into(),
                     profile_home: std::env::temp_dir(),
                     executable: None,

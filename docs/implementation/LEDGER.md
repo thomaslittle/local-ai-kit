@@ -53,6 +53,16 @@ requests or interest renewal. [Receipt](../qualification/evidence/2026-10-23-cac
 Actual dot registration, account-to-provider mapping and current allowance remain
 unqualified and require approved access/setup, not an inferred quota estimate.
 
+## October 23 bounded Unix executable symlink candidate
+
+Implemented executable-only Unix resolution and logical/physical identity checks.
+The single focused discovery-to-probe fixture is Linux/WSL2 platform-executed with
+synthetic metadata and no inference; no broad test campaign was run. Retarget,
+replacement and bounded invalid-link/data-read cases pass in that fixture.
+[Evidence](../qualification/evidence/2026-10-23-unix-executable-symlink/README.md).
+macOS, actual accounts, atomic handle execution and release/service replacement
+are not qualified or performed by this source-only candidate.
+
 ## October 22 native SDK bootstrap CI follow-up (release held)
 
 Clean source `aeecd15` passes Windows artifact provenance/licenses/SBOM,

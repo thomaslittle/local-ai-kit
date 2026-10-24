@@ -1,6 +1,8 @@
 //! Injected operating-system boundaries. Importing this crate performs no I/O.
+mod executable;
 mod native;
 mod paths;
+pub use executable::{ExecutableIdentity, resolve_executable};
 use lai_contracts::Result;
 pub use paths::child_path;
 use std::path::{Path, PathBuf};
@@ -36,6 +38,13 @@ pub trait LocalFilesystem: Send + Sync {
     fn probe(&self, path: &Path) -> Result<EntryKind>;
     fn children(&self, path: &Path, max_entries: usize) -> Result<DirectoryListing>;
     fn read_chunk(&self, path: &Path, offset: u64, max_bytes: usize) -> Result<ReadChunk>;
+    /// Separate opt-in boundary; injected filesystems do not follow links by default.
+    fn resolve_executable(&self, _: &Path) -> Result<ExecutableIdentity> {
+        Err(lai_contracts::DomainError::new(
+            lai_contracts::ErrorCode::CapabilityUnsupported,
+            "Executable link resolution unavailable",
+        ))
+    }
 }
 pub struct NativeFilesystem;
 

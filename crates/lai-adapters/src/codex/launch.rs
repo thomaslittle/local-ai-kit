@@ -14,10 +14,24 @@ fn missing() -> DomainError {
 }
 
 pub fn resolve_executable(candidate: &Path) -> Result<PathBuf> {
-    if !candidate.is_absolute() || !candidate.is_file() {
+    if !candidate.is_absolute() {
         return Err(missing());
     }
     let name = candidate.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    // Check provider identity on the logical command, never a versioned target's name.
+    // This is an executable candidate, not publisher/signature attestation.
+    #[cfg(unix)]
+    if std::fs::symlink_metadata(candidate).is_ok_and(|m| m.file_type().is_symlink()) {
+        if name != "codex" {
+            return Err(missing());
+        }
+        return lai_discovery::resolve_executable(candidate)
+            .map(|identity| identity.resolved)
+            .map_err(|_| missing());
+    }
+    if !candidate.is_file() {
+        return Err(missing());
+    }
     if name.eq_ignore_ascii_case("codex.exe") {
         return Ok(candidate.to_owned());
     }
@@ -68,6 +82,14 @@ pub async fn probe(
         ));
     }
     let executable = resolve_executable(client.executable.as_deref().ok_or_else(missing)?)?;
+    client.validate_executable()?;
+    if client
+        .executable_identity
+        .as_ref()
+        .is_some_and(|identity| identity.resolved != executable)
+    {
+        return Err(missing());
+    }
     let workspace = tempfile::Builder::new()
         .prefix("lai-codex-metadata-")
         .tempdir()

@@ -40,6 +40,9 @@ fn reject_symlink_components(path: &Path) -> Result<()> {
     Ok(())
 }
 impl LocalFilesystem for NativeFilesystem {
+    fn resolve_executable(&self, path: &Path) -> Result<crate::ExecutableIdentity> {
+        crate::resolve_executable(path)
+    }
     fn probe(&self, path: &Path) -> Result<EntryKind> {
         match fs::symlink_metadata(path) {
             Ok(m) => Ok(if m.file_type().is_symlink() {
