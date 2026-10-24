@@ -111,3 +111,32 @@ must not be mistaken for authenticated readiness. OpenCode 2.1.4 was detected
 but rejected as `PROTOCOL_INCOMPATIBLE`: discovered-process startup currently
 requires 1.x. Do not remove that version check or invoke incompatible flags.
 These results qualify metadata only, not generation or all consumer GUI flows.
+
+## Separately approved app-scoped Claude execution
+
+After approval to run Claude Code for specific applications, add an
+`execution` block to each approved app entry. Keep it as narrow as the consumer
+needs:
+
+```json
+"execution": {
+  "connectionIds": ["<authenticated primary claude_code connection id>"],
+  "workspaces": {"default": "/ABSOLUTE/PRIVATE/workspaces/<app>"},
+  "allowPaid": false, "allowWrites": false,
+  "reviewNative": false, "allowNativePolicy": false
+}
+```
+
+Scope by connection id rather than `providerIds` so a `needs_auth` or
+unknown-billing profile of the same provider is not granted. Each workspace is an
+owner-only directory dedicated to that app. Consumers send
+`workspaceId: "default"` and `permissionMode: "read_only"`. Gracefully stop the
+broker, then restart the same command adding `--allow-execution claude_code` and
+`--workspace /ABSOLUTE/PRIVATE/workspaces/host-unused`. The argument parser
+requires a host workspace whenever execution is allowed. With only a grants
+manifest (no `--token-file`/`--admin-token-file`), that host grant is never
+attached to any descriptor; app grants come solely from the manifest. Execution
+providers must also be metadata providers. Descriptor paths stay the same and
+credentials rotate, so connected consumers must reconnect. An app's `grants.list`
+reporting `execution: true` means the grant is installed. It is not consumer
+connection or completed generation.
