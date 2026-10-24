@@ -36,6 +36,30 @@ check is wired into the SDK/integration verification profiles.
 [Receipt and source hashes](receipt.json) · [synthetic structured output](structured-result.json).
 The sample is synthetic data, not an account observation or usable endpoint.
 
+## Refresh-fixture CI follow-up — October 24
+
+The [Ubuntu run at `f341eae`](https://github.com/thomaslittle/local-ai-kit/actions/runs/40050350814/job/120741416147)
+failed the existing inventory reconciliation journey: `generation-0` remained
+visible where `generation-1` was expected. Windows and macOS passed that head.
+The CI log does not identify the worker's exact interleaving. A controlled,
+bounded blocking-source gate reproduced the same assertion after the test
+advanced paused Tokio time through the scan deadline and observed its published
+`Timeout`. Yielding runnable tasks does not synchronize blocking-worker delivery.
+
+The fixture now waits for the initial publication, checks that inventory is not
+due before 300 seconds, then holds virtual time at admission until the public
+snapshot contains the new generation. It advances the remaining time afterward,
+preserving the original 335-second budget, scope/no-model assertions and rescan
+bound. The source gate and waits remain bounded; no production timeout or
+scheduler code changed. No test was disabled and no new unit suite was added.
+
+The single filtered journey passed on Linux/WSL2 (0.09 seconds of test execution);
+the existing four-case MCP stdio journey passed on Windows (0.56 seconds total).
+Formatting, whitespace and project hygiene passed. Two preliminary diagnostic
+runs stopped at the startup wait before reaching the controlled race; their
+failed receipts are retained separately. [Focused receipt and hashes](refresh-fixture.json).
+These results do not replace the required exact-head hosted CI matrix.
+
 Unqualified: real account mappings/remaining allowances, actual dot MCP access,
 live broker/credential binding, published-package consumption, hosted exact-head
 CI, and other-platform interoperability. The façade creates no feed: an actual

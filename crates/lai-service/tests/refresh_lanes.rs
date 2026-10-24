@@ -416,12 +416,22 @@ async fn inventory_reconciles_without_metadata_and_keeps_application_scope() {
     let generation = Arc::new(AtomicUsize::new(0));
     let count = Arc::new(AtomicUsize::new(0));
     let (g, c) = (generation.clone(), count.clone());
+    // A runnable Tokio task does not imply its blocking source has returned.
+    let (release, receive) = std::sync::mpsc::sync_channel(1);
+    let receive = Mutex::new(receive);
     let s = Arc::new(NativeService::new(
         Arc::new(move |_| {
             c.fetch_add(1, Ordering::SeqCst);
+            let generation = g.load(Ordering::SeqCst);
+            if generation == 1 {
+                receive
+                    .lock()
+                    .unwrap()
+                    .recv_timeout(Duration::from_secs(2))
+                    .expect("fixture must release the admitted inventory worker");
+            }
             let mut value = scan();
-            value.snapshot.connections[0].display_name =
-                format!("generation-{}", g.load(Ordering::SeqCst));
+            value.snapshot.connections[0].display_name = format!("generation-{generation}");
             Ok(value)
         }),
         Duration::ZERO,
@@ -433,6 +443,7 @@ async fn inventory_reconciles_without_metadata_and_keeps_application_scope() {
     s.handle("app", "discovery.refresh", json!({}))
         .await
         .unwrap();
+    let initial_revision = snapshot(&s).await["revision"].clone();
     tokio::time::pause();
     s.enable_inventory_refresh(true);
     assert!(s.start_background_tasks());
@@ -440,14 +451,34 @@ async fn inventory_reconciles_without_metadata_and_keeps_application_scope() {
         !s.start_background_tasks(),
         "a second supervisor would duplicate work"
     );
+    // Release Tokio's rounded initial interval tick, then hold time for publication.
     settle().await;
+    tokio::time::advance(Duration::from_millis(1)).await;
+    wait_snapshot(&s, |value| value["revision"] != initial_revision).await;
+    assert_eq!(count.load(Ordering::SeqCst), 2);
     advance(5).await;
     generation.store(1, Ordering::SeqCst);
     // Read-only interest keeps the active cadence; reads themselves never scan.
-    for _ in 0..6 {
+    for _ in 0..5 {
         snapshot(&s).await;
         advance(55).await;
     }
+    assert_eq!(count.load(Ordering::SeqCst), 2, "inventory is not due yet");
+    assert_eq!(
+        named(&snapshot(&s).await, "connections", "personal")["displayName"],
+        "generation-0"
+    );
+    advance(20).await;
+    // A runnable task/yield budget cannot synchronize a blocking worker.
+    // Hold the clock at admission until the public snapshot proves publication;
+    // advancing through its five-second deadline would test a timeout instead.
+    release.send(()).unwrap();
+    wait_snapshot(&s, |value| {
+        named(value, "connections", "personal")["displayName"] == "generation-1"
+    })
+    .await;
+    assert_eq!(count.load(Ordering::SeqCst), 3);
+    advance(35).await;
     let after = snapshot(&s).await;
     assert_eq!(after["connections"].as_array().unwrap().len(), 1);
     assert_eq!(
