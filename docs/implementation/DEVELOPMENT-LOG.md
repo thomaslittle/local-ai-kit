@@ -1,5 +1,29 @@
 # Development log — Local AI Kit
 
+## October 24 Fedora local helper bring-up
+
+Platform-executed on Fedora from source `b0df201`: pinned Rust 1.97.1
+`cargo build --locked -p lai-cli --bin local-ai-kit` passed. The installed
+user-local executable reports `0.1.0-alpha.18`; protocol `1.0` handshake passed.
+The debug source-build SHA256 is
+`d77726696a50ca8a510a84253c7ee8c2be90971d549fa532dd273424480fb113`,
+not a published release-artifact claim. One private independent Unix-socket
+broker serves separate passive-only app descriptors for Remotif, Crntly and
+Haiwire. Socket/descriptors are 0600 inside a private 0700 directory. Real
+passive discovery found Claude Code, Codex and OpenCode (four connections,
+zero models). Duplicate binding was rejected, consumer disconnect preserved
+the broker, and SIGINT removed its socket and descriptors before restart.
+
+Authenticated readiness, model catalogs and generation remain unqualified;
+no metadata probes, credentials/OAuth changes or inference were performed.
+The broker is manually owned, with no root/user startup service, HTTP listener,
+remote exposure or hosted usage-plugin activation. Consumer owners received
+the supported executable and distinct descriptor paths. The first real Remotif
+GUI check accepted the descriptor and started exactly one `connect --ipc` bridge,
+then rejected the handshake because its composer incorrectly required session
+tool capabilities before catalog viewing. Its owner is repairing that consumer
+gate; no discovery/probe/session/inference followed in that app check. See the [Fedora local runtime guide](../integration/fedora-local-runtime.md).
+
 ## October 24 Linux cached-usage revocation follow-up
 
 Implemented a second revocation check after asynchronous request-body decoding.
