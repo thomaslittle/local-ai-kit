@@ -105,6 +105,7 @@ try {
 
 | Integration | Where to start |
 |---|---|
+| Read cached quota windows through a read-only MCP façade | [Cached usage MCP](docs/integration/cached-usage-mcp.md) — explicit scope, no provider work or polling |
 | Install a built bundle (helper, npm tarballs, Python wheel) | [Distribution](docs/integration/distribution.md) |
 | Native helper CLI, stdio / HTTP / broker transports | [Native helper](docs/integration/native-helper.md), [pairing](docs/integration/pairing.md), [shared broker](docs/integration/shared-broker.md) |
 | Prompt-driven desktop app (provider/model selection, grants, streaming) | [Prompt-app guide](docs/integration/prompt-app.md) |

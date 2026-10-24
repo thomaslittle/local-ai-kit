@@ -1,5 +1,17 @@
 # Development log — Local AI Kit
 
+## October 23 cache-only usage MCP candidate
+
+The optional SDK façade exposes `kit_usage_cached` over an existing cache with
+explicit connection/account projection and operator mappings. Tool reads have no
+client/refresh/probe/credential/interest operation. One Windows synthetic stdio
+journey covers scoped/redacted quota observations, stale reset/unknown states,
+empty scope, disposal and terminal denial. It exposed and fixed live-store
+disposal calling its overwritten wrapper instead of the underlying disposer.
+[Evidence and limits](../qualification/evidence/2026-10-23-cached-usage-mcp/README.md).
+Actual dot access and account mapping require separate approved setup; no
+persistent connection, grant, shared service change or release was performed.
+
 ## October 22 native SDK bootstrap CI follow-up (release held)
 
 Clean source `aeecd15` passes Windows artifact provenance/licenses/SBOM,

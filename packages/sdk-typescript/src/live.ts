@@ -21,12 +21,22 @@ export function createLiveSnapshotStore(
   initial?: Snapshot,
 ): LiveSnapshotStore {
   const store = createSnapshotStore(client, initial);
+  const disposeStore = store.dispose.bind(store);
   let controller: AbortController | undefined;
   let started = false;
   let disposed = false;
   let pending: ReturnType<typeof setTimeout> | undefined;
   let reading = false;
   let dirty = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    if (pending) clearTimeout(pending);
+    pending = undefined;
+    controller?.abort();
+    controller = undefined;
+    disposeStore();
+  };
 
   const schedule = () => {
     if (disposed) return;
@@ -73,7 +83,11 @@ export function createLiveSnapshotStore(
           continue;
         }
         // A revoked or closed client must not spin. A transient error backs off.
-        if (error instanceof LocalAIError && ['CLOSED', 'LOCAL_ACCESS_DENIED', 'TRANSPORT_CLOSED'].includes(error.code)) return;
+        if (error instanceof LocalAIError && ['CLOSED', 'LOCAL_ACCESS_DENIED'].includes(error.code)) {
+          dispose(); // A terminal access failure retires the cached account projection too.
+          return;
+        }
+        if (error instanceof LocalAIError && error.code === 'TRANSPORT_CLOSED') return;
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -91,13 +105,6 @@ export function createLiveSnapshotStore(
         started = false;
       };
     },
-    dispose() {
-      disposed = true;
-      if (pending) clearTimeout(pending);
-      pending = undefined;
-      controller?.abort();
-      controller = undefined;
-      store.dispose();
-    },
+    dispose,
   });
 }

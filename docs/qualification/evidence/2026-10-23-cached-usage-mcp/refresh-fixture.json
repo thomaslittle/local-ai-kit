@@ -1,0 +1,153 @@
+{
+  "recordedAt": "2026-10-24T04:11:07.179914+00:00",
+  "baseHead": "f341eae13fe32c7971de1cf13511dccf010829d0",
+  "ciFailure": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40050350814/job/120741416147",
+  "status": "focused fixture/platform evidence; exact-head hosted CI pending",
+  "productionSchedulerOrDeadlineChanges": false,
+  "source": {
+    "file": "refresh_lanes.rs",
+    "sha256": "92778a8c98bf4d004129329d43e98ce6c0944ba745ec6d51dca09c26ec2437aa"
+  },
+  "controlledRedSource": {
+    "file": "refresh-order-controlled-red-20261024.rs",
+    "sha256": "fe88d1523155d382c17c9f40aa3f6f048ebff88d1dd4ad235e28656c17d06a7b"
+  },
+  "stages": [
+    {
+      "name": "refresh-order-red-resumed",
+      "meaning": "diagnostic setup failure: initial interval tick not released",
+      "guard": {
+        "command": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-p",
+          "lai-service",
+          "--test",
+          "refresh_lanes",
+          "inventory_reconciles_without_metadata_and_keeps_application_scope",
+          "--",
+          "--exact",
+          "--nocapture"
+        ],
+        "exitCode": 101,
+        "seconds": 60.017246737,
+        "peakBytes": 1102572192,
+        "stop": null,
+        "platform": "Linux"
+      },
+      "log": {
+        "file": "refresh-order-red-resumed.txt",
+        "sha256": "6cf01a15c72ddb7143cb96b493fdbbda2c4d1fabfc4731e3e7e30a5717aea97f"
+      }
+    },
+    {
+      "name": "refresh-order-red-publication",
+      "meaning": "diagnostic setup failure: interval not initialized before clock advance",
+      "guard": {
+        "command": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-p",
+          "lai-service",
+          "--test",
+          "refresh_lanes",
+          "inventory_reconciles_without_metadata_and_keeps_application_scope",
+          "--",
+          "--exact",
+          "--nocapture"
+        ],
+        "exitCode": 101,
+        "seconds": 66.92850549500001,
+        "peakBytes": 1102575175,
+        "stop": null,
+        "platform": "Linux"
+      },
+      "log": {
+        "file": "refresh-order-red-publication.txt",
+        "sha256": "97f0b11aadc4f991b3716417c025b3dc045af50521281cbb23776e4ef70ec3c1"
+      }
+    },
+    {
+      "name": "refresh-order-red-started",
+      "meaning": "controlled red: published Timeout, then generation-0 versus generation-1",
+      "guard": {
+        "command": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-p",
+          "lai-service",
+          "--test",
+          "refresh_lanes",
+          "inventory_reconciles_without_metadata_and_keeps_application_scope",
+          "--",
+          "--exact",
+          "--nocapture"
+        ],
+        "exitCode": 101,
+        "seconds": 38.761176423999984,
+        "peakBytes": 1102577361,
+        "stop": null,
+        "platform": "Linux"
+      },
+      "log": {
+        "file": "refresh-order-red-started.txt",
+        "sha256": "93df4812fdb9b81a95debe583621e84ac6a69449de78f7d6efd79d13b6cdb0ee"
+      }
+    },
+    {
+      "name": "refresh-order-green-resumed",
+      "meaning": "publication-synchronized existing fixture passed",
+      "guard": {
+        "command": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-p",
+          "lai-service",
+          "--test",
+          "refresh_lanes",
+          "inventory_reconciles_without_metadata_and_keeps_application_scope",
+          "--",
+          "--exact",
+          "--nocapture"
+        ],
+        "exitCode": 0,
+        "seconds": 40.253878989000015,
+        "peakBytes": 1102578405,
+        "stop": null,
+        "platform": "Linux"
+      },
+      "log": {
+        "file": "refresh-order-green-resumed.txt",
+        "sha256": "cf56cba87f45fbca61a8d7af53a5c7221bd1074b222db489a37d51c1ae584088"
+      }
+    }
+  ],
+  "mcpJourney": {
+    "platform": "Windows",
+    "command": "node --test tests/integration/cached-usage-mcp.test.mjs",
+    "passed": 1,
+    "cases": 4,
+    "log": {
+      "file": "pr32-resume-mcp-20261024.txt",
+      "sha256": "c72447a856f2de3f5aedf722a55ff743170d4939089a6c545c200915ba60fe43"
+    }
+  },
+  "otherPassedChecks": [
+    "cargo fmt --all --check",
+    "git diff --check",
+    "python scripts/check_project.py"
+  ],
+  "limits": [
+    "CI log alone does not identify the original worker interleaving",
+    "No live accounts, grants, cache host, dot connection, shared service or release changes",
+    "No new unit suite or repeated verification campaign"
+  ]
+}

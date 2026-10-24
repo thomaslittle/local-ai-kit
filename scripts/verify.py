@@ -27,6 +27,8 @@ def main():
     if a.profile=='adapters':run([sys.executable,'scripts/adapter_conformance.py',*(['--adapter',a.adapter] if a.adapter else ['--all'])])
     if a.profile in ('selectors','javascript') or full:js_package('selector-core')
     if a.profile in ('sdk-typescript','sdk','javascript') or full:js_package('sdk-typescript')
+    if a.profile in ('sdk-typescript','sdk','javascript','integration') or full:
+        run(['node','--test','tests/integration/cached-usage-mcp.test.mjs'])
     if a.profile in ('sdk',) or full:run([sys.executable,'-m','unittest','discover','-s','packages/sdk-python/tests','-v'])
     if a.profile in ('generation',) or full:
         run([sys.executable,'-m','unittest','discover','-s','tests/generation','-v'])

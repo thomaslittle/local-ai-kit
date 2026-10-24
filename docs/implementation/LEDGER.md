@@ -1,5 +1,15 @@
 # Execution ledger - Local AI Kit
 
+## October 23 cache-only usage MCP candidate
+
+Implemented scoped `kit_usage_cached` façade and bounded stdio framing over
+existing SDK cache state. Windows synthetic endpoint evidence, strict SDK
+type-check and canonical quota-pool validation pass. Disposal and terminal
+permission denial clear the live store; tool reads cause no provider/client
+requests or interest renewal. [Receipt](../qualification/evidence/2026-10-23-cached-usage-mcp/README.md).
+Actual dot registration, account-to-provider mapping and current allowance remain
+unqualified and require approved access/setup, not an inferred quota estimate.
+
 ## October 22 native SDK bootstrap CI follow-up (release held)
 
 Clean source `aeecd15` passes Windows artifact provenance/licenses/SBOM,
