@@ -99,6 +99,47 @@ reads do not change broker cadence or read credentials. An existing host's prior
 subscription continues with its prior policy; this is not a promise that another
 host's authorized metadata scheduler stops reading native account state.
 
+## Cache producer and T3 host binding
+
+The optional `@local-ai-kit/sdk/mcp/host` export connects an existing SDK cache
+to an authenticated host. `createCachedUsageProducer` is inert until `attach()`.
+Attachment observes **one in-process `SnapshotStore.subscribe`**, reads its current
+state, and projects subsequent cache notifications with the same scope/redaction
+code as the stdio tool. It never calls `LiveSnapshotStore.connect`, a broker RPC,
+`load`, `scan` or `probe`. Attaching twice is idempotent. This local observer is
+distinct from creating another broker inventory subscription or interest lease.
+
+Only the sanitized projection is retained. Tool reads copy that projection and
+may degrade its freshness; they do not read the source store. A clock rewind does
+not promote a previously aged reading while that projection remains published.
+New source publications still carry their own evidence/freshness. Stop/dispose
+clears rows before detaching, and callbacks from an old attachment cannot revive
+them. Source error/retirement publishes no account rows. The producer does not
+dispose the owner's store or stop another consumer.
+
+`createT3CachedUsageTool` binds that producer to explicit, copied environment and
+external MCP **client-session IDs**, not provider/model names, thread IDs, OAuth
+client registration names or inferred billing accounts. Its `read(invocation,{})`
+checks the trusted per-request T3 invocation context before reading the producer.
+Another environment, an unlisted client, a thread credential or extra arguments
+are denied. An empty client list allows nobody. `revoke()` disables only this
+binding; it does not revoke a peer or stop the shared producer. A replacement OAuth
+session requires deliberate rebinding. These IDs and account mappings are supplied
+by the operator, never accepted as tool-call parameters.
+
+The [T3 Effect toolkit source and exact composition](../../examples/mcp/t3code/README.md)
+reuse T3's existing authenticated `/mcp` transport, `McpToolAccess.reads`, and
+`McpHttpServer.toolkitRegistration`. They add no second server, tunnel, authentication
+mechanism or poller. This is a source integration module, **not a runtime plugin
+installation or an already registered tool**. The inspected T3 host has no existing
+Kit cache service; a usable approved producer host has not been selected. A Rust
+consumer's private cache is not automatically accessible in the Node host.
+
+If the selected cache and T3 run in different processes, an approved data channel
+is still needed; this implementation provides no implicit IPC/network bridge.
+Alternatively, a T3-owned SDK cache requires approval for its single broker feed
+and startup interest behavior. Do not manufacture a second poller to fill that gap.
+
 The live store's disposal now calls its captured underlying disposer, and terminal
 `LOCAL_ACCESS_DENIED`/`CLOSED` inventory failures retire that store/cache. A changed
 authorization requires a new host-owned store. Transport loss alone is not proof
@@ -146,9 +187,12 @@ node --test tests/integration/cached-usage-mcp.test.mjs
 1. Select an existing approved cache host and the exact visible Kit account and
    connection IDs. Verify which consumer account actually uses that allowance;
    otherwise leave it unmapped and report unknown.
-2. Approve a dedicated local stdio MCP connection to that host's adapter and its
-   explicit read-only allowlists. Anyone holding its pipes can read that scoped
-   report; do not share those pipes or put credentials in MCP arguments/output.
+2. Choose the transport for the actual consumer. Local stdio works only for a
+   local MCP client; **cloud dot cannot reach local stdin/stdout**. For cloud dot,
+   review the source composition into the existing authenticated T3 HTTPS MCP
+   host and the exact external client-session/environment binding. Approve the
+   selected account/connection allowlists and explicit consumer-account mapping.
+   Existing orchestration access alone is not consent to export account usage.
 3. If a new broker app/feed is necessary, separately approve its identity and
    connection scope. It needs cached inventory/usage visibility only: no passive
    scanning permission, metadata-probe permission, execution/workspace/paid/write
@@ -157,6 +201,11 @@ node --test tests/integration/cached-usage-mcp.test.mjs
 4. Reuse one store/subscription. Review startup interest semantics before enabling
    a new feed, and clear the cache on denial/revocation/disconnection according to
    the owning host's lifecycle. Do not kill or restart a peer/shared broker.
+5. Separately approve the selected candidate package/build and host deployment or
+   restart, and any persistent usage-data access/client rebinding. No release,
+   credential provisioning, source installation or deployment is performed by
+   these factories. Then approve one cached cloud read with retained evidence;
+   confirm that it causes zero new broker/provider requests and preserves unknowns.
 
 No actual dot registration, credential provisioning, persistent grant or network
 exposure was performed. Live account mapping, current provider allowance, dot

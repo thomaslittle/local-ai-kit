@@ -58,11 +58,30 @@ function reading(value: Observation5, now: number, maxAge: number, loading: bool
       remaining:value.value.remaining ?? null,usedFraction:value.value.usedFraction ?? null},
   };
 }
-const empty = (state: 'unavailable'|'invalid'): CachedUsageReport => ({state,quotaPools:[],connections:[],mappings:[],
+export const emptyCachedUsageReport = (state: 'unavailable'|'invalid'): CachedUsageReport => ({state,quotaPools:[],connections:[],mappings:[],
   unmappedAccountIds:[],contextCounters:'not_reported',noticeCodes:[state === 'invalid' ? 'INVALID_USAGE_CACHE' : 'CACHE_UNAVAILABLE']});
 
-/** Constructor is inert. Only tools/call reads getSnapshot(); no store actions are accepted. */
-export function createCachedUsageMcp(options: CachedUsageMcpOptions): CachedUsageMcpHandler {
+export const cachedUsageToolDefinition = Object.freeze({
+  name:'kit_usage_cached',
+  description:'Read scoped cached provider quota windows only. Unknown is not zero. No provider calls, refresh, credentials, inference or interest renewal. Explicit account mappings only; context counters are not plan quota.',
+  inputSchema:Object.freeze({type:'object',properties:Object.freeze({}),additionalProperties:false}),
+  annotations:Object.freeze({readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}),
+});
+
+/** Age an owned sanitized projection; never promote stale data or infer a reset. */
+export function ageCachedUsageReport(report: CachedUsageReport, now: number, maxAge: number): CachedUsageReport {
+  try {
+    if (!Number.isFinite(now) || !Number.isSafeInteger(maxAge) || maxAge < 1000 || maxAge > 86_400_000) invalid();
+    const copy = structuredClone(report);
+    for (const pool of copy.quotaPools) for (const window of pool.windows) {
+      window.reading = reading(window.reading, now, maxAge, false);
+    }
+    return copy;
+  } catch { return emptyCachedUsageReport('invalid'); }
+}
+
+/** Construction is inert; each read projects getSnapshot() once, without store actions. */
+export function createCachedUsageReader(options: CachedUsageMcpOptions): () => CachedUsageReport {
   const checked = (values: readonly string[]) => {
     if (!Array.isArray(values) || values.length > 32 || values.some(value=>!id(value))) throw new Error('INVALID_USAGE_SCOPE');
     return new Set(values);
@@ -74,11 +93,10 @@ export function createCachedUsageMcp(options: CachedUsageMcpOptions): CachedUsag
   const maxAge = options.maxObservationAgeMs ?? 60_000;
   if (!Number.isSafeInteger(maxAge) || maxAge < 1000 || maxAge > 86_400_000) throw new Error('INVALID_USAGE_AGE');
   const store = options.store, clock = options.now ?? Date.now;
-  let phase: 'new'|'offered'|'ready' = 'new';
   const report = (): CachedUsageReport => {
     try {
       const state = store.getSnapshot();
-      if (!state.snapshot || state.error) return empty('unavailable');
+      if (!state.snapshot || state.error) return emptyCachedUsageReport('unavailable');
       const snapshot = state.snapshot, now = clock();
       if (!Number.isFinite(now) || !['live','synthetic'].includes(snapshot.mode)
           || snapshot.quotaPools.length > 128 || snapshot.connections.length > 512 || snapshot.routes.length > 2048
@@ -119,8 +137,15 @@ export function createCachedUsageMcp(options: CachedUsageMcpOptions): CachedUsag
       };
       if (new TextEncoder().encode(JSON.stringify(result)).length > 128*1024) invalid();
       return result;
-    } catch { return empty('invalid'); }
+    } catch { return emptyCachedUsageReport('invalid'); }
   };
+  return report;
+}
+
+/** Constructor is inert. Only tools/call reads getSnapshot(); no store actions are accepted. */
+export function createCachedUsageMcp(options: CachedUsageMcpOptions): CachedUsageMcpHandler {
+  const report = createCachedUsageReader(options);
+  let phase: 'new'|'offered'|'ready' = 'new';
   return message => {
     const packet = object(message) ? message : {};
     const requestId = typeof packet.id === 'string' && packet.id.length <= 128 || Number.isSafeInteger(packet.id) ? packet.id : null;
@@ -144,9 +169,7 @@ export function createCachedUsageMcp(options: CachedUsageMcpOptions): CachedUsag
     if (phase !== 'ready') return error(-32000,'Initialize MCP first');
     if (packet.method === 'tools/list') {
       if (Object.keys(params).some(key=>key !== '_meta')) return error(-32602,'No tool-list cursor');
-      return success({tools:[{name:'kit_usage_cached',description:'Read scoped cached provider quota windows only. Unknown is not zero. No provider calls, refresh, credentials, inference or interest renewal. Explicit account mappings only; context counters are not plan quota.',
-        inputSchema:{type:'object',properties:{},additionalProperties:false},
-        annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}}]});
+      return success({tools:[cachedUsageToolDefinition]});
     }
     if (packet.method === 'tools/call') {
       if (params.name !== 'kit_usage_cached' || Object.keys(params).some(key=>!['name','arguments','_meta'].includes(key))

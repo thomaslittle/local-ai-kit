@@ -29,6 +29,7 @@ def main():
     if a.profile in ('sdk-typescript','sdk','javascript') or full:js_package('sdk-typescript')
     if a.profile in ('sdk-typescript','sdk','javascript','integration') or full:
         run(['node','--test','tests/integration/cached-usage-mcp.test.mjs'])
+        run(['node','--experimental-strip-types','--test','tests/integration/cached-usage-host.test.mjs'])
     if a.profile in ('sdk',) or full:run([sys.executable,'-m','unittest','discover','-s','packages/sdk-python/tests','-v'])
     if a.profile in ('generation',) or full:
         run([sys.executable,'-m','unittest','discover','-s','tests/generation','-v'])
