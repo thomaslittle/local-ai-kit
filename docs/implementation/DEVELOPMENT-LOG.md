@@ -1,5 +1,22 @@
 # Development log — Local AI Kit
 
+## October 24 first shared-broker consumer catalog
+
+Platform-executed on Fedora against the running metadata-only broker (helper
+`2daa749`): Remotif connected through its own app descriptor and, after its
+consumer stopped probing automatically and stopped requiring session tools for
+passive viewing, its picker read the cached broker snapshot with discovery
+complete and no error. It showed 25 model rows: seven Codex, 13 from the
+authenticated primary Claude Code profile, and five aliases from the
+`needs_auth` additional Claude profile. OpenCode was detected with no model rows.
+A read-only inspection of the broker cache matched those counts exactly. The
+primary Claude catalog grew from five aliases to 13 entries (aliases plus full
+native IDs) at the broker's 23:23 UTC permitted metadata refresh. That is a
+provider-reported catalog change, not duplicate consumer rows. Execution
+capabilities stayed unavailable as intended, and no generation was requested.
+Haiwire's private-Xvfb check failed before catalog inspection, so its normal-display
+consumer check is still owned by Haiwire. Crntly consumer integration has not been verified.
+
 ## October 24 authorized Linux metadata continuation
 
 Explicit owner permission enabled metadata-only Codex, Claude Code and OpenCode
