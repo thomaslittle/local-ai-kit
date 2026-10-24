@@ -130,6 +130,7 @@ async fn disconnect_waits_for_inflight_managed_create_then_closes_its_session() 
             locations: BTreeMap::from([(
                 "personal".into(),
                 lai_discovery::LocatedClient {
+                    executable_identity: None,
                     provider_id: "codex_managed".into(),
                     profile_home: std::env::temp_dir(),
                     executable: None,
@@ -222,6 +223,7 @@ async fn unrelated_provider_startup_does_not_delay_managed_disconnect() {
             locations: BTreeMap::from([(
                 "personal".into(),
                 lai_discovery::LocatedClient {
+                    executable_identity: None,
                     provider_id: "test".into(),
                     profile_home: std::env::temp_dir(),
                     executable: None,

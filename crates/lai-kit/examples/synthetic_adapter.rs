@@ -139,6 +139,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             locations: BTreeMap::from([(
                 "c".into(),
                 LocatedClient {
+                    executable_identity: None,
                     provider_id: "fixture".into(),
                     profile_home: std::env::temp_dir(),
                     executable: None,
