@@ -1,0 +1,761 @@
+{
+  "recordedAt": "2026-10-24T05:32:29.641289+00:00",
+  "repository": "https://github.com/thomaslittle/local-ai-kit",
+  "inventoryBranch": "checkpoint/windows-migration-20261024/inventory",
+  "inventoryCommit": "the commit containing this inventory; obtain exact SHA with git rev-parse origin/checkpoint/windows-migration-20261024/inventory",
+  "scope": {
+    "localBranches": 15,
+    "registeredWorktrees": 4,
+    "stashes": 3,
+    "stashChangedSourcePaths": 67
+  },
+  "branches": [
+    {
+      "localBranch": "chore/open-source-readiness",
+      "localHead": "f2cc34db2b7a90c29703749f8ce0c56c504e77d2",
+      "remoteBranch": "chore/open-source-readiness",
+      "remoteHead": "f2cc34db2b7a90c29703749f8ce0c56c504e77d2",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "f2cc34db2b7a90c29703749f8ce0c56c504e77d2",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "codex/chatgpt-managed-auth",
+      "localHead": "470dee4569c049777e21b58392964292808e077c",
+      "remoteBranch": "codex/chatgpt-managed-auth",
+      "remoteHead": "470dee4569c049777e21b58392964292808e077c",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "470dee4569c049777e21b58392964292808e077c",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "docs/full-api-reference",
+      "localHead": "21e032600983b5bcf40c8d78dc1550623a1f4085",
+      "remoteBranch": "docs/full-api-reference",
+      "remoteHead": "21e032600983b5bcf40c8d78dc1550623a1f4085",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "21e032600983b5bcf40c8d78dc1550623a1f4085",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "feat/cached-usage-host-bridge",
+      "localHead": "97053661461b991762d0606a1b5da1a01b1661ce",
+      "remoteBranch": "feat/cached-usage-host-bridge",
+      "remoteHead": "97053661461b991762d0606a1b5da1a01b1661ce",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "97053661461b991762d0606a1b5da1a01b1661ce",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "feat/cached-usage-mcp",
+      "localHead": "3c439561efb058658c8bc96666ca67d6bfde9074",
+      "remoteBranch": "feat/cached-usage-mcp",
+      "remoteHead": "3c439561efb058658c8bc96666ca67d6bfde9074",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "3c439561efb058658c8bc96666ca67d6bfde9074",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "feat/demo-react-vite",
+      "localHead": "da8a20ca7f893f32729e42f04d49b218f90798b6",
+      "remoteBranch": "feat/demo-react-vite",
+      "remoteHead": "da8a20ca7f893f32729e42f04d49b218f90798b6",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "da8a20ca7f893f32729e42f04d49b218f90798b6",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "feat/host-mcp-native-policy",
+      "localHead": "55fa0542d9d016ff49f4fc6c9c855e74a3f64069",
+      "remoteBranch": "feat/host-mcp-native-policy",
+      "remoteHead": "55fa0542d9d016ff49f4fc6c9c855e74a3f64069",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "55fa0542d9d016ff49f4fc6c9c855e74a3f64069",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "feat/shared-runtime",
+      "localHead": "649b2a8db00d4d316b5c2489dc56ecef928dbd2a",
+      "remoteBranch": "feat/shared-runtime",
+      "remoteHead": "649b2a8db00d4d316b5c2489dc56ecef928dbd2a",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "649b2a8db00d4d316b5c2489dc56ecef928dbd2a",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "feature/initial-implementation",
+      "localHead": "b0f2793489b223f6d7fd555f87bd0acd4da53a2e",
+      "remoteBranch": "checkpoint/windows-migration-20261024/initial-implementation-local",
+      "remoteHead": "b0f2793489b223f6d7fd555f87bd0acd4da53a2e",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "3c914550d1261be29f2dd5266bdaca30281f2f21",
+      "status": "historical checkpoint; existing remote branch left unchanged"
+    },
+    {
+      "localBranch": "feature/muse-provider",
+      "localHead": "8ec7123e19b16c35c0370a123d8170730517181d",
+      "remoteBranch": "feature/muse-provider",
+      "remoteHead": "8ec7123e19b16c35c0370a123d8170730517181d",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "8ec7123e19b16c35c0370a123d8170730517181d",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "fix/remotif-stdio-diagnostic",
+      "localHead": "e709645f5c7c4f2489a11ad10fa75b95f2bca535",
+      "remoteBranch": "fix/remotif-stdio-diagnostic",
+      "remoteHead": "e709645f5c7c4f2489a11ad10fa75b95f2bca535",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "e709645f5c7c4f2489a11ad10fa75b95f2bca535",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "fix/unix-executable-symlinks",
+      "localHead": "5bd139d4f428ef8a41bb731315025d83c824ee89",
+      "remoteBranch": "fix/unix-executable-symlinks",
+      "remoteHead": "5bd139d4f428ef8a41bb731315025d83c824ee89",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "5bd139d4f428ef8a41bb731315025d83c824ee89",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "grok-tokscale-upstream-discovery",
+      "localHead": "22f4423d3bcdd1fdef214e40b6017df9fb6749d3",
+      "remoteBranch": "checkpoint/windows-migration-20261024/grok-tokscale-base",
+      "remoteHead": "22f4423d3bcdd1fdef214e40b6017df9fb6749d3",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": null,
+      "status": "historical checkpoint; existing remote branch left unchanged"
+    },
+    {
+      "localBranch": "main",
+      "localHead": "9a40e503c82e3efc15991382322ccf30bc00f806",
+      "remoteBranch": "main",
+      "remoteHead": "9a40e503c82e3efc15991382322ccf30bc00f806",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "9a40e503c82e3efc15991382322ccf30bc00f806",
+      "status": "existing remote branch exact match"
+    },
+    {
+      "localBranch": "merge/muse-into-main",
+      "localHead": "dee22a7a605d6d0d6b9bb30aa1a10900c76cb748",
+      "remoteBranch": "merge/muse-into-main",
+      "remoteHead": "dee22a7a605d6d0d6b9bb30aa1a10900c76cb748",
+      "equalAtDestination": true,
+      "sameNameRemoteAtAudit": "dee22a7a605d6d0d6b9bb30aa1a10900c76cb748",
+      "status": "existing remote branch exact match"
+    }
+  ],
+  "worktrees": [
+    {
+      "worktree": "<WINDOWS_SITES>/local-ai-kit",
+      "localBranch": "main",
+      "detached": false,
+      "head": "9a40e503c82e3efc15991382322ccf30bc00f806",
+      "remoteBranch": "main",
+      "remoteHead": "9a40e503c82e3efc15991382322ccf30bc00f806",
+      "dirtyOrUntrackedSource": []
+    },
+    {
+      "worktree": "<WINDOWS_HOME>/.codex/worktrees/chatgpt-managed-auth/crntly-desktop/tmp/timer-wire-kit-alpha10",
+      "localBranch": null,
+      "detached": true,
+      "head": "794584735152c16f10a9d256cea2d4b681a7cda9",
+      "remoteBranch": "checkpoint/windows-migration-20261024/detached-alpha10",
+      "remoteHead": "794584735152c16f10a9d256cea2d4b681a7cda9",
+      "dirtyOrUntrackedSource": []
+    },
+    {
+      "worktree": "<WINDOWS_HOME>/.t3/worktrees/local-ai-kit/docs-full-api-reference",
+      "localBranch": "feat/cached-usage-host-bridge",
+      "detached": false,
+      "head": "97053661461b991762d0606a1b5da1a01b1661ce",
+      "remoteBranch": "feat/cached-usage-host-bridge",
+      "remoteHead": "97053661461b991762d0606a1b5da1a01b1661ce",
+      "dirtyOrUntrackedSource": []
+    },
+    {
+      "worktree": "<WINDOWS_D>/remotif-cinematic-20261023/kit-stdout-worktree",
+      "localBranch": "fix/remotif-stdio-diagnostic",
+      "detached": false,
+      "head": "e709645f5c7c4f2489a11ad10fa75b95f2bca535",
+      "remoteBranch": "fix/remotif-stdio-diagnostic",
+      "remoteHead": "e709645f5c7c4f2489a11ad10fa75b95f2bca535",
+      "dirtyOrUntrackedSource": []
+    }
+  ],
+  "stashes": [
+    {
+      "stashAtAudit": "stash@{0}",
+      "originalStash": "0dcbdb8ca6e5f9a8f04b50e3dcf98e5097be2dea",
+      "originalBase": "22f4423d3bcdd1fdef214e40b6017df9fb6749d3",
+      "remoteBranch": "checkpoint/windows-migration-20261024/stash-0-grok-freebuff",
+      "remoteHead": "ef6d454a916c6dd775206b370b559e8965fcead6",
+      "originalStashUnchanged": true,
+      "status": "UNQUALIFIED historical WIP; no tests or completion claimed",
+      "sourcePaths": [
+        {
+          "path": "apps/demo/fixture/service.mjs",
+          "action": "write",
+          "safeSha256": "57288fd56f80acc3265a4c349861b3a23a64981c795dfc6d16bcb332fe126ab0"
+        },
+        {
+          "path": "apps/demo/lib/catalog_visibility.d.mts",
+          "action": "write",
+          "safeSha256": "2d1c0e76b0cd76e6b7595e84b5f845134ec432a425e052cec9617e80d853f08f"
+        },
+        {
+          "path": "apps/demo/lib/catalog_visibility.mjs",
+          "action": "write",
+          "safeSha256": "08d7cd552d3f93487e202b4bc067e64039ae454cb7dcf17972033d42341936da"
+        },
+        {
+          "path": "apps/demo/lib/errors.mjs",
+          "action": "write",
+          "safeSha256": "eb29e36d9fc15a126d33ebf1784658bdbda2b058013ba75bc63c1f806ffac4ac"
+        },
+        {
+          "path": "apps/demo/lib/profile_auth.mjs",
+          "action": "write",
+          "safeSha256": "700ec55da085eecef92a8e3510373044c31c55046e530c0c30cad8c4ffcb3e9f"
+        },
+        {
+          "path": "apps/demo/src/pages/connections.tsx",
+          "action": "write",
+          "safeSha256": "bfe50227d0b85039cf2e6f1636342b542fc24eccc2b4a8fc34d04e6dd226a769"
+        },
+        {
+          "path": "apps/demo/src/pages/playground.tsx",
+          "action": "write",
+          "safeSha256": "41c5d5065bb54724d518cc0bcdbe6b702989c27e1b2d9b6092e91128038212e1"
+        },
+        {
+          "path": "apps/demo/src/state/store.ts",
+          "action": "write",
+          "safeSha256": "3300b1dc0ab6d91553ba9fbf0635f1f08e36831e98969a323c8625859e739ff1"
+        },
+        {
+          "path": "apps/demo/src/state/types.ts",
+          "action": "write",
+          "safeSha256": "8908f12af9561542c379b6e93d21eda2086a8f79579425f6987e22f093855796"
+        },
+        {
+          "path": "crates/lai-adapters/src/freebuff/mod.rs",
+          "action": "write",
+          "safeSha256": "d926a64aa377d77a753a5a232cad83306462f6ff7d09efd0e0c37baf78ab5dcb"
+        },
+        {
+          "path": "crates/lai-adapters/src/lib.rs",
+          "action": "write",
+          "safeSha256": "4ae41ec9bacc20bd91370beee9b938f51f57709532cc43e6392c4500e99ed38c"
+        },
+        {
+          "path": "crates/lai-adapters/src/opencode/client.rs",
+          "action": "write",
+          "safeSha256": "3c268788a5fdc2ce03c039b6734dd5d13383fd37451ca32706bf5178986b5add"
+        },
+        {
+          "path": "crates/lai-adapters/tests/freebuff_catalog.rs",
+          "action": "write",
+          "safeSha256": "b188a5723d763b143473bb69c686f2d1b099f8d98881c4024e4bf70370a98a9a"
+        },
+        {
+          "path": "crates/lai-adapters/tests/opencode_execution.rs",
+          "action": "write",
+          "safeSha256": "23ec14fe7061add7ae316ee334b6d9fe81c6bb21acac2164f46eed8b6ed24620"
+        },
+        {
+          "path": "crates/lai-cli/src/args.rs",
+          "action": "write",
+          "safeSha256": "b21dc1e0dfed38bb5f8ea91578fdb5c3f87af3c11f32b87016372065464f5999"
+        },
+        {
+          "path": "crates/lai-cli/src/main.rs",
+          "action": "write",
+          "safeSha256": "52ab6f41b0a0de222455c7f651fbbdb8862c1367419849d0914786dccbfff044"
+        },
+        {
+          "path": "crates/lai-contracts/src/api.rs",
+          "action": "write",
+          "safeSha256": "60811d311d38c8636f9b33135127693c7f5f228481f148f8d7a7347d4f48c170"
+        },
+        {
+          "path": "crates/lai-core/src/lib.rs",
+          "action": "write",
+          "safeSha256": "ce9661575abf4098fe75f10fc0625076ff2b05ee5e3f02cb5abce437a1bb7e5d"
+        },
+        {
+          "path": "crates/lai-core/src/selection.rs",
+          "action": "write",
+          "safeSha256": "b98f42ed1ab17aebf67c67a737a2106b5d248fa5db7c964a07849a53bcd3dcd1"
+        },
+        {
+          "path": "crates/lai-core/tests/selection_projection.rs",
+          "action": "write",
+          "safeSha256": "46d1931bbd47141070ef17521ef11811e1bf1e7c602cf59ed252a057f03c0f58"
+        },
+        {
+          "path": "crates/lai-discovery/src/catalog.rs",
+          "action": "write",
+          "safeSha256": "fc7647a8cdac34df54b743f067dea1df6f2d01ca69e18f7df9ceeeb5031d35ef"
+        },
+        {
+          "path": "crates/lai-discovery/src/environment.rs",
+          "action": "write",
+          "safeSha256": "d4965ef2bf9e4abeede25f9d87dbdd5025da1f790b87452eae5c461fd892cb7a"
+        },
+        {
+          "path": "crates/lai-discovery/src/knowledge.rs",
+          "action": "write",
+          "safeSha256": "0abc6c462226ad1ea2daa44ce613f0c2a371dbc9b2bec429caca5c2d32d45eed"
+        },
+        {
+          "path": "crates/lai-discovery/src/lib.rs",
+          "action": "write",
+          "safeSha256": "f6e54ece59ab4082f51f41ab3fd61269261bb0535cc6c1ef7789cb5a7e54192d"
+        },
+        {
+          "path": "crates/lai-discovery/src/registry.rs",
+          "action": "write",
+          "safeSha256": "130dc92b8247c10f0809af3ccdfa1bc4c7fef4ecd0906bb8f5f267a5cfcf7f38"
+        },
+        {
+          "path": "crates/lai-discovery/src/scanner.rs",
+          "action": "write",
+          "safeSha256": "e7bb6f5c30e0a7dfec69ee94dff7cfe2ed4716f7b1db0c62926c189afb9a14d3"
+        },
+        {
+          "path": "crates/lai-discovery/tests/upstream_parity.rs",
+          "action": "write",
+          "safeSha256": "ed46ed2f9f56b789a072a4ec4986250dc0996a301e87b4ddc6a9bb4c2b210cba"
+        },
+        {
+          "path": "crates/lai-kit/src/adapter_info.rs",
+          "action": "write",
+          "safeSha256": "9a5d9944f097855c1b10badad8c474ab4db83aecb09b7489d6b5eca8549588d6"
+        },
+        {
+          "path": "crates/lai-kit/src/service_builder.rs",
+          "action": "write",
+          "safeSha256": "3922ed3660a48cc1c3229ddadbb7cfc6be77974a7b93b7fc481284e8da9b272c"
+        },
+        {
+          "path": "crates/lai-service/src/execution.rs",
+          "action": "write",
+          "safeSha256": "e52676b113e7c54e452b03a4ab6167ccd08dc89799cb6c5d825f7034d673b606"
+        },
+        {
+          "path": "crates/lai-service/src/resume_token.rs",
+          "action": "write",
+          "safeSha256": "39f91c5636d3c486d7f36b0c1fe23e36b06fa36e284dfdcd85061d13f72170c4"
+        },
+        {
+          "path": "docs/adapters/SUPPORT-MATRIX.md",
+          "action": "write",
+          "safeSha256": "84dcca51b1b76eb23fb2f431970d86180c32eeb88c285a8cbefabb258d1dffd3"
+        },
+        {
+          "path": "docs/adapters/passive-inventory.md",
+          "action": "write",
+          "safeSha256": "bd7e09f1eb277b6e1174bc0d509317b6e446935c6171339f2709c763be025ef1"
+        },
+        {
+          "path": "docs/handoffs/RESUME.md",
+          "action": "write",
+          "safeSha256": "303519faa4705043682bb5acef8b5fb9fdcce912d91684260a319441961475a7"
+        },
+        {
+          "path": "docs/upstream/tokscale.md",
+          "action": "write",
+          "safeSha256": "7348142e491cc13066c65f0ab36206cc2266c2770b5b887bb9a9e37b593aeeff"
+        },
+        {
+          "path": "packages/sdk-python/src/local_ai_kit/generated.py",
+          "action": "write",
+          "safeSha256": "690b3478e8ee8ea3103ff2879af0cdececd22bfbc1a7e0fbc29fd1226df1e138"
+        },
+        {
+          "path": "packages/sdk-typescript/src/generated.ts",
+          "action": "write",
+          "safeSha256": "bfed11867c0ab6660bc33e1173c1a6d80877fddf06450d270a5d5e4c95d97f64"
+        },
+        {
+          "path": "protocol/contracts.schema.json",
+          "action": "write",
+          "safeSha256": "6868716aa7ed9165865556a316be14b53cd05e327e24bd5dad77023b945e1dc3"
+        },
+        {
+          "path": "protocol/methods.json",
+          "action": "write",
+          "safeSha256": "24eb674c7f4d86f7365409091e640df388a5e46bb82cfe07ce8b3c482d13453e"
+        },
+        {
+          "path": "protocol/openapi.json",
+          "action": "write",
+          "safeSha256": "ce4f46d4bda5f891a6fe97ae337e038f1201563761a622ae23434f90961311b8"
+        },
+        {
+          "path": "scripts/run_live_demo.mjs",
+          "action": "write",
+          "safeSha256": "d43e444eaf68ada31ad2804f84e575035863dc9e6091035423ec51e547fb8eec"
+        },
+        {
+          "path": "scripts/test_demo_catalog_visibility.mjs",
+          "action": "write",
+          "safeSha256": "fae835781e5fe25459ca61659ca400acad548189f3ef51d32e9bca461e85e5e1"
+        },
+        {
+          "path": "scripts/test_demo_profile_auth.mjs",
+          "action": "write",
+          "safeSha256": "53b6038df7839f397349c01ca042f3f8ae734f831f0ce482f1983a15002e3208"
+        },
+        {
+          "path": "upstream/tokscale/lock.json",
+          "action": "write",
+          "safeSha256": "449653767f99b3f3988a0c99559de91525976c21a2b8fa130078f67f7e3df1f7"
+        },
+        {
+          "path": "upstream/tokscale/mappings.json",
+          "action": "write",
+          "safeSha256": "dbc10401928e77533e9466e8e4fbb167bb4fb9c65e65134488894decbdd0724d"
+        }
+      ],
+      "excludedPaths": [],
+      "sanitizedPaths": [
+        {
+          "path": "docs/upstream/tokscale.md",
+          "category": "sanitized personal paths in documentation"
+        }
+      ],
+      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-0-grok-freebuff-20261024.md"
+    },
+    {
+      "stashAtAudit": "stash@{1}",
+      "originalStash": "1c5761e7d86c3552ab1dc0bba192c7a2064f663c",
+      "originalBase": "169ec81ae45d454f4342bd6feded365c25446a50",
+      "remoteBranch": "checkpoint/windows-migration-20261024/stash-1-platform-contracts",
+      "remoteHead": "a5a13e5180fa7533c496043a06d7f3e11fd3b480",
+      "originalStashUnchanged": true,
+      "status": "UNQUALIFIED historical WIP; no tests or completion claimed",
+      "sourcePaths": [
+        {
+          "path": "Cargo.lock",
+          "action": "write",
+          "safeSha256": "9805b9d7acacbdcc8a462f6cc8209632514741aa86ba6a563e8e8f33b0c25063"
+        },
+        {
+          "path": "Cargo.toml",
+          "action": "write",
+          "safeSha256": "a59a2c0a650a7b0116dc8b36cbb2f679b2fe4a3b7f80ab10fb53aea52d0cfd79"
+        },
+        {
+          "path": "crates/lai-contracts/examples/schema.rs",
+          "action": "write",
+          "safeSha256": "c114e3e7bdefe9ef8526607589d943f6c340dcfded07098d6638dae3bda538b4"
+        },
+        {
+          "path": "crates/lai-contracts/src/errors.rs",
+          "action": "write",
+          "safeSha256": "571b5ef7eeb5dd804c49125eef93ff49b9bfd34b888f11d11eef257d1bf93471"
+        },
+        {
+          "path": "crates/lai-contracts/src/events.rs",
+          "action": "write",
+          "safeSha256": "7813ca72f73c575134b1c505d89a265450415c5bfbcaec30e05a695fd8703cac"
+        },
+        {
+          "path": "crates/lai-contracts/src/evidence.rs",
+          "action": "write",
+          "safeSha256": "4efc6ad2afafaeeaa3d1e4f3ccf19b5833477a85805299f4e6999c706d867355"
+        },
+        {
+          "path": "crates/lai-contracts/src/identity.rs",
+          "action": "write",
+          "safeSha256": "3c74ee9cc59b5da267d2f9ebf5ee929e3cf44df3aa6fa98f324c2851415da01e"
+        },
+        {
+          "path": "crates/lai-contracts/src/lib.rs",
+          "action": "write",
+          "safeSha256": "a74b5f8d2d3c14491db7c4fcc5d8a9c9fa5bafbd3a694e497ed30a6111e54580"
+        },
+        {
+          "path": "crates/lai-contracts/src/options.rs",
+          "action": "write",
+          "safeSha256": "d94a8ffe5f50508a591c463e073049c267b904b89318e3044404c9536daa4bef"
+        },
+        {
+          "path": "crates/lai-contracts/src/usage.rs",
+          "action": "write",
+          "safeSha256": "972e970074c8f41330b5b637d600b768f6fbc48076fa9c70e14b52ceba39b095"
+        },
+        {
+          "path": "crates/lai-contracts/tests/contracts.rs",
+          "action": "write",
+          "safeSha256": "9387eb7d396afa3d3e6220df8b298db1856ceefbf5d17b100659fac2f0416f6b"
+        },
+        {
+          "path": "crates/lai-platform/Cargo.toml",
+          "action": "write",
+          "safeSha256": "72592a3af53ab1fb5517c35b0a7e25ca3601325a6c82d123526ecd0f7ce0813f"
+        },
+        {
+          "path": "crates/lai-platform/src/lib.rs",
+          "action": "write",
+          "safeSha256": "467cc1179a3290e222a2f5e98a3c674b351690bf25cf3d162bfdc83288dffaf4"
+        },
+        {
+          "path": "crates/lai-platform/tests/filesystem.rs",
+          "action": "write",
+          "safeSha256": "48bdcd81bfca4cbdbf8ed603e8070f61736fe3ccebfcaa92cbb9e99c265bfd1b"
+        },
+        {
+          "path": "protocol/domain.schema.json",
+          "action": "write",
+          "safeSha256": "aec4d9157e549bfd93fc2500a90fb184db394382dbb6b10c14bb632ce5252b26"
+        }
+      ],
+      "excludedPaths": [],
+      "sanitizedPaths": [],
+      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-1-platform-contracts-20261024.md"
+    },
+    {
+      "stashAtAudit": "stash@{2}",
+      "originalStash": "97c4266fe3fc59584b2302e74be4acb6a9c5103e",
+      "originalBase": "1a49571b2ea5759b383966f1eae80162f4f7f4b1",
+      "remoteBranch": "checkpoint/windows-migration-20261024/stash-2-offline-scaffolds",
+      "remoteHead": "1179deeae19932a1d188a5f715ef37944eb7752d",
+      "originalStashUnchanged": true,
+      "status": "UNQUALIFIED historical WIP; no tests or completion claimed",
+      "sourcePaths": [
+        {
+          "path": "Cargo.lock",
+          "action": "write",
+          "safeSha256": "b95af84943c6247ceab9810fd61581a5ff70878849ef53f2514d4275204a24bf"
+        },
+        {
+          "path": "Cargo.toml",
+          "action": "write",
+          "safeSha256": "b4421224de896e2efc08eff2170cee71339be0c2a9a7120e895d7cd4d1e2e176"
+        },
+        {
+          "path": "crates/lai-contracts/Cargo.toml",
+          "action": "write",
+          "safeSha256": "a3b7cfb2b07999c12809186f6a2dbd4c59204f2bc3db79271e775c454232b850"
+        },
+        {
+          "path": "crates/lai-contracts/src/lib.rs",
+          "action": "write",
+          "safeSha256": "dde90ee3980b2cd8564353583b8b37178cfea3ba502cf0cec43910cd6ee3cfd8"
+        },
+        {
+          "path": "crates/lai-contracts/tests/contracts.rs",
+          "action": "write",
+          "safeSha256": "d959eadacb0139d7b89bc1ba2c3d5d49edf88f0b4b3d06ffcefd12e13eedc2be"
+        },
+        {
+          "path": "docs/implementation/LEDGER.md",
+          "action": "write",
+          "safeSha256": "09c05fc2e0a66fffd70dc4f7d9a1cb3406e7a014a60d7f182d5754fdc4eb68fc"
+        },
+        {
+          "path": "rust-toolchain.toml",
+          "action": "write",
+          "safeSha256": "559f488c181e0e9e77cf17c29de663977f036ec7ff2e2060585714bf53c52d62"
+        }
+      ],
+      "excludedPaths": [],
+      "sanitizedPaths": [],
+      "checkpointNote": "docs/handoffs/WINDOWS-MIGRATION-stash-2-offline-scaffolds-20261024.md"
+    }
+  ],
+  "extraCheckpointRefs": [
+    {
+      "kind": "historical-head",
+      "branch": "checkpoint/windows-migration-20261024/grok-tokscale-base",
+      "head": "22f4423d3bcdd1fdef214e40b6017df9fb6749d3",
+      "reason": "Local-only branch name; commit already on remote main"
+    },
+    {
+      "kind": "historical-head",
+      "branch": "checkpoint/windows-migration-20261024/detached-alpha10",
+      "head": "794584735152c16f10a9d256cea2d4b681a7cda9",
+      "reason": "Detached historical worktree; commit already on remote main"
+    },
+    {
+      "kind": "historical-head",
+      "branch": "checkpoint/windows-migration-20261024/initial-implementation-local",
+      "head": "b0f2793489b223f6d7fd555f87bd0acd4da53a2e",
+      "reason": "Local head two commits ahead of same-name remote; commits already on remote main"
+    },
+    {
+      "kind": "stash-source-checkpoint",
+      "stash": "stash@{0}",
+      "original": "0dcbdb8ca6e5f9a8f04b50e3dcf98e5097be2dea",
+      "base": "22f4423d3bcdd1fdef214e40b6017df9fb6749d3",
+      "branch": "checkpoint/windows-migration-20261024/stash-0-grok-freebuff",
+      "head": "ef6d454a916c6dd775206b370b559e8965fcead6",
+      "includedPaths": [
+        "apps/demo/fixture/service.mjs",
+        "apps/demo/lib/catalog_visibility.d.mts",
+        "apps/demo/lib/catalog_visibility.mjs",
+        "apps/demo/lib/errors.mjs",
+        "apps/demo/lib/profile_auth.mjs",
+        "apps/demo/src/pages/connections.tsx",
+        "apps/demo/src/pages/playground.tsx",
+        "apps/demo/src/state/store.ts",
+        "apps/demo/src/state/types.ts",
+        "crates/lai-adapters/src/freebuff/mod.rs",
+        "crates/lai-adapters/src/lib.rs",
+        "crates/lai-adapters/src/opencode/client.rs",
+        "crates/lai-adapters/tests/freebuff_catalog.rs",
+        "crates/lai-adapters/tests/opencode_execution.rs",
+        "crates/lai-cli/src/args.rs",
+        "crates/lai-cli/src/main.rs",
+        "crates/lai-contracts/src/api.rs",
+        "crates/lai-core/src/lib.rs",
+        "crates/lai-core/src/selection.rs",
+        "crates/lai-core/tests/selection_projection.rs",
+        "crates/lai-discovery/src/catalog.rs",
+        "crates/lai-discovery/src/environment.rs",
+        "crates/lai-discovery/src/knowledge.rs",
+        "crates/lai-discovery/src/lib.rs",
+        "crates/lai-discovery/src/registry.rs",
+        "crates/lai-discovery/src/scanner.rs",
+        "crates/lai-discovery/tests/upstream_parity.rs",
+        "crates/lai-kit/src/adapter_info.rs",
+        "crates/lai-kit/src/service_builder.rs",
+        "crates/lai-service/src/execution.rs",
+        "crates/lai-service/src/resume_token.rs",
+        "docs/adapters/SUPPORT-MATRIX.md",
+        "docs/adapters/passive-inventory.md",
+        "docs/handoffs/RESUME.md",
+        "docs/upstream/tokscale.md",
+        "packages/sdk-python/src/local_ai_kit/generated.py",
+        "packages/sdk-typescript/src/generated.ts",
+        "protocol/contracts.schema.json",
+        "protocol/methods.json",
+        "protocol/openapi.json",
+        "scripts/run_live_demo.mjs",
+        "scripts/test_demo_catalog_visibility.mjs",
+        "scripts/test_demo_profile_auth.mjs",
+        "upstream/tokscale/lock.json",
+        "upstream/tokscale/mappings.json"
+      ],
+      "excluded": [],
+      "sanitized": [
+        {
+          "path": "docs/upstream/tokscale.md",
+          "category": "sanitized personal paths in documentation"
+        }
+      ],
+      "note": "docs/handoffs/WINDOWS-MIGRATION-stash-0-grok-freebuff-20261024.md"
+    },
+    {
+      "kind": "stash-source-checkpoint",
+      "stash": "stash@{1}",
+      "original": "1c5761e7d86c3552ab1dc0bba192c7a2064f663c",
+      "base": "169ec81ae45d454f4342bd6feded365c25446a50",
+      "branch": "checkpoint/windows-migration-20261024/stash-1-platform-contracts",
+      "head": "a5a13e5180fa7533c496043a06d7f3e11fd3b480",
+      "includedPaths": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "crates/lai-contracts/examples/schema.rs",
+        "crates/lai-contracts/src/errors.rs",
+        "crates/lai-contracts/src/events.rs",
+        "crates/lai-contracts/src/evidence.rs",
+        "crates/lai-contracts/src/identity.rs",
+        "crates/lai-contracts/src/lib.rs",
+        "crates/lai-contracts/src/options.rs",
+        "crates/lai-contracts/src/usage.rs",
+        "crates/lai-contracts/tests/contracts.rs",
+        "crates/lai-platform/Cargo.toml",
+        "crates/lai-platform/src/lib.rs",
+        "crates/lai-platform/tests/filesystem.rs",
+        "protocol/domain.schema.json"
+      ],
+      "excluded": [],
+      "sanitized": [],
+      "note": "docs/handoffs/WINDOWS-MIGRATION-stash-1-platform-contracts-20261024.md"
+    },
+    {
+      "kind": "stash-source-checkpoint",
+      "stash": "stash@{2}",
+      "original": "97c4266fe3fc59584b2302e74be4acb6a9c5103e",
+      "base": "1a49571b2ea5759b383966f1eae80162f4f7f4b1",
+      "branch": "checkpoint/windows-migration-20261024/stash-2-offline-scaffolds",
+      "head": "1179deeae19932a1d188a5f715ef37944eb7752d",
+      "includedPaths": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "crates/lai-contracts/Cargo.toml",
+        "crates/lai-contracts/src/lib.rs",
+        "crates/lai-contracts/tests/contracts.rs",
+        "docs/implementation/LEDGER.md",
+        "rust-toolchain.toml"
+      ],
+      "excluded": [],
+      "sanitized": [],
+      "note": "docs/handoffs/WINDOWS-MIGRATION-stash-2-offline-scaffolds-20261024.md"
+    }
+  ],
+  "safety": {
+    "originalStashesUntouched": true,
+    "originalWorktreeHeadsUntouched": true,
+    "worktreesClean": true,
+    "forcePush": false,
+    "resetOrCleanup": false,
+    "newTestsOrFeatureWork": false,
+    "scan": "Changed/untracked stash blobs reviewed for credential filenames, private-key/token patterns, credential-bearing URLs, personal paths, binary/build/runtime categories. No credential blockers found. Existing committed historical heads already reachable from public remote main.",
+    "redaction": "docs/upstream/tokscale.md personal paths replaced with <WINDOWS_OR_USER_LOCAL_PATH>; source fixtures/comments matched unchanged already-public base lines."
+  },
+  "exclusions": [
+    {
+      "path": ".verification/**",
+      "category": "Local-only raw receipts/logs, one-off already-applied transformation/recording helpers, superseded RED fixture and machine-specific guards; essential resume facts consolidated in committed handoffs"
+    },
+    {
+      "path": "target/**; dist/**; node_modules/**; .venv*/**; __pycache__/**",
+      "category": "Generated targets/packages/dependencies/caches; not source migration data"
+    },
+    {
+      "path": "retained-symbols/**; retained-incremental-20261022-2335/**",
+      "category": "Local retained build/debug caches; not uploaded"
+    },
+    {
+      "path": "actual OAuth/broker/provider credentials, private runtime databases and machine configuration",
+      "category": "Excluded; not read or provisioned as part of this operation"
+    },
+    {
+      "path": "raw stash merge/index/untracked objects",
+      "category": "Original stash plumbing remains local; only reviewed source snapshots published. Original stagedness is not reproduced."
+    }
+  ],
+  "ignoredLocalHelperPaths": [
+    ".verification/add_executable_identity_defaults.py",
+    ".verification/build_doc_examples.py",
+    ".verification/fix_review1_examples.py",
+    ".verification/migrate_windows_refs.py",
+    ".verification/publish_migration_inventory.py",
+    ".verification/record_cached_usage_mcp.py",
+    ".verification/record_refresh_fixture.py",
+    ".verification/record_unix_symlink.py",
+    ".verification/record_usage_host.py",
+    ".verification/refresh-order-controlled-red-20261024.rs",
+    ".verification/render_docs_gfm.py",
+    ".verification/run_unix_symlink_check.py",
+    ".verification/stage_usage_host.ps1",
+    ".verification/usage_host_effect_journey.mjs",
+    ".verification/validate_docs_final.py"
+  ],
+  "unresolved": [
+    "Historical stash code is intentionally unqualified and may conflict with current source.",
+    "Original stash index/stagedness and private Windows runtime state are not migrated.",
+    "Live Kit/dot account scope, host selection, credential/access setup and deployment remain unapproved."
+  ],
+  "previousSourceQualification": {
+    "PR32": "3c439561efb058658c8bc96666ca67d6bfde9074; all three platform CI jobs passed",
+    "PR33": "8355636855cea7e63e5e980f33e8e80fb36d3217; all three platform CI jobs passed",
+    "preservation": "Documentation/checkpoint commits have no new feature validation claim."
+  }
+}
