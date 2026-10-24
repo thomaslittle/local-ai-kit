@@ -11,6 +11,7 @@ pub use knowledge::{
 };
 use lai_contracts::Snapshot;
 use lai_platform::LocalFilesystem;
+pub use lai_platform::{ExecutableIdentity, resolve_executable};
 pub use registry::{MUSE_BINARY_OVERRIDE, ProviderDefinition, definitions};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -21,6 +22,22 @@ pub struct LocatedClient {
     pub provider_id: String,
     pub profile_home: PathBuf,
     pub executable: Option<PathBuf>,
+    /// Logical command and pinned Unix target for a discovered executable link.
+    pub executable_identity: Option<ExecutableIdentity>,
+}
+impl LocatedClient {
+    pub fn validate_executable(&self) -> lai_contracts::Result<()> {
+        if let Some(identity) = &self.executable_identity {
+            if self.executable.as_ref() != Some(&identity.command) {
+                return Err(lai_contracts::DomainError::new(
+                    lai_contracts::ErrorCode::RuntimeMissing,
+                    "Executable location changed",
+                ));
+            }
+            identity.validate()?;
+        }
+        Ok(())
+    }
 }
 /// Locations stay inside the native process; only `snapshot` is a public wire record.
 pub struct ScanResult {

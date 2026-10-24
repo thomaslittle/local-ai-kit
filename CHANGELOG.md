@@ -4,6 +4,10 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Fixed
+
+- Bounded Unix executable-symlink discovery with separate logical-command and target identity, launch-time checks, and versioned Codex/managed-Codex target handling. Credential/configuration symlink policies remain unchanged; see [scope and qualification](docs/adapters/unix-executable-links.md).
+
 ## [0.1.0-alpha.18] - 2026-10-22
 
 ### Added

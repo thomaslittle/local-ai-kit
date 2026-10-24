@@ -84,14 +84,29 @@ pub fn inject_managed_codex(scan: &mut ScanResult, state_dir: &Path) {
         .locations
         .values()
         .filter(|located| located.provider_id == "codex")
-        .filter_map(|located| located.executable.as_deref())
-        .filter_map(|path| crate::codex::resolve_executable(path).ok())
-        .min();
-    let Some(executable) = executable else { return };
+        .filter_map(|located| {
+            let command = located.executable.as_ref()?;
+            let resolved = crate::codex::resolve_executable(command).ok()?;
+            // A versioned Unix target is not itself a command named `codex`.
+            let executable = if located.executable_identity.is_some() {
+                command.clone()
+            } else {
+                resolved
+            };
+            Some((executable, located.executable_identity.clone()))
+        })
+        .min_by(|(a, _), (b, _)| a.cmp(b));
+    let Some((executable, executable_identity)) = executable else {
+        return;
+    };
     let home = state_dir.join("chatgpt-codex-home");
+    let executable_key = executable_identity
+        .as_ref()
+        .map(|identity| format!("{identity:?}"))
+        .unwrap_or_else(|| executable.to_string_lossy().into_owned());
     let connection = stable_id(
         "managed-codex-connection",
-        &[&state_dir.to_string_lossy(), &executable.to_string_lossy()],
+        &[&state_dir.to_string_lossy(), &executable_key],
     );
     let installation = stable_id("managed-codex-installation", &[&connection]);
     let profile = stable_id("managed-codex-profile", &[&connection]);
@@ -137,6 +152,7 @@ pub fn inject_managed_codex(scan: &mut ScanResult, state_dir: &Path) {
     scan.locations.insert(
         connection,
         LocatedClient {
+            executable_identity,
             provider_id: "codex_managed".into(),
             profile_home: home,
             executable: Some(executable),
@@ -245,6 +261,7 @@ impl NativeRegistry {
             scan.locations.insert(
                 id.clone(),
                 LocatedClient {
+                    executable_identity: None,
                     provider_id: provider.into(),
                     profile_home: p.profile_home.clone(),
                     executable: Some(p.executable.clone()),

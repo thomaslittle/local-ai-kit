@@ -52,6 +52,7 @@ pub fn service() -> Arc<NativeService> {
                         (
                             c.id.clone(),
                             LocatedClient {
+                                executable_identity: None,
                                 provider_id: "test".into(),
                                 profile_home: std::env::temp_dir(),
                                 executable: None,

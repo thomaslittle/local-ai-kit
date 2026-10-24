@@ -4,6 +4,7 @@ use rusqlite::Connection;
 use std::{fs, path::Path};
 fn located(home: &Path) -> LocatedClient {
     LocatedClient {
+        executable_identity: None,
         provider_id: "cursor".into(),
         profile_home: home.into(),
         executable: None,

@@ -31,6 +31,7 @@ fn inventory() -> ScanResult {
             (
                 c.id.clone(),
                 LocatedClient {
+                    executable_identity: None,
                     provider_id: "codex".into(),
                     profile_home: std::env::temp_dir().join(&c.id),
                     executable: None,

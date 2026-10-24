@@ -32,6 +32,7 @@ fn inventory(root: std::path::PathBuf) -> ScanResult {
             (
                 connection.id.clone(),
                 LocatedClient {
+                    executable_identity: None,
                     provider_id: "codex".into(),
                     profile_home: root.join(&connection.id),
                     executable: None,
