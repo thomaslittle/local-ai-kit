@@ -20,8 +20,16 @@ Live-qualified generation, one turn per consumer, no retries counted:
   completed with a 5-character output. Its in-app picker then showed both Haiku
   rows on the primary profile as runnable and the `needs_auth` row as not runnable,
   without starting a turn.
-- **Haiwire:** not run. Haiwire has no broker generation path by design (its
-  Kit integration is metadata-only), and adding one needs an owner ADR decision.
+- **Haiwire:** at first it had no broker generation path (its Kit integration
+  was metadata-only). After owner approval it added an opt-in read-only broker
+  chat (`49160ca`, `71f8651`). In-app, Claude "haiku" on the primary connection
+  ran `grants.list`, `selection.validate`, `sessions.create`, `events.subscribe`,
+  `turns.start` and `sessions.close`. The turn completed with 35 bytes of output,
+  no error, no tools and no retry. Haiwire keeps the session id internal; the
+  broker log records lifecycle, not sessions, so it is not quoted. On the way,
+  Haiwire fixed its own handling of `grants.list` `connectionIds: null` and of
+  explicit-config account scopes. The reply-text rendering fix is built but has
+  not been seen live.
 
 Defect found by a consumer: the user-local `2daa749` helper is an unstripped
 debug build (about 217 MB), and Haiwire rejects helpers over 64 MiB. It
