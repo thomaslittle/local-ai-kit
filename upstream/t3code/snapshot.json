@@ -2,14 +2,14 @@
   "source": {
     "repository": "pingdotgg/t3code",
     "url": "https://github.com/pingdotgg/t3code",
-    "commit": "cfafb4bb54d244e4612f5681aad3832ea64cb0fb",
-    "commitSubject": "fix(codex): a slow but healthy Codex no longer shows as Unavailable (#15945)",
+    "commit": "f0dd86f16482595c6cfffe0ac64dc12bffb634f9",
+    "commitSubject": "fix(web): stable callbacks refresh before layout effects read them (#25489)",
     "branch": "main",
     "nightlyBranch": null,
-    "nightlyTag": "v0.1.1-nightly.20261016.3203",
-    "nightlyCommit": "e3b35d1b2440b104f0bc2e357377c348121234dd",
-    "stableTag": "v0.1.0",
-    "stableCommit": "81493efb71e8e8244f95d3e9f71d8369654ab151",
+    "nightlyTag": "v0.1.3-nightly.20261026.3717",
+    "nightlyCommit": "1316d48b0c68151afd8b47eb0c11a114cf0b4daa",
+    "stableTag": "v0.1.2",
+    "stableCommit": "044f07257c9684ae4543bd1e1ebf9c394e9e3830",
     "license": "MIT",
     "licenseCopyright": "Copyright (c) 2026 T3 Tools Inc."
   },
@@ -42,6 +42,45 @@
       "commit": "cfafb4bb54d244e4612f5681aad3832ea64cb0fb",
       "local": "crates/lai-adapters/src/codex/launch.rs already waited 20 seconds"
     },
+    "grokLoginRecheck": {
+      "when": "grok models reports logged out",
+      "attempts": 1,
+      "unknownRecheckKeepsLoggedOut": true,
+      "source": "packages/provider-grok/src/server/status.ts",
+      "commit": "a2157eced708fd25fab7b616f5a68cb65312eaed"
+    },
+    "codexCodeModeHost": {
+      "sibling": "codex-code-mode-host",
+      "launchersExempt": ["shebang", "volta-shim", "mise", "aqua-proxy", "windows-non-exe", "bunx", "shim"],
+      "source": "apps/server/src/provider/CodexInstallation.ts",
+      "commit": "348888a767433464dd47e723ec6509dc5a8282db"
+    },
+    "codexPlanLabels": {
+      "nativeIdPreserved": true,
+      "unknownOmitted": true,
+      "source": "apps/server/src/provider/CodexProvider.ts",
+      "commit": "33f1fe5ebe53fdd8d18b6a5d63dfd29c336ba5a9"
+    },
+    "codexConfiguredServiceTier": {
+      "method": "config/read",
+      "field": "config.service_tier",
+      "fastAlias": "priority",
+      "addsTiers": false,
+      "source": "apps/server/src/provider/CodexProvider.ts",
+      "commit": "3b844dab5ced7277ce4a2cf0e5e11d0f04e62241"
+    },
+    "codexIndividualCredits": {
+      "field": "individualLimit.remainingPercent",
+      "label": "Monthly credit limit",
+      "source": "apps/server/src/provider/codexUsageLimits.ts",
+      "commit": "4c18faf62cd1685b0243dcacc1a94e333c2b93ff"
+    },
+    "claudeMonthlySpend": {
+      "prefer": "enabled spend budget with matching currency and exponent",
+      "fallback": "enabled extra_usage amounts or utilization",
+      "source": "apps/server/src/provider/claudeUsageLimits.ts",
+      "commit": "fd8dd51654f855dbf4e23c457701f5088c59b689"
+    },
     "chatgpt": {
       "issuer": "https://auth.openai.com",
       "authorizationEndpoint": "https://auth.openai.com/api/accounts/authorize",
@@ -61,7 +100,7 @@
   "reviewedNotAdopted": [
     {
       "area": "local-model-runtimes",
-      "finding": "T3 Code main at this pin has no Ollama, LM Studio, or llama.cpp provider. OpenAI-compatible local endpoints appear only as configuration inside OpenCode or Pi, not as a scanner."
+      "finding": "T3 Code main at f0dd86f still has no Ollama, LM Studio, or llama.cpp provider. OpenAI-compatible local endpoints appear only as configuration inside OpenCode or Pi, not as a scanner."
     },
     {
       "area": "cloud-llm-apis",
@@ -104,12 +143,32 @@
       "finding": "AntigravityInstallation.ts installs a managed Antigravity build. At cfafb4bb, Windows ARM validation kills the PyInstaller tree before deleting the temp profile (895354e9). Local AI Kit inventories an already installed antigravity or agy binary and does not install one."
     },
     {
+      "area": "grok-billing-file",
+      "finding": "Grok usage limits read auth.json and call the Grok billing endpoint, including a zero-percent period when the percentage is omitted (79f2bae6). Local AI Kit does not read Grok credential files or export subscription tokens. Login state still comes from grok models."
+    },
+    {
+      "area": "muse-usage-home-spawn",
+      "finding": "MuseUsageHome starts a read-only Muse SDK host to learn museHome for session-history usage (c8933536). Local AI Kit already reads usage from the Muse session protocol and does not spawn Muse during passive discovery to locate a home."
+    },
+    {
+      "area": "codex-effort-override",
+      "finding": "T3 forces reasoning effort medium for the gpt-6-astra family even when the model reports another default (CodexProvider.ts codexDefaultReasoningEffortOverride). Local AI Kit keeps the effort the model catalog reports and does not add a hard-coded family override."
+    },
+    {
+      "area": "chatgpt-profile-key",
+      "finding": "T3 hashes client id, subject, and ID token into a profile key so a child session fails when the ChatGPT connection changes, and it records a hashed OpenAI user id for install telemetry. Local AI Kit already rejects an identity change for the one registration in a state directory. The profile key and telemetry owner id were not ported."
+    },
+    {
+      "area": "t3-release-ci",
+      "finding": ".github/workflows/release.yml moved macOS and Windows packaging between GitHub and Blacksmith runners and stopped publishing per-platform npm packages. That is T3 Code's desktop release pipeline. Local AI Kit does not build or publish T3."
+    },
+    {
       "area": "acp-malformed-session-update",
       "finding": "effect-acp drops one schema-invalid session notification instead of ending the connection (559c4b1f). Local AI Kit's ACP client already continues on an unrecognized sessionUpdate and does not fail a turn when usage_update omits used. A notification with no sessionUpdate still ends the turn."
     },
     {
       "area": "shell-resolution",
-      "finding": "T3's packages/shared/src/shell.ts and apps/desktop/src/shell/DesktopShellEnvironment.ts resolve login-shell PATH and platform environment for spawning desktop clients. Local AI Kit keeps its own injected platform environment and never reads shell profiles or executes discovered commands during passive discovery; shell probing remains an explicitly authorized active-probe concern."
+      "finding": "T3's packages/shared/src/shell.ts and apps/desktop/src/shell/DesktopShellEnvironment.ts resolve login-shell PATH and platform environment for spawning desktop clients. At f0dd86f that includes Nushell hydration, a shorter Windows PowerShell probe, and skipping the macOS xcrun git shim. Local AI Kit keeps its own injected platform environment and never reads shell profiles or executes discovered commands during passive discovery; shell probing remains an explicitly authorized active-probe concern."
     }
   ],
   "watchedPaths": [

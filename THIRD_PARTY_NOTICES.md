@@ -51,6 +51,21 @@ See [SOURCE-AUDIT.md](docs/design/source-audit.md) for previously inspected revi
 
 See [upstream/tokscale/NOTICE.md](upstream/tokscale/NOTICE.md).
 
+## T3 Code provider sync (2026-10-26)
+
+| Field | Value |
+| --- | --- |
+| Source | https://github.com/pingdotgg/t3code at `f0dd86f16482595c6cfffe0ac64dc12bffb634f9` |
+| Nightly tag at pin time | `v0.1.3-nightly.20261026.3717` (`1316d48b0c68151afd8b47eb0c11a114cf0b4daa`) |
+| Stable tag at pin time | `v0.1.2` (`044f07257c9684ae4543bd1e1ebf9c394e9e3830`) |
+| Referenced paths | `packages/provider-grok/src/server/status.ts`, `apps/server/src/provider/CodexInstallation.ts`, `apps/server/src/provider/CodexProvider.ts`, `apps/server/src/provider/codexUsageLimits.ts`, `apps/server/src/provider/claudeUsageLimits.ts` |
+| Upstream commits | [a2157ece](https://github.com/pingdotgg/t3code/commit/a2157eced708fd25fab7b616f5a68cb65312eaed) (Grok login recheck), [348888a7](https://github.com/pingdotgg/t3code/commit/348888a767433464dd47e723ec6509dc5a8282db) (Codex code-mode host), [33f1fe5e](https://github.com/pingdotgg/t3code/commit/33f1fe5ebe53fdd8d18b6a5d63dfd29c336ba5a9) (ChatGPT plan labels), [3b844dab](https://github.com/pingdotgg/t3code/commit/3b844dab5ced7277ce4a2cf0e5e11d0f04e62241) (configured service tier), [4c18faf6](https://github.com/pingdotgg/t3code/commit/4c18faf62cd1685b0243dcacc1a94e333c2b93ff) (Codex individual credits), [fd8dd516](https://github.com/pingdotgg/t3code/commit/fd8dd51654f855dbf4e23c457701f5088c59b689) (Claude monthly spend) |
+| Copied files | None. Behavior was reimplemented in Rust. |
+| License | MIT |
+| Copyright | Copyright (c) 2026 T3 Tools Inc. The license text is reproduced in the Muse section below and applies to this reuse as well. |
+| What was reused | The six behaviors named in the upstream commits above. |
+| What was not reused | Grok billing that reads `auth.json` ([79f2bae6](https://github.com/pingdotgg/t3code/commit/79f2bae6)); spawning a Muse SDK host to learn `museHome` ([c8933536](https://github.com/pingdotgg/t3code/commit/c8933536)); a forced `gpt-6-astra` reasoning effort; ChatGPT profile-key hashing; shell-profile PATH hydration; T3 release CI. Earlier non-adoptions remain: ACP Registry downloads, Codex downloads, managed Antigravity installs, and the Cursor SDK. |
+
 ## T3 Code provider sync (2026-10-16)
 
 | Field | Value |

@@ -2171,7 +2171,7 @@ mod tests {
         }
         assert_eq!(
             snapshot["source"]["commit"],
-            "cfafb4bb54d244e4612f5681aad3832ea64cb0fb"
+            "f0dd86f16482595c6cfffe0ac64dc12bffb634f9"
         );
     }
 }

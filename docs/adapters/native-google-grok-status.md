@@ -10,6 +10,8 @@ The execution and metadata route is registered only for explicitly configured Gr
 
 Metadata probes (`grok models`, and the ACP initialize that follows a logged-in status, including an explicitly registered native profile) set `GROK_DISABLE_AUTOUPDATER=1`. That is the process-scoped switch Grok documents so a background health check does not start the CLI updater. Text sessions leave the variable unset. The behavior is a Rust reimplementation of T3 Code `packages/provider-grok/src/server/probeEnvironment.ts` at [2a7bd167](https://github.com/pingdotgg/t3code/commit/2a7bd1673c7bdad4304b7771944e73c29ecd3c01). No T3 Code source is copied.
 
+If the first `grok models` result is logged out, the probe runs once more. A definite second result replaces the first. An unknown second result stays logged out. Reimplemented from [a2157ece](https://github.com/pingdotgg/t3code/commit/a2157eced708fd25fab7b616f5a68cb65312eaed). Login state still comes from `grok models`; Grok `auth.json` and the billing endpoint are not read.
+
 Metadata-only qualification on September 25, 2026 used Grok CLI **1.0.41 (4220f3b224a6)** on Windows x64. It reused the existing native login and returned an authenticated ACP session, **Grok 4.7** and a native `reasoning_effort` option. No prompt/model turn was sent. Plan and quota remained unknown; the test profile's `subscription` billing value remained explicitly user-supplied evidence. This is not paid-generation qualification.
 
 ## Gemini CLI

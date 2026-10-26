@@ -34,6 +34,7 @@
         "passive CLI locations for providers T3 Code actually scans",
         "ChatGPT OAuth refresh and identity-token rules",
         "Grok health-probe environment that disables the CLI updater",
+        "one Grok login recheck, Codex code-mode host, plan labels, configured service tier, individual credits, and Claude monthly spend",
         "the distinction between local model servers, cloud CLIs, and the T3 Connect relay"
       ],
       "doesNotConsume": [

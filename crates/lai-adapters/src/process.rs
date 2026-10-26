@@ -458,6 +458,28 @@ pub(crate) async fn exchange_with_identity(
             return Err(error(ErrorCode::ProtocolIncompatible));
         }
     }
+    // The saved service tier is the current selection across models that
+    // already advertise it. A missing or rejected config read leaves the
+    // catalog defaults in place. Reimplemented from T3 Code
+    // `applyConfiguredCodexServiceTier` at
+    // [3b844dab5c](https://github.com/pingdotgg/t3code/commit/3b844dab5c).
+    let configured_tier = match peer
+        .request("config/read", json!({"includeLayers": false}))
+        .await
+    {
+        Ok(value) => value["config"]["service_tier"]
+            .as_str()
+            .map(str::to_owned)
+            .filter(|tier| {
+                !tier.is_empty()
+                    && tier.len() <= 64
+                    && tier
+                        .bytes()
+                        .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+            }),
+        Err(error) if error.code == ErrorCode::ProviderUnavailable => None,
+        Err(error) => return Err(error),
+    };
     let limits = if managed.is_some() {
         None
     } else {
@@ -471,23 +493,22 @@ pub(crate) async fn exchange_with_identity(
     if peer.account_update_seen {
         peer.verify_account().await?;
     }
-    if let Some(identity) = managed {
-        return crate::codex::parse_managed_metadata(
+    let mut report = if let Some(identity) = managed {
+        crate::codex::parse_managed_metadata(connection, route, &initialize, identity, &models)?
+    } else {
+        crate::codex::parse_metadata(
             connection,
             route,
             &initialize,
-            identity,
+            &account,
             &models,
-        );
+            limits.as_ref(),
+        )?
+    };
+    if let Some(tier) = configured_tier.as_deref() {
+        crate::codex::apply_configured_service_tier(&mut report.models, tier);
     }
-    crate::codex::parse_metadata(
-        connection,
-        route,
-        &initialize,
-        &account,
-        &models,
-        limits.as_ref(),
-    )
+    Ok(report)
 }
 
 /// Execute an explicitly chosen metadata command. No shell or unbounded output.

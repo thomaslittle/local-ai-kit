@@ -4,6 +4,18 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [0.1.0-alpha.19] - 2026-10-26
+
+### Changed
+
+- Grok metadata probes repeat a logged-out `grok models` result once. A definite recheck replaces the first result. An unknown recheck stays logged out. Reimplemented from T3 Code [a2157ece](https://github.com/pingdotgg/t3code/commit/a2157eced708fd25fab7b616f5a68cb65312eaed).
+- A native Codex binary is launchable only with an adjacent non-empty `codex-code-mode-host` executable. Shebang scripts, version-manager shims, and Windows non-`.exe` launchers stay exempt. Reimplemented from [348888a7](https://github.com/pingdotgg/t3code/commit/348888a767433464dd47e723ec6509dc5a8282db).
+- Known ChatGPT plan codes keep the raw `planType` and use the current display labels (Pro 200, Pro Lite 100, Pro Max 500, Business Premium, Business, Enterprise, Edu). Reimplemented from [33f1fe5e](https://github.com/pingdotgg/t3code/commit/33f1fe5ebe53fdd8d18b6a5d63dfd29c336ba5a9).
+- Codex `config/read` `service_tier` selects an advertised choice. `fast` aliases `priority`. The probe does not add a tier. Reimplemented from [3b844dab](https://github.com/pingdotgg/t3code/commit/3b844dab5ced7277ce4a2cf0e5e11d0f04e62241).
+- Codex `individualLimit.remainingPercent` is reported as a "Monthly credit limit" window. Reimplemented from [4c18faf6](https://github.com/pingdotgg/t3code/commit/4c18faf62cd1685b0243dcacc1a94e333c2b93ff).
+- Claude monthly spend prefers an enabled budget when currency and exponent match, then enabled extra usage. Reimplemented from [fd8dd516](https://github.com/pingdotgg/t3code/commit/fd8dd51654f855dbf4e23c457701f5088c59b689).
+- The T3 Code pin moved to `f0dd86f16482595c6cfffe0ac64dc12bffb634f9` (`main`), nightly `v0.1.3-nightly.20261026.3717`, stable `v0.1.2`. Ollama, LM Studio, llama.cpp, ChatGPT OAuth protocol changes, credential-file Grok billing, Muse home spawning, and T3 release CI were reviewed and not adopted.
+
 ## [0.1.0-alpha.18] - 2026-10-22
 
 ### Added

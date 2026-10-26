@@ -1,4 +1,4 @@
-use lai_adapters::codex::parse_metadata;
+use lai_adapters::codex::{apply_configured_service_tier, parse_metadata};
 use lai_contracts::*;
 use serde_json::{Value, json};
 fn init() -> Value {
@@ -46,6 +46,66 @@ fn actual_plan_and_native_effort_survive_without_model_name_rules() {
             .unwrap()
             .billing_sensitive
     );
+}
+#[test]
+fn known_plan_codes_keep_the_native_id_and_gain_the_current_label() {
+    let mut saved = account();
+    saved["account"]["planType"] = json!("self_serve_business_prolite");
+    let report = parse_metadata("connection", "route", &init(), &saved, &[model()], None).unwrap();
+    let plan = report.plan.fresh_value().unwrap();
+    assert_eq!(plan.native_id, "self_serve_business_prolite");
+    assert_eq!(plan.label, "ChatGPT Business Premium Subscription");
+    saved["account"]["planType"] = json!("pro");
+    let report = parse_metadata("connection", "route", &init(), &saved, &[model()], None).unwrap();
+    assert_eq!(
+        report.plan.fresh_value().unwrap().label,
+        "ChatGPT Pro 200 Subscription"
+    );
+    saved["account"]["planType"] = json!("future-plan");
+    let report = parse_metadata("connection", "route", &init(), &saved, &[model()], None).unwrap();
+    assert_eq!(report.plan.fresh_value().unwrap().label, "future-plan");
+}
+#[test]
+fn configured_service_tier_selects_only_an_advertised_choice() {
+    let mut report =
+        parse_metadata("connection", "route", &init(), &account(), &[model()], None).unwrap();
+    apply_configured_service_tier(&mut report.models, "fast");
+    let option = report.models[0]
+        .options
+        .iter()
+        .find(|option| option.id == "serviceTier")
+        .unwrap();
+    assert!(option.current_value.is_none());
+    apply_configured_service_tier(&mut report.models, "native-tier");
+    let option = report.models[0]
+        .options
+        .iter()
+        .find(|option| option.id == "serviceTier")
+        .unwrap();
+    assert_eq!(option.current_value.as_ref(), Some(&json!("native-tier")));
+}
+#[test]
+fn enterprise_monthly_credits_are_a_separate_window() {
+    let mut rates = usage();
+    rates["rateLimitsByLimitId"]["codex"]["individualLimit"] =
+        json!({"remainingPercent": 60, "resetsAt": 1790000000});
+    let report = parse_metadata(
+        "connection",
+        "route",
+        &init(),
+        &account(),
+        &[model()],
+        Some(&rates),
+    )
+    .unwrap();
+    let credit = report.quota_pools[0]
+        .windows
+        .iter()
+        .find(|window| window.label == "Monthly credit limit")
+        .unwrap();
+    assert_eq!(credit.reading.fresh_value().unwrap().used.as_str(), "40");
+    assert!(credit.duration_seconds.is_none());
+    assert_eq!(report.quota_pools[0].windows.len(), 3);
 }
 #[test]
 fn secrets_private_paths_and_unknown_fields_do_not_escape() {

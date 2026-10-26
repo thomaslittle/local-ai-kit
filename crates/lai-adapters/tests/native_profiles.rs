@@ -10,6 +10,21 @@ fn document() -> serde_json::Value {
     let root = std::env::temp_dir();
     json!({"profiles":[{"id":"google","label":"My Google CLI","provider":"gemini_cli","executable":root.join("gemini"),"profileHome":root.join("google-home")},{"id":"antigravity","label":"Google ACP","provider":"antigravity","executable":root.join("agy_acp_server.exe"),"profileHome":root.join("gemini/antigravity-acp"),"authMethod":"oauth-personal"},{"id":"grok","label":"Grok","provider":"grok","executable":root.join("grok.exe"),"profileHome":root.join(".grok"),"billing":"subscription"}]})
 }
+fn write_codex_host(dir: &std::path::Path) {
+    let host = dir.join(if cfg!(windows) {
+        "codex-code-mode-host.exe"
+    } else {
+        "codex-code-mode-host"
+    });
+    std::fs::write(&host, b"host").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut permissions = std::fs::metadata(&host).unwrap().permissions();
+        permissions.set_mode(0o755);
+        std::fs::set_permissions(&host, permissions).unwrap();
+    }
+}
 fn empty() -> ScanResult {
     ScanResult {
         snapshot: Snapshot::empty(DataMode::Live),
@@ -23,6 +38,7 @@ fn managed_codex_is_inert_isolated_and_stable() {
     let tmp = tempfile::tempdir().unwrap();
     let codex = tmp.path().join("codex.exe");
     std::fs::write(&codex, b"fixture").unwrap();
+    write_codex_host(tmp.path());
     let state = tmp.path().join("kit-state");
     let mut first = empty();
     first.locations.insert(
@@ -77,6 +93,7 @@ fn managed_codex_can_use_private_executable_only_inventory() {
     std::fs::create_dir(&bin).unwrap();
     let executable = bin.join("codex.exe");
     std::fs::write(&executable, b"fixture").unwrap();
+    write_codex_host(&bin);
     std::fs::create_dir(tmp.path().join(".codex")).unwrap();
     let mut env = ScanEnvironment::for_home(tmp.path().into(), HostPlatform::Windows);
     env.search_path.push(bin);

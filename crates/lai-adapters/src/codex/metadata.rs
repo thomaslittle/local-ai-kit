@@ -91,7 +91,7 @@ pub fn parse_metadata(
             report.plan = Observation::reported(
                 Plan {
                     native_id: plan.into(),
-                    label: plan.into(),
+                    label: plan_label(plan).into(),
                 },
                 source.clone(),
             );
@@ -118,6 +118,29 @@ pub fn parse_metadata(
         report.diagnostics.push("USAGE_UNAVAILABLE".into());
     }
     Ok(report)
+}
+
+/// Display names for ChatGPT plan codes Codex reports on `account/read`.
+/// The native id stays the code. Unlisted codes keep that code as the label
+/// instead of a guessed product name. `unknown` is omitted by the caller.
+/// Reimplemented from T3 Code `codexPlanLabel` at
+/// [33f1fe5ebe](https://github.com/pingdotgg/t3code/commit/33f1fe5ebe).
+fn plan_label(plan: &str) -> &str {
+    match plan {
+        "free" => "ChatGPT Free Subscription",
+        "go" => "ChatGPT Go Subscription",
+        "plus" => "ChatGPT Plus Subscription",
+        "pro" => "ChatGPT Pro 200 Subscription",
+        "prolite" => "ChatGPT Pro 100 Subscription",
+        "promax" => "ChatGPT Pro 500 Subscription",
+        "self_serve_business_prolite" => "ChatGPT Business Premium Subscription",
+        "team" | "self_serve_business_usage_based" | "business" => "ChatGPT Business Subscription",
+        "ent26" | "enterprise_cbp_automation" | "enterprise_cbp_usage_based" | "enterprise" => {
+            "ChatGPT Enterprise Subscription"
+        }
+        "edu" | "edu_plus" | "edu_pro" => "ChatGPT Edu Subscription",
+        other => other,
+    }
 }
 
 /// SIWC identity is validated by the host-managed OAuth flow. Codex's custom

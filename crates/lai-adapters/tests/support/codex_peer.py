@@ -23,7 +23,13 @@ for raw in sys.stdin:
     elif method=='model/list':
         cursor=item['params'].get('cursor')
         number='2' if cursor else '1'
-        result={'data':[{'model':'synthetic-'+number,'displayName':'Synthetic '+number,'hidden':False,'isDefault':number=='1','supportedReasoningEfforts':[]}],'nextCursor':('same-cursor' if mode=='loop' else ('next' if cursor is None else None))}
+        model={'model':'synthetic-'+number,'displayName':'Synthetic '+number,'hidden':False,'isDefault':number=='1','supportedReasoningEfforts':[]}
+        if mode=='service-tier' and cursor is None:
+            model['serviceTiers']=[{'id':'priority','name':'Priority','description':''},{'id':'flex','name':'Flex','description':''}]
+            model['defaultServiceTier']='flex'
+        result={'data':[model],'nextCursor':('same-cursor' if mode=='loop' else ('next' if cursor is None else None))}
+    elif method=='config/read':
+        result={'config':({'service_tier':'fast'} if mode=='service-tier' else {})}
     elif method=='account/rateLimits/read':
         if mode=='usage-error':
             print(json.dumps({'id':item['id'],'error':{'code':-1,'message':'PRIVATE-TOKEN'}}),flush=True);continue

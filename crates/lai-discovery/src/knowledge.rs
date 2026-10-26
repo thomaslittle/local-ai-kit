@@ -10,7 +10,7 @@ pub const TOKSCALE_REPOSITORY: &str = "junhoyeo/tokscale";
 pub const TOKSCALE_COMMIT: &str = "1d9a9395418efc6952944b794097935d7d6fa1e8";
 /// Audited T3 Code commit. Released builds do not fetch this revision.
 pub const T3CODE_REPOSITORY: &str = "pingdotgg/t3code";
-pub const T3CODE_COMMIT: &str = "cfafb4bb54d244e4612f5681aad3832ea64cb0fb";
+pub const T3CODE_COMMIT: &str = "f0dd86f16482595c6cfffe0ac64dc12bffb634f9";
 
 /// Why a discovery rule is trusted. Higher ranks win when sources disagree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

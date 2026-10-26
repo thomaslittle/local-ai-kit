@@ -5,6 +5,7 @@ mod usage;
 use lai_contracts::{DomainError, ErrorCode, Result};
 pub use metadata::parse_managed_metadata;
 pub use metadata::parse_metadata;
+pub use models::apply_configured_service_tier;
 use serde_json::Value;
 fn invalid() -> DomainError {
     DomainError::new(
