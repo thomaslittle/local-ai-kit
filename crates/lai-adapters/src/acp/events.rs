@@ -137,6 +137,24 @@ impl Wire {
             Some(
                 "user_message_chunk" | "plan" | "available_commands_update" | "session_info_update",
             ) => {}
+            // A session notice is not assistant text. Reimplemented from T3 Code
+            // 323d9611 (ACP session notices). An empty title is omitted. A
+            // malformed notice stays an unknown update.
+            Some("notice") => match session_notice(update) {
+                SessionNotice::Message(message) => {
+                    cx.emit(EventPayload::Warning {
+                        code: "ACP_SESSION_NOTICE".into(),
+                        message,
+                    })?;
+                }
+                SessionNotice::Omit => {}
+                SessionNotice::Unknown => {
+                    cx.emit(EventPayload::Warning {
+                        code: "UNKNOWN_ACP_UPDATE".into(),
+                        message: "An unsupported ACP update was omitted".into(),
+                    })?;
+                }
+            },
             Some(_) => {
                 cx.emit(EventPayload::Warning {
                     code: "UNKNOWN_ACP_UPDATE".into(),
@@ -147,6 +165,57 @@ impl Wire {
         }
         Ok(())
     }
+}
+enum SessionNotice {
+    Message(String),
+    Omit,
+    Unknown,
+}
+fn bounded_notice(text: &str, max_chars: usize) -> String {
+    text.trim().chars().take(max_chars).collect()
+}
+/// ACP `sessionUpdate: "notice"`. Title and description are bounded. Severity
+/// is required; a blank severity is `info`. This does not copy T3's parser.
+fn session_notice(update: &Value) -> SessionNotice {
+    let title = match update.get("title") {
+        Some(Value::String(text)) => {
+            let title = bounded_notice(text, 1024);
+            if title.is_empty() {
+                return SessionNotice::Omit;
+            }
+            title
+        }
+        _ => return SessionNotice::Unknown,
+    };
+    let description = match update.get("description") {
+        None | Some(Value::Null) => None,
+        Some(Value::String(text)) => {
+            let text = bounded_notice(text, 4096);
+            (!text.is_empty()).then_some(text)
+        }
+        Some(_) => return SessionNotice::Unknown,
+    };
+    let severity = match update.get("severity") {
+        Some(Value::String(text)) => {
+            let text = bounded_notice(text, 64);
+            if text.is_empty() {
+                "info".to_string()
+            } else {
+                text
+            }
+        }
+        _ => return SessionNotice::Unknown,
+    };
+    let mut message = if severity == "info" {
+        title
+    } else {
+        format!("[{severity}] {title}")
+    };
+    if let Some(description) = description {
+        message.push_str("\n\n");
+        message.push_str(&description);
+    }
+    SessionNotice::Message(message)
 }
 fn emit_text(cx: &TurnContext, text: &str, thought: bool) -> Result<()> {
     let mut chunk = String::new();
@@ -169,4 +238,41 @@ fn emit_text(cx: &TurnContext, text: &str, thought: bool) -> Result<()> {
         })?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn session_notice_keeps_title_and_description_out_of_a_model_reply() {
+        let shown = session_notice(&json!({
+            "sessionUpdate": "notice",
+            "severity": "warning",
+            "title": "  Quota refresh  ",
+            "description": "  remaining  "
+        }));
+        match shown {
+            SessionNotice::Message(message) => {
+                assert_eq!(message, "[warning] Quota refresh\n\nremaining");
+            }
+            _ => panic!("expected a notice"),
+        }
+        assert!(matches!(
+            session_notice(&json!({"sessionUpdate":"notice","severity":"info","title":"   "})),
+            SessionNotice::Omit
+        ));
+        assert!(matches!(
+            session_notice(
+                &json!({"sessionUpdate":"notice","description":"secret-notice-sentinel"})
+            ),
+            SessionNotice::Unknown
+        ));
+        let long = "n".repeat(1100);
+        match session_notice(&json!({"sessionUpdate":"notice","severity":"","title": long})) {
+            SessionNotice::Message(message) => assert_eq!(message.chars().count(), 1024),
+            _ => panic!("expected a bounded notice"),
+        }
+    }
 }

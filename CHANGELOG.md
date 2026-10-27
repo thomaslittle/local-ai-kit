@@ -4,6 +4,17 @@ All notable changes to Local AI Kit are recorded here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [0.1.0-alpha.20] - 2026-10-27
+
+### Added
+
+- Passive inventory for the fx CLI (`fx` on `PATH`, profile `~/.fx`). The binary is not launched and skill files are not opened. Reimplemented from T3 Code [6df241d23](https://github.com/pingdotgg/t3code/commit/6df241d23a8b82ff786fe3253dfb08645933db26).
+
+### Changed
+
+- ACP session notices are warnings (`ACP_SESSION_NOTICE`) and are not appended to assistant text. The client advertises `session.notices`. An empty title is omitted. A malformed notice stays an unknown update. Reimplemented from [323d9611](https://github.com/pingdotgg/t3code/commit/323d9611ff49521357fdc205f667614602ec46b6).
+- The T3 Code pin moved to `e9236274a3a6e0c731a7df4092db1e686f039068` (`main`), nightly `v0.1.4-nightly.20261027.3770`, stable `v0.1.3`. Ollama, LM Studio, llama.cpp, fx execution, model-label rewriting, the Cursor SDK bump, and T3 release CI were reviewed and not adopted.
+
 ## [0.1.0-alpha.19] - 2026-10-26
 
 ### Changed

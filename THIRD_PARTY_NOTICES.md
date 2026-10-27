@@ -51,6 +51,21 @@ See [SOURCE-AUDIT.md](docs/design/source-audit.md) for previously inspected revi
 
 See [upstream/tokscale/NOTICE.md](upstream/tokscale/NOTICE.md).
 
+## T3 Code provider sync (2026-10-27)
+
+| Field | Value |
+| --- | --- |
+| Source | https://github.com/pingdotgg/t3code at `e9236274a3a6e0c731a7df4092db1e686f039068` |
+| Nightly tag at pin time | `v0.1.4-nightly.20261027.3770` (`7c3b3b3605efa695e9948051b569937fc1482c0f`) |
+| Stable tag at pin time | `v0.1.3` (`d2c440312e5f39d59827ed466838a623516454d6`) |
+| Referenced paths | `packages/provider-fx/src/server/driver.ts`, `packages/provider-fx/src/server/status.ts`, `packages/provider-acp/src/server/runtimeModel.ts`, `packages/effect-acp/src/client.ts` |
+| Upstream commits | [6df241d23](https://github.com/pingdotgg/t3code/commit/6df241d23a8b82ff786fe3253dfb08645933db26) (fx provider; inventory only), [323d9611](https://github.com/pingdotgg/t3code/commit/323d9611ff49521357fdc205f667614602ec46b6) (ACP session notices) |
+| Copied files | None. Behavior was reimplemented in Rust. |
+| License | MIT |
+| Copyright | Copyright (c) 2026 T3 Tools Inc. The license text is reproduced in the Muse section below and applies to this reuse as well. |
+| What was reused | The `fx` command and `~/.fx` as passive inventory, and ACP `notice` updates as warnings that are not assistant text. |
+| What was not reused | fx execution and its medium effort default, shortened model labels ([56695ae3](https://github.com/pingdotgg/t3code/commit/56695ae3ec2aad931030af1e7e43852f741b9eef)), the seven-day new-model badge ([0790e3891](https://github.com/pingdotgg/t3code/commit/0790e3891b7470d5a33292dedc4d4ae62d02ff29)), the Cursor SDK 1.0.38 bump ([850d1e7a](https://github.com/pingdotgg/t3code/commit/850d1e7a6c5ffd894c48e9182169cf8e25097db5)), and T3 release CI. |
+
 ## T3 Code provider sync (2026-10-26)
 
 | Field | Value |

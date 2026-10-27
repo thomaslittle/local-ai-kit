@@ -649,7 +649,7 @@ mod tests {
                 &downgrade,
                 &signed.archive,
                 &signed.public_key,
-                "0.1.0-alpha.19",
+                "0.1.0-alpha.20",
                 "1.0",
                 false
             )

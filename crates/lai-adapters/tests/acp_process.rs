@@ -105,6 +105,47 @@ async fn native_stream_arrives_before_prompt_response_and_session_reuses_context
     r.close("owner", &s.id).await.unwrap();
 }
 #[tokio::test]
+async fn session_notice_is_not_assistant_text() {
+    let (runtime, session) = setup("notice").await;
+    runtime
+        .start("owner", &session.id, "hello".into(), "1".into())
+        .await
+        .unwrap();
+    finish(&runtime, &session).await;
+    assert_eq!(
+        runtime.get("owner", &session.id).unwrap().state,
+        SessionState::Completed
+    );
+    let events = runtime.events("owner", Some(&session.id), None).unwrap();
+    let payloads: Vec<_> = events["events"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|event| &event["payload"])
+        .collect();
+    let text: String = payloads
+        .iter()
+        .filter(|payload| payload["type"] == "text_delta")
+        .map(|payload| payload["text"].as_str().unwrap())
+        .collect();
+    assert_eq!(text, "native reply");
+    let notices: Vec<_> = payloads
+        .iter()
+        .filter(|payload| payload["code"] == "ACP_SESSION_NOTICE")
+        .collect();
+    assert_eq!(notices.len(), 1);
+    assert_eq!(
+        notices[0]["message"],
+        "[warning] Quota refresh\n\nremaining"
+    );
+    assert!(
+        payloads
+            .iter()
+            .any(|payload| payload["code"] == "UNKNOWN_ACP_UPDATE")
+    );
+    assert!(!events.to_string().contains("secret-notice-sentinel"));
+}
+#[tokio::test]
 async fn foreign_session_cannot_inject_output() {
     let (r, s) = setup("foreign").await;
     r.start("owner", &s.id, "hello".into(), "1".into())

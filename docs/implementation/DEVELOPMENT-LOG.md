@@ -1,5 +1,13 @@
 # Development log — Local AI Kit
 
+## October 27 T3 Code provider sync (fixture-tested)
+
+Pinned T3 Code `main` at `e9236274a3a6e0c731a7df4092db1e686f039068`. There is still no `nightly` branch. The newest nightly is `v0.1.4-nightly.20261027.3770` (`7c3b3b3605efa695e9948051b569937fc1482c0f`); `main` was 20 commits ahead of it. Stable `v0.1.3` is `d2c440312e5f39d59827ed466838a623516454d6`. The previous pin was `f0dd86f16482595c6cfffe0ac64dc12bffb634f9`.
+
+Reimplemented in Rust, with no T3 Code source copied: passive fx inventory (`fx`, `~/.fx`) from [6df241d23](https://github.com/pingdotgg/t3code/commit/6df241d23a8b82ff786fe3253dfb08645933db26), and ACP session notices as warnings from [323d9611](https://github.com/pingdotgg/t3code/commit/323d9611ff49521357fdc205f667614602ec46b6). fx execution, shortened model labels, the seven-day new badge, the Cursor SDK 1.0.38 bump, and T3 release CI were reviewed and not adopted. Ollama, LM Studio, and llama.cpp are still absent upstream. ChatGPT OAuth on the watched paths did not change.
+
+`python scripts/upstream_t3code.py --offline` passed. `cargo fmt --all --check` and `cargo clippy --workspace --all-targets --all-features --locked -- -D warnings` passed on Linux. `python scripts/verify.py --profile all` passed, including workspace Rust tests, SDK tests, generation checks, React Doctor, and the demo browser suite. This pass is fixture-tested. It is not live-qualified and was not platform-executed on Windows or macOS.
+
 ## October 26 T3 Code provider sync (fixture-tested)
 
 Pinned T3 Code `main` at `f0dd86f16482595c6cfffe0ac64dc12bffb634f9`. There is still no `nightly` branch. The newest nightly is `v0.1.3-nightly.20261026.3717` (`1316d48b0c68151afd8b47eb0c11a114cf0b4daa`); `main` was 16 commits ahead of it. Stable `v0.1.2` is `044f07257c9684ae4543bd1e1ebf9c394e9e3830`. `v0.1.1` also landed after the previous pin.

@@ -5,6 +5,7 @@ options=[{'id':'model','name':'Model','category':'model','type':'select','curren
 pending=None
 turns=0
 authenticated=False
+notices_advertised=False
 def out(value):print(json.dumps({'jsonrpc':'2.0',**value}),flush=True)
 def answer(i,result):out({'id':i,'result':result})
 def update(session_update,**data):out({'method':'session/update','params':{'sessionId':'foreign' if mode=='foreign' else session,'update':{'sessionUpdate':session_update,**data}}})
@@ -15,6 +16,8 @@ for line in sys.stdin:
  if r.get('jsonrpc')!='2.0':sys.exit(7)
  if m=='initialize':
   if p.get('clientCapabilities',{}).get('terminal') or p.get('clientCapabilities',{}).get('fs',{}).get('writeTextFile'):sys.exit(8)
+  notices_advertised=p.get('clientCapabilities',{}).get('session',{}).get('notices') is not None
+  if mode=='notice' and not notices_advertised:sys.exit(15)
   answer(i,{'protocolVersion':9 if mode=='version' else 1,'agentInfo':{'name':'Fixture','version':'1'},'agentCapabilities':{'loadSession':mode!='no_resume','promptCapabilities':{'image':mode=='image'},**({'mcpCapabilities':{'http':True,'sse':False}} if mode.startswith('host') else {})},'authMethods':[{'id':'oauth-personal','name':'Personal login'}]})
  elif m=='authenticate':
   if mode=='auth_fail':out({'id':i,'error':{'code':-32000,'message':'SECRET_SENTINEL_AUTH_URL'}})
@@ -59,6 +62,11 @@ for line in sys.stdin:
   elif mode=='fs':out({'id':'fs-id','method':'fs/read_text_file','params':{'sessionId':session,'path':'private-sentinel'}})
   elif mode=='changed':
    options[0]['currentValue']='native-y';update('config_option_update',configOptions=options);answer(i,{'stopReason':'end_turn'})
+  elif mode=='notice':
+   update('notice',severity='warning',title='  Quota refresh  ',description='  remaining  ')
+   update('notice',severity='info',title='   ')
+   update('notice',description='secret-notice-sentinel')
+   update('agent_message_chunk',content={'type':'text','text':'native reply'});answer(i,{'stopReason':'end_turn'})
   else:
    update('agent_message_chunk',content={'type':'text','text':'native reply '+str(turns)});update('usage_update',used=12,size=1024);answer(i,{'stopReason':'end_turn'})
  elif m=='session/cancel':

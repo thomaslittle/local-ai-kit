@@ -143,6 +143,7 @@ def diff_is_relevant(text: str) -> bool:
 PROVIDER_PREFIXES = (
     "apps/server/src/provider/",
     "packages/provider-",
+    "packages/effect-acp/src/",
     "packages/shared/src/shell.ts",
     "apps/desktop/src/shell/DesktopShellEnvironment.ts",
 )
@@ -154,7 +155,7 @@ ORCHESTRATION_PREFIXES = (
 RELEVANT_NAME_MARKERS = (
     "provider", "driver", "installation", "auth", "login", "usage", "quota",
     "model", "catalog", "settings", "detect", "environment", "shell", "acp",
-    "codex", "claude", "grok", "muse", "opencode", "cursor", "antigravity", "pi",
+    "codex", "claude", "grok", "muse", "opencode", "cursor", "antigravity", "pi", "fx",
 )
 
 

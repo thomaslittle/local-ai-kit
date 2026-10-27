@@ -73,6 +73,12 @@ pub fn definitions() -> &'static [ProviderDefinition] {
             profile_prefix: None,
         },
         ProviderDefinition {
+            id: "fx",
+            name: "fx",
+            commands: &["fx"],
+            profile_prefix: None,
+        },
+        ProviderDefinition {
             id: "ollama",
             name: "Ollama",
             commands: &["ollama"],

@@ -44,7 +44,7 @@ impl Wire {
             this.init = this
                 .call(
                     "initialize",
-                    json!({"protocolVersion":1,"clientInfo":{"name":"local-ai-kit","version":env!("CARGO_PKG_VERSION")},"clientCapabilities":{"fs":{"readTextFile":false,"writeTextFile":false},"terminal":false,"session":{"configOptions":{"boolean":{}}}}}),
+                    json!({"protocolVersion":1,"clientInfo":{"name":"local-ai-kit","version":env!("CARGO_PKG_VERSION")},"clientCapabilities":{"fs":{"readTextFile":false,"writeTextFile":false},"terminal":false,"session":{"configOptions":{"boolean":{}},"notices":{}}}}),
                 )
                 .await?;
             if this.init["protocolVersion"].as_u64() != Some(1) {

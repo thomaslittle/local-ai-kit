@@ -8,7 +8,7 @@ T3 Code has no `nightly` branch. `.github/workflows/release.yml` schedules a nig
 
 ## What this pin adopted
 
-From `f0dd86f16482595c6cfffe0ac64dc12bffb634f9`, including facts first adopted at `42da166d131017335a1158d0b379dd68b8985796` and `cfafb4bb54d244e4612f5681aad3832ea64cb0fb`:
+From `e9236274a3a6e0c731a7df4092db1e686f039068`, including facts first adopted at `42da166d131017335a1158d0b379dd68b8985796`, `cfafb4bb54d244e4612f5681aad3832ea64cb0fb`, and `f0dd86f16482595c6cfffe0ac64dc12bffb634f9`:
 
 - Pi is a passive installation candidate. The command is `pi`. The profile is `PI_CODING_AGENT_DIR` or `~/.pi/agent`. Session files live under `sessions/` and are not opened. There is no Pi execution adapter.
 - OpenCode's own installer directory `~/.opencode/bin` is searched for `opencode` in addition to `PATH`.
@@ -21,6 +21,8 @@ From `f0dd86f16482595c6cfffe0ac64dc12bffb634f9`, including facts first adopted a
 - A saved Codex `service_tier` selects an advertised choice (`fast` aliases `priority`) and does not add a tier ([3b844dab](https://github.com/pingdotgg/t3code/commit/3b844dab5ced7277ce4a2cf0e5e11d0f04e62241)).
 - Codex individual monthly credits are a separate window ([4c18faf6](https://github.com/pingdotgg/t3code/commit/4c18faf62cd1685b0243dcacc1a94e333c2b93ff)).
 - Claude monthly spend prefers an enabled budget with a matching currency ([fd8dd516](https://github.com/pingdotgg/t3code/commit/fd8dd51654f855dbf4e23c457701f5088c59b689)).
+- The `fx` command and `~/.fx` are passive inventory. fx is not launched ([6df241d23](https://github.com/pingdotgg/t3code/commit/6df241d23a8b82ff786fe3253dfb08645933db26)).
+- An ACP session `notice` is a warning, not assistant text. The client advertises `session.notices` ([323d9611](https://github.com/pingdotgg/t3code/commit/323d9611ff49521357fdc205f667614602ec46b6)).
 
 The behavior was reimplemented in Rust. No T3 Code source file was copied for this pin. See [upstream/t3code/NOTICE.md](../../upstream/t3code/NOTICE.md).
 
@@ -42,7 +44,10 @@ The behavior was reimplemented in Rust. No T3 Code source file was copied for th
 - Forcing reasoning effort `medium` for the `gpt-6-astra` family.
 - Hashing a ChatGPT profile key or an OpenAI telemetry owner id.
 - Reading Nushell or PowerShell profiles to hydrate `PATH`.
-- T3 Code's Blacksmith release workflow and npm launcher publish.
+- T3 Code's Blacksmith release workflow, the built-web boot check, and desktop launch checks.
+- Running fx, including `fx status`, `fx models`, `fx acp`, and a medium effort default ([6df241d23](https://github.com/pingdotgg/t3code/commit/6df241d23a8b82ff786fe3253dfb08645933db26)).
+- Shortened model labels ([56695ae3](https://github.com/pingdotgg/t3code/commit/56695ae3ec2aad931030af1e7e43852f741b9eef)) and a seven-day new-model badge ([0790e3891](https://github.com/pingdotgg/t3code/commit/0790e3891b7470d5a33292dedc4d4ae62d02ff29)).
+- The Cursor SDK bump to 1.0.38 ([850d1e7a](https://github.com/pingdotgg/t3code/commit/850d1e7a6c5ffd894c48e9182169cf8e25097db5)).
 
 Authority is unchanged: an official client or a Local AI Kit qualification outranks this upstream. T3 Code is supporting evidence, recorded on the discovery rule as `upstream.t3code` at the pinned commit.
 

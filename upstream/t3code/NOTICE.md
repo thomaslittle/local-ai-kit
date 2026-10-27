@@ -4,9 +4,9 @@ Local AI Kit reviewed [T3 Code](https://github.com/pingdotgg/t3code) as an upstr
 
 | Field | Value |
 | --- | --- |
-| Pinned commit | `f0dd86f16482595c6cfffe0ac64dc12bffb634f9` (`main`) |
-| Latest nightly at pin time | `v0.1.3-nightly.20261026.3717` (`1316d48b0c68151afd8b47eb0c11a114cf0b4daa`) |
-| Latest stable at pin time | `v0.1.2` (`044f07257c9684ae4543bd1e1ebf9c394e9e3830`) |
+| Pinned commit | `e9236274a3a6e0c731a7df4092db1e686f039068` (`main`) |
+| Latest nightly at pin time | `v0.1.4-nightly.20261027.3770` (`7c3b3b3605efa695e9948051b569937fc1482c0f`) |
+| Latest stable at pin time | `v0.1.3` (`d2c440312e5f39d59827ed466838a623516454d6`) |
 | License | MIT |
 | Copyright | Copyright (c) 2026 T3 Tools Inc. |
 
@@ -26,7 +26,9 @@ Adopted at this pin:
 - Codex `config/read` `service_tier` selects an advertised choice, with `fast` aliasing `priority` ([3b844dab](https://github.com/pingdotgg/t3code/commit/3b844dab5ced7277ce4a2cf0e5e11d0f04e62241)).
 - Codex `individualLimit.remainingPercent` is a "Monthly credit limit" window ([4c18faf6](https://github.com/pingdotgg/t3code/commit/4c18faf62cd1685b0243dcacc1a94e333c2b93ff)).
 - Claude monthly spend prefers an enabled matching-currency budget, then enabled extra usage ([fd8dd516](https://github.com/pingdotgg/t3code/commit/fd8dd51654f855dbf4e23c457701f5088c59b689)).
+- Passive `fx` inventory: command `fx`, profile `~/.fx`. Reimplemented from [6df241d23](https://github.com/pingdotgg/t3code/commit/6df241d23a8b82ff786fe3253dfb08645933db26). The binary is not launched.
+- ACP `sessionUpdate` `notice` is a warning, not assistant text. The client advertises `session.notices`. Reimplemented from [323d9611](https://github.com/pingdotgg/t3code/commit/323d9611ff49521357fdc205f667614602ec46b6).
 
-Reviewed and not adopted: Ollama, LM Studio, and llama.cpp (absent upstream), direct cloud HTTP APIs (absent upstream; Local AI Kit already has explicit API routes), ACP Registry downloads including the Windows ARM `windows-x86_64` fallback and Gemini CLI, multi-account ChatGPT handoff, Codex shadow homes, Codex release downloads (including the Windows system-tar extract), Windows Claude launcher-shim rewriting, managed Antigravity installs, and the bundled Cursor SDK (including Auto-review). Also not adopted from this range: Grok billing that reads `auth.json` ([79f2bae6](https://github.com/pingdotgg/t3code/commit/79f2bae6)), spawning Muse to learn `museHome` ([c8933536](https://github.com/pingdotgg/t3code/commit/c8933536)), a forced `gpt-6-astra` effort of medium, ChatGPT profile-key hashing, shell-profile PATH hydration, and T3 release CI. Codex's 20-second status probe already matched Local AI Kit. ChatGPT OAuth endpoints and algorithms did not change.
+Reviewed and not adopted: Ollama, LM Studio, and llama.cpp (absent upstream), direct cloud HTTP APIs (absent upstream; Local AI Kit already has explicit API routes), ACP Registry downloads including the Windows ARM `windows-x86_64` fallback and Gemini CLI, multi-account ChatGPT handoff, Codex shadow homes, Codex release downloads (including the Windows system-tar extract), Windows Claude launcher-shim rewriting, managed Antigravity installs, and the bundled Cursor SDK (including Auto-review). Also not adopted from this range: running fx (status, models, ACP, and a medium effort default), shortened model labels ([56695ae3](https://github.com/pingdotgg/t3code/commit/56695ae3ec2aad931030af1e7e43852f741b9eef)), a seven-day new-model badge ([0790e3891](https://github.com/pingdotgg/t3code/commit/0790e3891b7470d5a33292dedc4d4ae62d02ff29)), the Cursor SDK bump to 1.0.38 ([850d1e7a](https://github.com/pingdotgg/t3code/commit/850d1e7a6c5ffd894c48e9182169cf8e25097db5)), Grok billing that reads `auth.json` ([79f2bae6](https://github.com/pingdotgg/t3code/commit/79f2bae6)), spawning Muse to learn `museHome` ([c8933536](https://github.com/pingdotgg/t3code/commit/c8933536)), a forced `gpt-6-astra` effort of medium, ChatGPT profile-key hashing, shell-profile PATH hydration, and T3 release CI. Codex's 20-second status probe already matched Local AI Kit. ChatGPT OAuth endpoints and algorithms did not change.
 
 The daily diff list is [UPSTREAM_T3CODE.md](../../UPSTREAM_T3CODE.md). The factual extract is [snapshot.json](snapshot.json).
