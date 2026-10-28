@@ -50,19 +50,8 @@ impl BrokerClient {
         path: &Path,
         expected_address: Option<&str>,
     ) -> std::result::Result<Self, String> {
-        let metadata =
-            std::fs::symlink_metadata(path).map_err(|_| "Token file is unavailable".to_owned())?;
-        if !metadata.is_file() || metadata.len() > 16 * 1024 {
-            return Err("Token file is invalid".into());
-        }
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            if metadata.permissions().mode() & 0o077 != 0 {
-                return Err("Token file permissions are not owner-only".into());
-            }
-        }
-        let bytes = std::fs::read(path).map_err(|_| "Token file is unreadable".to_owned())?;
+        let bytes = lai_platform::read_private_file(path, 16 * 1024)
+            .map_err(|_| "Token file must be a readable, bounded owner-only regular file".to_owned())?;
         let descriptor: Value =
             serde_json::from_slice(&bytes).map_err(|_| "Token file is malformed".to_owned())?;
         let address = descriptor["address"]

@@ -16,6 +16,7 @@ path = "src/main.rs"
 required-features = ["tui"]
 
 [dependencies]
+lai-platform = { path = "../lai-platform" }
 lai-contracts = { path = "../lai-contracts" }
 lai-transports = { path = "../lai-transports" }
 serde.workspace = true

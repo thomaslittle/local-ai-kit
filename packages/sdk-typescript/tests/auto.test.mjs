@@ -115,3 +115,11 @@ import('node:readline').then(({createInterface}) => {
     await assert.rejects(openAutoTransport({executable:binary,address:'/fixture/denied',token:'a'.repeat(64)}), error=>error.code==='LOCAL_ACCESS_DENIED');
   } finally { rmSync(directory,{recursive:true,force:true}); }
 });
+
+test('non-executable Unix overrides fail before spawning', {skip: process.platform === 'win32'}, () => {
+  const {directory, binary} = helper();
+  try {
+    chmodSync(binary, 0o600);
+    assert.throws(() => resolveHelper({executable: binary}), /INVALID_EXECUTABLE/);
+  } finally { rmSync(directory, {recursive: true, force: true}); }
+});

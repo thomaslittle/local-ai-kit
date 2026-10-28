@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import sys
+import stat
 import tempfile
 import time
 from typing import Any
@@ -70,11 +71,21 @@ def _shared_token(address: str, token_file: str | os.PathLike | None = None) -> 
     try:
         path = pathlib.Path(token_file) if token_file is not None else default_token_file()
         info = path.lstat()
-        if path.is_symlink() or not path.is_file() or info.st_size > 16384:
+        if not stat.S_ISREG(info.st_mode):
             return None
-        if sys.platform != 'win32' and info.st_mode & 0o077:
+        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_BINARY', 0)
+        with os.fdopen(os.open(path, flags), 'rb') as stream:
+            opened = os.fstat(stream.fileno())
+            if not stat.S_ISREG(opened.st_mode) or opened.st_size > 16384 or (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino):
+                return None
+            if sys.platform != 'win32' and opened.st_mode & 0o077:
+                return None
+            data = stream.read(16385)
+        if len(data) > 16384:
             return None
-        descriptor = json.loads(path.read_text('utf-8'))
+        descriptor = json.loads(data.decode('utf-8'))
+        if not isinstance(descriptor, dict):
+            return None
         if 'address' in descriptor and descriptor['address'] != address:
             return None
         token = descriptor.get('token')

@@ -78,6 +78,18 @@ class HelperResolutionTests(unittest.TestCase):
                 self.assertEqual(client_module._shared_token('/tmp/x.sock', path), 'a' * 64)
                 self.assertIsNone(client_module._shared_token('/tmp/other.sock', path))
 
+    def test_shared_token_rejects_non_objects_oversize_and_links(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / 'grant.json'
+            for content in ('[]', 'null', 'x' * 16385):
+                path.write_text(content)
+                path.chmod(0o600)
+                self.assertIsNone(client_module._shared_token('/tmp/x.sock', path))
+            if os.name != 'nt':
+                link = pathlib.Path(directory) / 'link.json'
+                link.symlink_to(path)
+                self.assertIsNone(client_module._shared_token('/tmp/x.sock', link))
+
 
 class PrivateLifecycleTests(unittest.IsolatedAsyncioTestCase):
     async def test_every_startup_failure_reaps_the_owned_broker(self):

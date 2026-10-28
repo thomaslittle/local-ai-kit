@@ -13,6 +13,7 @@ name = "local_ai_kit"
 path = "src/lib.rs"
 
 [dependencies]
+lai-platform = { path = "../lai-platform" }
 lai-contracts = { path = "../lai-contracts" }
 lai-control = { path = "../lai-control", default-features = false }
 lai-kit = { path = "../lai-kit" }

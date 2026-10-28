@@ -1,7 +1,7 @@
 /** Dependency-first transport. Nothing spawns or connects until this is called. */
 import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
-import {lstatSync, readFileSync, statSync} from 'node:fs';
+import {accessSync, constants, closeSync, fstatSync, lstatSync, openSync, readFileSync, readSync, statSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {isAbsolute, join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -27,6 +27,7 @@ function usable(path) {
   if (typeof path !== 'string' || !isAbsolute(path) || path.includes('\0')) return false;
   if (/\.(cmd|bat|ps1)$/i.test(path)) return false;
   try {
+    accessSync(path, constants.X_OK);
     return statSync(path).isFile();
   } catch {
     return false;
@@ -82,12 +83,24 @@ export function defaultTokenFile() {
 function sharedToken(address) {
   try {
     const path = defaultTokenFile();
-    const link = lstatSync(path);
-    if (link.isSymbolicLink()) return null;
-    const info = statSync(path);
-    if (!info.isFile() || info.size > 16384) return null;
-    if (process.platform !== 'win32' && (info.mode & 0o077) !== 0) return null;
-    const descriptor = JSON.parse(readFileSync(path, 'utf8'));
+    const before = lstatSync(path);
+    if (!before.isFile() || before.isSymbolicLink()) return null;
+    const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
+    let descriptor;
+    try {
+      const info = fstatSync(fd);
+      if (!info.isFile() || info.size > 16384 || info.dev !== before.dev || info.ino !== before.ino) return null;
+      if (process.platform !== 'win32' && (info.mode & 0o077) !== 0) return null;
+      const bytes = Buffer.alloc(16385);
+      let length = 0;
+      while (length < bytes.length) {
+        const count = readSync(fd, bytes, length, bytes.length - length, null);
+        if (!count) break;
+        length += count;
+      }
+      if (length > 16384) return null;
+      descriptor = JSON.parse(bytes.subarray(0, length).toString('utf8'));
+    } finally { closeSync(fd); }
     if (descriptor?.address !== undefined && descriptor.address !== address) return null;
     if (typeof descriptor?.token !== 'string' || !/^[0-9a-f]{64}$/.test(descriptor.token)) return null;
     return descriptor.token;

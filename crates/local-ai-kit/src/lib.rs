@@ -232,7 +232,14 @@ pub fn usable_helper(path: &Path) -> bool {
     if ["cmd", "bat", "ps1"].contains(&extension.as_str()) {
         return false;
     }
-    path.metadata().is_ok_and(|meta| meta.is_file())
+    path.metadata().is_ok_and(|meta| {
+        if !meta.is_file() { return false; }
+        #[cfg(unix)] {
+            use std::os::unix::fs::PermissionsExt;
+            if meta.permissions().mode() & 0o111 == 0 { return false; }
+        }
+        true
+    })
 }
 
 fn path_helper() -> Option<PathBuf> {
@@ -250,9 +257,7 @@ pub fn resolve_helper(explicit: Option<PathBuf>) -> Option<PathBuf> {
     }
     if let Some(value) = env::var_os("LAI_HELPER_PATH") {
         let path = PathBuf::from(value);
-        if usable_helper(&path) {
-            return Some(path);
-        }
+        return usable_helper(&path).then_some(path);
     }
     if let Ok(current) = env::current_exe() {
         if let Some(directory) = current.parent() {
@@ -266,18 +271,8 @@ pub fn resolve_helper(explicit: Option<PathBuf>) -> Option<PathBuf> {
 }
 
 fn shared_token(path: &Path, expected_address: &str) -> Option<String> {
-    let info = path.symlink_metadata().ok()?;
-    if !info.is_file() || info.file_type().is_symlink() || info.len() > 16 * 1024 {
-        return None;
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if info.permissions().mode() & 0o077 != 0 {
-            return None;
-        }
-    }
-    let descriptor: Value = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
+    let bytes = lai_platform::read_private_file(path, 16 * 1024).ok()?;
+    let descriptor: Value = serde_json::from_slice(&bytes).ok()?;
     if descriptor
         .get("address")
         .and_then(Value::as_str)
@@ -599,6 +594,11 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let file = directory.path().join("helper");
         std::fs::write(&file, b"#!/bin/sh\n").unwrap();
+        #[cfg(unix)] {
+            use std::os::unix::fs::PermissionsExt;
+            assert!(!usable_helper(&file));
+            std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
         assert!(usable_helper(&file));
         assert!(!usable_helper(Path::new("helper")));
         let script = directory.path().join("helper.cmd");
