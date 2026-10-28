@@ -101,7 +101,7 @@ async function boot(): Promise<void> {
 
 boot().catch(() => {
   const status = document.createElement('p');
-  status.textContent = 'The demo could not start. Reload this page; if it persists, restart the Local AI Kit demo command.';
+  status.textContent = 'The demo could not start. Reload this page; if it persists, restart the OriginLM demo command.';
   status.setAttribute('role', 'alert');
   status.className = 'm-8 text-muted-foreground';
   document.querySelector('#app')?.replaceChildren(status);
