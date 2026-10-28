@@ -3,8 +3,6 @@
  * axes: dark/grotesk-sans/warm · posture: restrained · job: try and sign up, the action in the nav, the hero, the install band and the footer · imagery: screenshots 2 (capture.mjs, example data) · sweep: pending v1 integration verification; earlier branch results do not qualify this revision · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V3 · weakest: V, the page keeps its eleven-part argument in order; varied the compositions instead (split, table, pinned steps, band, vertical tabs, index table, statement, film with chapters) */
 /* Hallmark · waive 39b · app UI at 36px with a ::after hit target expanding it to 44px · the copy control lives in each code block header beside the code it copies, where a 48px marketing pill would crowd the sample */
-/* Hallmark · waive 44c · the render heuristic selects .hero-copy as the hero; the actual header fills the 900px fold and includes the 700px stack plus its caption and layer key. The reviewed full-fold capture confirms the composition. */
-/* Hallmark · waive 79 · the same .hero-copy heuristic excludes the adjacent stack and caption from its content bounds; the full 1440x900 capture has that real visual through the fold. */
 /* Hallmark · dismissed 28a · the first lazy image is the usage screenshot in the second section, below the fold; the LCP is the hero stage poster, which carries fetchpriority high */
 /* Hallmark · answered F7 · the pills are the nav links, icon buttons, filter and install tabs, all controls; boxes take the 12px card radius */
 /* Hallmark · answered F15 · 64px between a split's text and its visual, 32px between grid columns, 40px inside the integrations panel: three roles, not drift */
@@ -175,8 +173,8 @@ p { color: var(--color-muted); }
 /* ---------- Hero: Stage ---------- */
 
 .hero { display: flex; align-items: center; min-height: calc(100dvh - 72px); padding-block: var(--space-xl) var(--space-2xl); }
-.hero-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--space-lg); align-items: center; }
-.hero-copy { padding-bottom: 0; }
+.intro-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--space-lg); align-items: center; }
+.intro-copy { padding-bottom: 0; }
 .hero h1 { font-size: clamp(2.5rem, 3.4vw + 0.6rem, 4.25rem); line-height: 1.02; max-width: 12ch; }
 .hero h1 .line { display: block; }
 .hero h1 .line-second { margin-top: var(--space-xs); max-width: 18ch; font-size: 1em; line-height: 1.12; letter-spacing: -0.015em; }
@@ -186,7 +184,7 @@ p { color: var(--color-muted); }
 
 .hero-figure { margin: 0; min-width: 0; }
 .hero-stage {
-  position: relative; height: min(720px, calc(100dvh - 200px)); min-height: 440px; border-radius: var(--radius-card);
+  position: relative; height: min(660px, calc(100dvh - 272px)); min-height: 440px; border-radius: var(--radius-card);
   background: var(--color-paper); color: var(--color-ink);
   overflow: hidden; isolation: isolate;
 }
@@ -458,8 +456,8 @@ p { color: var(--color-muted); }
 
 @media (max-width: 60rem) {
   .hero { min-height: 0; padding-block: var(--space-xl) var(--space-2xl); }
-  .hero-grid, .head-split, .halves, .how-grid, .install-shell, .status-layout, .integrations, .video-layout, .final-cta, .footer-grid { grid-template-columns: minmax(0, 1fr); }
-  .hero-grid { gap: var(--space-xl); }
+  .intro-grid, .head-split, .halves, .how-grid, .install-shell, .status-layout, .integrations, .video-layout, .final-cta, .footer-grid { grid-template-columns: minmax(0, 1fr); }
+  .intro-grid { gap: var(--space-xl); }
   .hero-stage { height: 440px; min-height: 0; }
   .head-split { gap: var(--space-md); margin-bottom: var(--space-xl); }
   .half--see { padding-right: 0; border-right: 0; padding-bottom: var(--space-2xl); }
@@ -474,7 +472,7 @@ p { color: var(--color-muted); }
 @media (max-width: 40rem) {
   .hero h1 { font-size: 2.6rem; }
   .hero-stage { height: 340px; }
-  .hero-grid { gap: var(--space-lg); }
+  .intro-grid { gap: var(--space-lg); }
   .stage-fallback { padding: 0; }
   .install-panel, .integration-panel, .security-foot { padding: var(--space-lg) var(--space-md); }
   .install-cmd { grid-template-columns: auto minmax(0, 1fr); }
@@ -518,3 +516,10 @@ p { color: var(--color-muted); }
 .layer-key dl { display: grid; gap: var(--space-md); margin-block: var(--space-sm); }
 .layer-key dt { color: var(--color-ink); font-weight: 600; }
 .layer-key dd { margin: var(--space-2xs) 0 0; }
+
+/* Keep the full desktop composition visible while scroll reveals the stack.
+   Static/no-script/reduced-motion layouts retain an ordinary single-screen hero. */
+@media (min-width: 60.001rem) and (prefers-reduced-motion: no-preference) {
+  .js .hero-scroll:not(:has(.hero-stage[data-fallback])) { height: calc(200dvh - 72px); }
+  .js .hero-scroll:not(:has(.hero-stage[data-fallback])) > .hero { position: sticky; top: 72px; }
+}

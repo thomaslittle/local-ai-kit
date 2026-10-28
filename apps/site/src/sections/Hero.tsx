@@ -27,6 +27,7 @@ class SceneBoundary extends Component<{ children: ReactNode; onFailure: () => vo
 
 export function HeroStage() {
   const stageRef = useRef<HTMLDivElement>(null);
+  const introPlayed = useRef(false);
   const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [enabled, setEnabled] = useState(false);
   const [ready, setReady] = useState(false);
@@ -84,7 +85,7 @@ export function HeroStage() {
 
   return (
     <figure className="hero-figure">
-      <div className="hero-stage" ref={stageRef} data-static={staticMode || paused || undefined} data-ready={ready && !paused && !staticMode && visible || undefined}>
+      <div className="hero-stage" ref={stageRef} data-fallback={staticMode || undefined} data-static={staticMode || paused || undefined} data-ready={ready && !paused && !staticMode && visible || undefined}>
         <picture>
         <source media="(max-width: 40rem)" srcSet="/scene/poster-mobile.webp" />
         <img
@@ -102,6 +103,7 @@ export function HeroStage() {
           <Suspense fallback={null}>
             <HeroScene
               stageEl={stageRef.current}
+              introPlayed={introPlayed}
               labels={labelRefs}
               quality={quality}
               onHover={setActive}
@@ -153,7 +155,7 @@ export function HeroStage() {
       <figcaption>
         {staticMode
           ? "The OriginLM stack, one runtime from the providers up to your app."
-          : "The OriginLM stack, pulled apart as you scroll. Hover a layer to read what it does."}
+          : "Scroll to separate your app, SDK, transport, runtime and providers."}
       </figcaption>
       <details className="layer-key">
         <summary>Explore the five layers</summary>
@@ -165,9 +167,10 @@ export function HeroStage() {
 
 export function Hero() {
   return (
+    <div className="hero-scroll">
     <header className="hero" id="top">
-      <div className="container hero-grid">
-        <div className="hero-copy">
+      <div className="container intro-grid">
+        <div className="intro-copy">
           <h1>
             <span className="line">See your AI.</span>
             <span className="line line-second">Build with it.</span>
@@ -194,5 +197,6 @@ export function Hero() {
         <HeroStage />
       </div>
     </header>
+    </div>
   );
 }

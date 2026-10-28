@@ -11,3 +11,17 @@ Mobile uses a lower DPR and bypasses bloom, depth of field and grain. Reduced mo
 The film target is 35 seconds: problem (3), see your AI (7), build with it (9), connect (4), install (5), then a 7-second brand ending to be tightened during visual review. No audio is required. Large rendered outputs belong in `media/video/out/`, never in source control.
 
 Implementation and visual iteration are in progress. No frame-rate, Lighthouse, bundle-budget, or final-render qualification is claimed yet.
+
+
+## Site scroll behavior, 2026-10-28
+
+The site owns its scroll controller separately from the shared scene renderer.
+On desktop, a sticky hero keeps the real UI in view through the complete separation
+and reverse-separation range. Mobile scrubs across a shorter ordinary flow. Static,
+no-script and reduced-motion states use the existing poster and native layer key.
+The introductory macro runs once per page visit; leaving and returning to the hero
+does not restart it. A headless software-WebGL test covers separation, reversal and
+viewport containment. It does not qualify hardware frame rates.
+
+Thomas stopped all video work during final verification. Existing media is retained;
+no further video qualification is implied by this site behavior change.

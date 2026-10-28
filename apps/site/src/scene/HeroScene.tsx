@@ -1,16 +1,17 @@
 import { useEffect, useEffectEvent, useRef } from 'react';
 import { LAYERS, type Layer } from '../data/layers';
-import { createStudio, spring } from './studio';
+import { createStudio } from './studio';
 
 type Props = {
   stageEl: HTMLElement | null;
+  introPlayed: { current: boolean };
   labels: { current: (HTMLDivElement | null)[] };
   onHover: (layer: Layer | null) => void;
   onReady: () => void;
   onFailure: () => void;
   quality: 'full' | 'light';
 };
-export default function HeroScene({ stageEl, labels, onHover, onReady, onFailure, quality }: Props) {
+export default function HeroScene({ stageEl, introPlayed, labels, onHover, onReady, onFailure, quality }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const ready = useEffectEvent(onReady);
   const failed = useEffectEvent(onFailure);
@@ -44,13 +45,26 @@ export default function HeroScene({ stageEl, labels, onHover, onReady, onFailure
       if (cancelled) { created.dispose(); return; }
       studio = created;
       const start = performance.now(); let previous = start;
+      let separation = 0, separationVelocity = 0;
       const frame = (now: number) => {
         if (cancelled) return;
         const seconds = (now - start) / 1000, dt = Math.min((now - previous) / 1000, 0.03); previous = now;
         for (let i = 0; i < 2; i++) { velocity[i] += ((desired[i] - pointer[i]) * 120 - velocity[i] * 18) * dt; pointer[i] += velocity[i] * dt; }
-        const scroll = Math.max(0, Math.min(1, -stageEl.getBoundingClientRect().top / Math.max(1, stageEl.clientHeight)));
-        const spread = Math.max(0, Math.min(1, spring(seconds - 0.45) * 0.7 + scroll * 0.3));
-        placeLabels(created.render({ seconds, spread, intro: Math.min(1, seconds / 2.6), pointer, active: active < 0 ? undefined : active }));
+        // The camera introduces the real UI; scrolling owns the separation.
+        // Start from a single card and reveal all five planes while the hero
+        // remains on screen. Damp the scrub to match pointer motion.
+        const hero = stageEl.closest('.hero') ?? stageEl;
+        const bounds = hero.getBoundingClientRect();
+        const track = stageEl.closest('.hero-scroll')?.getBoundingClientRect() ?? bounds;
+        const pinned = innerWidth > 960 && track.height > bounds.height + 1;
+        const distance = pinned ? (track.height - bounds.height) * 0.8 : bounds.height * 0.3;
+        const scroll = Math.max(0, Math.min(1, (72 - (pinned ? track.top : bounds.top)) / Math.max(1, distance)));
+        separationVelocity += ((scroll - separation) * 120 - separationVelocity * 18) * dt;
+        separation += separationVelocity * dt;
+        const spread = Math.max(0, Math.min(1, separation));
+        const intro = introPlayed.current ? 1 : Math.min(1, seconds / 2.6);
+        if (intro === 1) introPlayed.current = true;
+        placeLabels(created.render({ seconds, spread, intro, pointer, active: active < 0 ? undefined : active }));
         if (seconds < 0.1) ready();
         animation = requestAnimationFrame(frame);
       };
@@ -61,6 +75,6 @@ export default function HeroScene({ stageEl, labels, onHover, onReady, onFailure
       element.removeEventListener('pointermove', move); element.removeEventListener('pointerleave', leave); element.removeEventListener('webglcontextlost', lost);
       studio?.dispose();
     };
-  }, [quality, stageEl]);
+  }, [quality, stageEl, introPlayed]);
   return <canvas ref={canvas} role="img" aria-label="Five opaque screens from OriginLM in example mode: your app, SDK, transport, runtime and providers." />;
 }
