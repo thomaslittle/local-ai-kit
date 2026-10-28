@@ -1,0 +1,61 @@
+/* OriginLM brand tokens. Mirrors apps/demo/src/styles.css (dark theme) so the
+   site, the desktop app and the product video share one palette and type ramp. */
+
+@font-face {
+  font-family: "Red Hat Display Variable";
+  src: url("../assets/fonts/RedHatDisplay-Variable.ttf") format("truetype");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --radius: 0.45rem;
+
+  /* Graphite workspace surfaces, from the desktop shell. */
+  --background: #171314;
+  --background-raised: #1e1a1b;
+  --card: #221d1e;
+  --card-strong: #272122;
+  --popover: #2e2829;
+  --foreground: #faf9f5;
+  --muted-foreground: #b0a8a1;
+  --faint: #8a817b;
+
+  --primary: #eba31a;
+  --primary-bright: #f7bd4b;
+  --primary-foreground: #231f20;
+  --brand-foreground: #eba31a;
+
+  --border: #3b3334;
+  --border-soft: rgb(250 249 245 / 8%);
+  --border-strong: rgb(250 249 245 / 14%);
+  --hairline: rgb(250 249 245 / 6%);
+
+  --surface-subtle: rgb(250 249 245 / 3%);
+  --surface: rgb(250 249 245 / 6%);
+  --raised: rgb(250 249 245 / 10%);
+  --surface-hover: rgb(250 249 245 / 12%);
+  --accent-subtle: rgb(235 163 26 / 10%);
+  --accent-surface: rgb(235 163 26 / 16%);
+  --accent-strong: rgb(235 163 26 / 26%);
+
+  --success: #7cc08f;
+  --warning: #d9a441;
+  --info: #a9b29f;
+  --danger: #e0776b;
+
+  --font-sans: "Red Hat Display Variable", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+
+  --max-width: 76rem;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --section-y: clamp(5rem, 10vw, 8.5rem);
+
+  --shadow-card: 0 1px 0 0 rgb(250 249 245 / 5%) inset, 0 22px 60px -30px rgb(0 0 0 / 80%);
+  --shadow-float: 0 1px 0 0 rgb(250 249 245 / 7%) inset, 0 40px 90px -40px rgb(0 0 0 / 90%);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
