@@ -406,3 +406,26 @@ async fn variable_font_assets_are_served_as_woff2() {
     s.close().await;
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[tokio::test]
+async fn inventory_sse_preserves_scope_and_rejects_session_mixing() {
+    let (server, _) = setup().await;
+    let token = pair(&server).await;
+    let refreshed = rpc(&server, &token, "discovery.refresh", json!({"level":"passive"})).await;
+    assert!(refreshed.get("result").is_some());
+    let mut response = client()
+        .get(format!("{}/v1/events?scope=inventory&after=0", server.url))
+        .bearer_auth(&token)
+        .send().await.unwrap();
+    assert_eq!(response.status(), 200);
+    assert!(response.headers()["content-type"].to_str().unwrap().starts_with("text/event-stream"));
+    let first = response.chunk().await.unwrap().unwrap();
+    assert!(String::from_utf8_lossy(&first).contains("event: update"));
+    drop(response);
+    for query in ["scope=unknown", "scope=inventory&sessionId=unowned"] {
+        let response = client().get(format!("{}/v1/events?{query}", server.url))
+            .bearer_auth(&token).send().await.unwrap();
+        assert_eq!(response.status(), 400);
+    }
+    server.close().await;
+}

@@ -102,6 +102,7 @@ pub(super) async fn diagnostics(State(s): State<Arc<Shared>>, h: HeaderMap) -> R
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct EventQuery {
+    scope: Option<String>,
     session_id: Option<String>,
     after: Option<String>,
 }
@@ -114,7 +115,9 @@ pub(super) async fn events(
         Ok(q) => q,
         Err(_) => return reject(StatusCode::BAD_REQUEST, "INVALID_REQUEST"),
     };
-    if query.session_id.as_ref().is_some_and(|s| s.len() > 256)
+    if query.scope.as_deref().is_some_and(|scope| scope != "inventory")
+        || (query.scope.is_some() && query.session_id.is_some())
+        || query.session_id.as_ref().is_some_and(|s| s.len() > 256)
         || query
             .after
             .as_ref()
@@ -131,6 +134,9 @@ pub(super) async fn events(
         Err(_) => return reject(StatusCode::TOO_MANY_REQUESTS, "STREAM_LIMIT"),
     };
     let mut params = json!({});
+    if let Some(scope) = query.scope {
+        params["scope"] = json!(scope);
+    }
     if let Some(id) = query.session_id {
         params["sessionId"] = json!(id);
     }

@@ -55,3 +55,6 @@ test('stderr is drained but not returned or logged',async()=>{
 test('server event gap fails only its subscription and preserves request transport',async()=>{
  const t=await open();try{const iterator=t.subscribe({after:'manual'})[Symbol.asyncIterator]();await iterator.next();assert.deepEqual(await t.request('test.gap'),{ok:true});await assert.rejects(iterator.next(),/EVENT_GAP/);assert.deepEqual(await t.request('test.echo',{alive:true}),{alive:true});}finally{await t.close();}
 });
+test('stdio carries nested auth method identifiers without relaxing malformed names',async()=>{
+ const t=await open();try{assert.deepEqual(await t.request('auth.chatgpt.status',{synthetic:true}),{synthetic:true});for(const method of ['auth..status','.auth.status','auth.status.'])await assert.rejects(t.request(method),/INVALID_METHOD/);}finally{await t.close();}
+});

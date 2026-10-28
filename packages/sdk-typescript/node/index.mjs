@@ -2,7 +2,7 @@
 import { spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
 import { tmpdir } from 'node:os';
-import { LocalAIError, remoteError } from '../dist/errors.js';
+import { LocalAIError, remoteError, requireMethod } from '../dist/errors.js';
 const failCode=code=>new LocalAIError(code);
 const bounded=(v,min,max)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw failCode('INVALID_LIMIT');return v;};
 class EventQueue {
@@ -88,7 +88,7 @@ export async function openStdioTransport(options){
  function request(method,params={},call={},onResult){
   if(ended)return Promise.reject(failCode('CLOSED'));
   if(call.signal?.aborted)return Promise.reject(failCode('CANCELLED'));
-  if(typeof method!=='string'||method.length>128||!/^[a-zA-Z][a-zA-Z0-9]*\.[a-zA-Z][a-zA-Z0-9]*$/.test(method))return Promise.reject(failCode('INVALID_METHOD'));
+  try{requireMethod(method);}catch(error){return Promise.reject(error);}
   if(pending.size>=maxPending)return Promise.reject(failCode('TOO_MANY_REQUESTS'));
   if(sequence>=Number.MAX_SAFE_INTEGER)return Promise.reject(failCode('REQUEST_ID_EXHAUSTED'));
   let body,duration;const id=++sequence;

@@ -6,7 +6,7 @@ export interface HttpOptions {
   /** Dependency injection for hosts/tests; the default is the platform fetch. */
   fetch?: typeof globalThis.fetch;
 }
-export interface PairingCodeOptions {
+export interface PairingCodeOptions extends CallOptions {
   /** Loopback origin returned by the host's HTTP runtime. */
   baseUrl: string;
   /** Dependency injection for hosts/tests; the default is the platform fetch. */
@@ -38,23 +38,31 @@ async function readJSON(response: Response, max: number): Promise<unknown> {
 async function pairingCodeRequest(options: PairingCodeOptions, method: 'GET' | 'POST'): Promise<PairingCode> {
   const origin = endpoint(options.baseUrl);
   const fetcher = options.fetch ?? globalThis.fetch;
-  let response: Response;
+  if (options.signal?.aborted) throw new LocalAIError('CANCELLED');
+  const duration = limit(options.timeoutMs ?? 30000, 1, 3600000);
+  const deadline = new AbortController();
+  const timer = setTimeout(() => deadline.abort(), duration);
+  const signal = AbortSignal.any([deadline.signal, ...(options.signal ? [options.signal] : [])]);
   try {
-    response = await fetcher(`${origin}/runtime/pairing-code`, {
-      method, headers: { Accept: 'application/json' }, credentials: 'omit', cache: 'no-store', redirect: 'error',
+    const response = await fetcher(`${origin}/runtime/pairing-code`, {
+      method, signal, headers: { Accept: 'application/json' }, credentials: 'omit', cache: 'no-store', redirect: 'error',
     });
-  } catch { throw new LocalAIError('TRANSPORT_FAILED'); }
-  if (!response.ok) {
-    await response.body?.cancel().catch(() => {});
-    throw new LocalAIError(`HTTP_${response.status}`);
-  }
-  const value = await readJSON(response, 4096) as Record<string, unknown>;
-  if (!value || typeof value !== 'object' || typeof value.code !== 'string'
-    || !/^[a-f0-9]{12}$/.test(value.code) || !Number.isSafeInteger(value.expiresInSeconds)
-    || (value.expiresInSeconds as number) < 1 || (value.expiresInSeconds as number) > 300) {
-    throw new LocalAIError('PROTOCOL_INVALID');
-  }
-  return { code: value.code, expiresInSeconds: value.expiresInSeconds as number };
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => {});
+      throw new LocalAIError(`HTTP_${response.status}`);
+    }
+    const value = await readJSON(response, 4096) as Record<string, unknown>;
+    if (!value || typeof value !== 'object' || typeof value.code !== 'string'
+      || !/^[a-f0-9]{12}$/.test(value.code) || !Number.isSafeInteger(value.expiresInSeconds)
+      || (value.expiresInSeconds as number) < 1 || (value.expiresInSeconds as number) > 300) {
+      throw new LocalAIError('PROTOCOL_INVALID');
+    }
+    return { code: value.code, expiresInSeconds: value.expiresInSeconds as number };
+  } catch (error) {
+    if (options.signal?.aborted) throw new LocalAIError('CANCELLED');
+    if (deadline.signal.aborted) throw new LocalAIError('TIMEOUT');
+    throw error instanceof LocalAIError ? error : new LocalAIError('TRANSPORT_FAILED');
+  } finally { clearTimeout(timer); }
 }
 /** Read the active host-issued pairing code from a loopback runtime. This does not consume or rotate it. */
 export function getPairingCode(options: PairingCodeOptions): Promise<PairingCode> {
@@ -117,6 +125,10 @@ export function createHttpTransport(options: HttpOptions): Transport {
         for (const key of ['sessionId', 'after'] as const) if (query[key] !== undefined) {
           if (typeof query[key] !== 'string' || query[key].length > 512 || /[\x00-\x1f]/.test(query[key])) throw new LocalAIError('INVALID_REQUEST');
           url.searchParams.set(key, query[key]);
+        }
+        if (query.scope !== undefined) {
+          if (query.scope !== 'inventory' || query.sessionId !== undefined) throw new LocalAIError('INVALID_REQUEST');
+          url.searchParams.set('scope', query.scope);
         }
         const response = await fetcher(url.href, { method: 'GET', signal: ctx.signal,
           headers: { Accept: 'text/event-stream', Authorization: `Bearer ${options.token}` }, credentials: 'omit', redirect: 'error' });

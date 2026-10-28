@@ -22,6 +22,13 @@ class AsyncTests(unittest.IsolatedAsyncioTestCase):
         ai = await AsyncClient.connect(t)
         self.assertEqual(await ai.snapshot.get({'fields':['models']}), {'fields':['models']})
 
+    async def test_nested_auth_rpc_identifier(self):
+        t = await self.open()
+        self.assertEqual(await t.request('auth.chatgpt.status', {'synthetic': True}), {'synthetic': True})
+        for method in ['auth..status', '.auth.status', 'auth.status.']:
+            with self.assertRaisesRegex(LocalAIError, 'INVALID_METHOD'):
+                await t.request(method)
+
     async def test_concurrent_responses_keep_identity(self):
         t = await self.open()
         values = await asyncio.gather(t.request('test.delay', {'value':'a','delay':0.03}), t.request('test.delay', {'value':'b','delay':0.001}))

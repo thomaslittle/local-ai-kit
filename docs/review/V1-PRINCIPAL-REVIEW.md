@@ -199,3 +199,15 @@ only after a successful runtime `apps.list` response without a connection error;
 example/offline/denied states never claim administrator access. Removed the implicit
 `./admin-token.json` fallback when no configured/home descriptor exists. The native
 build passed for privilege labels; the fallback change awaits the final pass.
+
+### V1-023 (P1): public nested methods and inventory subscriptions fail at transport boundaries
+
+TS HTTP, Node, Native Messaging and Python validated exactly two method-name
+segments, rejecting advertised `auth.chatgpt.*` RPCs. HTTP also omitted the inventory
+scope on the client and rejected it on the server, so inventory subscriptions could
+read the wrong event stream. Implemented: shared TS method validation permits
+bounded dotted identifiers; Python matches it; HTTP validates and forwards the
+inventory scope and rejects mixed inventory/session queries. Pairing-code requests now
+honor cancellation and a bounded deadline as RPCs already did. Regression fixtures
+are authored; SDK/transport builds passed before the final pairing deadline change.
+The full verification pass remains pending.
