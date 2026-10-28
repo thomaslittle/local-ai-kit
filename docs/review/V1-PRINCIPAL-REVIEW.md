@@ -389,3 +389,8 @@ is unchanged. All helper launch sites normalize synchronous OS exceptions; inval
 NUL-containing executable paths fail with a safe typed error. Both regressions
 failed before the fix; all 90 SDK tests pass. The final qualification record covers
 the packed-artifact Electron run separately from fixtures and other platforms.
+
+Hosted follow-up: macOS executes the SDK fixture through Node's canonical
+`/private/var` path. The ASAR resolution assertion now compares the physical
+unpacked file's canonical path, retaining the exact-tree check and missing-file
+rejection. This corrects fixture portability; no runtime behavior changed.

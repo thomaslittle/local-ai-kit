@@ -190,7 +190,7 @@ test('Electron packaged helpers resolve to the real unpacked tree',async()=>{
   const isolated=await import(pathToFileURL(join(sdk,'node','auto.mjs')).href);
   assert.throws(()=>isolated.resolveHelper(),/RUNTIME_MISSING/);
   Object.defineProperty(process.versions,'electron',{value:'fixture',configurable:true});
-  assert.equal(isolated.resolveHelper(),unpacked);
+  assert.equal(isolated.resolveHelper(),realpathSync(unpacked));
   rmSync(unpacked);assert.throws(()=>isolated.resolveHelper(),/HELPER_NOT_UNPACKED/);
  }finally{
   if(descriptor)Object.defineProperty(process.versions,'electron',descriptor);else delete process.versions.electron;
