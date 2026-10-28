@@ -18,7 +18,8 @@ if ($Purge) {
 }
 Stop-ScheduledTask -TaskName 'OriginLM Helper' -ErrorAction SilentlyContinue
 Unregister-ScheduledTask -TaskName 'OriginLM Helper' -Confirm:$false -ErrorAction SilentlyContinue
-Remove-Item -Force (Join-Path ([Environment]::GetFolderPath('Startup')) 'OriginLM Tray.lnk') -ErrorAction SilentlyContinue
+$startup = [Environment]::GetFolderPath('Startup')
+if ($startup) { Remove-Item -Force (Join-Path $startup 'OriginLM Tray.lnk') -ErrorAction SilentlyContinue }
 
 $manifestRoots = @(
   (Join-Path $env:LOCALAPPDATA 'Google\Chrome\User Data\NativeMessagingHosts'),

@@ -44,7 +44,7 @@ class UnixUninstall(unittest.TestCase):
     def test_purge_rejects_a_home_alias_before_removing_data(self):
         with tempfile.TemporaryDirectory(prefix='originlm-uninstall-') as directory:
             home=pathlib.Path(directory);sentinel=home/'keep.txt';sentinel.write_text('fixture')
-            env={**os.environ,'HOME':directory,'LAI_STATE_DIR':str(home/'.'),'LAI_DATA_DIR':str(home/'data'),'LAI_BIN_DIR':str(home/'bin'),'XDG_CONFIG_HOME':str(home/'config')}
+            env={**os.environ,'HOME':directory,'LAI_STATE_DIR':directory+'/.','LAI_DATA_DIR':str(home/'data'),'LAI_BIN_DIR':str(home/'bin'),'XDG_CONFIG_HOME':str(home/'config')}
             result=subprocess.run(['sh',str(ROOT/'scripts/service/uninstall.sh'),'--purge'],env=env,capture_output=True,text=True)
             self.assertEqual(result.returncode,2)
             self.assertTrue(sentinel.exists())
