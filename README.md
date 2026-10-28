@@ -74,7 +74,20 @@ Overview, accounts, models, usage, issues, applications, diagnostics, safe
 refresh, issue snooze/acknowledge, app revocation, and redacted export. It never
 opens SQLite or calls a provider. See the
 [shared broker guide](docs/integration/shared-broker.md) and the
-[decision record](docs/design/ADR-001-shared-runtime.md).
+[decision record](docs/design/ADR-001-shared-runtime.md). For Fedora source builds and
+private per-app connection paths, see the [local runtime guide](docs/integration/fedora-local-runtime.md).
+
+### Native desktop manager
+
+```sh
+cargo run -p lai-desktop -- --token-file ~/.local/state/local-ai-kit/fedora-shared/control-admin-token.json
+```
+
+A GPUI client built on [GPUI Kit](https://gpui-kit.com) with the
+[GPUI Fast](https://github.com/longbridge/gpui-fast) backend: overview,
+providers, models, interactive usage charts, connected apps, sessions, a
+read-only playground, diagnostics and settings, all over the broker's public
+authenticated API. See [`crates/lai-desktop/README.md`](crates/lai-desktop/README.md).
 
 ### Run the showcase
 

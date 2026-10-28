@@ -56,6 +56,7 @@ fn setup(
                         (
                             c.id.clone(),
                             LocatedClient {
+                                executable_identity: None,
                                 provider_id: "test".into(),
                                 profile_home: std::env::temp_dir(),
                                 executable: None,
@@ -132,6 +133,7 @@ async fn revocation_during_open_then_regrant_closes_the_unpublished_agent() {
                     locations: BTreeMap::from([(
                         "personal".into(),
                         LocatedClient {
+                            executable_identity: None,
                             provider_id: "test".into(),
                             profile_home: std::env::temp_dir(),
                             executable: None,

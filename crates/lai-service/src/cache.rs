@@ -211,7 +211,10 @@ fn mark_snapshot_stale(snapshot: &mut Snapshot) {
     for connection in &mut snapshot.connections {
         mark_observation_stale(&mut connection.auth);
         mark_observation_stale(&mut connection.plan);
-        if connection.status == "metadata_ready" {
+        if matches!(
+            connection.status.as_str(),
+            "metadata_ready" | "metadata_cached"
+        ) {
             connection.status = "metadata_stale".into();
         }
     }
@@ -1506,6 +1509,7 @@ mod refresh_generation_tests {
                 locations: BTreeMap::from([(
                     "personal".into(),
                     LocatedClient {
+                        executable_identity: None,
                         provider_id: "test".into(),
                         profile_home: PathBuf::from("synthetic"),
                         executable: None,

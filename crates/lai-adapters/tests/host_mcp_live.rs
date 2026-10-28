@@ -27,6 +27,7 @@ async fn live_claude_turn_calls_host_and_native_tools() {
     let wanted = std::env::var("LAI_LIVE_CLAUDE_MODEL").unwrap_or_else(|_| "haiku".into());
     let native_tools = std::env::var_os("LAI_LIVE_MCP_NATIVE_TOOLS").is_some();
     let located = lai_discovery::LocatedClient {
+        executable_identity: None,
         provider_id: "claude_code".into(),
         profile_home: home.into(),
         executable: Some(exe.into()),
@@ -193,6 +194,7 @@ async fn live_codex_native_tools_and_host_mcp_share_a_session() {
     };
     let wanted = std::env::var("LAI_LIVE_CODEX_MODEL").unwrap_or_default();
     let located = lai_discovery::LocatedClient {
+        executable_identity: None,
         provider_id: "codex".into(),
         profile_home: home.clone().into(),
         executable: Some(exe.into()),

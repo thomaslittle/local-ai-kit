@@ -1,0 +1,61 @@
+{
+  "recordedAt": "2026-10-24T04:52:13.241155+00:00",
+  "kitBase": "3c439561efb058658c8bc96666ca67d6bfde9074",
+  "t3ReadOnlySource": "5bb54a0f77c6655fdb2ab551612ca1ca1fcd3667",
+  "platform": "Windows",
+  "node": "22.20.0",
+  "effect": "4.0.5 (T3 dependency, MIT)",
+  "status": "source integration and isolated synthetic execution; not deployed",
+  "sourceSha256": {
+    "packages/sdk-typescript/src/cached-usage-mcp.ts": "21fddc6f12e5ccfb605b8cf345d552c922675fc1fcb33a8bf12bad1912cb3cbe",
+    "packages/sdk-typescript/src/cached-usage-host.ts": "abed027c5c6b1ca7e687252cc885383e9ade9f2440ef6afe27f2bfb59b3da4ce",
+    "packages/sdk-typescript/package.json": "e1dc455dbd968eeaeec07d106362057ec2a46d6e642d9a4d2a6a5e4299a4e973",
+    "examples/mcp/t3code/kit-usage-toolkit.ts": "182c274b176e64d5a060bb40b1b2648cbe48d06a04adde3c77ca805f2346361c",
+    "tests/integration/cached-usage-host.test.mjs": "55df9594ff8d64fa2483c7598fe1a66868b7d0a087b1f7bb226babb49222e653",
+    "scripts/verify.py": "d969d25524e58826364cd02e2f923251e854d94bf6aef61287224b72c93634b2"
+  },
+  "privateLogSha256": {
+    "cached-usage-host-red-20261024.txt": "bbc1777d64992196277e032ba7530233e84eaddeec84a9f90042b05715475cc2",
+    "cached-usage-host-final-20261024.txt": "4e2322b0d61961ba2b8528676deed394ec096eaa6befaedee3816b7e48fa5c9a",
+    "cached-usage-host-stage-20261024.txt": "23ebb9c9a2837b99051ee51509ddc0a8c96519f7424fce9481b4ed6d473005b4",
+    "cached-usage-host-effect-final-20261024.txt": "ae856f1a7a0f382eec313e832a87ccac81fdba258f85c29cd5234541da11b4e7"
+  },
+  "integrationCommand": "node --experimental-strip-types --test tests/integration/cached-usage-host.test.mjs tests/integration/cached-usage-mcp.test.mjs",
+  "integrationResult": {
+    "passed": 2,
+    "failed": 0,
+    "seconds": 0.482382
+  },
+  "effectToolkitJourney": {
+    "effectVersion": "4.0.5",
+    "tool": "kit_usage_cached",
+    "calls": 5,
+    "allowed": 1,
+    "denied": 1,
+    "excessRejected": 1,
+    "retired": 1,
+    "revoked": 1,
+    "brokerOrProviderRequests": 0,
+    "networkListeners": 0,
+    "host": "isolated in-memory Effect toolkit; not deployed T3"
+  },
+  "checks": [
+    "SDK strict no-emit",
+    "focused SDK emit and Effect toolkit no-emit",
+    "project hygiene/local Markdown links",
+    "staged whitespace"
+  ],
+  "ownedSourceStage": {
+    "bytes": 95738,
+    "capBytes": 2097152
+  },
+  "liveChanges": [],
+  "unqualified": [
+    "T3 full HTTP/OAuth/layer composition",
+    "dot tool registration",
+    "selected cache host and producer transport",
+    "actual account/connection/billing mappings",
+    "provider allowance",
+    "exact-head hosted CI"
+  ]
+}

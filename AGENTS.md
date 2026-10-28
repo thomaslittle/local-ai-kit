@@ -2,6 +2,27 @@
 
 Guidance for AI coding agents (and humans who like checklists) working in this repository. Read [CONTRIBUTING.md](CONTRIBUTING.md) first; this file adds the constraints that matter most when you are working autonomously.
 
+## Owner implementation direction (2026-10-24)
+
+Applies to every coding agent working in this repository, including OpenAI-backed
+agents. For implementation scope and verification effort, this direction
+supersedes older blanket test-first, full-suite or multi-configuration requirements
+here and in linked guides; safety and permission boundaries remain unchanged.
+
+- Deliver small, working, user-visible product increments. Code volume, speculative
+  scaffolding and test infrastructure are not substitutes for a working product.
+- Verify the changed user flow with focused visual end-to-end/in-app checks using
+  the existing surface and harness. For a non-UI slice, exercise its smallest
+  relevant consuming flow. Stop when the bounded result is demonstrated.
+- No exhaustive unit-test campaigns, new CI, or repetitive qualification or
+  certification loops. Rerun only after a relevant change or a diagnosed failure
+  that warrants the retry, not merely to produce another green report.
+- Keep essential build, authorization/security and data-integrity checks narrow
+  and proportional to the change. Never bypass safeguards or claim untested
+  behavior works; distinguish fixture evidence from live behavior.
+- Reuse existing infrastructure. Avoid duplicate harnesses, extra services and
+  unnecessary worker fan-out. Do not expand scope to unrelated cleanup or checks.
+
 ## Read before changing code
 
 1. [README.md](README.md) for what the project is and how to build it.
@@ -40,3 +61,23 @@ Guidance for AI coding agents (and humans who like checklists) working in this r
 Use virtual homes, synthetic credentials, fake clients, and mock servers by default. Installing or configuring a dependency is not permission to consume an AI account. Live inference or paid checks require explicit authorization from the maintainers; missing account or platform access does not prevent fixture-based work. Do not launch extra hosted coding services or charge external AI APIs as part of a change.
 
 Record source commits, licenses, adapter operations, platforms, tests, and limits, and preserve upstream notices when reusing code. Do not publish to registries, buy or reset credits, sign releases, or alter unrelated local client settings. In every report distinguish **planned**, **implemented**, **fixture-tested**, **platform-executed**, and **live-qualified** status.
+
+## Dependency hygiene (owner direction, 2026-10-25)
+
+- At work start, check the important stack's official releases/registries and
+  dated release notes when its recorded review is missing or more than 7 days
+  old; also check before release and before relevant dependency changes. Review
+  urgent upstream advisories promptly, regardless of the review date.
+- Record review date, official source links, resolved version/Git SHA, local fork
+  patches, compatibility/pin rationale, and the upgrade decision in the linked
+  audit or existing dependency guidance. Distinguish latest stable, prerelease,
+  Git-only snapshots and supported compatibility pins; prefer compatible,
+  supported releases over blindly tracking HEAD.
+- Reuse a current review while pins/sources/advisories are unchanged; do not repeat
+  unchanged audits or add scheduled model wake-ups for this guidance. Coordinate
+  upgrades with active owners and preserve dirty work.
+- Validate adopted upgrades with focused builds and existing visual E2E/in-app
+  smoke of affected flows (or the smallest consuming flow for non-UI work). Add
+  no new unit tests for this maintenance; repeat checks only after a relevant
+  change or diagnosed failure. Record evidence and untested platform limits.
+- Latest bounded review: [2026-10-25 dependency audit](docs/dependency-audit-2026-10-25.md).

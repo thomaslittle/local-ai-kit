@@ -19,6 +19,7 @@ fn create(escape: bool) -> NativeService {
                     (
                         c.id.clone(),
                         LocatedClient {
+                            executable_identity: None,
                             provider_id: "gateway".into(),
                             profile_home: std::env::temp_dir(),
                             executable: None,

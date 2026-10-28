@@ -1,0 +1,34 @@
+{
+  "recordedAt": "2026-10-24T07:07:20.5899786Z",
+  "base": "97053661461b991762d0606a1b5da1a01b1661ce",
+  "platform": "Windows",
+  "status": "source-only; no active connection",
+  "check": "node --experimental-strip-types examples/mcp/remote/inert-check.mjs",
+  "result": "PASS",
+  "cacheReads": 1,
+  "providerRequests": 0,
+  "listeners": 0,
+  "liveCredentialsOrGrants": 0,
+  "databaseBytesUnchanged": true,
+  "checks": [
+    "SDK strict no-emit",
+    "project hygiene/local links",
+    "whitespace"
+  ],
+  "sourceSha256": {
+    "packages/sdk-typescript/src/cached-usage-remote.ts": "d630a8b0b4e56b62dd837544dc517e25bd6928509f5be437fcc822721bfc38a6",
+    "examples/mcp/remote/owner-cache.mjs": "30b1cb26db36d5b6f14bb5b81e4e6e06be8aada96206002ebfff89eb0d13f8ad",
+    "examples/mcp/remote/inert-check.mjs": "e5183b0ae4f9a3dba3efb53c157d700cc2c8f81c43a70ae43e2576c16cbfacef",
+    "examples/mcp/remote/host-config.json.template": "6497b64cbfd46070ac465af88158a4a725c9bd8330a0031a47a4970d9d82c86c",
+    "examples/mcp/remote/plugin-template/plugin.json": "b7e08288371b6f5ab42a69c5f70a22874d302bb5240e0464bb9864e2c50c0ba2",
+    "examples/mcp/remote/plugin-template/mcp.json.template": "6f214457c7fb4e9241c2b355601c8400c103306e3499ebc1c92321ef2e54ecbd",
+    "examples/mcp/remote/plugin-template/skills/cached-usage/SKILL.md": "c7a1a98c685d6507bd39670c25e95a90c0c9e3477a3354cbee25fcc23784b483"
+  },
+  "limitations": [
+    "No real HTTPS route/auth integration or private plugin registration",
+    "No live cache read/account binding performed in this task",
+    "Owner-side database export requires separate explicit cache-owner permission",
+    "Node22 SQLite experimental",
+    "Exact-head CI pending"
+  ]
+}

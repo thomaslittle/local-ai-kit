@@ -1,5 +1,127 @@
 # Execution ledger - Local AI Kit
 
+## October 24 app-scoped Claude execution
+
+With owner approval, the local broker gained per-app Claude Code execution
+grants for Remotif, Crntly and Haiwire. Each grant covers only the authenticated
+primary Claude Code connection (subscription billing). `workspaceId: "default"`
+maps to a dedicated empty owner-only directory per app. Requests are read-only,
+with paid, writes, native-policy and native-review all false. No Codex or
+other-provider execution was granted. The broker was gracefully restarted with
+`--allow-execution claude_code`. Each app's `grants.list` reported
+`execution: true`.
+
+Live-qualified generation, one turn per consumer, no retries counted:
+- **Crntly:** its own Compose client over the broker, headless, with no tools,
+  selected "Haiku 5.5" on the primary route. The turn completed with a 5-character
+  output in about 1.9 s.
+- **Remotif:** its own Kit client code, headless, selected "Haiku 4.5" on the
+  primary route. `selection.validate` passed, `session-1` was created and `turn-2`
+  completed with a 5-character output. Its in-app picker then showed both Haiku
+  rows on the primary profile as runnable and the `needs_auth` row as not runnable,
+  without starting a turn.
+- **Haiwire:** at first it had no broker generation path (its Kit integration
+  was metadata-only). After owner approval it added an opt-in read-only broker
+  chat (`49160ca`, `71f8651`). In-app, Claude "haiku" on the primary connection
+  ran `grants.list`, `selection.validate`, `sessions.create`, `events.subscribe`,
+  `turns.start` and `sessions.close`. The turn completed with 35 bytes of output,
+  no error, no tools and no retry. Haiwire keeps the session id internal; the
+  broker log records lifecycle, not sessions, so it is not quoted. On the way,
+  Haiwire fixed its own handling of `grants.list` `connectionIds: null` and of
+  explicit-config account scopes. The reply-text rendering fix is built but has
+  not been seen live.
+
+Defect found by a consumer: the user-local `2daa749` helper is an unstripped
+debug build (about 217 MB), and Haiwire rejects helpers over 64 MiB. It
+displayed this as "Helper version incompatible". A stripped copy of the same
+build (31.4 MB, SHA256
+`655e670f31e31529e06e75d8c7ba7e313e5fdd79fca85c1af5ce6ba218fd1a26`) let Haiwire
+reach Ready with 25 models over 4 connections, matching the broker. The stripped
+copy is now published in a separate versioned runtime directory. The running
+broker and the `~/.local/bin` link were left on the debug build.
+
+## October 24 first shared-broker consumer catalog
+
+Platform-executed on Fedora against the running metadata-only broker (helper
+`2daa749`): Remotif connected through its own app descriptor and, after its
+consumer stopped probing automatically and stopped requiring session tools for
+passive viewing, its picker read the cached broker snapshot with discovery
+complete and no error. It showed 25 model rows: seven Codex, 13 from the
+authenticated primary Claude Code profile, and five aliases from the
+`needs_auth` additional Claude profile. OpenCode was detected with no model rows.
+A read-only inspection of the broker cache matched those counts exactly. The
+primary Claude catalog grew from five aliases to 13 entries (aliases plus full
+native IDs) at the broker's 23:23 UTC permitted metadata refresh. That is a
+provider-reported catalog change, not duplicate consumer rows. Execution
+capabilities stayed unavailable as intended, and no generation was requested.
+Haiwire's private-Xvfb check failed before catalog inspection, so its normal-display
+consumer check is still owned by Haiwire. Crntly consumer integration has not been verified.
+
+## October 24 authorized Linux metadata continuation
+
+Explicit owner permission enabled metadata-only Codex, Claude Code and OpenCode
+checks using existing native sign-ins. The first real probes exposed Unix
+executable symlinks as configuration-only installations. Reused source fix
+`5bd139d` as `2daa749`, preserving the cached-usage work and both historical logs.
+The focused `lai-kit` Unix discovery-to-probe fixture passed (one test), helper
+build and formatting passed, and a versioned user-local candidate replaced the
+owned broker through SIGINT/restart. Its source-build SHA256 is
+`d4675775665da2bb0cdde79ecfa61f10053101feb6be2a61faea0df6942172fe`.
+
+Platform-executed, live metadata only: Codex and primary Claude Code reported
+authenticated readiness and published seven native Codex models/five Claude
+aliases. An additional Claude profile remained `needs_auth` with unverified
+aliases; preserve its route/profile identity. Official-protocol usage readings
+were returned and reported to the owner without committing live account data.
+OpenCode 2.1.4 remains metadata-incompatible with the discovered-process adapter's
+explicit 1.x contract. No generation, new OAuth grants, provider account-scope
+changes, paid fallback, remote endpoint or plugin activation was performed.
+The broker retains separate app descriptors and metadata-only permissions;
+consumer GUI integration is owned by the respective application owners.
+
+## October 24 Fedora local helper bring-up
+
+Platform-executed on Fedora from source `b0df201`: pinned Rust 1.97.1
+`cargo build --locked -p lai-cli --bin local-ai-kit` passed. The installed
+user-local executable reports `0.1.0-alpha.18`; protocol `1.0` handshake passed.
+The debug source-build SHA256 is
+`d77726696a50ca8a510a84253c7ee8c2be90971d549fa532dd273424480fb113`,
+not a published release-artifact claim. One private independent Unix-socket
+broker serves separate passive-only app descriptors for Remotif, Crntly and
+Haiwire. Socket/descriptors are 0600 inside a private 0700 directory. Real
+passive discovery found Claude Code, Codex and OpenCode (four connections,
+zero models). Duplicate binding was rejected, consumer disconnect preserved
+the broker, and SIGINT removed its socket and descriptors before restart.
+
+Authenticated readiness, model catalogs and generation remain unqualified;
+no metadata probes, credentials/OAuth changes or inference were performed.
+The broker is manually owned, with no root/user startup service, HTTP listener,
+remote exposure or hosted usage-plugin activation. Consumer owners received
+the supported executable and distinct descriptor paths. The first real Remotif
+GUI check accepted the descriptor and started exactly one `connect --ipc` bridge,
+then rejected the handshake because its composer incorrectly required session
+tool capabilities before catalog viewing. Its owner is repairing that consumer
+gate; no discovery/probe/session/inference followed in that app check. See the [Fedora local runtime guide](../integration/fedora-local-runtime.md).
+
+## October 24 Linux cached-usage revocation follow-up
+
+Implemented a second revocation check after asynchronous request-body decoding.
+The existing synthetic consuming flow reproduced a revoked upload returning 200;
+after the fix it returns 403 without another cache read. Fixture-tested and
+platform-executed on Linux with Node 24.22.1 and 22.23.4 using
+`node --experimental-strip-types examples/mcp/remote/inert-check.mjs`: one
+synthetic cache read, zero provider requests/listeners/live credentials or grants,
+and unchanged fixture database bytes. No live cache, account mapping, deployment
+or plugin activation was performed; these remain unqualified and approval-gated.
+SDK strict no-emit type-check, project hygiene/local links and whitespace checks
+also pass. `npm ci --ignore-scripts --no-audit --no-fund` installed the locked
+workspace dependencies without changing the lockfile. CI for this continuation
+is unverified.
+
+Shared user-local Node 24.22.1/npm 11.19.1 and Bun 1.4.4 setup is available;
+Node 22.23.4/npm 10.9.9 is retained for consumers requiring npm 10. Official
+release archive SHA256 checks passed. No other application source was edited.
+
 ## October 23 cache-only usage MCP candidate
 
 Implemented scoped `kit_usage_cached` façade and bounded stdio framing over
@@ -9,6 +131,16 @@ permission denial clear the live store; tool reads cause no provider/client
 requests or interest renewal. [Receipt](../qualification/evidence/2026-10-23-cached-usage-mcp/README.md).
 Actual dot registration, account-to-provider mapping and current allowance remain
 unqualified and require approved access/setup, not an inferred quota estimate.
+
+## October 23 bounded Unix executable symlink candidate
+
+Implemented executable-only Unix resolution and logical/physical identity checks.
+The single focused discovery-to-probe fixture is Linux/WSL2 platform-executed with
+synthetic metadata and no inference; no broad test campaign was run. Retarget,
+replacement and bounded invalid-link/data-read cases pass in that fixture.
+[Evidence](../qualification/evidence/2026-10-23-unix-executable-symlink/README.md).
+macOS, actual accounts, atomic handle execution and release/service replacement
+are not qualified or performed by this source-only candidate.
 
 ## October 22 native SDK bootstrap CI follow-up (release held)
 

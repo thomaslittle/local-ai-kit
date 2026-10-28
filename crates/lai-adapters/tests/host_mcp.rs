@@ -109,6 +109,7 @@ fn fake_claude() -> (tempfile::TempDir, lai_discovery::LocatedClient) {
     });
     std::fs::write(&exe, b"").unwrap();
     let located = lai_discovery::LocatedClient {
+        executable_identity: None,
         provider_id: "claude_code".into(),
         profile_home: dir.path().into(),
         executable: Some(exe),
