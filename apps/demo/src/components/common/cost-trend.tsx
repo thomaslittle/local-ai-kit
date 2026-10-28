@@ -12,6 +12,8 @@ export function CostTrend() {
   const { refreshCosts } = useActions();
   const records = costs?.records.slice(-24) ?? [];
   const amounts = records.map((record) => record.amountUsd === null ? null : Number(record.amountUsd));
+  const latest = records.at(-1);
+  const latestAmount = amounts.at(-1);
   const maximum = Math.max(...amounts.filter((amount): amount is number => amount !== null && Number.isFinite(amount)), 0.000001);
   return (
     <section aria-labelledby="cost-trend-title" className="min-w-0 border-y py-5">
@@ -26,7 +28,9 @@ export function CostTrend() {
       {costs?.storageError ? <p role="status" className="mt-3 text-sm text-destructive">{costs.storageError}</p> : null}
       {records.length ? (
         <>
-          <div className="mt-5 flex h-40 items-end gap-1 border-b" aria-hidden="true">
+          <p className="mt-4 text-2xl font-semibold tabular-nums">{latestAmount != null && Number.isFinite(latestAmount) ? money(latestAmount) : 'Unknown'} <span className="text-sm font-normal text-muted-foreground">{latest?.basis === 'estimated' ? 'estimated for the latest turn' : latest?.basis === 'provider_reported' ? 'reported for the latest turn' : 'for the latest turn'}</span></p>
+          <p className="mt-3 text-xs text-muted-foreground">Scale: $0 to {money(maximum)} per turn</p>
+          <div className="mt-2 flex h-40 items-end gap-1 border-b" aria-hidden="true">
             {records.map((record, index) => (
               <div key={`${record.usage.sessionId}:${record.usage.turnId}`} className="flex h-full min-w-0 flex-1 items-end">
                 {amounts[index] !== null && Number.isFinite(amounts[index]) ? (

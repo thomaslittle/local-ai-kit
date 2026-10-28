@@ -1555,7 +1555,7 @@ impl Desktop {
                         },
                         theme,
                     ))
-                    .child(format!("observed {freshness} ago")),
+                    .child(format!("refreshed {freshness} ago")),
             )
             .child(div().flex_1())
             .child({

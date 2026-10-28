@@ -27,7 +27,7 @@ function ProfileCard({ connection, stale }: { connection: Connection; stale?: bo
         <div className="my-2">
           <Badge variant={stale ? 'warning' : 'success'}>{stale ? 'Previously authenticated' : 'Authenticated'}</Badge>
         </div>
-        {stale ? <p className="text-xs text-muted-foreground">{`${provider} · Check is stale`}</p> : null}
+        {stale ? <p className="text-xs text-muted-foreground">{`${provider}: check is stale`}</p> : null}
         <p className="text-xs text-muted-foreground">{known(connection.plan)?.label ?? 'Plan not reported'}</p>
       </div>
     </div>
@@ -41,6 +41,7 @@ export default function OverviewPage() {
   const mode = useDemo((state) => state.mode);
   const verified = connections.filter(isVerified);
   const previous = connections.filter(isStale);
+  const needsAuth = connections.filter((connection) => connection.status === 'needs_auth');
   const pools = snapshot?.quotaPools ?? [];
   const issues = snapshot?.issues?.filter((issue) => issue.state === 'open') ?? [];
   const windows = pools.flatMap((pool) => pool.windows.map((window) => ({ pool, window })));
@@ -48,9 +49,7 @@ export default function OverviewPage() {
   return (
     <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b pb-5">
-        <p className="max-w-xl text-base text-muted-foreground">
-          {mode === 'synthetic' ? 'Example accounts and allowances. Pair a runtime to see your own.' : 'Your provider-reported access, with unknowns left visible.'}
-        </p>
+        <p className="text-sm text-muted-foreground">{mode === 'synthetic' ? 'Example data' : 'Provider-reported evidence'}</p>
         <div className="flex gap-3">
           <Button render={<Link to="/connections" />} nativeButton={false}>Manage connections</Button>
           <Button variant="outline" render={<Link to="/selector-lab" />} nativeButton={false}>Build with it</Button>
@@ -74,7 +73,8 @@ export default function OverviewPage() {
         ))}
       </dl>
 
-      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      {needsAuth.length ? <p className="border-l-2 border-warning pl-4 text-sm"><Link to="/connections" className="underline underline-offset-4">Sign-in needs attention</Link>: {needsAuth.map((connection) => connection.displayName).join(', ')}.</p> : null}
+      <div data-capture="usage-and-costs" className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
       <section aria-labelledby="allowances-title">
         <div className="mb-4 flex items-baseline justify-between gap-4">
           <h2 id="allowances-title" className="text-xl font-semibold">Usage and allowances</h2>

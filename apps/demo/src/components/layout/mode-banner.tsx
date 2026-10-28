@@ -20,17 +20,13 @@ export function ModeBanner() {
         live ? 'bg-linear-to-r from-success/15 via-success/5 to-transparent' : 'bg-linear-to-r from-info/15 via-info/5 to-transparent',
       )}
     >
-      <span aria-hidden="true" className="relative flex size-2 shrink-0">
-        <span className={cn('absolute inset-0 rounded-full motion-safe:animate-pulse-ring', live ? 'bg-success' : 'bg-info')} />
-        <span className={cn('relative size-2 rounded-full', live ? 'bg-success' : 'bg-info')} />
-      </span>
       {live ? <BroadcastIcon className="size-3.5 text-success" aria-hidden="true" /> : <FlaskIcon className="size-3.5 text-info" aria-hidden="true" />}
       <strong className="font-semibold whitespace-nowrap">{live ? 'Live connection' : 'Synthetic showcase'}</strong>
       <span className="text-muted-foreground">
         {live
           ? 'Only native data is shown. Execution requires your explicit action and a host-granted workspace.'
           : canPair
-            ? 'Example accounts and models: no native runtime is paired. Pair one to see your real accounts. No credentials inspected. No inference used.'
+            ? 'Example accounts and models. Pair a runtime to see yours. No credentials inspected or inference used.'
             : 'Example accounts and models. No credentials inspected. No inference used.'}
       </span>
       {live ? (
@@ -43,7 +39,7 @@ export function ModeBanner() {
         </Button>
       ) : (
         <Badge variant="info" className="ml-auto hidden sm:inline-flex">
-          NO ACCOUNT REQUIRED
+          Example data
         </Badge>
       )}
     </div>

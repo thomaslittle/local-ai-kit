@@ -222,7 +222,20 @@ mod tests {
             samples: Vec::new(),
             path: None,
         };
-        let now = Utc::now().timestamp();
+        let now = snapshot
+            .quota_pools
+            .iter()
+            .flat_map(|pool| &pool.windows)
+            .filter_map(|window| match &window.reading {
+                Observation::Known { observed_at, .. } => {
+                    DateTime::parse_from_rfc3339(observed_at.as_str())
+                        .ok()
+                        .map(|at| at.timestamp())
+                }
+                _ => None,
+            })
+            .max()
+            .unwrap();
         history.observe(&snapshot, now);
         let count = history.samples.len();
         assert!(count > 0);
