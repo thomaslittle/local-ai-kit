@@ -26,8 +26,8 @@ downloads an update.
 5. **Approval and signing.** An approved external signer signs the canonical
    manifest. Signing credentials are not created or stored by this repository.
 6. **Installation.** `lai-update` verifies the signature, platform, protocol
-   family, version monotonicity, archive size, SHA-256, and staged bytes before
-   activation.
+   family, version monotonicity, archive size, SHA-256, and the exact copied executable bytes before
+   activation. It never installs a second, unsigned extracted file.
 7. **Activation and rollback.** Activation holds an exclusive session lease and
    an activation lock, backs up the previous executable, replaces atomically,
    and keeps the backup for explicit rollback. A session marker older than 24
@@ -57,8 +57,8 @@ not fetched with the update.
 
 ## Rollback
 
-`lai-update::rollback(target, backup)` restores the exact backup. The failed
-version remains in the backup directory and is not deleted. If activation fails
+`lai-update::rollback(target, backup)` restores the exact backup and retains that
+backup file. It replaces the current target; it does not preserve the failed version. If activation fails
 before replacement, the current executable is untouched. If the replacement
 fails, the previous binary is still present and the caller can roll back
 without re-downloading anything.

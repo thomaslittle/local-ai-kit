@@ -257,3 +257,15 @@ in the version used for staging directories. Replace it with the already-locked
 semver parser/precedence comparator, and require the supported numeric alpha family.
 Signed synthetic update regressions cover digit boundaries and invalid suffixes.
 Implemented; focused build passed. Signed fixture execution remains pending.
+
+### V1-029 (P1): updater activation did not install the signed bytes
+
+Activation verified the single-executable archive but copied a separate unsigned
+`staged/local-ai-kit` file, and bypassed downgrade rejection. The documented update
+format already is one executable, so remove that second-file seam: copy the verified
+archive into a fresh target-side temporary file, verify those exact bytes again,
+then replace. Preserve executable permissions and retain the active-session lease.
+Signed fixtures now assert that an unrelated staged executable cannot be installed.
+Staging uses exclusive directory/file creation and cleans failed partial copies;
+manifest/marker reads and hash loops are bounded. Already archived crash markers
+are no longer repeatedly renamed. Focused builds pass; fixture execution is pending.

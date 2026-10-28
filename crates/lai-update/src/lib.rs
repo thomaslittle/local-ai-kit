@@ -54,7 +54,8 @@ fn sha256_file(path: &Path) -> Result<String, DomainError> {
         )
     })?;
     let mut digest = Sha256::new();
-    let mut block = [0u8; 1024 * 1024];
+    let mut block = [0u8; 64 * 1024];
+    let mut total = 0u64;
     loop {
         let count = file.read(&mut block).map_err(|_| {
             fail(
@@ -65,6 +66,8 @@ fn sha256_file(path: &Path) -> Result<String, DomainError> {
         if count == 0 {
             break;
         }
+        total += count as u64;
+        if total > MAX_ARCHIVE_BYTES { return Err(fail(ErrorCode::FrameTooLarge, "Update payload exceeds the bound")); }
         digest.update(&block[..count]);
     }
     Ok(format!("{:x}", digest.finalize()))
@@ -203,6 +206,41 @@ pub fn verify_update(
     Ok(())
 }
 
+fn copy_verified_payload(manifest: &UpdateManifest, source_path: &Path, target_path: &Path) -> Result<(), DomainError> {
+    let mut created = false;
+    let copy = (|| -> Result<(), DomainError> {
+        let mut source = File::open(source_path)
+            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Staged executable is unreadable"))?
+            .take(manifest.archive_bytes + 1);
+        let mut options = OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)] {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o755);
+        }
+        let mut output = options.open(target_path)
+            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Replacement could not be created"))?;
+        created = true;
+        let bytes = std::io::copy(&mut source, &mut output)
+            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Replacement copy failed"))?;
+        output.sync_all()
+            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Replacement could not be flushed"))?;
+        drop(output);
+        if bytes != manifest.archive_bytes || sha256_file(target_path)? != manifest.archive_sha256.to_ascii_lowercase() {
+            return Err(fail(ErrorCode::LocalAccessDenied, "Replacement does not match the signed executable"));
+        }
+        Ok(())
+    })();
+    if let Err(error) = copy {
+        // Only remove a file this activation created (create_new rejects collisions).
+        if created {
+            let _ = std::fs::remove_file(target_path);
+        }
+        return Err(error);
+    }
+    Ok(())
+}
+
 pub struct StagedUpdate {
     pub directory: PathBuf,
     pub archive: PathBuf,
@@ -227,60 +265,29 @@ pub fn stage_update(
         protocol_version,
         false,
     )?;
+    let name = Path::new(&manifest.archive).file_name()
+        .filter(|name| *name != "manifest.json" && *name != "READY")
+        .ok_or_else(|| fail(ErrorCode::InvalidRequest, "Update payload name is invalid"))?;
+    std::fs::create_dir_all(staging_root)
+        .map_err(|_| fail(ErrorCode::StorageUnavailable, "Update staging is unavailable"))?;
     let directory = staging_root.join(&manifest.version);
-    if directory.exists() {
-        return Err(fail(
-            ErrorCode::Conflict,
-            "Update version is already staged",
-        ));
-    }
-    std::fs::create_dir_all(&directory).map_err(|_| {
-        fail(
-            ErrorCode::StorageUnavailable,
-            "Update staging is unavailable",
-        )
-    })?;
-    let staged_archive = directory.join(
-        Path::new(&manifest.archive)
-            .file_name()
-            .ok_or_else(|| fail(ErrorCode::InvalidRequest, "Update archive name is invalid"))?,
-    );
-    std::fs::copy(archive, &staged_archive).map_err(|_| {
-        fail(
-            ErrorCode::StorageUnavailable,
-            "Update archive could not be staged",
-        )
-    })?;
-    if sha256_file(&staged_archive)? != manifest.archive_sha256 {
-        let _ = std::fs::remove_dir_all(&directory);
-        return Err(fail(
-            ErrorCode::InvalidRequest,
-            "Staged update checksum does not match",
-        ));
-    }
-    let manifest_path = directory.join("manifest.json");
-    std::fs::write(
-        &manifest_path,
-        serde_json::to_vec_pretty(manifest)
-            .map_err(|_| fail(ErrorCode::InvalidRequest, "Update manifest is invalid"))?,
-    )
-    .map_err(|_| {
-        fail(
-            ErrorCode::StorageUnavailable,
-            "Update manifest could not be staged",
-        )
-    })?;
-    std::fs::write(directory.join("READY"), b"verified\n").map_err(|_| {
-        fail(
-            ErrorCode::StorageUnavailable,
-            "Update staging is unavailable",
-        )
-    })?;
-    Ok(StagedUpdate {
-        directory,
-        archive: staged_archive,
-        manifest: manifest_path,
-    })
+    std::fs::create_dir(&directory).map_err(|error| fail(
+        if error.kind() == std::io::ErrorKind::AlreadyExists { ErrorCode::Conflict } else { ErrorCode::StorageUnavailable },
+        "Update staging directory could not be created",
+    ))?;
+    let result = (|| {
+        let staged_archive = directory.join(name);
+        copy_verified_payload(manifest, archive, &staged_archive)?;
+        let manifest_path = directory.join("manifest.json");
+        std::fs::write(&manifest_path, serde_json::to_vec_pretty(manifest)
+            .map_err(|_| fail(ErrorCode::InvalidRequest, "Update manifest is invalid"))?)
+            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Update manifest could not be staged"))?;
+        std::fs::write(directory.join("READY"), b"verified\n")
+            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Update staging is unavailable"))?;
+        Ok(StagedUpdate { directory: directory.clone(), archive: staged_archive, manifest: manifest_path })
+    })();
+    if result.is_err() { let _ = std::fs::remove_dir_all(&directory); }
+    result
 }
 
 pub struct SessionGuard {
@@ -337,10 +344,11 @@ fn session_markers(root: &Path) -> Vec<PathBuf> {
         .filter(|entry| {
             entry.file_name().to_string_lossy().starts_with("session-")
                 && entry.file_name().to_string_lossy().ends_with(".json")
+                && !entry.file_name().to_string_lossy().ends_with(".stale.json")
         })
         .map(|entry| entry.path())
         .filter_map(|path| {
-            let started = std::fs::read(&path)
+            let started = read_bounded_file(&path, 4096)
                 .ok()
                 .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
                 .and_then(|value| value["startedAt"].as_u64());
@@ -414,7 +422,7 @@ pub fn activate(
         public_key,
         env!("CARGO_PKG_VERSION"),
         "1.0",
-        true,
+        false,
     )?;
     let backup_dir = state_root.join("backups");
     std::fs::create_dir_all(&backup_dir).map_err(|_| {
@@ -432,24 +440,10 @@ pub fn activate(
             )
         })?;
     }
-    let staged_binary = staged.directory.join(if cfg!(windows) {
-        "local-ai-kit.exe"
-    } else {
-        "local-ai-kit"
-    });
-    if !staged_binary.is_file() {
-        return Err(fail(
-            ErrorCode::InvalidRequest,
-            "Staged update has no executable",
-        ));
-    }
+    // The signed update payload is one executable, not an archive requiring
+    // a separately trusted extractor. Never install an unrelated staged file.
     let replacement = target.with_extension(format!("new-{}", unix_ms()));
-    std::fs::copy(&staged_binary, &replacement).map_err(|_| {
-        fail(
-            ErrorCode::StorageUnavailable,
-            "Staged executable could not be installed",
-        )
-    })?;
+    copy_verified_payload(manifest, &staged.archive, &replacement)?;
     if std::fs::rename(&replacement, target).is_err() {
         let _ = std::fs::remove_file(&replacement);
         return Err(fail(
@@ -473,8 +467,8 @@ pub fn activate(
     })
 }
 
-/// Restore the exact backup recorded by `activate`. The failed version is kept
-/// in the backup directory rather than deleted.
+/// Restore the exact backup recorded by `activate`. The caller retains that
+/// backup; this operation replaces the currently installed target.
 pub fn rollback(target: &Path, backup: &Path) -> Result<(), DomainError> {
     if !backup.is_file() {
         return Err(fail(ErrorCode::NotFound, "Update backup is unavailable"));
@@ -491,6 +485,19 @@ pub fn rollback(target: &Path, backup: &Path) -> Result<(), DomainError> {
     Ok(())
 }
 
+fn read_bounded_file(path: &Path, max: u64) -> std::io::Result<Vec<u8>> {
+    let metadata = path.symlink_metadata()?;
+    if !metadata.is_file() || metadata.len() > max {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Expected a bounded regular file"));
+    }
+    let mut bytes = Vec::new();
+    File::open(path)?.take(max + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > max {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "File exceeds the bound"));
+    }
+    Ok(bytes)
+}
+
 pub fn read_manifest(path: &Path) -> Result<UpdateManifest, DomainError> {
     let metadata = std::fs::metadata(path).map_err(|_| {
         fail(
@@ -504,7 +511,7 @@ pub fn read_manifest(path: &Path) -> Result<UpdateManifest, DomainError> {
             "Update manifest exceeds the bound",
         ));
     }
-    let bytes = std::fs::read(path).map_err(|_| {
+    let bytes = read_bounded_file(path, MAX_MANIFEST_BYTES).map_err(|_| {
         fail(
             ErrorCode::StorageUnavailable,
             "Update manifest is unreadable",
@@ -585,7 +592,7 @@ mod tests {
     fn signed(version: &str) -> Signed {
         let temp = tempfile::tempdir().unwrap();
         let archive = temp.path().join("bundle.zip");
-        std::fs::write(&archive, b"release-bytes").unwrap();
+        std::fs::write(&archive, b"new-binary").unwrap();
         let mut manifest = write_unsigned_manifest(
             &temp.path().join("manifest.json"),
             version,
@@ -625,7 +632,7 @@ mod tests {
 
     #[test]
     fn signature_checksum_platform_and_downgrade_are_all_required() {
-        let signed = signed("0.1.0-alpha.18");
+        let signed = signed("0.1.0-alpha.21");
         verify_update(
             &signed.manifest,
             &signed.archive,
@@ -656,7 +663,7 @@ mod tests {
                 &downgrade,
                 &signed.archive,
                 &signed.public_key,
-                "0.1.0-alpha.20",
+                "0.1.0-alpha.22",
                 "1.0",
                 false
             )
@@ -680,7 +687,7 @@ mod tests {
 
     #[test]
     fn staged_activation_refuses_a_live_session_and_rolls_back() {
-        let signed = signed("0.1.0-alpha.18");
+        let signed = signed("0.1.0-alpha.21");
         let root = tempfile::tempdir().unwrap();
         let staging = root.path().join("staged");
         let staged = stage_update(
@@ -697,7 +704,7 @@ mod tests {
         } else {
             "local-ai-kit"
         });
-        std::fs::write(&executable, b"new-binary").unwrap();
+        std::fs::write(&executable, b"unsigned-staged-file").unwrap();
         let target = root.path().join(if cfg!(windows) {
             "current.exe"
         } else {
@@ -733,7 +740,7 @@ mod tests {
 
     #[test]
     fn an_old_crash_marker_is_preserved_but_does_not_block_activation() {
-        let signed = signed("0.1.0-alpha.18");
+        let signed = signed("0.1.0-alpha.21");
         let root = tempfile::tempdir().unwrap();
         let staged = stage_update(
             &signed.manifest,
@@ -749,7 +756,7 @@ mod tests {
         } else {
             "local-ai-kit"
         });
-        std::fs::write(&executable, b"new-binary").unwrap();
+        std::fs::write(&executable, b"unsigned-staged-file").unwrap();
         let target = root.path().join("current");
         std::fs::write(&target, b"old-binary").unwrap();
         let marker = root.path().join("session-999.json");
@@ -775,7 +782,7 @@ mod tests {
 
     #[test]
     fn a_failed_staging_copy_never_touches_the_installed_binary() {
-        let signed = signed("0.1.0-alpha.18");
+        let signed = signed("0.1.0-alpha.21");
         let root = tempfile::tempdir().unwrap();
         let target = root.path().join("current");
         std::fs::write(&target, b"old-binary").unwrap();
@@ -789,12 +796,7 @@ mod tests {
             "1.0",
         )
         .unwrap();
-        std::fs::remove_file(staged.directory.join(if cfg!(windows) {
-            "local-ai-kit.exe"
-        } else {
-            "local-ai-kit"
-        }))
-        .ok();
+        std::fs::remove_file(&staged.archive).unwrap();
         assert!(
             activate(
                 root.path(),
