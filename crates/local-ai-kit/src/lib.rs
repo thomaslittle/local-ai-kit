@@ -451,13 +451,20 @@ impl LocalAi {
         if let Some(path) = token_file.as_deref() {
             if let Some(token) = shared_token(path, &address) {
                 if address_listening(&address, &token) {
-                    let client = BrokerClient::connect(&address, &token).map_err(|_| {
-                        denied("The shared broker rejected this application's grant")
-                    })?;
-                    return Ok(Self {
-                        mode: Mode::Shared,
-                        backend: Backend::Shared(client),
-                    });
+                    match BrokerClient::connect(&address, &token) {
+                        Ok(client) => {
+                            return Ok(Self {
+                                mode: Mode::Shared,
+                                backend: Backend::Shared(client),
+                            });
+                        }
+                        Err(error) if error.starts_with("PROTOCOL_INCOMPATIBLE:") => {}
+                        Err(_) => {
+                            return Err(denied(
+                                "The shared broker rejected this application's grant or returned an invalid response",
+                            ));
+                        }
+                    }
                 }
             }
         }
@@ -482,15 +489,17 @@ impl LocalAi {
         if let Some(directory) = options.state_dir.clone() {
             builder = builder.state_dir(directory);
         }
-        let kit = builder.build()?;
-        kit.service().start_background_tasks();
-        let client = kit.connect("local-ai-kit-dependency", options.policy.clone())?;
-        drop(kit);
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(1)
             .enable_all()
             .build()
             .map_err(|_| unavailable("The in-process runtime is unavailable"))?;
+        let client = {
+            let _entered = runtime.enter();
+            let kit = builder.build()?;
+            kit.service().start_background_tasks();
+            kit.connect("local-ai-kit-dependency", options.policy.clone())?
+        };
         Ok(Self {
             mode: Mode::InProcess,
             backend: Backend::InProcess { client, runtime },

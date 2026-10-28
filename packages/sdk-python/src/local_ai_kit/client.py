@@ -175,14 +175,27 @@ async def open_auto_transport(executable: str | None = None, **options):
     address = options.pop('address', None) or default_address()
     if not isinstance(address, str) or not address or len(address) > 200 or '\0' in address:
         raise LocalAIError('INVALID_REQUEST')
-    token = options.pop('token', None) or _shared_token(address, options.pop('token_file', None))
+    token_file = options.pop('token_file', None)
+    explicit_token = options.pop('token', None)
+    token = explicit_token if explicit_token is not None else _shared_token(address, token_file)
     if token:
         try:
-            transport = await AsyncStdioTransport.open_broker(executable=helper, address=address, token=token, **options)
-            transport.mode = 'shared'  # type: ignore[attr-defined]
-            return transport
+            shared_options = {key: value for key, value in options.items() if key not in ('passive', 'probe_providers')}
+            transport = await AsyncStdioTransport.open_broker(executable=helper, address=address, token=token, **shared_options)
+            try:
+                handshake = await transport.request('runtime.handshake', {'protocolVersion': '1.0', 'clientName': 'local-ai-kit-auto'})
+                if not isinstance(handshake, dict) or not isinstance(handshake.get('protocolVersion'), str) or not re.fullmatch(r'1\.\d+', handshake['protocolVersion']):
+                    raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+                methods = handshake.get('methods')
+                if not isinstance(methods, list) or len(methods) > 512 or any(not isinstance(method, str) for method in methods):
+                    raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+                transport.mode = 'shared'  # type: ignore[attr-defined]
+                return transport
+            except BaseException:
+                await transport.close()
+                raise
         except LocalAIError as error:
-            if error.code in ('LOCAL_ACCESS_DENIED', 'PROTOCOL_INCOMPATIBLE'):
+            if error.code not in ('RUNTIME_MISSING', 'TRANSPORT_CLOSED', 'PROTOCOL_INCOMPATIBLE'):
                 raise
     return await _open_private(helper, options)
 

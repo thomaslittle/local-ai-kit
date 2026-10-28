@@ -194,9 +194,18 @@ export async function openAutoTransport(options = {}) {
   if (token) {
     try {
       const transport = await openBrokerTransport({...options, executable: helper, address, token});
-      return Object.assign(transport, {mode: 'shared'});
+      try {
+        const handshake = await transport.request('runtime.handshake', {protocolVersion: '1.0', clientName: 'local-ai-kit-auto'});
+        if (!handshake || !/^1\.\d+$/.test(handshake.protocolVersion) || !Array.isArray(handshake.methods) || !handshake.methods.every(method => typeof method === 'string')) {
+          throw fail('PROTOCOL_INCOMPATIBLE');
+        }
+        return Object.assign(transport, {mode: 'shared'});
+      } catch (error) {
+        await transport.close();
+        throw error;
+      }
     } catch (error) {
-      if (error instanceof LocalAIError && error.code === 'RUNTIME_MISSING') return openPrivateTransport(helper, options);
+      if (error instanceof LocalAIError && ['RUNTIME_MISSING', 'TRANSPORT_CLOSED', 'PROTOCOL_INCOMPATIBLE'].includes(error.code)) return openPrivateTransport(helper, options);
       throw error;
     }
   }

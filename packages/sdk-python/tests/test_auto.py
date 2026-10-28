@@ -109,5 +109,28 @@ class PrivateLifecycleTests(unittest.IsolatedAsyncioTestCase):
         broker.wait.assert_awaited()
 
 
+class SharedFallbackTests(unittest.IsolatedAsyncioTestCase):
+    async def test_protocol_mismatch_closes_shared_before_starting_private(self):
+        shared = MagicMock()
+        shared.request = AsyncMock(return_value={'protocolVersion': '2.0', 'methods': []})
+        shared.close = AsyncMock()
+        private = AsyncMock(return_value=object())
+        with (patch.object(client_module, 'resolve_helper', return_value='/fixture/helper'),
+              patch.object(client_module.AsyncStdioTransport, 'open_broker', AsyncMock(return_value=shared)) as opening,
+              patch.object(client_module, '_open_private', private)):
+            await client_module.open_auto_transport(token='a' * 64, passive=False)
+            shared.close.assert_awaited_once()
+            private.assert_awaited_once()
+            self.assertNotIn('passive', opening.call_args.kwargs)
+
+    async def test_denied_grant_never_starts_another_runtime(self):
+        with (patch.object(client_module, 'resolve_helper', return_value='/fixture/helper'),
+              patch.object(client_module.AsyncStdioTransport, 'open_broker', AsyncMock(side_effect=LocalAIError('LOCAL_ACCESS_DENIED'))),
+              patch.object(client_module, '_open_private', AsyncMock()) as private):
+            with self.assertRaises(LocalAIError):
+                await client_module.open_auto_transport(token='a' * 64)
+            private.assert_not_awaited()
+
+
 if __name__ == '__main__':
     unittest.main()

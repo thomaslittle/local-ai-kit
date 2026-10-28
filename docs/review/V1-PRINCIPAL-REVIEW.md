@@ -87,3 +87,14 @@ CSS and GPUI outputs; remaining surface-specific tokens are still under review.
 Linux native and web/site production builds have run successfully before the
 latest changes. Headless synthetic screenshots exist; they do not qualify live
 accounts, other operating systems, or all product flows.
+
+V1-002 update: all three automatic resolvers now distinguish protocol mismatch
+from grant denial. TS/Python negotiate while choosing the shared transport, close
+an incompatible connection, and start their private helper; denied grants remain
+fatal. Python only falls back for explicitly classified unavailable transports,
+not arbitrary domain errors, and excludes private-only options from shared
+connection arguments. Structured mismatch status reporting remains pending.
+
+V1-012 (P1): the Rust embedded fallback started Tokio background tasks before
+constructing/entering its runtime. Runtime construction and entry now precede
+kit initialization and background-task startup. Final fixture execution pending.

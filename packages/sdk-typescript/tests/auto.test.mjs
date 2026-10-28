@@ -89,3 +89,29 @@ test('malformed private startup reaps the child before rejecting', {skip: proces
     rmSync(directory, {recursive: true, force: true});
   }
 });
+
+test('protocol mismatch falls back but grant denial never does', {skip: process.platform === 'win32'}, async () => {
+  const {directory, binary} = helper();
+  writeFileSync(binary, `#!/usr/bin/env node
+import('node:readline').then(({createInterface}) => {
+  const address = process.argv[process.argv.indexOf('--ipc') + 1];
+  const serving = process.argv[2] === 'serve';
+  if (serving) process.stdout.write(JSON.stringify({protocolVersion:'1.0',address,token:'a'.repeat(64)})+'\\n');
+  const lines = createInterface({input:process.stdin});
+  lines.on('close',()=>process.exit(0));
+  lines.on('line',line=>{
+    if (serving) return;
+    const request=JSON.parse(line);
+    const denied=address==='/fixture/denied';
+    const result=request.method==='broker.authenticate' ? {authenticated:true} : {protocolVersion:address==='/fixture/shared'?'2.0':'1.0',methods:[]};
+    process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:request.id,...(denied?{error:{code:-32000,data:{code:'LOCAL_ACCESS_DENIED'}}}:{result})})+'\\n');
+  });
+});
+`);
+  try {
+    const transport = await openAutoTransport({executable:binary,address:'/fixture/shared',token:'a'.repeat(64),passive:false});
+    assert.equal(transport.mode,'child');
+    await transport.close();
+    await assert.rejects(openAutoTransport({executable:binary,address:'/fixture/denied',token:'a'.repeat(64)}), error=>error.code==='LOCAL_ACCESS_DENIED');
+  } finally { rmSync(directory,{recursive:true,force:true}); }
+});
