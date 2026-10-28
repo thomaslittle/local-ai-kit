@@ -115,7 +115,7 @@ function ConnectionCard({ connection, snapshot }: { connection: Connection; snap
   const freshness = authState(connection)?.freshness ?? 'unavailable';
 
   return (
-    <Card data-connection-id={connection.id} className="profile-card surface-interactive gap-0 bg-card/70 p-5 backdrop-blur-sm [--card-spacing:--spacing(0)]">
+    <Card data-connection-id={connection.id} className="profile-card gap-0 bg-card p-5 [--card-spacing:--spacing(0)]">
       <div className="flex items-start gap-3">
         <ProviderGlyph id={connection.providerId} name={provider} size="lg" />
         <div className="min-w-0 flex-1">
@@ -159,7 +159,7 @@ function ProfileMetadata() {
         <div role="status" aria-live="polite" className="mb-4 grid gap-2">
           <p className="text-sm">{`${batch.completed} of ${batch.total} profiles checked`}</p>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${(batch.completed / batch.total) * 100}%` }} />
+            <div className="h-full rounded-full bg-primary transition-none duration-500" style={{ width: `${(batch.completed / batch.total) * 100}%` }} />
           </div>
         </div>
       ) : null}
@@ -216,7 +216,7 @@ export default function ConnectionsPage() {
       ) : null}
       <details
         data-testid="detected-profiles"
-        className="rounded-2xl border bg-card/70 p-6 backdrop-blur-sm"
+        className="rounded-2xl border bg-card p-6"
         open={detectedExpanded}
         onToggle={(event) => actions.patch({ detectedExpanded: event.currentTarget.open })}
       >

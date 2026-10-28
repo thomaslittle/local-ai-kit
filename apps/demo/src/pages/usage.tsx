@@ -1,3 +1,5 @@
+import { ResetCountdown } from '@/components/common/reset-countdown';
+import { CostTrend } from '@/components/common/cost-trend';
 import { lazy, Suspense } from 'react';
 import { ClockIcon, GaugeIcon, LinkIcon, StackIcon } from '@phosphor-icons/react';
 import type { QuotaPool, UsageWindow } from '@local-ai-kit/sdk';
@@ -16,7 +18,7 @@ function CountBadge({ reading }: { reading: Reading }) {
   return (
     <div className="relative mx-auto grid size-40 shrink-0 place-content-center rounded-full border-2 border-dashed text-center">
       <span className="text-3xl font-semibold tracking-tight tabular-nums">{reading.used}</span>
-      <span className="text-[0.65rem] tracking-wide text-muted-foreground uppercase">{reading.unit}</span>
+      <span className="text-[0.65rem] text-muted-foreground">{reading.unit}</span>
     </div>
   );
 }
@@ -46,7 +48,7 @@ function WindowReading({ window }: { window: UsageWindow }) {
           <Badge variant={reading.freshness === 'stale' ? 'warning' : 'outline'}>{reading.freshness}</Badge>
           <span className="inline-flex items-center gap-1.5">
             <ClockIcon className="size-3.5" aria-hidden="true" />
-            {window.resetsAt ? `Resets ${new Date(window.resetsAt).toLocaleTimeString()}` : 'Reset not reported'}
+            <ResetCountdown at={window.resetsAt} />
           </span>
         </div>
       </div>
@@ -56,7 +58,7 @@ function WindowReading({ window }: { window: UsageWindow }) {
 
 function PoolCard({ pool, synthetic }: { pool: QuotaPool; synthetic: boolean }) {
   return (
-    <Card data-pool={pool.id} className="surface-interactive gap-0 bg-card/70 p-6 backdrop-blur-sm [--card-spacing:--spacing(0)]">
+    <Card data-pool={pool.id} className="gap-0 bg-card p-6 [--card-spacing:--spacing(0)]">
       <div className="mb-5 flex items-start justify-between gap-3">
         <h2 className="text-lg font-semibold tracking-tight">{pool.windows[0]?.label ?? pool.id}</h2>
         <Badge variant={pool.sharing === 'verified' ? 'success' : 'outline'}>{pool.sharing === 'verified' ? 'Verified sharing' : 'Sharing unknown'}</Badge>
@@ -76,7 +78,7 @@ function PoolCard({ pool, synthetic }: { pool: QuotaPool; synthetic: boolean }) 
 
 function Stat({ label, value, note }: { label: string; value: string; note: string }) {
   return (
-    <Card className="gap-1 bg-card/70 p-5 backdrop-blur-sm [--card-spacing:--spacing(0)]">
+    <Card className="gap-1 bg-card p-5 [--card-spacing:--spacing(0)]">
       <span className="text-3xl font-semibold tracking-tight tabular-nums">{value}</span>
       <span className="text-sm font-medium">{label}</span>
       <small className="text-xs text-muted-foreground">{note}</small>
@@ -101,7 +103,7 @@ export default function UsagePage() {
   const verified = pools.filter((pool) => pool.sharing === 'verified').length;
 
   return (
-    <div className="grid gap-5">
+    <div className="grid min-w-0 grid-cols-1 gap-5">
       <p className="max-w-3xl text-sm text-muted-foreground">Windows belong to quota pools, not model rows. Shared pools appear once; unknown totals stay unknown.</p>
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Stat label="Quota pools" value={String(pools.length)} note={`${windows} usage window${windows === 1 ? '' : 's'}`} />
@@ -123,6 +125,7 @@ export default function UsagePage() {
         <StackIcon className="size-3" aria-hidden="true" />
         Quota windows come from the connection that owns them and are never summed across providers.
       </p>
+      <CostTrend />
     </div>
   );
 }

@@ -151,7 +151,13 @@ pub fn auth_view(connection: &Connection) -> AuthView {
         Observation::Known {
             value: lai_contracts::AuthState::Authenticated,
             ..
-        } => AuthKind::Verified,
+        } => {
+            if stale {
+                AuthKind::Cached
+            } else {
+                AuthKind::Verified
+            }
+        }
         Observation::Known {
             value: lai_contracts::AuthState::Unauthenticated | lai_contracts::AuthState::Expired,
             ..

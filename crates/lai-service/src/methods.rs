@@ -11,6 +11,8 @@ const METHODS: &[&str] = &[
     "models.list",
     "models.page",
     "usage.read",
+    "costs.read",
+    "costs.setPrices",
     "capabilities.read",
     "adapters.list",
     "diagnostics.report",
@@ -72,6 +74,14 @@ impl NativeService {
                 Ok(
                     json!({"protocolVersion":"1.0","runtimeVersion":env!("CARGO_PKG_VERSION"),"methods":self.advertised_methods(),"capabilities":self.advertised_capabilities()}),
                 )
+            }
+            "costs.read" => {
+                params::allow(p, &[])?;
+                Ok(json!(self.cost_report(client)?))
+            }
+            "costs.setPrices" => {
+                let input: lai_contracts::SetPricesParams = params::decode(p.clone())?;
+                Ok(json!(self.set_cost_prices(client, input.prices)?))
             }
             "runtime.health" => {
                 params::allow(p, &[])?;

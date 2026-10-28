@@ -14,10 +14,11 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
+const exampleMode = process.argv.includes('--example');
 const portFlag = process.argv.indexOf('--port');
 const port = portFlag < 0 ? 5173 : Number(process.argv[portFlag + 1]);
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
-  console.error('Usage: npm run dev -- [--port <1-65535>]');
+  console.error('Usage: npm run dev -- [--port <1-65535>] [--example]');
   process.exit(2);
 }
 
@@ -36,7 +37,7 @@ const helperPort = await freePort();
 const helperUrl = `http://127.0.0.1:${helperPort}`;
 // run_live_demo.mjs builds the helper, grants the host permissions, and serves the API. Its assets
 // are unused here because Vite serves the UI.
-const host = spawn(process.execPath, [resolve(root, 'scripts/run_live_demo.mjs')], {
+const host = exampleMode ? null : spawn(process.execPath, [resolve(root, 'scripts/run_live_demo.mjs')], {
   cwd: root,
   stdio: 'inherit',
   windowsHide: true,
@@ -44,7 +45,7 @@ const host = spawn(process.execPath, [resolve(root, 'scripts/run_live_demo.mjs')
 });
 
 function stopHost() {
-  if (host.exitCode !== null) return;
+  if (!host || host.exitCode !== null) return;
   // On Windows a plain kill would orphan the helper the demo script started.
   if (process.platform === 'win32') {
     try {
@@ -55,8 +56,8 @@ function stopHost() {
   } else host.kill('SIGTERM');
 }
 
-let helperAlive = true;
-host.once('exit', (code) => {
+let helperAlive = !exampleMode;
+host?.once('exit', (code) => {
   helperAlive = false;
   if (!shuttingDown) console.error(`The native helper exited (code ${code}). The UI keeps running and falls back to labeled example data.`);
 });
@@ -99,10 +100,13 @@ vite = await createServer({
   configFile: resolve(root, 'apps/demo/vite.config.ts'),
   server: {
     port,
+    strictPort: true,
     host: '127.0.0.1',
-    proxy: { '/runtime': toHelper, '/v1': toHelper },
+    proxy: exampleMode ? undefined : { '/runtime': toHelper, '/v1': toHelper },
   },
 });
 await vite.listen();
 vite.printUrls();
-console.log(`Open the demo at ${vite.resolvedUrls.local[0]} and choose "Show current pairing code", then pair.`);
+console.log(exampleMode
+  ? `Example data only: ${vite.resolvedUrls.local[0]}`
+  : `Open the demo at ${vite.resolvedUrls.local[0]} and choose "Show current pairing code", then pair.`);

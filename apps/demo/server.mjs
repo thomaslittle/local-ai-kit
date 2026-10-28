@@ -8,7 +8,7 @@ import {createFixtureService} from './fixture/service.mjs';
 const HERE=dirname(fileURLToPath(import.meta.url));
 const DIST=resolve(HERE,'dist');
 const MIME={html:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',svg:'image/svg+xml',woff2:'font/woff2'};
-const CLIENT_ROUTES=new Set(['/overview','/connections','/models','/usage','/selector-lab','/playground','/diagnostics']);
+const CLIENT_ROUTES=new Set(['/overview','/connections','/models','/usage','/selector-lab','/playground','/diagnostics','/settings']);
 const SEGMENT=/^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 export async function createFixtureServer({port=0}={}){
  if(!Number.isInteger(port)||port<0||port>65535)throw Error('INVALID_PORT');

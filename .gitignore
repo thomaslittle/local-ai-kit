@@ -47,3 +47,8 @@ examples/**/obj/
 
 # Browser automation scratch output
 .playwright-mcp/
+
+# Rendered media (reproducible from media/video source)
+/media/video/out/
+/media/video/frames/
+/media/video/strip.png

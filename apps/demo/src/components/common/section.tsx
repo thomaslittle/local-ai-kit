@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface SectionProps {
@@ -10,10 +9,10 @@ interface SectionProps {
   children?: ReactNode;
 }
 
-/** A titled card. The title is a real heading so pages stay navigable by outline. */
+/** A titled region. The title is a real heading so pages stay navigable by outline. */
 export function Section({ title, description, action, className, children }: SectionProps) {
   return (
-    <Card className={cn('bg-card/70 p-6 backdrop-blur-sm [--card-spacing:--spacing(0)]', className)}>
+    <section className={cn('border-t py-6', className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
@@ -22,6 +21,6 @@ export function Section({ title, description, action, className, children }: Sec
         {action}
       </div>
       {children ? <div className="mt-5">{children}</div> : null}
-    </Card>
+    </section>
   );
 }

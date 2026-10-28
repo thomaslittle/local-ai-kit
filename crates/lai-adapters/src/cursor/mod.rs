@@ -390,16 +390,16 @@ fn quota_pool(
         resets_at: snapshot.resets_at.clone(),
         duration_seconds: snapshot.period_seconds,
     }];
-    if let Some(api) = snapshot.api_percent.filter(|api| *api > 0.0) {
-        if let Some(reading) = percent_reading(api) {
-            windows.push(UsageWindow {
-                id: stable_id("window", &[&pool_id, "api"]),
-                label: "API usage".into(),
-                reading: Observation::reported(reading, source.clone()),
-                resets_at: snapshot.resets_at.clone(),
-                duration_seconds: snapshot.period_seconds,
-            });
-        }
+    if let Some(api) = snapshot.api_percent.filter(|api| *api > 0.0)
+        && let Some(reading) = percent_reading(api)
+    {
+        windows.push(UsageWindow {
+            id: stable_id("window", &[&pool_id, "api"]),
+            label: "API usage".into(),
+            reading: Observation::reported(reading, source.clone()),
+            resets_at: snapshot.resets_at.clone(),
+            duration_seconds: snapshot.period_seconds,
+        });
     }
     Some(QuotaPool {
         id: pool_id,

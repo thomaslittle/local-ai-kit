@@ -1,15 +1,19 @@
-# Local AI Kit
+# OriginLM
 
-**Discover, inspect, select, and use the AI access already configured on a user's computer, through one integration.**
+**See your AI. Build with it.**
+
+A local control center for the AI you already have, and the developer platform
+that lets your applications use it. Provider coverage is evidence-based and
+operation-specific.
 
 [![CI](https://github.com/thomaslittle/local-ai-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/thomaslittle/local-ai-kit/actions/workflows/ci.yml)
 [![React Doctor](https://github.com/thomaslittle/local-ai-kit/actions/workflows/react-doctor.yml/badge.svg)](https://github.com/thomaslittle/local-ai-kit/actions/workflows/react-doctor.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)
 
-Local AI Kit is a Rust toolkit with an embedded library, a standalone native helper, authenticated local transports, TypeScript and Python SDKs, and optional React selectors. Your application does not have to reproduce client-specific paths, metadata parsers, or streaming protocols for each AI client a user might have installed.
+OriginLM is built on Local AI Kit, a Rust toolkit with an embedded library, a standalone native helper, authenticated local transports, TypeScript and Python SDKs, and optional React selectors. Your application does not have to reproduce client-specific paths, metadata parsers, or streaming protocols for each AI client a user might have installed.
 
-> **Alpha.** The native service, supported execution adapters, SDKs, selectors, and installable bundles work, but the API can still change between `0.1.0-alpha.N` releases. Nothing is published to npm, PyPI, or crates.io yet; use [GitHub release bundles](https://github.com/thomaslittle/local-ai-kit/releases) or build from source. Provider coverage is operation-specific: read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) before relying on a provider.
+> **Source preview.** The API can change between `0.1.0-alpha.N` revisions. Nothing is published to npm, PyPI, or crates.io yet. Start with the [source install guide](docs/integration/install.md) or [local SDK quickstarts](docs/integration/quickstarts.md). The v1 branch is under [principal review](docs/review/V1-PRINCIPAL-REVIEW.md); signing and release qualification are not complete. Provider coverage is operation-specific: read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) before relying on a provider.
 
 ## What it does
 
@@ -19,6 +23,13 @@ Local AI Kit is a Rust toolkit with an embedded library, a standalone native hel
 - **Granted sessions.** Streaming text sessions, approvals, cancellation, image input, host MCP tools, resumable sessions, and scoped result artifacts, only after a host grants them explicitly.
 - **Explicit native-tool sessions.** Host MCP defaults to read-only, host-tools-only behavior. An operator may separately grant native CLI shell, file, web, and build tools with `native_policy`; see the [host MCP contract and provider details](docs/integration/host-mcp.md).
 - **Thin SDKs.** Rust is the canonical implementation. The [TypeScript](packages/sdk-typescript/) and [Python](packages/sdk-python/) SDKs are typed protocol clients generated from the Rust contracts. The React [hooks](packages/react/) and [eight selector layouts](packages/ui-react/) are optional.
+
+### Privacy
+
+OriginLM has no telemetry or hosted relay. History and grants stay on your
+machine. Authorized provider operations can send prompts, attachments and tool
+results to the provider you select; local model routes can run locally.
+Credentials are never returned to consuming apps. See the [privacy boundary](docs/design/ADR-003-v1-product-boundaries.md).
 
 ### Safety model
 

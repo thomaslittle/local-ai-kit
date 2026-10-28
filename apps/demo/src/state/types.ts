@@ -1,7 +1,7 @@
 import type { Candidate, Catalog, Selection } from '@local-ai-kit/selector-core';
-import type { LocalAIClient, Snapshot, Event as SessionEvent } from '@local-ai-kit/sdk';
+import type { LocalAIClient, CostReport, Snapshot, Event as SessionEvent } from '@local-ai-kit/sdk';
 
-export type Page = 'Overview' | 'Connections' | 'Models' | 'Usage' | 'Selector lab' | 'Playground' | 'Diagnostics';
+export type Page = 'Overview' | 'Connections' | 'Models' | 'Usage' | 'Selector lab' | 'Playground' | 'Diagnostics' | 'Settings';
 
 export type Mode = 'synthetic' | 'live';
 
@@ -103,6 +103,9 @@ export interface DemoState {
   notice: string;
   connectionError: string | null;
   diagnostics: unknown;
+  costs: CostReport | null;
+  costError: string | null;
+  savingPrices: boolean;
   detectedExpanded: boolean;
   paletteOpen: boolean;
   connectOpen: boolean;

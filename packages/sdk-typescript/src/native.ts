@@ -1,5 +1,5 @@
 import type { CallOptions, Transport } from './types.ts';
-import { LocalAIError, remoteError } from './errors.ts';
+import { LocalAIError, remoteError, requireMethod } from './errors.ts';
 export interface NativePort {
  postMessage(value: unknown):void; disconnect():void;
  onMessage:{addListener(fn:(v:unknown)=>void):void;removeListener(fn:(v:unknown)=>void):void};
@@ -41,7 +41,7 @@ export function createNativeMessagingTransport(options:{connect:()=>NativePort})
  function request<T=unknown>(method:string,params:unknown={},call:CallOptions={},hook?:(v:T)=>void):Promise<T>{
   if(closed)return Promise.reject(failure('CLOSED'));
   if(call.signal?.aborted)return Promise.reject(failure('CANCELLED'));
-  if(!/^[a-zA-Z][a-zA-Z0-9]*\.[a-zA-Z][a-zA-Z0-9]*$/.test(method)||method.length>128)return Promise.reject(failure('INVALID_METHOD'));
+  try{requireMethod(method);}catch(error){return Promise.reject(error);}
   if(pending.size>=64)return Promise.reject(failure('TOO_MANY_REQUESTS'));
   if(sequence>=Number.MAX_SAFE_INTEGER)return Promise.reject(failure('REQUEST_ID_EXHAUSTED'));
   const duration=call.timeoutMs??30000;

@@ -70,6 +70,63 @@ impl Desktop {
             .child(
                 div()
                     .v_flex()
+                    .gap_3()
+                    .p_4()
+                    .rounded(px(ui::CARD_RADIUS))
+                    .border_1()
+                    .border_color(theme.border)
+                    .bg(theme.colors.list)
+                    .child(
+                        div()
+                            .h_flex()
+                            .justify_between()
+                            .child(ui::section_title("Install", &theme))
+                            .child(
+                                Button::new("open-install-docs")
+                                    .secondary()
+                                    .label("Install guide")
+                                    .on_click(|_, _, cx| {
+                                        cx.open_url(
+                                            "https://github.com/thomaslittle/local-ai-kit/blob/main/docs/integration/install.md",
+                                        );
+                                    }),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(11.))
+                            .text_color(theme.muted_foreground)
+                            .child("Two ways in, one runtime: run the dashboard for every client and quota, or add the dependency to your app. Installing it for the dashboard makes every app built on it work."),
+                    )
+                    .child(
+                        div()
+                            .h_flex()
+                            .items_start()
+                            .gap_3()
+                            .child(track(
+                                "Get the app",
+                                "The local control center: usage, quotas, models and issues for every AI client on this machine.",
+                                &[
+                                    "curl -fsSL https://<site>/install.sh | sh",
+                                    "irm https://<site>/install.ps1 | iex",
+                                ],
+                                &theme,
+                            ))
+                            .child(track(
+                                "Add to your project",
+                                "One dependency. The SDK finds a running runtime or starts its own.",
+                                &[
+                                    "npm install @local-ai-kit/sdk",
+                                    "cargo add local-ai-kit",
+                                    "pip install local-ai-kit",
+                                ],
+                                &theme,
+                            )),
+                    ),
+            )
+            .child(
+                div()
+                    .v_flex()
                     .gap_2()
                     .p_4()
                     .rounded(px(ui::CARD_RADIUS))
@@ -376,6 +433,36 @@ impl Desktop {
             )
             .into_any_element()
     }
+}
+
+fn track(
+    title: &'static str,
+    body: &'static str,
+    commands: &[&str],
+    theme: &gpui_kit::component::Theme,
+) -> AnyElement {
+    div()
+        .flex_1()
+        .min_w(px(0.))
+        .v_flex()
+        .gap_2()
+        .p_3()
+        .rounded(px(8.))
+        .bg(theme.muted)
+        .child(
+            div()
+                .text_size(px(12.5))
+                .font_weight(FontWeight::SEMIBOLD)
+                .child(title),
+        )
+        .child(
+            div()
+                .text_size(px(10.5))
+                .text_color(theme.muted_foreground)
+                .child(body),
+        )
+        .child(code_block(commands, theme))
+        .into_any_element()
 }
 
 fn code_block(lines: &[&str], theme: &gpui_kit::component::Theme) -> AnyElement {

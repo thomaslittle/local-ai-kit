@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
 };
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 
 pub const MAX_PAGE_LINES: usize = 500;
 
@@ -27,18 +27,29 @@ impl BrokerClient {
             .build()
             .map_err(|_| "Runtime unavailable".to_owned())?;
         let stream = runtime
-            .block_on(lai_transports::local_ipc::connect(address))
+            .block_on(async {
+                tokio::time::timeout(
+                    Duration::from_secs(2),
+                    lai_transports::local_ipc::connect(address),
+                )
+                .await
+            })
+            .map_err(|_| "Broker connection timed out".to_owned())?
             .map_err(|error| error.to_string())?;
         let mut client = Self {
             runtime,
             stream: Some(BufReader::new(stream)),
             sequence: 0,
         };
-        client.call("broker.authenticate", json!({"token": token}))?;
-        client.call(
+        let authentication = client.call("broker.authenticate", json!({"token": token}))?;
+        if authentication["authenticated"] != true {
+            return Err("PERMISSION_DENIED: Broker did not authenticate this client".into());
+        }
+        let handshake = client.call(
             "runtime.handshake",
             json!({"protocolVersion":"1.0","clientName":"local-ai-kit-control"}),
         )?;
+        validate_handshake(&handshake)?;
         Ok(client)
     }
 
@@ -46,19 +57,9 @@ impl BrokerClient {
         path: &Path,
         expected_address: Option<&str>,
     ) -> std::result::Result<Self, String> {
-        let metadata =
-            std::fs::metadata(path).map_err(|_| "Token file is unavailable".to_owned())?;
-        if !metadata.is_file() || metadata.len() > 16 * 1024 {
-            return Err("Token file is invalid".into());
-        }
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            if metadata.permissions().mode() & 0o077 != 0 {
-                return Err("Token file permissions are not owner-only".into());
-            }
-        }
-        let bytes = std::fs::read(path).map_err(|_| "Token file is unreadable".to_owned())?;
+        let bytes = lai_platform::read_private_file(path, 16 * 1024).map_err(|_| {
+            "Token file must be a readable, bounded owner-only regular file".to_owned()
+        })?;
         let descriptor: Value =
             serde_json::from_slice(&bytes).map_err(|_| "Token file is malformed".to_owned())?;
         let address = descriptor["address"]
@@ -74,60 +75,99 @@ impl BrokerClient {
     }
 
     pub fn call(&mut self, method: &str, params: Value) -> std::result::Result<Value, String> {
+        self.call_typed(method, params).map_err(|error| {
+            let code = serde_json::to_value(&error.code).ok();
+            format!(
+                "{}: {}",
+                code.as_ref()
+                    .and_then(Value::as_str)
+                    .unwrap_or("PROVIDER_UNAVAILABLE"),
+                error.message
+            )
+        })
+    }
+
+    /// Canonical errors retain code and retry hints without exposing remote error bodies.
+    pub fn call_typed(&mut self, method: &str, params: Value) -> lai_contracts::Result<Value> {
         self.sequence = self.sequence.saturating_add(1);
         let id = self.sequence;
         let frame = json!({"jsonrpc":"2.0","id":id,"method":method,"params":params});
-        let stream = self
-            .stream
-            .as_mut()
-            .ok_or_else(|| "Control center is closed".to_owned())?;
-        self.runtime.block_on(async {
-            let bytes = serde_json::to_vec(&frame).map_err(|_| "Request is invalid".to_owned())?;
-            if bytes.len() > 1024 * 1024 {
-                return Err("Request exceeds the frame bound".to_owned());
-            }
-            stream
-                .get_mut()
-                .write_all(&bytes)
-                .await
-                .map_err(|_| "Broker connection is closed".to_owned())?;
-            stream
-                .get_mut()
-                .write_all(b"\n")
-                .await
-                .map_err(|_| "Broker connection is closed".to_owned())?;
-            stream
-                .get_mut()
-                .flush()
-                .await
-                .map_err(|_| "Broker connection is closed".to_owned())?;
-            loop {
-                let mut line = String::new();
-                let read =
-                    tokio::time::timeout(Duration::from_secs(30), stream.read_line(&mut line))
+        let stream = self.stream.as_mut().ok_or_else(|| {
+            DomainError::new(ErrorCode::ProviderUnavailable, "Control center is closed")
+        })?;
+        let mut complete_reply = false;
+        let result = self.runtime.block_on(async {
+            tokio::time::timeout(Duration::from_secs(30), async {
+                let bytes =
+                    serde_json::to_vec(&frame).map_err(|_| DomainError::new(ErrorCode::InvalidRequest, "Request is invalid"))?;
+                if bytes.len() > 1024 * 1024 {
+                    return Err(DomainError::new(ErrorCode::FrameTooLarge, "Request exceeds the frame bound"));
+                }
+                stream
+                    .get_mut()
+                    .write_all(&bytes)
+                    .await
+                    .map_err(|_| DomainError::new(ErrorCode::ProviderUnavailable, "Broker connection is closed"))?;
+                stream
+                    .get_mut()
+                    .write_all(b"\n")
+                    .await
+                    .map_err(|_| DomainError::new(ErrorCode::ProviderUnavailable, "Broker connection is closed"))?;
+                stream
+                    .get_mut()
+                    .flush()
+                    .await
+                    .map_err(|_| DomainError::new(ErrorCode::ProviderUnavailable, "Broker connection is closed"))?;
+                loop {
+                    let mut line = Vec::new();
+                    // Bound allocation before parsing, including a peer that never sends a newline.
+                    let read = (&mut *stream)
+                        .take(1024 * 1024 + 1)
+                        .read_until(b'\n', &mut line)
                         .await
-                        .map_err(|_| "Broker request timed out".to_owned())?
-                        .map_err(|_| "Broker connection is closed".to_owned())?;
-                if read == 0 {
-                    return Err("Broker connection is closed".to_owned());
+                        .map_err(|_| DomainError::new(ErrorCode::ProviderUnavailable, "Broker connection is closed"))?;
+                    if line.len() > 1024 * 1024 {
+                        return Err(DomainError::new(ErrorCode::FrameTooLarge, "Broker response exceeds the frame bound"));
+                    }
+                    if read == 0 {
+                        return Err(DomainError::new(ErrorCode::ProviderUnavailable, "Broker connection is closed"));
+                    }
+                    let value: Value = serde_json::from_slice(&line)
+                        .map_err(|_| DomainError::new(ErrorCode::ProtocolIncompatible, "Broker returned invalid JSON"))?;
+                    if value.get("id").and_then(Value::as_i64) != Some(id as i64) {
+                        continue;
+                    }
+                    if value.get("jsonrpc").and_then(Value::as_str) != Some("2.0") {
+                        return Err(DomainError::new(ErrorCode::ProtocolIncompatible, "Broker returned an invalid response envelope"));
+                    }
+                    if let Some(error) = value.get("error") {
+                        let data = &error["data"];
+                        let code = serde_json::from_value::<ErrorCode>(data["code"].clone())
+                            .map_err(|_| DomainError::new(ErrorCode::ProtocolIncompatible, "Broker returned an invalid error code"))?;
+                        let retryable = data["retryable"] == true;
+                        let retry_after_ms = match data.get("retryAfterMs") {
+                            None | Some(Value::Null) => None,
+                            Some(value) => Some(value.as_u64().filter(|value| retryable && *value <= 86_400_000)
+                                .ok_or_else(|| DomainError::new(ErrorCode::ProtocolIncompatible, "Broker returned an invalid retry hint"))?),
+                        };
+                        complete_reply = true;
+                        return Err(DomainError { code, message: "Broker rejected this request; check its error code and the application's grants".into(), retryable, retry_after_ms });
+                    }
+                    if value.get("result").is_none() {
+                        return Err(DomainError::new(ErrorCode::ProtocolIncompatible, "Broker returned an invalid response envelope"));
+                    }
+                    complete_reply = true;
+                    return Ok(value.get("result").cloned().unwrap_or(Value::Null));
                 }
-                let value: Value = serde_json::from_str(&line)
-                    .map_err(|_| "Broker returned invalid JSON".to_owned())?;
-                if value.get("id").and_then(Value::as_i64) != Some(id as i64) {
-                    continue;
-                }
-                if let Some(error) = value.get("error") {
-                    let code = error["data"]["code"]
-                        .as_str()
-                        .unwrap_or("PROVIDER_UNAVAILABLE");
-                    let message = error["data"]["message"]
-                        .as_str()
-                        .unwrap_or("Broker request failed");
-                    return Err(format!("{code}: {message}"));
-                }
-                return Ok(value.get("result").cloned().unwrap_or(Value::Null));
-            }
-        })
+            })
+            .await
+            .map_err(|_| DomainError::new(ErrorCode::Timeout, "Broker request timed out"))?
+        });
+        // A partial write/read or late reply cannot be reused as a new request's stream.
+        if result.is_err() && !complete_reply {
+            self.stream = None;
+        }
+        result
     }
 
     pub fn snapshot(&mut self) -> std::result::Result<Snapshot, String> {
@@ -146,6 +186,21 @@ impl BrokerClient {
     pub fn close(mut self) {
         let _ = self.call("runtime.closeClient", json!({}));
         self.stream = None;
+    }
+}
+
+fn validate_handshake(value: &Value) -> std::result::Result<(), String> {
+    let compatible = value["protocolVersion"].as_str().is_some_and(|version| {
+        version
+            .strip_prefix("1.")
+            .is_some_and(|minor| !minor.is_empty() && minor.bytes().all(|b| b.is_ascii_digit()))
+    }) && value["methods"]
+        .as_array()
+        .is_some_and(|methods| methods.iter().all(Value::is_string));
+    if compatible {
+        Ok(())
+    } else {
+        Err("PROTOCOL_INCOMPATIBLE: Update the runtime or use a compatible private helper".into())
     }
 }
 

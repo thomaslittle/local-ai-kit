@@ -33,6 +33,7 @@ for(const variant of ['rail','compact','palette','capability','compare','allowan
   const page=await context.newPage();
   try{
    await mountFixture(page);
+   await nav(page,'Selector lab');
    await page.locator(`[data-variant="${variant}"]`).click();
    const result=await new AxeBuilder({page}).withTags(tags).analyze();
    assert.deepEqual(details(result),[]);
@@ -45,6 +46,7 @@ for(const section of ['Overview','Connections','Models','Usage','Playground','Di
   try{
    await mountFixture(page);
    await nav(page,section);
+   assert.equal(await page.locator('main main').count(),0,'Each page has one main landmark');
    assert.deepEqual(details(await new AxeBuilder({page}).withTags(tags).analyze()),[]);
   }finally{await context.close();}
  });
@@ -201,8 +203,9 @@ test('without any native runtime the demo falls back to labeled example data and
  try{
   await page.goto(`http://127.0.0.1:${host.address().port}/`);
   await page.locator('#mode-banner.synthetic').waitFor();
-  assert.match(await page.locator('#mode-banner').innerText(),/no native runtime is paired/i);
+  assert.match(await page.locator('#mode-banner').innerText(),/pair a runtime to see yours/i);
   assert.equal(await page.getByRole('button',{name:'Pair a runtime'}).isVisible(),true);
+  await nav(page,'Selector lab');
   await page.locator('[data-model-row]').first().waitFor();
  }finally{await context.close();await new Promise(done=>host.close(done));}
 });

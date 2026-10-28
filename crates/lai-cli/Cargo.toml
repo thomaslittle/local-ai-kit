@@ -21,6 +21,7 @@ lai-core = { path = "../lai-core" }
 lai-discovery = { path = "../lai-discovery" }
 lai-platform = { path = "../lai-platform" }
 lai-service = { path = "../lai-service" }
+lai-control = { path = "../lai-control", default-features = false }
 lai-transports = { path = "../lai-transports" }
 lai-chatgpt-auth = { path = "../lai-chatgpt-auth" }
 serde.workspace = true

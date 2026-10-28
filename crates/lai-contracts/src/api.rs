@@ -437,6 +437,10 @@ pub struct MethodInputs {
     model_page: ModelPageParams,
     #[serde(rename = "usage.read")]
     usage: EmptyParams,
+    #[serde(rename = "costs.read")]
+    costs: EmptyParams,
+    #[serde(rename = "costs.setPrices")]
+    cost_prices: SetPricesParams,
     #[serde(rename = "capabilities.read")]
     capabilities: ModelParams,
     #[serde(rename = "selection.resolve")]
@@ -534,6 +538,10 @@ pub struct MethodOutputs {
     model_page: ModelPage,
     #[serde(rename = "usage.read")]
     usage: Vec<QuotaPool>,
+    #[serde(rename = "costs.read")]
+    costs: CostReport,
+    #[serde(rename = "costs.setPrices")]
+    cost_prices: Vec<ModelPrice>,
     #[serde(rename = "capabilities.read")]
     capabilities: Vec<Capability>,
     #[serde(rename = "selection.resolve")]

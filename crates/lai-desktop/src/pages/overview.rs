@@ -439,6 +439,15 @@ impl Desktop {
                     .iter()
                     .take(3)
                     .map(|issue| issue.title.clone())
+                    .chain(
+                        snapshot
+                            .connections
+                            .iter()
+                            .filter(|connection| {
+                                data::auth_view(connection).kind == data::AuthKind::Required
+                            })
+                            .map(|connection| format!("{} needs sign-in", connection.display_name)),
+                    )
                     .collect()
             })
             .unwrap_or_default();
@@ -481,7 +490,7 @@ impl Desktop {
                             div()
                                 .text_size(px(11.5))
                                 .text_color(theme.muted_foreground)
-                                .child("Nothing needs attention."),
+                                .child("No issues were reported."),
                         ),
                 )
             })
@@ -536,15 +545,15 @@ impl Desktop {
                     .child(ui::metric(
                         "Broker clients",
                         counts.apps.to_string(),
-                        Some("includes this window".into()),
+                        Some(if self.example { "example mode; no broker".into() } else { "reported by the broker".into() }),
                         &theme,
                     ))
                     .child(div().flex_1())
                     .child(ui::metric(
-                        "Open issues",
-                        issues.to_string(),
+                        "Reported issues",
+                        if self.connected { issues.to_string() } else { "Unknown".into() },
                         Some(if issues == 0 {
-                            "nothing needs attention".into()
+                            "none reported".into()
                         } else {
                             "review in Diagnostics".into()
                         }),
@@ -559,6 +568,7 @@ impl Desktop {
                     .child(quota_cards.flex_1())
                     .children(next_reset),
             )
+            .child(self.cost_trend(cx))
             .when(!cached_only.is_empty(), |this| {
                 this.child(
                     div()
@@ -575,7 +585,7 @@ impl Desktop {
                                 .text_size(px(11.))
                                 .text_color(theme.muted_foreground)
                                 .child(format!(
-                                    "{} is signed in from a local cache; its usage and model catalog stay inside its own client.",
+                                    "{} has stale or cache-only sign-in evidence. Check the provider before relying on access.",
                                     cached_only.join(" and ")
                                 )),
                         ),
@@ -598,7 +608,7 @@ impl Desktop {
                                 .text_size(px(11.))
                                 .text_color(theme.muted_foreground)
                                 .child(format!(
-                                    "{} usage is not loaded from the broker's cache.",
+                                    "No allowance reported for {}.",
                                     unloaded
                                         .iter()
                                         .map(|(name, _)| name.clone())

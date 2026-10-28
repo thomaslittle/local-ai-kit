@@ -14,9 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-24.04, windows-2025, macos-15-intel]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    # Cold macOS Intel builds compile debug/tests, clippy, then release artifacts.
+    # The measured debug + lint stages alone take about 36 minutes.
+    timeout-minutes: 75
     env:
       CARGO_INCREMENTAL: '0'
       CARGO_BUILD_JOBS: '2'

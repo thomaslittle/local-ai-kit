@@ -10,6 +10,20 @@ from .errors import LocalAIError, remote_error
 from .wire import encode_request, decode_message
 
 
+def _process_options(cwd=None, env=None):
+    if cwd is not None and (not isinstance(cwd, str) or not pathlib.Path(cwd).is_absolute() or '\0' in cwd):
+        raise LocalAIError('INVALID_WORKSPACE')
+    if env is not None and not isinstance(env, dict):
+        raise LocalAIError('INVALID_ENVIRONMENT')
+    allowed = ('PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_RUNTIME_DIR','APPDATA','LOCALAPPDATA','LOCAL_AI_KIT_STATE_DIR','DBUS_SESSION_BUS_ADDRESS')
+    inherited = {key: os.environ[key] for key in allowed if key in os.environ}
+    for key, value in (env or {}).items():
+        if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', key) or not isinstance(value, str) or '\0' in value or key.upper() in ('NODE_OPTIONS','LD_PRELOAD','DYLD_INSERT_LIBRARIES','PYTHONSTARTUP','PYTHONPATH','PYTHONHOME'):
+            raise LocalAIError('INVALID_ENVIRONMENT')
+        inherited[key] = value
+    return {'cwd': cwd or tempfile.gettempdir(), 'env': inherited}
+
+
 class _EventQueue:
     def __init__(self, size: int):
         self.values: asyncio.Queue = asyncio.Queue(size)
@@ -62,8 +76,6 @@ class AsyncStdioTransport:
                    max_queued_events: int = 256):
         if not isinstance(executable, str) or not pathlib.Path(executable).is_absolute() or executable.lower().endswith(('.cmd', '.bat', '.ps1')):
             raise LocalAIError('INVALID_EXECUTABLE')
-        if cwd is not None and (not pathlib.Path(cwd).is_absolute() or '\0' in cwd):
-            raise LocalAIError('INVALID_WORKSPACE')
         args = list(args or [])
         if len(args) > 128 or any(not isinstance(a, str) or '\0' in a or len(a) > 32768 for a in args):
             raise LocalAIError('INVALID_REQUEST')
@@ -72,14 +84,9 @@ class AsyncStdioTransport:
                 raise LocalAIError('INVALID_LIMIT')
         if not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or not 0 < timeout <= 3600:
             raise LocalAIError('INVALID_LIMIT')
-        allowed = ('PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS')
-        inherited = {key: os.environ[key] for key in allowed if key in os.environ}
-        for key, value in (env or {}).items():
-            if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', key) or not isinstance(value, str) or '\0' in value or key.upper() in ('NODE_OPTIONS','LD_PRELOAD','DYLD_INSERT_LIBRARIES','PYTHONSTARTUP','PYTHONPATH','PYTHONHOME'):
-                raise LocalAIError('INVALID_ENVIRONMENT')
-            inherited[key] = value
+        process_options = _process_options(cwd, env)
         try:
-            process = await asyncio.create_subprocess_exec(executable, *args, cwd=cwd or tempfile.gettempdir(), env=inherited,
+            process = await asyncio.create_subprocess_exec(executable, *args, **process_options,
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, limit=max_frame_bytes + 1)
         except (OSError, ValueError):
             raise LocalAIError('RUNTIME_MISSING') from None

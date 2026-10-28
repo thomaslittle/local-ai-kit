@@ -3,7 +3,7 @@ import type { Snapshot, Model } from './generated.ts';
 import type { CallOptions } from './types.ts';
 import { LocalAIError } from './errors.ts';
 export interface CatalogReadOptions extends CallOptions { maxModels?: number }
-const fields: Exclude<keyof Snapshot,'models'>[] = ['protocolVersion','revision','observedAt','mode','providers','installations','profiles','accounts','connections','routes','quotaPools','diagnostics'];
+const fields: Exclude<keyof Snapshot,'models'>[] = ['protocolVersion','revision','observedAt','mode','providers','installations','profiles','accounts','connections','routes','quotaPools','diagnostics','cursor','health','issues'];
 /** Explicit read only: no discovery, authentication, retries, or fallback after a failed page. */
 export async function readCatalogSnapshot(client: LocalAIClient, options: CatalogReadOptions = {}): Promise<Snapshot> {
   const max = options.maxModels ?? 20_000;

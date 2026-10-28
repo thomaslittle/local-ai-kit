@@ -197,18 +197,18 @@ impl<F: LocalFilesystem> Scanner<F> {
                 kind: "local_client".into(),
             });
             let mut roots = definition.roots(env);
-            if !definition.has_override(env) {
-                if let Some(prefix) = definition.profile_prefix {
-                    roots.extend(
-                        extra
-                            .iter()
-                            .filter(|p| {
-                                p.file_name()
-                                    .is_some_and(|n| n.to_string_lossy().starts_with(prefix))
-                            })
-                            .cloned(),
-                    );
-                }
+            if !definition.has_override(env)
+                && let Some(prefix) = definition.profile_prefix
+            {
+                roots.extend(
+                    extra
+                        .iter()
+                        .filter(|p| {
+                            p.file_name()
+                                .is_some_and(|n| n.to_string_lossy().starts_with(prefix))
+                        })
+                        .cloned(),
+                );
             }
             let default_root = roots.first().cloned();
             roots.sort();

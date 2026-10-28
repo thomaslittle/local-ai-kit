@@ -1,0 +1,11 @@
+import { chromium } from "playwright-core";
+const browser = await chromium.launch({ executablePath: "/usr/bin/google-chrome", headless: true });
+const page = await browser.newPage({ viewport: { width: 1440, height: 960 }, colorScheme: "dark" });
+const errors=[]; page.on("pageerror",e=>errors.push(e.message));
+await page.goto("http://127.0.0.1:5177/?3d", { waitUntil: "networkidle" });
+await page.waitForTimeout(1500);
+await page.locator(".hero-stage").scrollIntoViewIfNeeded();
+await page.waitForTimeout(5000);
+await page.screenshot({ path: "review/desktop-stage.png" });
+console.log(errors);
+await browser.close();

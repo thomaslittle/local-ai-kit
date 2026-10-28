@@ -1,0 +1,182 @@
+{
+  "sourceCommit": "08ef3baee51b9cb48e4974b1ffcf25a32bc552f9",
+  "localVerification": {
+    "profile": "all",
+    "exitCode": 0,
+    "commands": 26,
+    "rustPassed": 681,
+    "nodeSuitePasses": [
+      28,
+      90,
+      3,
+      14,
+      5,
+      26,
+      16,
+      34
+    ],
+    "pythonSuiteCounts": [
+      40,
+      11,
+      3,
+      1,
+      22,
+      16
+    ],
+    "clippy": "workspace/all-targets/all-features, -D warnings: passed",
+    "rustfmt": "passed",
+    "sourceChanges": "08ef3ba; documentation/capture-only commits followed during verification"
+  },
+  "lighthouse": {
+    "desktop": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "mobile": {
+      "performance": 95,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    }
+  },
+  "sceneGzipBytes": 143847,
+  "cliBytes": 24484024,
+  "performance": {
+    "sourceCommit": "0114da7cbbb22bb6cdcecdaa9419cb52d358f934",
+    "workingTreeDirty": true,
+    "binarySha256": "addf624df24a344cdd3d4790f2a4c9602a09341e4039f49b3bbea6cf3ae7f568",
+    "platform": "x86_64-unknown-linux-gnu",
+    "hostOS": "Linux-7.2.11-200.fc44.x86_64-x86_64-with-glibc2.43",
+    "logicalCPUs": 16,
+    "fixture": {
+      "detectedProfiles": 10,
+      "registeredPassiveAdapters": 9,
+      "providerCalls": 0,
+      "inferenceRequests": 0
+    },
+    "coldProcessAndScanMs": {
+      "count": 20,
+      "min": 1.7501530001027277,
+      "max": 2.818296000441478,
+      "mean": 2.037255150025885,
+      "p50": 1.979169999685837,
+      "p95": 2.1979260000080103
+    },
+    "warmStdioSnapshotMs": {
+      "count": 200,
+      "min": 0.1544680008009891,
+      "max": 0.32973499946820084,
+      "mean": 0.18708182498812675,
+      "p50": 0.17566700080351438,
+      "p95": 0.2583960003903485
+    },
+    "idle": {
+      "seconds": 60.059530843000175,
+      "oneCoreCPUPercent": 0.0,
+      "peakRSSMiB": 13.078125
+    },
+    "browserSDK": {
+      "rawBytes": 17908,
+      "gzipBytes": 6522
+    },
+    "targetsMet": {
+      "coldScanP95Below1s": true,
+      "warmIPCP95Below50ms": true,
+      "idleBelow50MiB": true,
+      "idleBelowOnePercent": true,
+      "browserSDKBelow25KiBGzip": true
+    }
+  },
+  "consumers": {
+    "platform": "linux",
+    "node": "packed SDK + native optional dependency, auto-start and close",
+    "python": "installed platform wheel, bundled helper auto-start and context close",
+    "rust": "packed source workspace path dependency, in-process start and drop",
+    "inferenceRequests": 0,
+    "limits": [
+      "Local unpublished artifacts; no registry install or remote AI qualification"
+    ],
+    "electron": "Linux Electron45.1.0 ASAR, packed SDK/native dependency, physical unpacked helper auto-start and owned close under private Xvfb"
+  },
+  "servicePrefix": {
+    "installer": "Linux x64 archive/checksum, extracted real binary, quoted unit generation",
+    "nativeHelper": "installed executable startup and owned shutdown executed",
+    "uninstaller": "default retains data; --purge removes only throwaway state/data",
+    "serviceManager": "systemctl fixture shim; actual user service registration not executed",
+    "inferenceRequests": 0
+  },
+  "designReview": {
+    "captureArtifactsResolved": 2,
+    "finishFindingsResolved": 4,
+    "partial": 0,
+    "unresolved": 0
+  },
+  "liveInferenceRequests": 0,
+  "latestHostedCI": {
+    "sourceCommit": "b089433a6f12df2ffcb85852826f00e25ee62fd8",
+    "result": "all nine checks passed",
+    "checks": [
+      {
+        "name": "verify (ubuntu-24.04)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969251/job/122874495493"
+      },
+      {
+        "name": "prepare (x86_64-unknown-linux-gnu, ubuntu-24.04, linux_x86_64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494714"
+      },
+      {
+        "name": "react-doctor",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969041/job/122874493431"
+      },
+      {
+        "name": "verify (windows-2025)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969251/job/122874495849"
+      },
+      {
+        "name": "prepare (aarch64-unknown-linux-gnu, ubuntu-24.04-arm, linux_aarch64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494481"
+      },
+      {
+        "name": "verify (macos-15-intel)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969251/job/122874496015"
+      },
+      {
+        "name": "prepare (x86_64-apple-darwin, macos-15-intel, macosx_15_0_x86_64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874493962"
+      },
+      {
+        "name": "prepare (aarch64-apple-darwin, macos-15, macosx_15_0_arm64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494661"
+      },
+      {
+        "name": "prepare (x86_64-pc-windows-msvc, windows-2025, win_amd64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494647"
+      }
+    ]
+  },
+  "video": "stopped by owner direction; existing outputs retained",
+  "additionalQualification": {
+    "electron": "Linux Electron45.1.0 ASAR passed from packed SDK/native dependency under private Xvfb; prior build reproduced spawn ENOTDIR",
+    "independentCodeReview": "562e347..08ef3ba: no actionable issues; reviewer ran 30 focused SDK tests",
+    "ciFixtureCorrections": "macOS canonical cwd/ASAR paths and Windows stub scope corrections passed affected hosted stages at 34696c3"
+  },
+  "hostedCheckpoint": {
+    "sourceCommit": "34696c3f06104980426c41855369aba019c2183a",
+    "linux": "full job passed",
+    "windows": "full job passed",
+    "macOS": "full verification, C# consumer, formatting and clippy passed; cold release compilation cancelled at 40-minute job limit",
+    "run": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40698238160",
+    "response": "75-minute budget; complete rerun passed at b089433"
+  }
+}

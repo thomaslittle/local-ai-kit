@@ -67,28 +67,7 @@ pub const PERSISTENT_PROVIDERS: [&str; 5] =
     ["codex", "codex_managed", "claude_code", "opencode", "muse"];
 /// The kit's per-user state directory (holds `resume.key`). With a virtual
 /// `home` it stays inside that home. Nothing is created here.
-pub fn default_state_dir(home: Option<&std::path::Path>) -> Option<std::path::PathBuf> {
-    if let Some(home) = home {
-        return Some(home.join(".local-ai-kit"));
-    }
-    let var = |name: &str| {
-        std::env::var_os(name)
-            .map(std::path::PathBuf::from)
-            .filter(|p| p.is_absolute())
-    };
-    if let Some(dir) = var("LOCAL_AI_KIT_STATE_DIR") {
-        return Some(dir);
-    }
-    if cfg!(windows) {
-        var("LOCALAPPDATA").map(|p| p.join("local-ai-kit"))
-    } else if cfg!(target_os = "macos") {
-        var("HOME").map(|p| p.join("Library/Application Support/local-ai-kit"))
-    } else {
-        var("XDG_STATE_HOME")
-            .or_else(|| var("HOME").map(|p| p.join(".local/state")))
-            .map(|p| p.join("local-ai-kit"))
-    }
-}
+pub use lai_platform::default_state_dir;
 /// Like [`build_service_with_declarations`]; `state_dir` enables durable
 /// resume tokens that survive helper restarts.
 pub fn build_service_with_state(
@@ -177,6 +156,9 @@ pub fn build_service_with_cursor_usage(
                 Ok(report)
             })
         }));
+    if let Some(directory) = &state_dir {
+        service = service.with_cost_prices(directory.clone());
+    }
     if let Some((auth, _)) = &chatgpt {
         service = service.with_chatgpt_auth(auth.clone());
     }

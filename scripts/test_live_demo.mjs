@@ -111,7 +111,7 @@ test('pairing is the preferred path; example data is an explicit, labeled choice
   assert.equal(await app.page.locator('#mode-banner').count(),0,'nothing is shown before pairing or an explicit choice');
   await app.page.getByRole('button',{name:'Explore example data'}).click();
   await app.page.locator('#mode-banner.synthetic').waitFor();
-  assert.match(await app.page.locator('#mode-banner').innerText(),/no native runtime is paired/i);
+  assert.match(await app.page.locator('#mode-banner').innerText(),/pair a runtime to see yours/i);
   await app.page.getByRole('button',{name:'Pair a runtime'}).click();
   await app.page.getByRole('heading',{name:'Connect your local runtime'}).waitFor();
   assert.equal(app.errors.length,0,app.errors.join('\n'));

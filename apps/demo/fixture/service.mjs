@@ -1,9 +1,11 @@
 /** Test/demo harness only, not a substitute for the Rust service or provider adapters. */
+import {fixtureCosts} from './costs.mjs';
 import {fixtureSnapshot} from './snapshot.mjs';
 import {createCatalog,resolveCandidates,reconcileSelection} from '../../../packages/selector-core/dist/index.js';
 export function createFixtureService({snapshot:provided,turnError=null}={}){
  const snapshot=provided?structuredClone(provided):fixtureSnapshot();
  if(snapshot.mode!=='synthetic')throw Error('SYNTHETIC_MODE_REQUIRED');
+ const costs=fixtureCosts(snapshot);
  const catalog=createCatalog(snapshot),sessions=new Map(),turns=new Map(),grants=new Map(),approvals=new Map(),listeners=new Set(),history=[];
  let counter=0,sequence=0,refreshes=0,closed=false;
  const error=code=>{const e=new Error(code);e.code=code;throw e;};
@@ -43,6 +45,7 @@ export function createFixtureService({snapshot:provided,turnError=null}={}){
   'runtime.health':()=>({status:'ok',mode:'synthetic'}),
   'snapshot.get':p=>{if(p.fields){if(!Array.isArray(p.fields)||p.fields.some(f=>!Object.hasOwn(snapshot,f)))error('INVALID_REQUEST');return Object.fromEntries(p.fields.map(f=>[f,snapshot[f]]));}return snapshot;},
   'connections.list':()=>snapshot.connections,'models.list':p=>snapshot.models.filter(m=>!p.routeId||m.routeId===p.routeId),
+  'costs.read':()=>costs.read(), 'costs.setPrices':p=>costs.set(p.prices),
   'usage.read':()=>snapshot.quotaPools,'capabilities.read':p=>snapshot.models.find(m=>m.id===p.modelId)?.capabilities??[],
   'adapters.list':()=>snapshot.providers.map(p=>({id:p.id,classification:'synthetic',liveQualified:false})),
   'discovery.refresh':p=>{if(p.level&&p.level!=='passive')error('CAPABILITY_UNSUPPORTED');snapshot.revision=`fixture-${++refreshes+1}`;return {scanId:id('fixture-scan'),mode:'synthetic',revision:snapshot.revision};},

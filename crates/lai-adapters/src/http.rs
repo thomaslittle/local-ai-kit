@@ -106,6 +106,16 @@ fn local(url: &Url) -> bool {
         .is_some_and(|ip| ip.is_loopback())
 }
 impl Endpoint {
+    /// Only documented OpenRouter origins define usage.cost in USD credits.
+    pub(crate) fn reports_usd_cost(&self) -> bool {
+        self.base.scheme() == "https"
+            && self.base.port_or_known_default() == Some(443)
+            && matches!(
+                self.base.host_str(),
+                Some("openrouter.ai" | "eu.openrouter.ai" | "us.openrouter.ai")
+            )
+    }
+
     /// `local_only` accepts literal loopback addresses only; no DNS or proxy detour.
     pub fn new(url: &str, auth: Authentication, local_only: bool) -> Result<Self> {
         if url.len() > 2048

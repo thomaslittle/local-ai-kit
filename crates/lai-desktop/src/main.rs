@@ -1,5 +1,6 @@
 mod app;
 mod brand;
+mod brand_tokens;
 mod broker;
 mod data;
 mod history;
@@ -10,16 +11,18 @@ mod theme;
 mod ui;
 
 use app::Desktop;
-use gpui_kit::component::{ThemeMode, TitleBar};
+use gpui_kit::component::TitleBar;
 use gpui_kit::*;
-use std::{borrow::Cow, path::PathBuf, sync::Arc, time::Duration};
+use std::{borrow::Cow, path::PathBuf, sync::Arc};
 
-fn parse_args() -> (PathBuf, u64) {
+fn parse_args() -> (PathBuf, u64, bool) {
     let mut token: Option<PathBuf> = None;
     let mut refresh = 30u64;
+    let mut example = false;
     let mut args = std::env::args().skip(1);
     while let Some(flag) = args.next() {
         match flag.as_str() {
+            "--example" => example = true,
             "--token-file" => token = args.next().map(PathBuf::from),
             "--refresh" => {
                 refresh = args
@@ -30,7 +33,7 @@ fn parse_args() -> (PathBuf, u64) {
             }
             "--help" | "-h" => {
                 println!(
-                    "local-ai-kit-desktop [--token-file PATH] [--refresh SECONDS]\n\
+                    "local-ai-kit-desktop [--token-file PATH] [--refresh SECONDS] [--example]\n\
                      Reads the shared broker over its public authenticated API."
                 );
                 std::process::exit(0);
@@ -38,27 +41,33 @@ fn parse_args() -> (PathBuf, u64) {
             _ => {}
         }
     }
+    if example {
+        return (PathBuf::from("example-mode-no-credential"), refresh, true);
+    }
     let token = token
         .or_else(|| std::env::var_os("LAI_DESKTOP_TOKEN_FILE").map(PathBuf::from))
         .or_else(default_token_file)
-        .unwrap_or_else(|| PathBuf::from("admin-token.json"));
-    (token, refresh)
+        // No implicit credential lookup in the current working directory.
+        .unwrap_or_default();
+    (token, refresh, example)
 }
 
 fn default_token_file() -> Option<PathBuf> {
-    let home = std::env::var("HOME").ok()?;
-    let state = PathBuf::from(&home).join(".local/state/local-ai-kit/fedora-shared");
+    if let Some(path) = std::env::var_os("LAI_BROKER_TOKEN_FILE") {
+        return Some(PathBuf::from(path));
+    }
+    let home = std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })?;
+    let state = PathBuf::from(home).join(".local-ai-kit");
     [
-        state.join("control-admin-token.json"),
-        state.join("control-token.json"),
-        PathBuf::from(&home).join(".local-ai-kit/broker-admin-token.json"),
+        state.join("broker-admin-token.json"),
+        state.join("broker-token.json"),
     ]
     .into_iter()
     .find(|path| path.is_file())
 }
 
 fn main() {
-    let (token_path, refresh) = parse_args();
+    let (token_path, refresh, example) = parse_args();
     let application = gpui_kit::application().with_assets(gpui_kit::assets::Assets);
     application.run(move |cx| {
         let _ = cx
@@ -68,13 +77,14 @@ fn main() {
             ) as &[u8])]);
         gpui_kit::init(cx);
         theme::install(cx, true);
-        let _ = ThemeMode::Dark;
         let token = token_path.clone();
         let (width, height) = std::env::var("LAI_DESKTOP_WINDOW")
             .ok()
             .and_then(|value| {
                 let (w, h) = value.split_once('x')?;
-                Some((w.parse::<f32>().ok()?, h.parse::<f32>().ok()?))
+                let (width, height) = (w.parse::<f32>().ok()?, h.parse::<f32>().ok()?);
+                (width.is_finite() && height.is_finite())
+                    .then_some((width.clamp(1000., 7680.), height.clamp(660., 4320.)))
             })
             .unwrap_or((1440.0, 920.0));
         let light = std::env::var_os("LAI_DESKTOP_THEME").is_some_and(|value| value == "light");
@@ -97,9 +107,8 @@ fn main() {
         }
         options.icon = icon;
         gpui_kit::open_window(options, cx, move |window, cx| {
-            cx.new(|cx| Desktop::new(window, cx, token, refresh))
+            cx.new(|cx| Desktop::new(window, cx, token, refresh, example))
         })
         .expect("desktop window");
-        let _ = Duration::from_secs(1);
     });
 }

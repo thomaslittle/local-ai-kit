@@ -12,7 +12,7 @@ use gpui_kit::*;
 impl Desktop {
     pub fn page_settings(&mut self, cx: &mut Context<Self>) -> AnyElement {
         let theme = cx.theme().clone();
-        let address = std::fs::read(&self.token_path)
+        let address = lai_platform::read_private_file(&self.token_path, 16 * 1024)
             .ok()
             .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
             .and_then(|value| {
@@ -22,7 +22,9 @@ impl Desktop {
                     .map(|address| address.to_string())
             })
             .unwrap_or_else(|| "unavailable".into());
-        let state_dir = crate::history::state_dir();
+        let state_dir = crate::history::state_dir()
+            .map(|path| path.display().to_string())
+            .unwrap_or_else(|| "Unavailable; preferences are not persisted".into());
         let entity_theme = cx.entity();
         let entity_refresh = cx.entity();
         let entity_dir = cx.entity();
@@ -34,6 +36,7 @@ impl Desktop {
             .px(px(ui::PAGE_PAD))
             .pb(px(36.))
             .gap_4()
+            .child(self.price_settings(cx))
             .child(
                 div()
                     .v_flex()
@@ -82,7 +85,7 @@ impl Desktop {
                         div()
                             .text_size(px(10.))
                             .text_color(theme.muted_foreground)
-                            .child("Motion uses the component library's tokens and follows the system's reduced-motion setting."),
+                            .child("Appearance preferences apply to this app."),
                     ),
             )
             .child(
@@ -108,11 +111,13 @@ impl Desktop {
                         &theme,
                     ))
                     .child(row(
-                        "Credential kind",
-                        if self.credential_kind.contains("admin") {
-                            "Administrator (can list and revoke apps)"
+                        "Application administration",
+                        if self.example {
+                            "Example mode; no credentials loaded"
+                        } else if self.bundle.as_ref().is_some_and(|bundle| bundle.error.is_none() && bundle.apps_error.is_none()) {
+                            "Confirmed by the runtime"
                         } else {
-                            "Application (scoped grants only)"
+                            "Not confirmed; inspect Connections for the response"
                         },
                         false,
                         &theme,
@@ -129,9 +134,9 @@ impl Desktop {
                                     .text_size(px(10.))
                                     .text_color(theme.muted_foreground)
                                     .cursor_pointer()
-                                    .child(format!("{}", state_dir.display()))
+                                    .child(state_dir.clone())
                                     .on_click(move |_, _, cx| {
-                                        let dir = state_dir.display().to_string();
+                                        let dir = state_dir.clone();
                                         entity_dir.update(cx, |this, cx| {
                                             cx.write_to_clipboard(
                                                 gpui::ClipboardItem::new_string(dir),

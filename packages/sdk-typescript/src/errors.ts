@@ -22,7 +22,7 @@ export function remoteError(data: unknown): LocalAIError {
   return new LocalAIError(code, retryable, value.retryAfterMs as number | undefined);
 }
 export function requireMethod(method: string): void {
-  if (!/^[a-zA-Z][a-zA-Z0-9]*\.[a-zA-Z][a-zA-Z0-9]*$/.test(method) || method.length > 128) throw new LocalAIError('INVALID_METHOD');
+  if (typeof method !== 'string' || method.length > 128 || !/^[a-zA-Z][a-zA-Z0-9]*(?:\.[a-zA-Z][a-zA-Z0-9]*)+$/.test(method)) throw new LocalAIError('INVALID_METHOD');
 }
 export function limit(value: number, min = 1024, max = 16 * 1024 * 1024): number {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new LocalAIError('INVALID_LIMIT');

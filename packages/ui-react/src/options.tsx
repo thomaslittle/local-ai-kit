@@ -8,7 +8,7 @@ export function ModelOptions({options,selection,onChange,onSensitiveOption}:Mode
   setNotice('');
   if(value!==undefined&&validateOption(option,value)){setNotice('That value is not supported by this native option.');return;}
   const captured=identity;
-  if(value!==undefined&&(option.billingSensitive||option.permissionSensitive)){
+  if(option.billingSensitive||option.permissionSensitive){
    if(!onSensitiveOption){setNotice('Host approval is required before changing this sensitive option.');return;}
    setPending(true);let allowed=false;
    try {allowed=await onSensitiveOption(option,value);}catch{setNotice('The host could not approve this change.');}

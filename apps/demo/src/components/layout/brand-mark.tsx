@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 export function BrandMark({ size = 34, className }: { size?: number; className?: string }) {
   return (
     <span
-      className={cn('grid shrink-0 place-items-center rounded-[26%] bg-[#EBA31A]', className)}
+      className={cn('grid shrink-0 place-items-center rounded-[26%] bg-primary', className)}
       style={{ width: size, height: size }}
     >
       <img src={markGraphite} alt="" aria-hidden="true" draggable={false} style={{ width: size * 0.68 }} />

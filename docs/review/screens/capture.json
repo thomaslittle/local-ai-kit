@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "562e347bf334ce7f99c64b56e66e65bf989b0ded",
+  "sourceDirty": false,
+  "app": "127.0.0.1:5176, example data only",
+  "site": "127.0.0.1:5177, prerendered production preview",
+  "browser": "Headless Chromium; software WebGL for the two scene captures",
+  "widths": [
+    1440,
+    390
+  ],
+  "errors": []
+}

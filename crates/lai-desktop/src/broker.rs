@@ -2,7 +2,7 @@
 //! never touch the broker store or provider credentials directly.
 
 use crate::history::{History, Sample};
-use lai_contracts::Snapshot;
+use lai_contracts::{CostReport, ModelPrice, Snapshot, estimate_cost};
 use lai_control::BrokerClient;
 use serde_json::{Value, json};
 use std::{
@@ -19,6 +19,8 @@ pub struct Bundle {
     pub apps_error: Option<String>,
     pub adapters: Vec<Value>,
     pub history: Vec<Sample>,
+    pub costs: Option<CostReport>,
+    pub cost_error: Option<String>,
     pub fetched_at: i64,
     pub error: Option<String>,
 }
@@ -27,6 +29,7 @@ pub enum Command {
     Refresh,
     Probe(String),
     RevokeApp(String),
+    SetPrices(Vec<ModelPrice>),
 }
 
 pub struct BrokerHandle {
@@ -34,16 +37,112 @@ pub struct BrokerHandle {
     pub updates: Receiver<Bundle>,
 }
 
-pub fn spawn(token_file: PathBuf, refresh: Duration) -> BrokerHandle {
+pub fn spawn(token_file: PathBuf, refresh: Duration, example: bool) -> BrokerHandle {
     let (command_tx, command_rx) = std::sync::mpsc::channel();
     let (update_tx, update_rx) = std::sync::mpsc::channel();
     thread::Builder::new()
         .name("lai-broker".into())
-        .spawn(move || worker(token_file, refresh, command_rx, update_tx))
+        .spawn(move || {
+            if example {
+                let mut fixture: Value =
+                    serde_json::from_str(include_str!("../assets/example-snapshot.json"))
+                        .expect("bundled synthetic snapshot");
+                let anchor = chrono::DateTime::parse_from_rfc3339(
+                    fixture["observedAt"].as_str().expect("fixture timestamp"),
+                )
+                .expect("valid fixture timestamp");
+                // Shift the labeled example once at launch, preserving all relative
+                // ages/reset intervals. Real provider evidence is never rebased.
+                rebase_example_times(
+                    &mut fixture,
+                    chrono::Utc::now().signed_duration_since(anchor),
+                );
+                let snapshot: Snapshot =
+                    serde_json::from_value(fixture).expect("rebased example snapshot");
+                let mut costs: CostReport =
+                    serde_json::from_str(include_str!("../assets/example-costs.json"))
+                        .expect("bundled example costs");
+                // Example mode never connects, probes, loads history or executes.
+                loop {
+                    if update_tx
+                        .send(Bundle {
+                            snapshot: snapshot.clone(),
+                            runtime: json!({"mode":"synthetic"}),
+                            apps: Vec::new(),
+                            apps_error: Some("Example mode has no connected applications.".into()),
+                            adapters: Vec::new(),
+                            history: Vec::new(),
+                            costs: Some(costs.clone()),
+                            cost_error: None,
+                            fetched_at: chrono::Utc::now().timestamp(),
+                            error: None,
+                        })
+                        .is_err()
+                    {
+                        break;
+                    }
+                    match command_rx.recv() {
+                        Ok(Command::SetPrices(prices)) => {
+                            costs.prices = prices;
+                            for record in &mut costs.records {
+                                record.price = costs
+                                    .prices
+                                    .iter()
+                                    .find(|price| {
+                                        price.provider_id == record.provider_id
+                                            && price.native_model_id == record.native_model_id
+                                    })
+                                    .cloned();
+                                record.amount_usd = record.price.as_ref().and_then(|price| {
+                                    estimate_cost(
+                                        record.usage.input_tokens.as_ref()?,
+                                        record.usage.output_tokens.as_ref()?,
+                                        price,
+                                    )
+                                });
+                                record.basis = if record.amount_usd.is_some() {
+                                    "estimated"
+                                } else {
+                                    "unknown"
+                                }
+                                .into();
+                            }
+                        }
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                }
+            } else {
+                worker(token_file, refresh, command_rx, update_tx);
+            }
+        })
         .expect("broker worker");
     BrokerHandle {
         commands: command_tx,
         updates: update_rx,
+    }
+}
+
+fn rebase_example_times(value: &mut Value, offset: chrono::Duration) {
+    match value {
+        Value::Object(fields) => {
+            for (key, value) in fields {
+                if matches!(key.as_str(), "observedAt" | "resetsAt") {
+                    if let Some(timestamp) = value
+                        .as_str()
+                        .and_then(|text| chrono::DateTime::parse_from_rfc3339(text).ok())
+                    {
+                        *value = Value::String((timestamp + offset).to_rfc3339());
+                    }
+                } else {
+                    rebase_example_times(value, offset);
+                }
+            }
+        }
+        Value::Array(items) => items
+            .iter_mut()
+            .for_each(|item| rebase_example_times(item, offset)),
+        _ => {}
     }
 }
 
@@ -75,6 +174,16 @@ fn fetch(client: &mut BrokerClient, history: &mut History) -> Result<Bundle, Str
         .ok()
         .and_then(|value| value.as_array().cloned())
         .unwrap_or_default();
+    let (costs, cost_error) = match client.call("costs.read", json!({})).and_then(|value| {
+        serde_json::from_value(value)
+            .map_err(|_| "Cost evidence was not in the supported format".into())
+    }) {
+        Ok(report) => (Some(report), None),
+        Err(_) => (
+            None,
+            Some("Cost evidence unavailable. Connect to a runtime with costs.read support.".into()),
+        ),
+    };
     let now = chrono::Utc::now().timestamp();
     history.observe(&snapshot, now);
     Ok(Bundle {
@@ -83,6 +192,8 @@ fn fetch(client: &mut BrokerClient, history: &mut History) -> Result<Bundle, Str
         apps,
         apps_error,
         adapters,
+        costs,
+        cost_error,
         history: history.samples.clone(),
         fetched_at: now,
         error: None,
@@ -127,17 +238,18 @@ fn worker(
                                     .into(),
                             ),
                             adapters: Vec::new(),
+                            costs: None,
+                            cost_error: Some("Runtime is offline".into()),
                             history: history.samples.clone(),
                             fetched_at: chrono::Utc::now().timestamp(),
                             error: Some(error.clone()),
                         });
                         last_error = Some(error);
                     }
-                    thread::sleep(Duration::from_secs(3));
-                    if commands.try_recv().is_ok() {
-                        continue;
+                    match commands.recv_timeout(Duration::from_secs(3)) {
+                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        _ => continue,
                     }
-                    continue;
                 }
             }
         }
@@ -162,6 +274,8 @@ fn worker(
                                 apps: Vec::new(),
                                 apps_error: Some("Broker became unavailable; reconnecting.".into()),
                                 adapters: Vec::new(),
+                                costs: None,
+                                cost_error: Some("Runtime is offline".into()),
                                 history: history.samples.clone(),
                                 fetched_at: chrono::Utc::now().timestamp(),
                                 error: Some(error),
@@ -176,6 +290,19 @@ fn worker(
                     let _ =
                         active.call("connections.probe", json!({"connectionId": connection_id}));
                     if let Ok(bundle) = fetch(active, &mut history) {
+                        let _ = updates.send(bundle);
+                    }
+                }
+            }
+            Ok(Command::SetPrices(prices)) => {
+                if let Some(active) = client.as_mut() {
+                    let error = active
+                        .call("costs.setPrices", json!({"prices":prices}))
+                        .err();
+                    if let Ok(mut bundle) = fetch(active, &mut history) {
+                        if error.is_some() {
+                            bundle.cost_error = Some("Prices were not saved. Check administrator access and price values.".into());
+                        }
                         let _ = updates.send(bundle);
                     }
                 }
@@ -247,12 +374,20 @@ pub struct ExecHandle {
     pub events: Receiver<ExecEvent>,
 }
 
-pub fn spawn_executor(token_file: PathBuf) -> ExecHandle {
+pub fn spawn_executor(token_file: PathBuf, example: bool) -> ExecHandle {
     let (command_tx, command_rx) = std::sync::mpsc::channel();
     let (event_tx, event_rx) = std::sync::mpsc::channel();
     thread::Builder::new()
         .name("lai-playground".into())
-        .spawn(move || executor(token_file, command_rx, event_tx))
+        .spawn(move || {
+            if example {
+                while command_rx.recv().is_ok() {
+                    let _ = event_tx.send(ExecEvent::Failed {
+                        error: "Execution is disabled in example mode. Connect a granted runtime to run a turn.".into(),
+                    });
+                }
+            } else { executor(token_file, command_rx, event_tx); }
+        })
         .expect("execution worker");
     ExecHandle {
         commands: command_tx,

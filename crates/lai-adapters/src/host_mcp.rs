@@ -74,10 +74,9 @@ impl HostTools {
                 if let Some(tool) = name
                     .strip_prefix(server.as_str())
                     .and_then(|tail| tail.strip_prefix(separator))
+                    && tools.contains(tool)
                 {
-                    if tools.contains(tool) {
-                        return Some(format!("mcp__{server}__{tool}"));
-                    }
+                    return Some(format!("mcp__{server}__{tool}"));
                 }
             }
         }

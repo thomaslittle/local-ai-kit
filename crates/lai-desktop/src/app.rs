@@ -172,13 +172,13 @@ impl Default for Prefs {
     }
 }
 
-fn prefs_path() -> PathBuf {
-    crate::history::state_dir().join("prefs.json")
+fn prefs_path() -> Option<PathBuf> {
+    crate::history::state_dir().map(|path| path.join("prefs.json"))
 }
 
 fn load_prefs() -> Prefs {
-    std::fs::read(prefs_path())
-        .ok()
+    prefs_path()
+        .and_then(|path| std::fs::read(path).ok())
         .and_then(|bytes| serde_json::from_slice(&bytes).ok())
         .unwrap_or_default()
 }
@@ -190,12 +190,15 @@ pub struct Desktop {
     pub refresh_seconds: u64,
     pub error: Option<String>,
     pub connected: bool,
+    pub example: bool,
     pub last_event: Instant,
     pub palette_open: bool,
     pub palette_input: Entity<InputState>,
     pub palette_query: String,
     pub search: Entity<InputState>,
     pub prompt: Entity<TextareaState>,
+    pub price_fields: [Entity<InputState>; 6],
+    pub price_edit_original: Option<lai_contracts::ModelPrice>,
     pub query: String,
     pub selected_connection: Option<String>,
     pub selected_model: Option<String>,
@@ -212,10 +215,10 @@ pub struct Desktop {
     pub playground_error: Option<String>,
     pub revoke_confirm: Option<String>,
     pub toast: Option<(String, Instant)>,
+    pub mini_view: bool,
     pub broker: BrokerHandle,
     pub executor: ExecHandle,
     pub token_path: PathBuf,
-    pub credential_kind: String,
     pub poll_task: Option<Task<()>>,
     focus: FocusHandle,
     initial_focus: bool,
@@ -238,6 +241,7 @@ impl Desktop {
         cx: &mut Context<Self>,
         token_path: PathBuf,
         refresh_seconds: u64,
+        example: bool,
     ) -> Self {
         let prefs = load_prefs();
         let dark = match std::env::var("LAI_DESKTOP_THEME").ok().as_deref() {
@@ -246,15 +250,29 @@ impl Desktop {
             _ => prefs.dark,
         };
         theme::install(cx, dark);
-        let broker = broker::spawn(token_path.clone(), Duration::from_secs(refresh_seconds));
-        let executor = broker::spawn_executor(token_path.clone());
-        let credential_kind = token_path
-            .file_name()
-            .map(|name| name.to_string_lossy().to_string())
-            .unwrap_or_default();
+        let broker = broker::spawn(
+            token_path.clone(),
+            Duration::from_secs(refresh_seconds),
+            example,
+        );
+        let executor = broker::spawn_executor(token_path.clone(), example);
         let palette_input = cx
             .new(|cx| InputState::new(window, cx).placeholder("Jump to a page, model or action…"));
         let search = cx.new(|cx| InputState::new(window, cx).placeholder("Search models…"));
+        let price_fields = std::array::from_fn(|index| {
+            cx.new(|cx| {
+                InputState::new(window, cx).placeholder(
+                    [
+                        "Provider ID",
+                        "Exact model ID",
+                        "Input USD per million",
+                        "Output USD per million",
+                        "YYYY-MM-DD",
+                        "Source or local rationale",
+                    ][index],
+                )
+            })
+        });
         let prompt = cx.new(|cx| {
             TextareaState::new(window, cx)
                 .placeholder("Describe a small test request. Nothing runs until you press Run.")
@@ -303,6 +321,7 @@ impl Desktop {
         }));
 
         let mut this = Self {
+            example,
             page: std::env::var("LAI_DESKTOP_PAGE")
                 .ok()
                 .and_then(|name| {
@@ -329,6 +348,8 @@ impl Desktop {
             palette_query: String::new(),
             search,
             prompt,
+            price_fields,
+            price_edit_original: None,
             query: String::new(),
             selected_connection: None,
             selected_model: None,
@@ -345,10 +366,10 @@ impl Desktop {
             playground_error: None,
             revoke_confirm: None,
             toast: None,
+            mini_view: example && std::env::var_os("LAI_DESKTOP_MINI_VIEW").is_some(),
             broker,
             executor,
             token_path,
-            credential_kind,
             poll_task: None,
             focus,
             initial_focus: true,
@@ -622,7 +643,9 @@ impl Desktop {
             providers_inspector: self.providers_inspector,
         };
         if let Ok(bytes) = serde_json::to_vec_pretty(&prefs) {
-            let path = prefs_path();
+            let Some(path) = prefs_path() else {
+                return;
+            };
             if let Some(parent) = path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
@@ -872,6 +895,7 @@ impl AuthExt for lai_contracts::Observation<lai_contracts::AuthState> {
             self,
             lai_contracts::Observation::Known {
                 value: lai_contracts::AuthState::Authenticated,
+                freshness: lai_contracts::Freshness::Fresh,
                 ..
             }
         )
@@ -937,6 +961,11 @@ impl Render for Desktop {
                     entity_keys.update(cx, |this, cx| this.toggle_theme(cx));
                 } else if command && key == "b" {
                     entity_keys.update(cx, |this, cx| this.toggle_sidebar(window, cx));
+                } else if command && event.keystroke.modifiers.shift && key == "m" {
+                    entity_keys.update(cx, |this, cx| {
+                        this.mini_view = !this.mini_view;
+                        cx.notify();
+                    });
                 }
             })
             .child(self.window_title_bar(&theme, entity.clone(), client_decorated))
@@ -998,8 +1027,9 @@ impl Render for Desktop {
                         .child(content.into_any_element()),
                 )
             })
-            .child(self.status_bar(&theme))
-            .children(self.palette_overlay(&theme, entity, window, cx))
+            .child(self.status_bar(&theme, entity.clone()))
+            .children(self.palette_overlay(&theme, entity.clone(), window, cx))
+            .children(self.mini_view_overlay(&theme, entity.clone()))
             .children(self.toast_overlay(&theme))
     }
 }
@@ -1230,12 +1260,16 @@ impl Desktop {
                 }))
         };
 
-        let status_tone = if self.connected {
+        let status_tone = if self.example {
+            Tone::Amber
+        } else if self.connected {
             Tone::Green
         } else {
             Tone::Red
         };
-        let status_text = if self.connected {
+        let status_text = if self.example {
+            "Example data"
+        } else if self.connected {
             "Broker connected"
         } else {
             "Reconnecting"
@@ -1297,10 +1331,14 @@ impl Desktop {
                             div()
                                 .text_size(px(10.))
                                 .text_color(theme.muted_foreground)
-                                .child(if self.credential_kind.contains("admin") {
-                                    "Admin credential"
+                                .child(if self.example {
+                                    "No runtime connected"
+                                } else if self.bundle.as_ref().is_some_and(|bundle| {
+                                    bundle.error.is_none() && bundle.apps_error.is_none()
+                                }) {
+                                    "Administrator access confirmed"
                                 } else {
-                                    "Application credential"
+                                    "Scoped credential"
                                 }),
                         ),
                     ),
@@ -1339,7 +1377,15 @@ impl Desktop {
                         div()
                             .text_size(px(11.5))
                             .text_color(theme.muted_foreground)
-                            .child(self.page.subtitle()),
+                            .child(
+                                if self.bundle.as_ref().is_some_and(|bundle| {
+                                    bundle.snapshot.mode == lai_contracts::DataMode::Synthetic
+                                }) {
+                                    "Example data. No accounts inspected; execution disabled."
+                                } else {
+                                    self.page.subtitle()
+                                },
+                            ),
                     ),
             )
             .child(
@@ -1451,7 +1497,7 @@ impl Desktop {
         )
     }
 
-    fn status_bar(&self, theme: &Theme) -> AnyElement {
+    fn status_bar(&self, theme: &Theme, entity: Entity<Self>) -> AnyElement {
         let revision = self
             .snapshot()
             .map(|s| s.revision.chars().take(18).collect::<String>())
@@ -1505,9 +1551,25 @@ impl Desktop {
                         },
                         theme,
                     ))
-                    .child(format!("observed {freshness} ago")),
+                    .child(format!("refreshed {freshness} ago")),
             )
             .child(div().flex_1())
+            .child({
+                div()
+                    .id("mini-view-toggle")
+                    .h_flex()
+                    .gap_1()
+                    .cursor_pointer()
+                    .hover(|style| style.text_color(theme.foreground))
+                    .child(ui::icon(IconName::ChartPie, 11., theme.muted_foreground))
+                    .child("Today")
+                    .on_click(move |_, _, cx| {
+                        entity.update(cx, |this, cx| {
+                            this.mini_view = !this.mini_view;
+                            cx.notify();
+                        });
+                    })
+            })
             .child(
                 div()
                     .h_flex()
@@ -1705,6 +1767,147 @@ impl Desktop {
                 .inset_0()
                 .child(backdrop)
                 .child(panel)
+                .into_any_element(),
+        )
+    }
+
+    fn mini_view_overlay(&self, theme: &Theme, entity: Entity<Self>) -> Option<AnyElement> {
+        if !self.mini_view {
+            return None;
+        }
+        let rows = self
+            .snapshot()
+            .map(crate::data::quota_rows)
+            .unwrap_or_default();
+        let mut seen = std::collections::BTreeSet::new();
+        let rows: Vec<_> = rows
+            .into_iter()
+            .filter(|row| seen.insert((row.pool_id.clone(), row.window_id.clone())))
+            .take(4)
+            .collect();
+        let close = entity.clone();
+        let open = entity.clone();
+        Some(
+            div()
+                .absolute()
+                .top(px(52.))
+                .right(px(18.))
+                .w(px(320.))
+                .v_flex()
+                .gap_2()
+                .p_3()
+                .rounded(px(12.))
+                .border_1()
+                .border_color(theme.border)
+                .bg(theme.popover)
+                .shadow_lg()
+                .child(
+                    div()
+                        .h_flex()
+                        .justify_between()
+                        .items_center()
+                        .child(
+                            div()
+                                .text_size(px(12.5))
+                                .font_weight(FontWeight::MEDIUM)
+                                .child("Allowances"),
+                        )
+                        .child(
+                            div()
+                                .id("mini-close")
+                                .size(px(32.))
+                                .h_flex()
+                                .items_center()
+                                .justify_center()
+                                .rounded(px(6.))
+                                .cursor_pointer()
+                                .text_color(theme.muted_foreground)
+                                .hover(|style| style.bg(theme.secondary_hover))
+                                .child("×")
+                                .on_click(move |_, _, cx| {
+                                    close.update(cx, |this, cx| {
+                                        this.mini_view = false;
+                                        cx.notify();
+                                    });
+                                }),
+                        ),
+                )
+                .children(rows.iter().map(|row| {
+                    let remaining = row
+                        .remaining
+                        .map(|value| format!("{:.0}% left", value * 100.0))
+                        .unwrap_or_else(|| "Unknown".into());
+                    let reset = ui::format_countdown(row.resets_at.as_deref())
+                        .map(|value| format!("Resets in {value}"))
+                        .unwrap_or_else(|| "Reset not reported".into());
+                    div()
+                        .h_flex()
+                        .items_center()
+                        .gap_2()
+                        .child(crate::icons::provider_tile(
+                            &row.provider_id,
+                            &row.pool_label,
+                            22.,
+                            theme,
+                        ))
+                        .child(
+                            div()
+                                .v_flex()
+                                .gap(px(1.))
+                                .flex_1()
+                                .min_w(px(0.))
+                                .child(
+                                    div()
+                                        .text_size(px(11.5))
+                                        .font_weight(FontWeight::MEDIUM)
+                                        .truncate()
+                                        .child(row.pool_label.clone()),
+                                )
+                                .child(
+                                    div()
+                                        .text_size(px(9.5))
+                                        .text_color(theme.muted_foreground)
+                                        .child(format!(
+                                            "{}: {reset}{}",
+                                            row.window_label,
+                                            if row.fresh { "" } else { " (stale)" }
+                                        )),
+                                ),
+                        )
+                        .child(
+                            div()
+                                .font_family(theme.mono_font_family.clone())
+                                .text_size(px(14.))
+                                .child(remaining),
+                        )
+                        .into_any_element()
+                }))
+                .when(rows.is_empty(), |this| {
+                    this.child(
+                        div()
+                            .text_size(px(10.5))
+                            .text_color(theme.muted_foreground)
+                            .child("No provider-reported allowance yet."),
+                    )
+                })
+                .child(
+                    Button::new("mini-open-overview")
+                        .secondary()
+                        .label("Open Overview")
+                        .on_click(move |_, _, cx| {
+                            open.update(cx, |this, cx| {
+                                this.set_page(Page::Overview, cx);
+                                this.mini_view = false;
+                                cx.notify();
+                            });
+                        }),
+                )
+                .child(
+                    div()
+                        .text_size(px(9.))
+                        .text_color(theme.muted_foreground)
+                        .child("Optional mini view (Ctrl+Shift+M)"),
+                )
                 .into_any_element(),
         )
     }

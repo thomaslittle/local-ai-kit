@@ -187,10 +187,10 @@ struct Inner {
 }
 impl Drop for Inner {
     fn drop(&mut self) {
-        if let Ok(slot) = self.listener.get_mut() {
-            if let Some(task) = slot.take() {
-                task.abort();
-            }
+        if let Ok(slot) = self.listener.get_mut()
+            && let Some(task) = slot.take()
+        {
+            task.abort();
         }
     }
 }
@@ -209,12 +209,12 @@ impl Clone for AuthManager {
 }
 impl Drop for AuthManager {
     fn drop(&mut self) {
-        if self.owned && self.inner.owners.fetch_sub(1, Ordering::AcqRel) == 1 {
-            if let Ok(mut slot) = self.inner.listener.lock() {
-                if let Some(task) = slot.take() {
-                    task.abort();
-                }
-            }
+        if self.owned
+            && self.inner.owners.fetch_sub(1, Ordering::AcqRel) == 1
+            && let Ok(mut slot) = self.inner.listener.lock()
+            && let Some(task) = slot.take()
+        {
+            task.abort();
         }
     }
 }
@@ -299,10 +299,10 @@ impl AuthManager {
             state.generation += 1;
             state.pending = None;
             state.error_code = None;
-            if let Ok(mut slot) = self.inner.listener.lock() {
-                if let Some(task) = slot.take() {
-                    task.abort();
-                }
+            if let Ok(mut slot) = self.inner.listener.lock()
+                && let Some(task) = slot.take()
+            {
+                task.abort();
             }
         }
         let (latest_tokens, unusable) = match self.inner.store.load_tokens(&latest) {
@@ -468,10 +468,10 @@ impl AuthManager {
         state.generation += 1;
         state.pending = None;
         state.error_code = None;
-        if let Ok(mut slot) = self.inner.listener.lock() {
-            if let Some(task) = slot.take() {
-                task.abort();
-            }
+        if let Ok(mut slot) = self.inner.listener.lock()
+            && let Some(task) = slot.take()
+        {
+            task.abort();
         }
         Ok(())
     }
@@ -512,10 +512,10 @@ impl AuthManager {
                 .registration
                 .as_ref()
                 .map(|r| r.client_id.clone());
-            if let Ok(mut slot) = self.inner.listener.lock() {
-                if let Some(task) = slot.take() {
-                    task.abort();
-                }
+            if let Ok(mut slot) = self.inner.listener.lock()
+                && let Some(task) = slot.take()
+            {
+                task.abort();
             }
             (tokens, client_id)
         };

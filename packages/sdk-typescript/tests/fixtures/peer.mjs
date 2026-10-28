@@ -10,6 +10,7 @@ createInterface({input:process.stdin,crlfDelay:Infinity}).on('line',line=>{
  else if(r.method==='test.bad')process.stdout.write('not-json\n');
  else if(r.method==='test.large')process.stdout.write('x'.repeat(2048));
  else if(r.method==='test.stderr'){process.stderr.write('SECRET_SHOULD_NOT_ESCAPE');result(r.id,{ok:true});}
+ else if(r.method==='test.directories')result(r.id,Object.fromEntries(['XDG_STATE_HOME','APPDATA','LOCALAPPDATA','LOCAL_AI_KIT_STATE_DIR'].map(key=>[key,process.env[key]??null])));
  else if(r.method==='test.env')result(r.id,{nodeOptions:process.env.NODE_OPTIONS??null,custom:process.env.EXPLICIT_VALUE??null});
  else if(r.method==='test.gap'){write({jsonrpc:'2.0',method:'events.error',params:{subscriptionId:'synthetic-sub',code:'EVENT_GAP'}});result(r.id,{ok:true});}
  else if(r.method==='test.flood'){

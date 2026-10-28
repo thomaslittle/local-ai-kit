@@ -117,10 +117,11 @@ fn monthly_spend_percent(rates: &Value) -> Option<String> {
             && currency == text(&limit["currency"]).map(str::trim);
         let same_scale =
             used["exponent"].as_i64().is_some() && used["exponent"] == limit["exponent"];
-        if same_currency && same_scale {
-            if let Some(percent) = amount_percent(&used["amount_minor"], &limit["amount_minor"]) {
-                return Some(percent_decimal(percent));
-            }
+        if same_currency
+            && same_scale
+            && let Some(percent) = amount_percent(&used["amount_minor"], &limit["amount_minor"])
+        {
+            return Some(percent_decimal(percent));
         }
     }
     let extra = &rates["extra_usage"];

@@ -118,10 +118,10 @@ fn gemini_executable(candidate: &Path) -> Result<(PathBuf, Vec<OsString>)> {
         parent.join("node_modules/@google/gemini-cli/dist/index.js"),
         parent.join("../lib/node_modules/@google/gemini-cli/dist/index.js"),
     ];
-    if let Ok(real) = candidate.canonicalize() {
-        if name(&real) == "index.js" {
-            entries.push(real);
-        }
+    if let Ok(real) = candidate.canonicalize()
+        && name(&real) == "index.js"
+    {
+        entries.push(real);
     }
     for entry in entries {
         let Some(package) = entry.parent().and_then(Path::parent) else {

@@ -16,18 +16,30 @@ async fn setup() -> (HttpServer, Arc<AtomicUsize>) {
     setup_with_assets(None).await
 }
 async fn setup_with_assets(assets: Option<std::path::PathBuf>) -> (HttpServer, Arc<AtomicUsize>) {
+    setup_config(assets, Duration::from_secs(30)).await
+}
+async fn setup_config(
+    assets: Option<std::path::PathBuf>,
+    ttl: Duration,
+) -> (HttpServer, Arc<AtomicUsize>) {
     let count = Arc::new(AtomicUsize::new(0));
     let reads = count.clone();
     let service = Arc::new(NativeService::new(
         Arc::new(move |_| {
-            reads.fetch_add(1, Ordering::SeqCst);
+            let revision = reads.fetch_add(1, Ordering::SeqCst);
+            let mut snapshot = Snapshot::empty(DataMode::Live);
+            snapshot.providers.push(lai_contracts::Provider {
+                id: "fixture".into(),
+                name: format!("Fixture {revision}"),
+                kind: "fixture".into(),
+            });
             Ok(ScanResult {
-                snapshot: Snapshot::empty(DataMode::Live),
+                snapshot,
                 locations: BTreeMap::new(),
                 metadata_probes: 0,
             })
         }),
-        Duration::from_secs(30),
+        ttl,
     ));
     (
         start(
@@ -405,4 +417,67 @@ async fn variable_font_assets_are_served_as_woff2() {
     assert_eq!(missing.status(), 404);
     s.close().await;
     let _ = std::fs::remove_dir_all(dir);
+}
+
+#[tokio::test]
+async fn inventory_sse_preserves_scope_and_rejects_session_mixing() {
+    let (server, _) = setup_config(None, Duration::ZERO).await;
+    let token = pair(&server).await;
+    let handshake = rpc(
+        &server,
+        &token,
+        "runtime.handshake",
+        json!({"protocolVersion":"1.0"}),
+    )
+    .await;
+    assert_eq!(handshake["result"]["protocolVersion"], "1.0");
+    // Reads are inert: seed the inventory explicitly before taking its cursor.
+    let initial = rpc(
+        &server,
+        &token,
+        "discovery.refresh",
+        json!({"level":"passive"}),
+    )
+    .await;
+    assert!(initial.get("result").is_some());
+    let before = rpc(&server, &token, "snapshot.get", json!({})).await;
+    let cursor = before["result"]["cursor"].as_str().unwrap();
+    assert!(cursor.contains(':'));
+    let refreshed = rpc(
+        &server,
+        &token,
+        "discovery.refresh",
+        json!({"level":"passive"}),
+    )
+    .await;
+    assert!(refreshed.get("result").is_some());
+    let mut response = client()
+        .get(format!(
+            "{}/v1/events?scope=inventory&after={cursor}",
+            server.url
+        ))
+        .bearer_auth(&token)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    assert!(
+        response.headers()["content-type"]
+            .to_str()
+            .unwrap()
+            .starts_with("text/event-stream")
+    );
+    let first = response.chunk().await.unwrap().unwrap();
+    assert!(String::from_utf8_lossy(&first).contains("event: update"));
+    drop(response);
+    for query in ["scope=unknown", "scope=inventory&sessionId=unowned"] {
+        let response = client()
+            .get(format!("{}/v1/events?{query}", server.url))
+            .bearer_auth(&token)
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 400);
+    }
+    server.close().await;
 }

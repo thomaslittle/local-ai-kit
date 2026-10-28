@@ -1,4 +1,5 @@
 pub mod apps;
+pub mod costs;
 pub mod diagnostics;
 pub mod guide;
 pub mod models;

@@ -134,21 +134,20 @@ pub fn poll(
         } else {
             NotificationReason::NewIssue
         };
-        if let Some(store) = store {
-            if store
+        if let Some(store) = store
+            && store
                 .record_notification(&issue.id, &key, severity_label(issue.severity), now_ms)
                 .is_err()
-            {
-                // Persistence is the dedupe authority. Fail closed rather than
-                // risk duplicate OS alerts from multiple consumers.
-                decisions.push(decision(
-                    issue,
-                    false,
-                    NotificationReason::SuppressedDuplicate,
-                    preferences,
-                ));
-                continue;
-            }
+        {
+            // Persistence is the dedupe authority. Fail closed rather than
+            // risk duplicate OS alerts from multiple consumers.
+            decisions.push(decision(
+                issue,
+                false,
+                NotificationReason::SuppressedDuplicate,
+                preferences,
+            ));
+            continue;
         }
         decisions.push(decision(issue, true, reason, preferences));
     }

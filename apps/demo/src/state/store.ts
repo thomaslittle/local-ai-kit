@@ -15,6 +15,7 @@ import {
   type LocalAIClient,
   type SessionCreateParams,
   type Snapshot,
+  type ModelPrice,
   type TurnStartParams,
 } from '@local-ai-kit/sdk';
 import { validateOption } from '@local-ai-kit/selector-core';
@@ -66,6 +67,9 @@ export const initialState: DemoState = {
   notice: '',
   connectionError: null,
   diagnostics: null,
+  costs: null,
+  costError: null,
+  savingPrices: false,
   detectedExpanded: true,
   paletteOpen: false,
   connectOpen: false,
@@ -87,6 +91,8 @@ export interface DemoActions {
   probeAllConnections: () => Promise<void>;
   revokeConnection: () => Promise<void>;
   refreshDiagnostics: () => Promise<void>;
+  refreshCosts: () => Promise<void>;
+  savePrices: (prices: ModelPrice[]) => Promise<boolean>;
   downloadArtifact: (event: SessionEvent) => Promise<void>;
   connectLive: (endpoint: string, token: string) => Promise<void>;
   /** Leave example data and pair a native runtime. */
@@ -211,6 +217,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
           pending.push(event);
           if (event.payload.type === 'text_delta') flushTimer ??= setTimeout(flushEvents, STREAM_FLUSH_MS);
           else flushEvents();
+          if (event.payload.type === 'final') void refreshCosts();
         }
       } catch (error) {
         if (!stale(current) && !abort.signal.aborted) notify(userFacingError(error as { code?: unknown }));
@@ -373,6 +380,7 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
       rebuild(snapshot, flags?.forceMode ?? mode, Boolean(flags?.forceMode));
       client = opened;
       set({ hasClient: true, handshake: opened.handshake });
+      void refreshCosts();
       if (opened.handshake.methods.includes('events.subscribe')) observe(opened, current);
       // Scripted fixture flags arrange their own snapshot; automated checks drive
       // metadata actions explicitly instead of auto-probing here.
@@ -507,6 +515,39 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     });
   }
 
+  async function refreshCosts(): Promise<void> {
+    const active = client;
+    const current = epoch;
+    if (!active?.handshake.methods.includes('costs.read')) {
+      set({ costs: null, costError: 'This runtime does not report cost evidence yet.' });
+      return;
+    }
+    try {
+      const costs = await active.costs.read();
+      if (!stale(current)) set({ costs, costError: null });
+    } catch {
+      if (!stale(current)) set({ costError: 'Cost evidence could not be refreshed. Any displayed observations are from the previous read.' });
+    }
+  }
+
+  async function savePrices(prices: ModelPrice[]): Promise<boolean> {
+    const active = client;
+    const current = epoch;
+    if (!active || get().savingPrices || !get().costs?.canEditPrices) return false;
+    set({ savingPrices: true, costError: null });
+    try {
+      await active.costs.setPrices({ prices });
+      if (stale(current)) return false;
+      await refreshCosts();
+      return !get().costError;
+    } catch {
+      if (!stale(current)) set({ costError: 'Prices were not saved. Check the values and your runtime administrator access.' });
+      return false;
+    } finally {
+      if (!stale(current)) set({ savingPrices: false });
+    }
+  }
+
   async function refreshDiagnostics(): Promise<void> {
     const active = client;
     if (!active) return;
@@ -583,6 +624,8 @@ export function createDemoStore(factory: DemoFactory): DemoStore {
     probeAllConnections,
     revokeConnection,
     refreshDiagnostics,
+    refreshCosts,
+    savePrices,
     downloadArtifact,
     connectLive: (endpoint, token) => attach(() => factory.connectLive(endpoint, token), 'live'),
     pair: () => factory.pair?.(),
