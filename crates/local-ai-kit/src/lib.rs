@@ -305,10 +305,12 @@ fn address_listening(address: &str, token: &str) -> bool {
         return false;
     };
     runtime.block_on(async {
-        lai_transports::local_ipc::connect(address)
-            .await
-            .map(|_| valid_token(token))
-            .unwrap_or(false)
+        tokio::time::timeout(
+            std::time::Duration::from_secs(2),
+            lai_transports::local_ipc::connect(address),
+        )
+        .await
+        .is_ok_and(|result| result.is_ok() && valid_token(token))
     })
 }
 

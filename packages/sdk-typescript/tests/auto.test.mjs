@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {chmodSync, readFileSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {openSharedBrokerTransport} from '../node/index.mjs';
+import {readGrant} from '../node/grant.mjs';
 import {defaultAddress, defaultTokenFile, platformPackage, resolveHelper, openAutoTransport} from '../node/auto.mjs';
 
 function helper() {
@@ -123,4 +125,47 @@ test('non-executable Unix overrides fail before spawning', {skip: process.platfo
     chmodSync(binary, 0o600);
     assert.throws(() => resolveHelper({executable: binary}), /INVALID_EXECUTABLE/);
   } finally { rmSync(directory, {recursive: true, force: true}); }
+});
+
+test('private broker receives only the approved environment and caller cwd', {skip: process.platform === 'win32'}, async () => {
+  const {directory, binary} = helper();
+  const observed = join(directory, 'observed');
+  const previous = process.env.UNRELATED_SYNTHETIC_SECRET;
+  process.env.UNRELATED_SYNTHETIC_SECRET = 'must-not-inherit';
+  writeFileSync(binary, '#!/bin/sh\nprintf "%s|%s|%s" "$PWD" "$EXPLICIT_VALUE" "$UNRELATED_SYNTHETIC_SECRET" > "$LAI_TEST_OUTPUT"\nprintf "invalid\\n"\nwhile read -r line; do :; done\n');
+  try {
+    await assert.rejects(openAutoTransport({executable: binary, token: '', cwd: directory, env: {LAI_TEST_OUTPUT: observed, EXPLICIT_VALUE: 'allowed'}}), /PROTOCOL_INVALID/);
+    assert.equal(readFileSync(observed, 'utf8'), `${directory}|allowed|`);
+  } finally {
+    if (previous === undefined) delete process.env.UNRELATED_SYNTHETIC_SECRET;
+    else process.env.UNRELATED_SYNTHETIC_SECRET = previous;
+    rmSync(directory, {recursive: true, force: true});
+  }
+});
+
+test('grant reader rejects oversized descriptors', () => {
+  const {directory} = helper();
+  const file = join(directory, 'grant.json');
+  try {
+    writeFileSync(file, JSON.stringify({address:'/fixture/shared',token:'a'.repeat(64),padding:'x'.repeat(16384)}), {mode:0o600});
+    assert.equal(readGrant(file, '/fixture/shared'), null);
+  } finally { rmSync(directory, {recursive:true, force:true}); }
+});
+
+test('shared startup never hides an authentication denial', {skip: process.platform === 'win32'}, async () => {
+  const {directory, binary} = helper();
+  const file = join(directory, 'grant.json');
+  const marker = join(directory, 'started');
+  writeFileSync(file, JSON.stringify({protocolVersion:'1.0',address:'/fixture/shared',token:'a'.repeat(64)}), {mode:0o600});
+  writeFileSync(binary, `#!/usr/bin/env node
+import('node:readline').then(({createInterface}) => {
+  if(process.argv[2]==='serve') import('node:fs').then(fs=>fs.writeFileSync(process.env.START_MARKER,'unexpected'));
+  const lines=createInterface({input:process.stdin});
+  lines.on('line',line=>{const request=JSON.parse(line);process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:request.id,error:{code:-32000,data:{code:'LOCAL_ACCESS_DENIED'}}})+'\\n');});
+});
+`);
+  try {
+    await assert.rejects(openSharedBrokerTransport({executable:binary,address:'/fixture/shared',tokenFile:file,env:{START_MARKER:marker}}), error=>error.code==='LOCAL_ACCESS_DENIED');
+    assert.throws(()=>readFileSync(marker), {code:'ENOENT'});
+  } finally { rmSync(directory,{recursive:true,force:true}); }
 });

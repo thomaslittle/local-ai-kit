@@ -1,12 +1,14 @@
 /** Dependency-first transport. Nothing spawns or connects until this is called. */
 import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
-import {accessSync, constants, closeSync, fstatSync, lstatSync, openSync, readFileSync, readSync, statSync} from 'node:fs';
+import {accessSync, constants, readFileSync, statSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {isAbsolute, join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {LocalAIError} from '../dist/errors.js';
 import {openBrokerTransport} from './index.mjs';
+import {readGrant} from './grant.mjs';
+import {processOptions} from './process.mjs';
 
 const fail = code => new LocalAIError(code);
 const require = createRequire(import.meta.url);
@@ -80,34 +82,6 @@ export function defaultTokenFile() {
   return process.env.LAI_BROKER_TOKEN_FILE ?? join(homedir(), '.local-ai-kit', 'broker-token.json');
 }
 
-function sharedToken(address) {
-  try {
-    const path = defaultTokenFile();
-    const before = lstatSync(path);
-    if (!before.isFile() || before.isSymbolicLink()) return null;
-    const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
-    let descriptor;
-    try {
-      const info = fstatSync(fd);
-      if (!info.isFile() || info.size > 16384 || info.dev !== before.dev || info.ino !== before.ino) return null;
-      if (process.platform !== 'win32' && (info.mode & 0o077) !== 0) return null;
-      const bytes = Buffer.alloc(16385);
-      let length = 0;
-      while (length < bytes.length) {
-        const count = readSync(fd, bytes, length, bytes.length - length, null);
-        if (!count) break;
-        length += count;
-      }
-      if (length > 16384) return null;
-      descriptor = JSON.parse(bytes.subarray(0, length).toString('utf8'));
-    } finally { closeSync(fd); }
-    if (descriptor?.address !== undefined && descriptor.address !== address) return null;
-    if (typeof descriptor?.token !== 'string' || !/^[0-9a-f]{64}$/.test(descriptor.token)) return null;
-    return descriptor.token;
-  } catch {
-    return null;
-  }
-}
 
 function uniqueAddress() {
   const suffix = `${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -131,8 +105,7 @@ function probeArgs(options) {
 async function openPrivateTransport(helper, options) {
   const address = uniqueAddress();
   const child = spawn(helper, probeArgs({...options, address}), {
-    cwd: options.cwd ?? tmpdir(),
-    env: options.env ? {...process.env, ...options.env} : process.env,
+    ...processOptions(options),
     shell: false,
     windowsHide: true,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -203,7 +176,7 @@ export async function openAutoTransport(options = {}) {
   const helper = resolveHelper(options);
   const address = options.address ?? defaultAddress();
   if (typeof address !== 'string' || !address || address.length > 200 || address.includes('\0')) throw fail('INVALID_REQUEST');
-  const token = options.token ?? sharedToken(address);
+  const token = options.token ?? readGrant(defaultTokenFile(), address)?.token;
   if (token) {
     try {
       const transport = await openBrokerTransport({...options, executable: helper, address, token});

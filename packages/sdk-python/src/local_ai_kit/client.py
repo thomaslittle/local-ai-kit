@@ -10,7 +10,7 @@ import tempfile
 import time
 from typing import Any
 from .errors import LocalAIError
-from .stdio import AsyncStdioTransport
+from .stdio import AsyncStdioTransport, _process_options
 
 PLATFORM_PACKAGES = {
     ('linux', 'x86_64'): '@local-ai-kit/cli-linux-x64',
@@ -104,6 +104,7 @@ def _unique_address() -> str:
 
 
 async def _open_private(executable: str, options: dict) -> AsyncStdioTransport:
+    process_options = _process_options(options.get('cwd'), options.get('env'))
     address = _unique_address()
     args = [executable, 'serve', '--ipc', address]
     if options.pop('passive', True):
@@ -115,7 +116,7 @@ async def _open_private(executable: str, options: dict) -> AsyncStdioTransport:
     try:
         broker = await asyncio.create_subprocess_exec(
             *args,
-            cwd=tempfile.gettempdir(),
+            **process_options,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,

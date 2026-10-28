@@ -1,7 +1,8 @@
 /** Node-only transport. Import does not spawn, scan, read credentials, or connect. */
 import { spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
-import { tmpdir } from 'node:os';
+import {readGrant} from './grant.mjs';
+import {processOptions} from './process.mjs';
 import { LocalAIError, remoteError, requireMethod } from '../dist/errors.js';
 const failCode=code=>new LocalAIError(code);
 const bounded=(v,min,max)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw failCode('INVALID_LIMIT');return v;};
@@ -26,18 +27,11 @@ export async function openStdioTransport(options){
  if(typeof options.executable!=='string'||!isAbsolute(options.executable)||/\.(cmd|bat|ps1)$/i.test(options.executable))throw failCode('INVALID_EXECUTABLE');
  const args=options.args??[];
  if(!Array.isArray(args)||args.length>128||args.some(a=>typeof a!=='string'||a.includes('\0')||a.length>32768))throw failCode('INVALID_REQUEST');
- if(options.cwd!==undefined&&(!isAbsolute(options.cwd)||options.cwd.includes('\0')))throw failCode('INVALID_WORKSPACE');
  const max=bounded(options.maxFrameBytes??8388608,1024,16777216);
  const maxPending=bounded(options.maxPendingRequests??64,1,1024);
  const maxEvents=bounded(options.maxQueuedEvents??256,1,4096);
  const timeoutMs=bounded(options.timeoutMs??30000,1,3600000);
- const env={};
- for(const key of ['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS'])if(process.env[key]!==undefined)env[key]=process.env[key];
- for(const [key,value] of Object.entries(options.env??{})){
-  if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)||typeof value!=='string'||value.includes('\0')||['NODE_OPTIONS','LD_PRELOAD','DYLD_INSERT_LIBRARIES'].includes(key.toUpperCase()))throw failCode('INVALID_ENVIRONMENT');
-  env[key]=value;
- }
- const child=spawn(options.executable,[...args],{cwd:options.cwd??tmpdir(),env,shell:false,windowsHide:true,stdio:['pipe','pipe','pipe']});
+ const child=spawn(options.executable,[...args],{...processOptions(options),shell:false,windowsHide:true,stdio:['pipe','pipe','pipe']});
  const pending=new Map(),subscriptions=new Map();let sequence=0,buffer=Buffer.alloc(0),ended=false,closing;
  let resolveExit;const exited=new Promise(resolve=>{resolveExit=resolve;});
  function fail(error){
@@ -159,29 +153,28 @@ export async function openSharedBrokerTransport(options){
  if(typeof options.tokenFile!=='string'||!isAbsolute(options.tokenFile)||options.tokenFile.includes('\0'))throw failCode('INVALID_REQUEST');
  const startArgs=options.startArgs??[];
  if(!Array.isArray(startArgs)||startArgs.length>64||startArgs.some(arg=>typeof arg!=='string'||arg.includes('\0')||arg.length>32768))throw failCode('INVALID_REQUEST');
- const {readFile,stat,lstat}=await import('node:fs/promises');
+ const processConfig=processOptions(options);
+ const waitMs=bounded(options.waitMs??8000,1,60000);
  const attempt=async()=>{
-  try{
-   const link=await lstat(options.tokenFile);
-   if(link.isSymbolicLink())return null;
-   const info=await stat(options.tokenFile);
-   if(!info.isFile())return null;
-   if(process.platform!=='win32'&&(info.mode&0o077)!==0)return null;
-   const parsed=JSON.parse(await readFile(options.tokenFile,'utf8'));
-   if(!validTokenFile(parsed,options.address))return null;
-   return await openBrokerTransport({...options,address:options.address,token:parsed.token});
-  }catch{return null;}
+  const parsed=readGrant(options.tokenFile,options.address);
+  if(!validTokenFile(parsed,options.address))return null;
+  try{return await openBrokerTransport({...options,address:options.address,token:parsed.token});}
+  catch(error){
+   if(error instanceof LocalAIError&&['RUNTIME_MISSING','TRANSPORT_CLOSED'].includes(error.code))return null;
+   throw error;
+  }
  };
  const existing=await attempt();
  if(existing)return existing;
  const child=spawn(options.executable,['serve','--ipc',options.address,'--independent','--token-file',options.tokenFile,...startArgs],{
-  cwd:options.cwd??tmpdir(),shell:false,windowsHide:true,stdio:['pipe','pipe','pipe'],env:options.env?{...process.env,...options.env}:process.env,
+  ...processConfig,shell:false,windowsHide:true,stdio:['pipe','pipe','pipe'],
  });
  child.stderr.on('data',()=>{});
  child.stdin.on('error',()=>{});
  child.once('error',()=>{});
  child.unref();
- const deadline=Date.now()+(options.waitMs??8000);
+ const deadline=Date.now()+waitMs;
+ try {
  let opened=null;
  while(Date.now()<deadline){
   opened=await attempt();
@@ -195,6 +188,10 @@ export async function openSharedBrokerTransport(options){
  }
  try{child.kill();}catch{}
  throw failCode('RUNTIME_MISSING');
+ } catch(error) {
+  try{child.kill();}catch{}
+  throw error;
+ }
 }
 
 export {resolveBundledBinary} from './bundle.mjs';

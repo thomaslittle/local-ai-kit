@@ -92,6 +92,21 @@ class HelperResolutionTests(unittest.TestCase):
 
 
 class PrivateLifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_private_broker_uses_the_same_safe_environment_and_cwd_as_the_bridge(self):
+        broker = MagicMock()
+        broker.returncode = None
+        broker.stdout.readline = AsyncMock(return_value=b'invalid descriptor')
+        broker.wait = AsyncMock(return_value=0)
+        with tempfile.TemporaryDirectory() as directory:
+            with (patch.dict(os.environ, {'NODE_OPTIONS': '--injected', 'UNRELATED_SECRET': 'synthetic'}),
+                  patch.object(asyncio, 'create_subprocess_exec', AsyncMock(return_value=broker)) as spawn):
+                with self.assertRaises(LocalAIError):
+                    await client_module._open_private('/fixture/helper', {'cwd': directory, 'env': {'HOME': directory}})
+                self.assertEqual(spawn.call_args.kwargs['cwd'], directory)
+                self.assertEqual(spawn.call_args.kwargs['env']['HOME'], directory)
+                self.assertNotIn('NODE_OPTIONS', spawn.call_args.kwargs['env'])
+                self.assertNotIn('UNRELATED_SECRET', spawn.call_args.kwargs['env'])
+
     async def test_every_startup_failure_reaps_the_owned_broker(self):
         for failure in (ValueError('oversized frame'), asyncio.CancelledError()):
             with self.subTest(failure=type(failure).__name__):

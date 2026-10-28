@@ -51,6 +51,8 @@ export interface AutoTransportOptions {
   probeProviders?: string[];
   /** Disable passive discovery in the private helper. */
   passive?: boolean;
+  /** Explicit additions to the minimal inherited helper environment. */
+  env?: Record<string, string>;
   cwd?: string;
   waitMs?: number;
 }
