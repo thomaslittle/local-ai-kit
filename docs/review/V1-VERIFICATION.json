@@ -114,7 +114,57 @@
     "unresolved": 0
   },
   "liveInferenceRequests": 0,
-  "latestHostedCI": "pending; see PR #55",
+  "latestHostedCI": {
+    "sourceCommit": "b089433a6f12df2ffcb85852826f00e25ee62fd8",
+    "result": "all nine checks passed",
+    "checks": [
+      {
+        "name": "verify (ubuntu-24.04)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969251/job/122874495493"
+      },
+      {
+        "name": "prepare (x86_64-unknown-linux-gnu, ubuntu-24.04, linux_x86_64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494714"
+      },
+      {
+        "name": "react-doctor",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969041/job/122874493431"
+      },
+      {
+        "name": "verify (windows-2025)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969251/job/122874495849"
+      },
+      {
+        "name": "prepare (aarch64-unknown-linux-gnu, ubuntu-24.04-arm, linux_aarch64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494481"
+      },
+      {
+        "name": "verify (macos-15-intel)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969251/job/122874496015"
+      },
+      {
+        "name": "prepare (x86_64-apple-darwin, macos-15-intel, macosx_15_0_x86_64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874493962"
+      },
+      {
+        "name": "prepare (aarch64-apple-darwin, macos-15, macosx_15_0_arm64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494661"
+      },
+      {
+        "name": "prepare (x86_64-pc-windows-msvc, windows-2025, win_amd64)",
+        "conclusion": "SUCCESS",
+        "url": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094/job/122874494647"
+      }
+    ]
+  },
   "video": "stopped by owner direction; existing outputs retained",
   "additionalQualification": {
     "electron": "Linux Electron45.1.0 ASAR passed from packed SDK/native dependency under private Xvfb; prior build reproduced spawn ENOTDIR",
@@ -127,6 +177,6 @@
     "windows": "full job passed",
     "macOS": "full verification, C# consumer, formatting and clippy passed; cold release compilation cancelled at 40-minute job limit",
     "run": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40698238160",
-    "response": "75-minute job budget; latest-head rerun pending"
+    "response": "75-minute budget; complete rerun passed at b089433"
   }
 }

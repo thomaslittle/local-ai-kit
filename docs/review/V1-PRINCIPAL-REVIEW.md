@@ -1,6 +1,6 @@
 # OriginLM v1 principal review
 
-Status: **local qualification passes; latest hosted CI pending**, 2026-10-28.
+Status: **local qualification and all nine hosted checks pass at `b089433`**, 2026-10-28.
 The current [ship-readiness report](V1-SHIP-READINESS.md) and
 [verification record](V1-VERIFICATION.json) supersede investigation-time
 “pending” notes below. This is a source-preview integration review, not public
@@ -402,5 +402,5 @@ formatting and clippy. GitHub then cancelled release-artifact compilation at the
 40-minute job deadline; its annotation explicitly reports the maximum execution
 time. The full job now has a bounded 75-minute budget for debug/test, lint and
 release compilation. All checks remain required. Linux and Windows full jobs
-passed at this checkpoint; macOS release/package qualification awaits the rerun.
+passed at this checkpoint; the complete macOS rerun passed at `b089433`.
 Evidence: [cancelled macOS job](https://github.com/thomaslittle/local-ai-kit/actions/runs/40698238160/job/122850744391).

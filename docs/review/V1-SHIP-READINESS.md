@@ -1,7 +1,7 @@
 # OriginLM v1 ship-readiness report
 
-Status: **source-preview implementation and local qualification pass; latest hosted
-CI qualification is pending**. See [draft PR #55](https://github.com/thomaslittle/local-ai-kit/pull/55).
+Status: **source-preview implementation, local qualification and all nine hosted
+checks pass at `b089433`**. See [draft PR #55](https://github.com/thomaslittle/local-ai-kit/pull/55).
 No registry publication, signing, deployment or live inference was performed.
 Thomas stopped video work; existing media is retained without further qualification.
 
@@ -59,12 +59,15 @@ These measurements are one host's evidence, not universal hardware promises.
 
 ## Hosted qualification
 
-At `34696c3`, Linux and Windows full jobs passed. macOS passed full deterministic
-verification, the C# consumer, formatting and clippy; its cold release compilation
-was cancelled at the workflow's 40-minute job deadline. The job budget is now
-75 minutes, with every check retained. The latest head still needs the complete
-three-OS pass before hosted qualification is complete. The earlier canonical-path
-and PowerShell fixture-scope corrections passed their affected hosted stages.
+All nine checks passed at `b089433`: full deterministic verification, C# consumer,
+formatting/clippy and local-artifact consumer smoke on Linux, Windows and macOS
+Intel; five artifact-preparation targets; and React Doctor. The workflow retains
+all checks with a bounded 75-minute budget for cold native builds.
+
+[Full three-OS verification](https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969251),
+[five-target preparation](https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969094),
+[React Doctor](https://github.com/thomaslittle/local-ai-kit/actions/runs/40704969041).
+The machine-readable record pins the tested source and individual check URLs.
 
 ## Honest limits and owner actions
 
