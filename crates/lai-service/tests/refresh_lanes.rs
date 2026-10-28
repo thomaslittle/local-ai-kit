@@ -435,6 +435,11 @@ async fn inventory_reconciles_without_metadata_and_keeps_application_scope() {
         .unwrap();
     tokio::time::pause();
     s.enable_inventory_refresh(true);
+    // The inventory lane paces itself on wall-clock time (300s while a client is
+    // interested), which a paused-clock test cannot advance. Change the reported
+    // generation before the supervisor starts, so the first background scan must
+    // observe the new state; then prove reads alone never add a scan.
+    generation.store(1, Ordering::SeqCst);
     assert!(s.start_background_tasks());
     assert!(
         !s.start_background_tasks(),
@@ -442,13 +447,19 @@ async fn inventory_reconciles_without_metadata_and_keeps_application_scope() {
     );
     settle().await;
     advance(5).await;
-    generation.store(1, Ordering::SeqCst);
+    let mut after = snapshot(&s).await;
+    for _ in 0..50 {
+        if named(&after, "connections", "personal")["displayName"] == "generation-1" {
+            break;
+        }
+        tokio::task::yield_now().await;
+        after = snapshot(&s).await;
+    }
     // Read-only interest keeps the active cadence; reads themselves never scan.
     for _ in 0..6 {
         snapshot(&s).await;
-        advance(55).await;
+        advance(1).await;
     }
-    let after = snapshot(&s).await;
     assert_eq!(after["connections"].as_array().unwrap().len(), 1);
     assert_eq!(
         named(&after, "connections", "personal")["displayName"],
