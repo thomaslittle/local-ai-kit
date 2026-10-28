@@ -13,7 +13,7 @@ include_media_dir!(pub struct OriginlmPromoMedia, "media");
 
 pub const WIDTH: usize = 1920;
 pub const HEIGHT: usize = 1080;
-pub const TOTAL_SECONDS: f32 = 52.0;
+pub const TOTAL_SECONDS: f32 = 54.8;
 
 const BG: &str = "#171314";
 const PANEL: &str = "#221d1e";
@@ -158,7 +158,7 @@ impl Scene for ProblemScene {
 
         fframes::svgr!(
             <g opacity={fade}>
-                {scene_label("01 / 05", "THE PROBLEM")}
+                {scene_label("01 / 06", "THE PROBLEM")}
                 <text x="120" y="356" font-family={SANS} font-weight="600" font-size="92" letter-spacing="-3" fill={TEXT}>"Your AI is scattered"</text>
                 <text x="120" y="462" font-family={SANS} font-weight="600" font-size="92" letter-spacing="-3" fill={AMBER}>"across six apps."</text>
                 <g opacity={enter(t, 0.35, 0.7)}>
@@ -205,7 +205,7 @@ fn quota_row<'a>(seconds: f32, index: usize, name: &'a str, percent: f32, reset:
 
 impl Scene for DashboardScene {
     fn duration(&self) -> Duration<'_> {
-        Duration::Seconds(12.0)
+        Duration::Seconds(10.0)
     }
 
     fn overlap(&self) -> Overlap {
@@ -214,7 +214,7 @@ impl Scene for DashboardScene {
 
     fn render_frame<'a>(&'a self, frame: Frame, _ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
         let t = frame.seconds();
-        let exit = 1.0 - ease_in_out((t - 11.65) / 0.35);
+        let exit = 1.0 - ease_in_out((t - 10.85) / 0.35);
         let fade = enter(t, 0.0, 0.3).min(exit);
         let window_in = spring_at(t, 0.15, 1.1);
         let metrics = enter(t, 1.1, 0.7);
@@ -236,7 +236,7 @@ impl Scene for DashboardScene {
 
         fframes::svgr!(
             <g opacity={fade}>
-                {scene_label("02 / 05", "SEE YOUR AI")}
+                {scene_label("02 / 06", "SEE YOUR AI")}
                 <text x="120" y="300" font-family={SANS} font-weight="600" font-size="64" letter-spacing="-2" fill={TEXT}>"One local view. Every provider."</text>
                 <g transform={format!("translate({:.1} {:.1})", (1.0 - window_in) * 40.0, 350.0 + (1.0 - window_in) * 60.0)} opacity={clamp01(window_in)}>
                     <rect x="120" y="0" width="1680" height="630" rx="26" fill={PANEL} stroke="#faf9f5" stroke-opacity="0.1" />
@@ -296,6 +296,92 @@ impl Scene for DashboardScene {
                 </g>
                 <g opacity={enter(t, 8.8, 0.7)}>
                     <text x="120" y="1010" font-family={SANS} font-weight="500" font-size="28" fill={MUTED}>"Read from the clients already on your machine. No relay, no account."</text>
+                </g>
+            </g>
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Scene 3 — models and routes
+// ---------------------------------------------------------------------------
+
+#[derive(Debug)]
+pub struct RoutesScene;
+
+impl Scene for RoutesScene {
+    fn duration(&self) -> Duration<'_> {
+        Duration::Seconds(8.2)
+    }
+
+    fn overlap(&self) -> Overlap {
+        Overlap::Previous(0.35)
+    }
+
+    fn render_frame<'a>(&'a self, frame: Frame, _ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
+        let t = frame.seconds();
+        let exit = 1.0 - ease_in_out((t - 7.85) / 0.35);
+        let fade = enter(t, 0.0, 0.3).min(exit);
+        let rows = [
+            ("Claude · Opus", "Claude Code", "subscription", AMBER),
+            ("Codex · Luna", "Codex", "subscription", AMBER),
+            ("qwen3-coder:30b", "Ollama", "local", SAGE),
+            ("GPT-5", "OpenAI API", "metered", "#c97e5a"),
+        ];
+        let row_svgs: Vec<Svgr> = rows
+            .iter()
+            .enumerate()
+            .map(|(index, (model, provider, route, tone))| {
+                let p = enter(t, 0.35 + index as f32 * 0.18, 0.6);
+                let y = 430.0 + index as f32 * 102.0;
+                fframes::svgr!(
+                    <g opacity={p} transform={format!("translate(0 {:.1})", (1.0 - p) * 16.0)}>
+                        <rect x="150" y={y} width="880" height="86" rx="15" fill={PANEL_2} fill-opacity="0.84" stroke="#faf9f5" stroke-opacity="0.08" />
+                        <text x="178" y={y + 38.0} font-family={SANS} font-weight="600" font-size="27" fill={TEXT}>{*model}</text>
+                        <text x="178" y={y + 66.0} font-family={SANS} font-weight="500" font-size="19" fill={MUTED}>{*provider}</text>
+
+                        <rect x="806" y={y + 28.0} width="196" height="32" rx="16" fill={tone} fill-opacity="0.1" stroke={tone} stroke-opacity="0.3" />
+                        <text x="904" y={y + 50.0} text-anchor="middle" font-family={SANS} font-weight="600" font-size="16" fill={tone}>{format!("{route}")}</text>
+                    </g>
+                )
+            })
+            .collect();
+
+        let bars = [("Subscription", 128, 0.78, AMBER), ("Local", 34, 0.24, SAGE), ("Metered", 0, 0.02, "#c97e5a")];
+        let bar_svgs: Vec<Svgr> = bars
+            .iter()
+            .enumerate()
+            .map(|(index, (label, count, fraction, tone))| {
+                let p = ease_in_out((t - 1.2 - index as f32 * 0.18) / 0.9);
+                let y = 500.0 + index as f32 * 82.0;
+                fframes::svgr!(<g opacity={enter(t, 1.0 + index as f32 * 0.15, 0.4)}>
+                    <text x="1100" y={y} font-family={SANS} font-weight="500" font-size="23" fill={MUTED}>{*label}</text>
+                    <text x="1760" y={y} text-anchor="end" font-family={SANS} font-weight="600" font-size="21" fill={TEXT}>{format!("{count} turns")}</text>
+                    <rect x="1100" y={y + 14.0} width="660" height="9" rx="4.5" fill="#faf9f5" fill-opacity="0.08" />
+                    <rect x="1100" y={y + 14.0} width={(660.0 * fraction * p).max(0.5)} height="9" rx="4.5" fill={tone} />
+                </g>)
+            })
+            .collect();
+
+        fframes::svgr!(
+            <g opacity={fade}>
+                {scene_label("03 / 06", "MODELS & ROUTES")}
+                <text x="120" y="300" font-family={SANS} font-weight="600" font-size="64" letter-spacing="-2" fill={TEXT}>"Every model. Every route."</text>
+                <text x="122" y="356" font-family={SANS} font-weight="500" font-size="27" fill={MUTED}>"What you can use, how it bills, and where it runs."</text>
+                {row_svgs}
+                <g opacity={enter(t, 0.9, 0.6)}>
+                    <rect x="1060" y="380" width="740" height="520" rx="22" fill={PANEL} fill-opacity="0.82" stroke="#faf9f5" stroke-opacity="0.09" />
+                    <text x="1100" y="438" font-family={SANS} font-weight="600" font-size="28" fill={TEXT}>"Usage by route"</text>
+                    <text x="1100" y="466" font-family={SANS} font-weight="500" font-size="19" fill={FAINT}>"today · observed, not estimated"</text>
+                    {bar_svgs}
+                    <path d="M1100 742 H1760" stroke="#faf9f5" stroke-opacity="0.1" />
+                    <text x="1100" y="806" font-family={SANS} font-weight="600" font-size="46" letter-spacing="-1" fill={TEXT}>"$0.00"</text>
+                    <text x="1240" y="806" font-family={SANS} font-weight="500" font-size="21" fill={MUTED}>"metered today"</text>
+                    <text x="1100" y="850" font-family={SANS} font-weight="500" font-size="18" fill={MUTED}>"Metered routes need explicit permission."</text>
+                    <text x="1100" y="876" font-family={SANS} font-weight="500" font-size="18" fill={MUTED}>"Subscription and local routes stay on the machine."</text>
+                </g>
+                <g opacity={enter(t, 6.0, 0.7)}>
+                    <text x="120" y="1002" font-family={SANS} font-weight="500" font-size="27" fill={FAINT}>"Unknown stays unknown. A missing price is never rendered as free."</text>
                 </g>
             </g>
         )
@@ -373,7 +459,7 @@ fn stack_layer<'a>(seconds: f32, spec: &LayerSpec, index: usize, explode: f32, l
 
 impl Scene for StackScene {
     fn duration(&self) -> Duration<'_> {
-        Duration::Seconds(11.6)
+        Duration::Seconds(10.4)
     }
 
     fn overlap(&self) -> Overlap {
@@ -382,7 +468,7 @@ impl Scene for StackScene {
 
     fn render_frame<'a>(&'a self, frame: Frame, _ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
         let t = frame.seconds();
-        let exit = 1.0 - ease_in_out((t - 11.25) / 0.35);
+        let exit = 1.0 - ease_in_out((t - 10.05) / 0.35);
         let fade = enter(t, 0.0, 0.3).min(exit);
         let explode = 0.18 + 0.82 * ease_in_out((t - 0.15) / 2.3);
         let toward = enter(t, 6.4, 0.8);
@@ -432,7 +518,7 @@ impl Scene for StackScene {
 
         fframes::svgr!(
             <g opacity={fade}>
-                {scene_label("03 / 05", "BUILD WITH IT")}
+                {scene_label("04 / 06", "BUILD WITH IT")}
                 <text x="120" y="300" font-family={SANS} font-weight="600" font-size="58" letter-spacing="-2" fill={TEXT}>"The same runtime you just saw."</text>
                 <g opacity={enter(t, 0.35, 0.6)}>
                     <text x="1800" y="286" text-anchor="end" font-family={SANS} font-weight="500" font-size="24" fill={FAINT}>"same runtime"</text>
@@ -464,7 +550,7 @@ pub struct ConnectScene;
 
 impl Scene for ConnectScene {
     fn duration(&self) -> Duration<'_> {
-        Duration::Seconds(11.4)
+        Duration::Seconds(9.8)
     }
 
     fn overlap(&self) -> Overlap {
@@ -473,7 +559,7 @@ impl Scene for ConnectScene {
 
     fn render_frame<'a>(&'a self, frame: Frame, _ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
         let t = frame.seconds();
-        let exit = 1.0 - ease_in_out((t - 11.05) / 0.35);
+        let exit = 1.0 - ease_in_out((t - 9.45) / 0.35);
         let fade = enter(t, 0.0, 0.3).min(exit);
         let badge = spring_at(t, 4.4, 1.1);
 
@@ -521,7 +607,7 @@ impl Scene for ConnectScene {
 
         fframes::svgr!(
             <g opacity={fade}>
-                {scene_label("04 / 05", "CONNECT")}
+                {scene_label("05 / 06", "CONNECT")}
                 <text x="120" y="290" font-family={SANS} font-weight="600" font-size="72" letter-spacing="-2" fill={TEXT}>"Discover. Grant. Connect."</text>
 
                 <g opacity={enter(t, 0.3, 0.5)}>
@@ -532,7 +618,7 @@ impl Scene for ConnectScene {
                 <g opacity={enter(t, 1.1, 0.7)} transform={format!("translate(0 {:.1})", (1.0 - enter(t, 1.1, 0.7)) * 22.0)}>
                     <rect x="940" y="330" width="720" height="290" rx="22" fill={PANEL} fill-opacity="0.86" stroke="#faf9f5" stroke-opacity="0.1" />
                     <text x="1010" y="390" font-family={SANS} font-weight="600" font-size="30" fill={TEXT}>"Acme Studio"</text>
-                    <text x="1010" y="414" font-family={SANS} font-weight="500" font-size="20" fill={FAINT}>"requests access · 127.0.0.1"</text>
+                    <text x="1010" y="414" font-family={SANS} font-weight="500" font-size="20" fill={FAINT}>"requests access · 127.0.1"</text>
                     {grant_rows}
                 </g>
 
@@ -569,7 +655,7 @@ fn typed(text: &str, seconds: f32, start: f32, duration: f32) -> String {
 
 impl Scene for InstallScene {
     fn duration(&self) -> Duration<'_> {
-        Duration::Seconds(11.2)
+        Duration::Seconds(10.0)
     }
 
     fn overlap(&self) -> Overlap {
@@ -603,7 +689,7 @@ impl Scene for InstallScene {
 
         fframes::svgr!(
             <g opacity={exit}>
-                {scene_label("05 / 05", "INSTALL")}
+                {scene_label("06 / 06", "INSTALL")}
                 <text x="120" y="298" font-family={SANS} font-weight="600" font-size="70" letter-spacing="-2" fill={TEXT}>"Install once. Every app gets your AI."</text>
 
                 <g opacity={left} transform={format!("translate(0 {:.1})", (1.0 - left) * 24.0)}>
@@ -645,6 +731,7 @@ impl Scene for InstallScene {
 pub struct OriginlmPromoVideo<'a> {
     problem: ProblemScene,
     dashboard: DashboardScene,
+    routes: RoutesScene,
     stack: StackScene,
     connect: ConnectScene,
     install: InstallScene,
@@ -657,6 +744,7 @@ impl<'a> OriginlmPromoVideo<'a> {
         Self {
             problem: ProblemScene,
             dashboard: DashboardScene,
+            routes: RoutesScene,
             stack: StackScene,
             connect: ConnectScene,
             install: InstallScene,
@@ -689,6 +777,7 @@ impl Video for OriginlmPromoVideo<'_> {
         Scenes::from(vec![
             &self.problem as &dyn Scene,
             &self.dashboard,
+            &self.routes,
             &self.stack,
             &self.connect,
             &self.install,
