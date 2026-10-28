@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
-import { ArrowRight, Sparkle, Stack } from "../components/Icon";
+import { ArrowRight } from "../components/Icon";
 import { LAYERS, type Layer } from "../data/layers";
 
 const HeroScene = lazy(() => import("../scene/HeroScene"));
@@ -49,100 +49,83 @@ export function HeroStage() {
   }, []);
 
   return (
-    <div className="hero-stage" ref={stageRef} data-static={staticMode || undefined}>
-      <img
-        className="stage-fallback"
-        src="/hero-poster.svg"
-        alt="The OriginLM stack, exploded: your app and the usage dashboard on top, then the SDK, transport, local runtime, adapters, and the AI providers already on the machine."
-        width={1200}
-        height={760}
-        fetchPriority="high"
-        style={{ opacity: ready ? 0 : 1, transition: "opacity 500ms ease" }}
-      />
+    <figure className="hero-figure">
+      <div className="hero-stage" ref={stageRef} data-static={staticMode || undefined} data-ready={ready || undefined}>
+        <img
+          className="stage-fallback"
+          src="/hero-poster.svg"
+          alt="The OriginLM stack, exploded: your app and the usage dashboard on top, then the SDK, transport, local runtime, adapters, and the AI providers already on the machine."
+          width={1200}
+          height={760}
+          fetchPriority="high"
+        />
 
-      {enabled && !staticMode && (
-        <Suspense fallback={null}>
-          <HeroScene
-            stageEl={stageRef.current}
-            labels={labelRefs}
-            quality={quality}
-            onHover={setActive}
-            onReady={() => setReady(true)}
-          />
-        </Suspense>
-      )}
-
-      {enabled && !ready && !staticMode && (
-        <div className="stage-loading" aria-hidden="true">
-          <span className="pulse" />
-        </div>
-      )}
-
-      <div className="stage-hint" aria-hidden="true">
-        <Stack size={13} />
-        {staticMode ? "Static diagram · reduced motion" : "Scroll to separate · hover a layer"}
-      </div>
-
-      <div className="stage-labels" aria-hidden="true">
-        {LAYERS.map((layer, index) => (
-          <div
-            key={layer.id}
-            ref={(node) => { labelRefs.current[index] = node; }}
-            className="layer-label"
-            data-active={active?.id === layer.id}
-            style={{ opacity: 0 }}
-          >
-            <i />
-            {layer.label}
-          </div>
-        ))}
-      </div>
-
-      <div className="stage-legend" aria-hidden="true">
-        <span><i /> same runtime</span>
-        <span><i /> local only</span>
-      </div>
-
-      <div className="layer-tooltip" data-visible={active !== null} role="status" aria-live="polite">
-        {active ? (
-          <>
-            <strong>{active.title}</strong> — {active.detail}
-          </>
-        ) : (
-          <span>&nbsp;</span>
+        {enabled && !staticMode && (
+          <Suspense fallback={null}>
+            <HeroScene
+              stageEl={stageRef.current}
+              labels={labelRefs}
+              quality={quality}
+              onHover={setActive}
+              onReady={() => setReady(true)}
+            />
+          </Suspense>
         )}
-      </div>
 
-      <ul className="visually-hidden">
-        {LAYERS.map((layer) => (
-          <li key={layer.id}>
-            {layer.title}: {layer.detail}
-          </li>
-        ))}
-      </ul>
-    </div>
+        <div className="stage-labels" aria-hidden="true">
+          {LAYERS.map((layer, index) => (
+            <div
+              key={layer.id}
+              ref={(node) => { labelRefs.current[index] = node; }}
+              className="layer-label"
+              data-active={active?.id === layer.id}
+              style={{ opacity: 0 }}
+            >
+              {layer.label}
+            </div>
+          ))}
+        </div>
+
+        <div className="layer-tooltip" data-visible={active !== null} role="status" aria-live="polite">
+          {active ? (
+            <>
+              <strong>{active.title}.</strong> {active.detail}
+            </>
+          ) : (
+            <span>&nbsp;</span>
+          )}
+        </div>
+
+        <ul className="visually-hidden">
+          {LAYERS.map((layer) => (
+            <li key={layer.id}>
+              {layer.title}: {layer.detail}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <figcaption>
+        {staticMode
+          ? "The OriginLM stack, one runtime from the providers up to your app."
+          : "The OriginLM stack, pulled apart as you scroll. Hover a layer to read what it does."}
+      </figcaption>
+    </figure>
   );
 }
 
 export function Hero() {
   return (
     <header className="hero" id="top">
-      <div className="grid-wash" aria-hidden="true" />
-      <div className="container">
+      <div className="container hero-grid">
         <div className="hero-copy">
-          <p className="hero-pill">
-            <span className="dot"><Sparkle size={12} /></span>
-            <span><strong>OriginLM</strong> · local-first, no telemetry</span>
-          </p>
-
           <h1>
             <span className="line">See and use all your AI.</span>
-            <span className="line accent">One dependency for every app.</span>
+            <span className="line line-second">One dependency for every app.</span>
           </h1>
 
-          <p className="hero-sub">
+          <p className="lead hero-sub">
             A local control center for every AI client, model, account and subscription on your machine.
-            The same runtime is the <strong>one dependency</strong> that puts the user's own AI in your app.
+            The same runtime is the one dependency that puts the user’s own AI in your app.
           </p>
 
           <div className="hero-actions">
@@ -155,15 +138,11 @@ export function Hero() {
           </div>
 
           <p className="hero-note">
-            <span>free &amp; MIT-licensed</span>
-            <span>macOS · Windows · Linux</span>
-            <span>no account required</span>
+            Free and MIT-licensed for macOS, Windows and Linux. Local-first, no telemetry, no account required.
           </p>
         </div>
 
-        <div className="hero-stage-wrap">
-          <HeroStage />
-        </div>
+        <HeroStage />
       </div>
     </header>
   );

@@ -1,4 +1,4 @@
-import { ArrowUpRight, EyeOff, KeyRound, Lock, Shield } from "../components/Icon";
+import { EyeOff, KeyRound, Lock, Shield } from "../components/Icon";
 
 const CARDS = [
   {
@@ -25,36 +25,32 @@ const CARDS = [
 
 export function Security() {
   return (
-    <section className="section" id="security" aria-labelledby="security-title">
+    <section className="section security" id="security" aria-labelledby="security-title">
       <div className="container">
-        <div className="section-head section-head--wide reveal">
-          <span className="eyebrow">Security and privacy</span>
-          <h2 id="security-title">A local runtime is only useful if it stays local.</h2>
-          <p className="lede">
-            OriginLM is not a relay and not a proxy. It is a boundary: one place that knows which app
-            asked for what, and one place where the user can take it back.
-          </p>
-        </div>
+        <h2 id="security-title">A local runtime is only useful if it stays local.</h2>
+        <p className="statement">
+          OriginLM is not a relay and not a proxy. It is a boundary: one place that knows which app
+          asked for what, and one place where the user can take it back.
+        </p>
 
-        <div className="security-grid reveal">
+        <div className="guarantees">
           {CARDS.map(({ icon: Icon, title, body }) => (
-            <article className="security-card" key={title}>
-              <span className="icon-tile"><Icon size={20} /></span>
-              <h3>{title}</h3>
+            <article className="guarantee" key={title}>
+              <h3><Icon size={20} /> {title}</h3>
               <p>{body}</p>
             </article>
           ))}
         </div>
 
-        <div className="security-foot reveal">
+        <div className="security-foot">
           <p>
             <strong>Read the actual guarantees.</strong> The threat model names the assets, the trust
             boundaries and the attacks that are out of scope. The privacy statement is generated from one
             source so the install page, README and app cannot drift.
           </p>
           <div className="security-links">
-            <a href="https://github.com/thomaslittle/local-ai-kit/blob/main/SECURITY.md">Security policy <ArrowUpRight size={12} /></a>
-            <a href="https://github.com/thomaslittle/local-ai-kit/blob/main/docs/security/threat-model.md">Threat model <ArrowUpRight size={12} /></a>
+            <a className="btn btn-ghost" href="https://github.com/thomaslittle/local-ai-kit/blob/main/SECURITY.md">Security policy</a>
+            <a className="btn btn-ghost" href="https://github.com/thomaslittle/local-ai-kit/blob/main/docs/security/threat-model.md">Threat model</a>
           </div>
         </div>
       </div>

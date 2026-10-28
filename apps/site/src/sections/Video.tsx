@@ -9,19 +9,18 @@ const CHAPTERS = [
 
 export function Video() {
   return (
-    <section className="section" id="video" aria-labelledby="video-title">
+    <section className="section video" id="video" aria-labelledby="video-title">
       <div className="container">
-        <div className="section-head section-head--wide reveal">
-          <span className="eyebrow">Product film</span>
-          <h2 id="video-title">One runtime, two stories — in under a minute.</h2>
-          <p className="lede">
+        <div className="head-split">
+          <h2 id="video-title">One runtime, two stories, in under a minute.</h2>
+          <p className="lead">
             The same film in the hero and in the app: first what you can see, then what you can build.
             Rendered with fframes from the same palette and geometry as this page.
           </p>
         </div>
 
-        <div className="video-shell reveal">
-          <div className="video-frame">
+        <div className="video-layout">
+          <figure className="video-frame">
             {PROMO.hasVideo ? (
               <video
                 controls
@@ -36,36 +35,34 @@ export function Video() {
                 same material.
               </video>
             ) : (
-              <>
+              <div className="video-poster" data-slot="film">
                 <img src="/video-poster.svg" alt="" width={1600} height={900} loading="lazy" />
-                <div className="video-placeholder" style={{ position: "absolute", inset: 0 }}>
+                <div className="video-placeholder" data-keep>
                   <span className="video-play" aria-hidden="true"><Play size={26} /></span>
                   <div>
                     <h3>The 52-second tour</h3>
                     <p>
                       Rendering now. The final cut ships as H.264 and WebM with a poster frame, silent by
-                      design — no unlicensed music or voiceover.
+                      design: no unlicensed music or voiceover.
                     </p>
                   </div>
                 </div>
-              </>
+              </div>
             )}
-          </div>
-          <div className="video-meta">
-            <span>1920×1080 · H.264 / WebM</span>
-            <span>52 seconds · silent</span>
-            <span>fframes · source in media/video</span>
-          </div>
-        </div>
+            <figcaption>
+              1920×1080, H.264 and WebM. 52 seconds, silent. Made with fframes; the source is in media/video.
+            </figcaption>
+          </figure>
 
-        <div className="paths-grid" style={{ marginTop: "1.25rem" }}>
-          {CHAPTERS.map(([time, title, body]) => (
-            <div className="security-card" key={title}>
-              <span className="chip chip--brand">{time}</span>
-              <h3 style={{ marginTop: "0.8rem", fontSize: "0.98rem" }}>{title}</h3>
-              <p>{body}</p>
-            </div>
-          ))}
+          <ol className="chapters">
+            {CHAPTERS.map(([time, title, body]) => (
+              <li key={title}>
+                <time>{time}</time>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>
