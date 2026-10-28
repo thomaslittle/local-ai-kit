@@ -56,7 +56,10 @@ export function Video() {
           <div className="video-meta">
             <span>1920×1080 · H.264 / WebM</span>
             <span>52 seconds · silent</span>
-            <span>fframes · source in media/video</span>
+            <span><a href="/media/originlm-loop.mp4">8 s seamless loop</a></span>
+            <span>
+              <a href="https://github.com/thomaslittle/local-ai-kit/tree/main/media/video">fframes source</a>
+            </span>
           </div>
         </div>
 

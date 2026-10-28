@@ -48,14 +48,44 @@ Bundle (production, gzip, measured with `vite build` + `gzip -c`):
 
 | Chunk | Gzip |
 | --- | ---: |
-| three-core | 188.2 kB |
-| fiber | 55.5 kB |
-| postprocessing | 17.9 kB |
-| HeroScene (incl. r3f-post) | 10.9 kB |
-| drei | 0.4 kB |
-| **3D total** | **263.5 kB** |
+| three-core | 181.7 KiB |
+| fiber | 53.6 KiB |
+| postprocessing | 17.5 KiB |
+| HeroScene (incl. r3f-post and geometry) | 10.9 KiB |
+| drei | 0.4 KiB |
+| **3D total** | **264.1 KiB / 270.5 kB** |
 
 The page shell (`index` + `react-vendor`) is separate and loads before the 3D chunk.
+
+For first paint and battery, the page shows the static poster instead of mounting three.js when
+the viewport is under 900 px, the visitor prefers reduced motion, or the WebGL renderer is a
+software rasterizer (headless CI, some VMs). A real desktop GPU gets the full scene. Add `?3d`
+to the URL to force the scene for review captures.
+
+## Accessibility and Lighthouse
+
+Production preview, Lighthouse 12 (Chrome headless):
+
+| Run | Performance | Accessibility | Best practices | SEO |
+| --- | ---: | ---: | ---: | ---: |
+| Desktop | 100 | 100 | 100 | 100 |
+| Mobile | 96 | 100 | 100 | 100 |
+
+The mobile run uses the static poster, so Total Blocking Time stays at 0 ms. Reports are kept
+in `review/lighthouse-desktop.json` and `review/lighthouse-mobile.json`.
+
+## Product film
+
+The promo generated with fframes lives in `media/video` (see its README). The site embeds the
+1080p H.264 film with a WebM alternative and a poster frame:
+
+- `public/media/originlm-promo.mp4` — 52.6 s, 5.9 MB, silent.
+- `public/media/originlm-promo.webm` — 52.6 s, 2.7 MB, silent.
+- `public/media/originlm-promo-poster.jpg` — frame at 27 s.
+- `public/media/originlm-loop.mp4` — 8 s seamless stack loop (hero fallback asset).
+
+Set `hasVideo` in `src/data/video.ts` to swap the player back to the "in post-production"
+placeholder if the media is removed.
 
 ## Review
 

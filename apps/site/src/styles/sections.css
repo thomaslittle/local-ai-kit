@@ -158,15 +158,11 @@
 .stage-fallback {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-}
-
-.stage-fallback img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
+  padding: 0.5rem;
 }
 
 .stage-loading {
@@ -1924,6 +1920,15 @@
   gap: 0.35rem;
 }
 
+.video-meta a {
+  color: var(--primary);
+}
+
+.video-meta a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ---------- Final CTA ---------- */
 
 .final-cta {
@@ -2089,7 +2094,7 @@
   }
 
   .hero-stage {
-    height: 25rem;
+    height: 20rem;
   }
 
   .stage-legend,
@@ -2199,7 +2204,13 @@
   }
 
   .dash-body {
-    grid-template-columns: 3.3rem minmax(0, 1fr);
+    grid-template-columns: 4rem minmax(0, 1fr);
+  }
+
+  .dash-rail span {
+    gap: 0.25rem;
+    padding-inline: 0.3rem;
+    font-size: 0.54rem;
   }
 
   .dash-metrics {

@@ -88,8 +88,8 @@ export function HeroStage() {
 
       <div className="stage-hint" aria-hidden="true">
         <Stack size={13} />
-        <span className="hint-desktop">{staticMode ? "Static diagram · reduced motion" : "Scroll to separate · hover a layer"}</span>
-        <span className="hint-mobile">{staticMode ? "Static diagram · reduced motion" : "Tap a layer to inspect"}</span>
+        <span className="hint-desktop">{staticMode ? "Static diagram · 3D paused" : "Scroll to separate · hover a layer"}</span>
+        <span className="hint-mobile">{staticMode ? "Static diagram" : "Tap a layer to inspect"}</span>
       </div>
 
       <div className="stage-labels" aria-hidden="true">

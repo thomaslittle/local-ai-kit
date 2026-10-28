@@ -23,7 +23,7 @@ const browser = await chromium.launch({
 });
 
 async function settle(page, ms = 1600) {
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   await page.waitForTimeout(ms);
   // Trigger every reveal, then return to the top.
   await page.evaluate(async () => {
@@ -98,7 +98,7 @@ const reduced = await browser.newContext({
   colorScheme: "dark",
 });
 const reducedPage = await reduced.newPage();
-await reducedPage.goto(base, { waitUntil: "networkidle" });
+await reducedPage.goto(base, { waitUntil: "load" });
 await reducedPage.waitForTimeout(800);
 await reducedPage.screenshot({ path: join(out, "desktop-reduced-motion.png") });
 await reduced.close();
@@ -108,7 +108,7 @@ const recorder = await browser.newContext({
   recordVideo: { dir: join(out, "video"), size: { width: 1440, height: 900 } },
 });
 const recordPage = await recorder.newPage();
-await recordPage.goto(base, { waitUntil: "networkidle" });
+await recordPage.goto(base, { waitUntil: "load" });
 await recordPage.waitForTimeout(2400);
 await recordPage.mouse.wheel(0, 420);
 await recordPage.waitForTimeout(2200);
