@@ -411,10 +411,13 @@ async fn variable_font_assets_are_served_as_woff2() {
 async fn inventory_sse_preserves_scope_and_rejects_session_mixing() {
     let (server, _) = setup().await;
     let token = pair(&server).await;
+    let before = rpc(&server, &token, "snapshot.get", json!({})).await;
+    let cursor = before["result"]["cursor"].as_str().unwrap();
+    assert!(cursor.contains(':'));
     let refreshed = rpc(&server, &token, "discovery.refresh", json!({"level":"passive"})).await;
     assert!(refreshed.get("result").is_some());
     let mut response = client()
-        .get(format!("{}/v1/events?scope=inventory&after=0", server.url))
+        .get(format!("{}/v1/events?scope=inventory&after={cursor}", server.url))
         .bearer_auth(&token)
         .send().await.unwrap();
     assert_eq!(response.status(), 200);

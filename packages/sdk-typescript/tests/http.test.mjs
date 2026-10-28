@@ -145,3 +145,9 @@ test('pairing code requests honor cancellation and a bounded deadline', async ()
  const abort=new AbortController();abort.abort();
  await assert.rejects(issuePairingCode({baseUrl:'http://localhost',fetch,signal:abort.signal}),/CANCELLED/);
 });
+
+test('an expired HTTP replay cursor becomes EVENT_GAP for live-store resynchronization',async()=>{
+ const t=createHttpTransport(config(async()=>new Response('{}',{status:409,headers:{'content-type':'application/json'}})));
+ await assert.rejects(collect(t.subscribe({scope:'inventory',after:'old-epoch:1'})),/EVENT_GAP/);
+ await t.close();
+});

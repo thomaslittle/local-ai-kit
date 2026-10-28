@@ -121,7 +121,13 @@ pub(super) async fn events(
         || query
             .after
             .as_ref()
-            .is_some_and(|s| s.len() > 20 || s.parse::<u64>().is_err())
+            .is_some_and(|s| {
+                if query.scope.as_deref() == Some("inventory") {
+                    s.is_empty() || s.len() > 128 || s.chars().any(char::is_control)
+                } else {
+                    s.len() > 20 || s.parse::<u64>().is_err()
+                }
+            })
     {
         return reject(StatusCode::BAD_REQUEST, "INVALID_REQUEST");
     }

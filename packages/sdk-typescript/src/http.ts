@@ -132,6 +132,10 @@ export function createHttpTransport(options: HttpOptions): Transport {
         }
         const response = await fetcher(url.href, { method: 'GET', signal: ctx.signal,
           headers: { Accept: 'text/event-stream', Authorization: `Bearer ${options.token}` }, credentials: 'omit', redirect: 'error' });
+        if (response.status === 409) {
+          await response.body?.cancel().catch(() => {});
+          throw new LocalAIError('EVENT_GAP');
+        }
         await checkStatus(response);
         if (!response.headers.get('content-type')?.toLowerCase().startsWith('text/event-stream') || !response.body) {
           await response.body?.cancel().catch(() => {}); throw new LocalAIError('PROTOCOL_INVALID');
