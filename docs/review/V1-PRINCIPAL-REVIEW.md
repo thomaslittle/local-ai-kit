@@ -190,3 +190,12 @@ invalidate the stream. `BrokerClient::call_typed` preserves canonical codes and 
 retry hints while suppressing untrusted error bodies; the Rust facade uses it directly.
 A denial-then-snapshot fixture and retry-hint/redaction fixture are authored; execution
 pending. Price-file loading also uses the common bounded opened-file reader.
+
+### V1-022 (P2): native privilege labels trusted the descriptor filename
+
+The desktop called a credential “administrator” when its filename contained `admin`.
+Removed filename-derived privilege state. Administration is now shown as confirmed
+only after a successful runtime `apps.list` response without a connection error;
+example/offline/denied states never claim administrator access. Removed the implicit
+`./admin-token.json` fallback when no configured/home descriptor exists. The native
+build passed for privilege labels; the fallback change awaits the final pass.

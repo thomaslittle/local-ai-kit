@@ -219,7 +219,6 @@ pub struct Desktop {
     pub broker: BrokerHandle,
     pub executor: ExecHandle,
     pub token_path: PathBuf,
-    pub credential_kind: String,
     pub poll_task: Option<Task<()>>,
     focus: FocusHandle,
     initial_focus: bool,
@@ -257,10 +256,6 @@ impl Desktop {
             example,
         );
         let executor = broker::spawn_executor(token_path.clone(), example);
-        let credential_kind = token_path
-            .file_name()
-            .map(|name| name.to_string_lossy().to_string())
-            .unwrap_or_default();
         let palette_input = cx
             .new(|cx| InputState::new(window, cx).placeholder("Jump to a page, model or action…"));
         let search = cx.new(|cx| InputState::new(window, cx).placeholder("Search models…"));
@@ -375,7 +370,6 @@ impl Desktop {
             broker,
             executor,
             token_path,
-            credential_kind,
             poll_task: None,
             focus,
             initial_focus: true,
@@ -1339,10 +1333,10 @@ impl Desktop {
                                 .text_color(theme.muted_foreground)
                                 .child(if self.example {
                                     "No runtime connected"
-                                } else if self.credential_kind.contains("admin") {
-                                    "Admin credential"
+                                } else if self.bundle.as_ref().is_some_and(|bundle| bundle.error.is_none() && bundle.apps_error.is_none()) {
+                                    "Administrator access confirmed"
                                 } else {
-                                    "Application credential"
+                                    "Scoped credential"
                                 }),
                         ),
                     ),

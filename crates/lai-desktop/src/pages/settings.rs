@@ -111,11 +111,13 @@ impl Desktop {
                         &theme,
                     ))
                     .child(row(
-                        "Credential kind",
-                        if self.credential_kind.contains("admin") {
-                            "Administrator (can list and revoke apps)"
+                        "Application administration",
+                        if self.example {
+                            "Example mode; no credentials loaded"
+                        } else if self.bundle.as_ref().is_some_and(|bundle| bundle.error.is_none() && bundle.apps_error.is_none()) {
+                            "Confirmed by the runtime"
                         } else {
-                            "Application (scoped grants only)"
+                            "Not confirmed; inspect Connections for the response"
                         },
                         false,
                         &theme,

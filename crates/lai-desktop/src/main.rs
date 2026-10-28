@@ -11,9 +11,9 @@ mod theme;
 mod ui;
 
 use app::Desktop;
-use gpui_kit::component::{ThemeMode, TitleBar};
+use gpui_kit::component::{TitleBar};
 use gpui_kit::*;
-use std::{borrow::Cow, path::PathBuf, sync::Arc, time::Duration};
+use std::{borrow::Cow, path::PathBuf, sync::Arc};
 
 fn parse_args() -> (PathBuf, u64, bool) {
     let mut token: Option<PathBuf> = None;
@@ -47,7 +47,8 @@ fn parse_args() -> (PathBuf, u64, bool) {
     let token = token
         .or_else(|| std::env::var_os("LAI_DESKTOP_TOKEN_FILE").map(PathBuf::from))
         .or_else(default_token_file)
-        .unwrap_or_else(|| PathBuf::from("admin-token.json"));
+        // No implicit credential lookup in the current working directory.
+        .unwrap_or_default();
     (token, refresh, example)
 }
 
@@ -76,13 +77,14 @@ fn main() {
             ) as &[u8])]);
         gpui_kit::init(cx);
         theme::install(cx, true);
-        let _ = ThemeMode::Dark;
         let token = token_path.clone();
         let (width, height) = std::env::var("LAI_DESKTOP_WINDOW")
             .ok()
             .and_then(|value| {
                 let (w, h) = value.split_once('x')?;
-                Some((w.parse::<f32>().ok()?, h.parse::<f32>().ok()?))
+                let (width, height) = (w.parse::<f32>().ok()?, h.parse::<f32>().ok()?);
+                (width.is_finite() && height.is_finite())
+                    .then_some((width.clamp(1000., 7680.), height.clamp(660., 4320.)))
             })
             .unwrap_or((1440.0, 920.0));
         let light = std::env::var_os("LAI_DESKTOP_THEME").is_some_and(|value| value == "light");
@@ -108,6 +110,5 @@ fn main() {
             cx.new(|cx| Desktop::new(window, cx, token, refresh, example))
         })
         .expect("desktop window");
-        let _ = Duration::from_secs(1);
     });
 }
