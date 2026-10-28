@@ -119,6 +119,14 @@
   "additionalQualification": {
     "electron": "Linux Electron45.1.0 ASAR passed from packed SDK/native dependency under private Xvfb; prior build reproduced spawn ENOTDIR",
     "independentCodeReview": "562e347..08ef3ba: no actionable issues; reviewer ran 30 focused SDK tests",
-    "ciFixtureCorrections": "macOS canonical cwd and Windows stub scope shadowing; hosted rerun pending"
+    "ciFixtureCorrections": "macOS canonical cwd/ASAR paths and Windows stub scope corrections passed affected hosted stages at 34696c3"
+  },
+  "hostedCheckpoint": {
+    "sourceCommit": "34696c3f06104980426c41855369aba019c2183a",
+    "linux": "full job passed",
+    "windows": "full job passed",
+    "macOS": "full verification, C# consumer, formatting and clippy passed; cold release compilation cancelled at 40-minute job limit",
+    "run": "https://github.com/thomaslittle/local-ai-kit/actions/runs/40698238160",
+    "response": "75-minute job budget; latest-head rerun pending"
   }
 }

@@ -394,3 +394,13 @@ Hosted follow-up: macOS executes the SDK fixture through Node's canonical
 `/private/var` path. The ASAR resolution assertion now compares the physical
 unpacked file's canonical path, retaining the exact-tree check and missing-file
 rejection. This corrects fixture portability; no runtime behavior changed.
+
+### V1-043 (P2): CI's cold macOS build exceeded its job deadline
+
+At `34696c3`, macOS passed full deterministic verification, the C# consumer,
+formatting and clippy. GitHub then cancelled release-artifact compilation at the
+40-minute job deadline; its annotation explicitly reports the maximum execution
+time. The full job now has a bounded 75-minute budget for debug/test, lint and
+release compilation. All checks remain required. Linux and Windows full jobs
+passed at this checkpoint; macOS release/package qualification awaits the rerun.
+Evidence: [cancelled macOS job](https://github.com/thomaslittle/local-ai-kit/actions/runs/40698238160/job/122850744391).

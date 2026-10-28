@@ -7,7 +7,7 @@ Thomas stopped video work; existing media is retained without further qualificat
 
 ## What changed
 
-The [principal review ledger](V1-PRINCIPAL-REVIEW.md) records 42 findings and their
+The [principal review ledger](V1-PRINCIPAL-REVIEW.md) records 43 findings and their
 changes. The branch integrates distribution through status/tray and web bridge,
 then hardens owned helper lifecycle, protocol errors, grants, bounded reads,
 inventory replay, saved prices, installer cleanup and signed updater activation.
@@ -59,13 +59,12 @@ These measurements are one host's evidence, not universal hardware promises.
 
 ## Hosted qualification
 
-An earlier checkpoint passed Linux full verification and all five artifact-preparation
-targets. Its macOS full-verification job never acquired a hosted runner and was
-cancelled for ARM capacity constraints. The main matrix now pins Ubuntu 24.04,
-Windows 2025 and macOS 15 Intel; ARM Mac artifact preparation remains. The latest
-head must finish these checks before CI qualification is complete. The preceding
-head exposed two fixture errors: a macOS `/var` symlink expectation and a shadowed
-PowerShell stub variable. Both assertions are corrected; their hosted rerun is pending.
+At `34696c3`, Linux and Windows full jobs passed. macOS passed full deterministic
+verification, the C# consumer, formatting and clippy; its cold release compilation
+was cancelled at the workflow's 40-minute job deadline. The job budget is now
+75 minutes, with every check retained. The latest head still needs the complete
+three-OS pass before hosted qualification is complete. The earlier canonical-path
+and PowerShell fixture-scope corrections passed their affected hosted stages.
 
 ## Honest limits and owner actions
 
