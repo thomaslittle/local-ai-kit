@@ -269,3 +269,29 @@ Signed fixtures now assert that an unrelated staged executable cannot be install
 Staging uses exclusive directory/file creation and cleans failed partial copies;
 manifest/marker reads and hash loops are bounded. Already archived crash markers
 are no longer repeatedly renamed. Focused builds pass; fixture execution is pending.
+
+### V1-030 (P1): fresh review — Python broker environment and price serialization
+
+The fresh reviewer identified that Python auto startup applied caller env/cwd only
+to its bridge, not the private broker that performs discovery. It also found that
+valid price rows could serialize past the reader's 128 KiB limit, producing an
+unreadable table after restart. Implemented one validated process environment
+for both Python children, and serialization-size validation before changing prices.
+Regressions authored; final execution pending.
+
+### V1-031 (P1): Node shared startup and Rust preflight boundaries
+
+Both Node broker startup paths inherited the whole environment, while the bridge
+filtered it. All three now share one validated process policy. Both descriptor
+readers share the bounded, no-follow, owner-private reader. The explicit shared
+starter propagates authentication/protocol failures and cleans up its own child
+on startup failure. Rust's preliminary IPC reachability probe now has the same
+two-second deadline as its client connection. Regressions authored; execution pending.
+
+### V1-032 (P1): update downgrade floor was the host's compile-time version
+
+A long-lived alpha.20 host could install alpha.22 and subsequently accept alpha.21.
+Activation now reads persisted versions under its lock, records the highest verified
+version durably before replacement, and refuses malformed state. Explicit rollback
+retains the floor. ADR-008 describes the conservative crash behavior. Signed
+sequential-activation and corrupt-state regressions authored; execution pending.

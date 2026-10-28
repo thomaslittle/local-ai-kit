@@ -367,6 +367,42 @@ fn session_markers(root: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
+// Held under activation.lock. The separate floor survives a process crash
+// between executable replacement and the informational state.json write.
+fn activation_floor(root: &Path) -> Result<String, DomainError> {
+    let invalid = || fail(ErrorCode::StorageUnavailable, "Update version state is invalid; restore it before activating");
+    let mut highest = parse_version(env!("CARGO_PKG_VERSION")).ok_or_else(invalid)?;
+    for (name, field) in [("state.json", "installedVersion"), ("version-floor.json", "highestVerifiedVersion")] {
+        let bytes = match read_bounded_file(&root.join(name), MAX_MANIFEST_BYTES) {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(_) => return Err(invalid()),
+        };
+        let value: Value = serde_json::from_slice(&bytes).map_err(|_| invalid())?;
+        let version = value[field].as_str().and_then(parse_version).ok_or_else(invalid)?;
+        if version.cmp_precedence(&highest).is_gt() { highest = version; }
+    }
+    Ok(highest.to_string())
+}
+
+fn persist_version_floor(root: &Path, version: &str) -> Result<(), DomainError> {
+    let temporary = root.join(format!("version-floor-{}-{}.tmp", std::process::id(), unix_ms()));
+    let mut created = false;
+    let result = (|| -> std::io::Result<()> {
+        let mut file = OpenOptions::new().write(true).create_new(true).open(&temporary)?;
+        created = true;
+        serde_json::to_writer(&mut file, &serde_json::json!({"highestVerifiedVersion": version}))?;
+        file.sync_all()?;
+        drop(file);
+        std::fs::rename(&temporary, root.join("version-floor.json"))?;
+        #[cfg(unix)]
+        File::open(root)?.sync_all()?;
+        Ok(())
+    })();
+    if result.is_err() && created { let _ = std::fs::remove_file(&temporary); }
+    result.map_err(|_| fail(ErrorCode::StorageUnavailable, "Update version floor could not be saved; executable was not replaced"))
+}
+
 pub struct Activation {
     pub backup: PathBuf,
     pub installed: PathBuf,
@@ -416,11 +452,12 @@ pub fn activate(
             "An active consumer/runtime session marker prevents activation",
         ));
     }
+    let floor = activation_floor(state_root)?;
     verify_update(
         manifest,
         &staged.archive,
         public_key,
-        env!("CARGO_PKG_VERSION"),
+        &floor,
         "1.0",
         false,
     )?;
@@ -444,6 +481,10 @@ pub fn activate(
     // a separately trusted extractor. Never install an unrelated staged file.
     let replacement = target.with_extension(format!("new-{}", unix_ms()));
     copy_verified_payload(manifest, &staged.archive, &replacement)?;
+    if let Err(error) = persist_version_floor(state_root, &manifest.version) {
+        let _ = std::fs::remove_file(&replacement);
+        return Err(error);
+    }
     if std::fs::rename(&replacement, target).is_err() {
         let _ = std::fs::remove_file(&replacement);
         return Err(fail(
@@ -616,6 +657,30 @@ mod tests {
             archive,
             _temp: temp,
         }
+    }
+
+    #[test]
+    fn activation_remembers_the_highest_version_across_calls_and_rollback() {
+        let root = tempfile::tempdir().unwrap();
+        let target = root.path().join("current");
+        std::fs::write(&target, b"old").unwrap();
+        let next = signed("0.1.0-alpha.22");
+        let staged = stage_update(&next.manifest, &next.archive, &root.path().join("staging"), &next.public_key, "0.1.0-alpha.20", "1.0").unwrap();
+        let activation = activate(root.path(), &staged, &next.manifest, &target, &next.public_key).unwrap();
+        rollback(&target, &activation.backup).unwrap();
+        // Model the crash window before informational metadata was written.
+        std::fs::remove_file(root.path().join("state.json")).unwrap();
+        let older = signed("0.1.0-alpha.21");
+        let staged = stage_update(&older.manifest, &older.archive, &root.path().join("staging"), &older.public_key, "0.1.0-alpha.20", "1.0").unwrap();
+        assert_eq!(activate(root.path(), &staged, &older.manifest, &target, &older.public_key).err().unwrap().code, ErrorCode::Conflict);
+        assert_eq!(std::fs::read(&target).unwrap(), b"old");
+    }
+
+    #[test]
+    fn corrupt_version_state_fails_closed() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(root.path().join("version-floor.json"), b"{}").unwrap();
+        assert_eq!(activation_floor(root.path()).unwrap_err().code, ErrorCode::StorageUnavailable);
     }
 
     #[test]
