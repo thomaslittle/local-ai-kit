@@ -1,3 +1,4 @@
+import { LayeredScreens } from "../components/LayeredScreens";
 import { CheckCircle } from "../components/Icon";
 import { CodeBlock } from "../components/CodeBlock";
 
@@ -41,16 +42,7 @@ export function Paths() {
               <li><CheckCircle size={16} /> Cost and usage trends, plus issues that need attention</li>
             </ul>
           </div>
-          <figure className="shot" data-slot="usage" data-kind="product">
-            <img
-              src="/screens/control-center-usage.webp"
-              width={2880}
-              height={1800}
-              loading="lazy"
-              alt="The OriginLM control center's Usage screen with example data: quota pools, utilization by pool and per-window detail."
-            />
-          </figure>
-          <p className="shot-caption">The control center’s Usage screen, running on example accounts.</p>
+          <LayeredScreens />
         </article>
 
         <article className="half half--build" id="developers" aria-labelledby="build-title">

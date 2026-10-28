@@ -1,5 +1,5 @@
 /* Hallmark · shape: Feature Stack (kept order, recomposed) · genre: atmospheric · theme: brand (OriginLM graphite and amber; material lent from Lumen, dealt 1/3) · redesign: full
- * paper: oklch(19% 0.008 0) · accent: oklch(76% 0.16 75) · display: Red Hat Display · body: Red Hat Display · hero: Stage · nav: three-part bar, four real destinations plus GitHub and the action · footer: statement, the closing action large over index columns · signature: the R3F exploded stack beside the head, the runtime pulled apart layer by layer
+ * paper: oklch(19% 0.008 0) · accent: oklch(76% 0.16 75) · display: Red Hat Display · body: Red Hat Display · hero: Stage · nav: three-part bar, four real destinations plus GitHub and the action · footer: statement, the closing action large over index columns · signature: the shared five-screen perspective stack beside the head, the runtime pulled apart layer by layer
  * axes: dark/grotesk-sans/warm · posture: restrained · job: try and sign up, the action in the nav, the hero, the install band and the footer · imagery: screenshots 2 (capture.mjs, example data) · sweep: pending v1 integration verification; earlier branch results do not qualify this revision · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V3 · weakest: V, the page keeps its eleven-part argument in order; varied the compositions instead (split, table, pinned steps, band, vertical tabs, index table, statement, film with chapters) */
 /* Hallmark · waive 39b · app UI at 36px with a ::after hit target expanding it to 44px · the copy control lives in each code block header beside the code it copies, where a 48px marketing pill would crowd the sample */
@@ -529,3 +529,14 @@ p { color: var(--color-muted); }
 .stage-motion:hover { background: var(--color-paper-3); }
 .stage-motion:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .stage-motion { display: none; } }
+
+/* Real UI on three planes; the static composition also works without scripting. */
+.layered-screens { --screen-spread: 1; position: relative; margin: 0; min-height: 460px; perspective: 1800px; overflow: hidden; }
+.layered-screens-plane { position: absolute; inset: 12% 8% 15%; transform-style: preserve-3d; transform: rotateX(50deg) rotateZ(-35deg); }
+.layered-screens-plane img { position: absolute; inset: 0; width: 100%; height: auto; border: var(--rule-hair) solid var(--color-rule-2); border-radius: var(--radius-inner); box-shadow: var(--shadow-card); background: var(--color-paper); }
+.layered-screens-plane img:nth-child(1) { transform: translateZ(calc(-70px * var(--screen-spread))); }
+.layered-screens-plane img:nth-child(2) { transform: translateZ(0); }
+.layered-screens-plane img:nth-child(3) { transform: translateZ(calc(70px * var(--screen-spread))); }
+.layered-screens figcaption { position: absolute; bottom: var(--space-sm); font-size: var(--text-sm); color: var(--color-muted); }
+@media (max-width: 600px) { .layered-screens { min-height: 340px; } .layered-screens-plane { inset: 15% 9% 20%; } }
+@media (prefers-reduced-motion: reduce) { .layered-screens { --screen-spread: 1 !important; } }

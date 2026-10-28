@@ -87,8 +87,8 @@ export function HeroStage() {
       <div className="hero-stage" ref={stageRef} data-static={staticMode || paused || undefined} data-ready={ready && !paused && !staticMode && visible || undefined}>
         <img
           className="stage-fallback"
-          src="/hero-poster.svg"
-          alt="The OriginLM stack, exploded: your app and the usage dashboard on top, then the SDK, transport, local runtime, adapters, and the AI providers already on the machine."
+          src="/scene/poster.webp"
+          alt="The OriginLM stack, exploded: your app, SDK, transport, runtime and providers, shown with real OriginLM screens in example mode."
           width={1200}
           height={760}
           fetchPriority="high"
