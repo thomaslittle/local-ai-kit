@@ -3984,7 +3984,7 @@ version = "0.1.0-alpha.20"
 dependencies = [
  "axum",
  "chrono",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "lai-contracts",
  "lai-discovery",
  "lai-platform",
@@ -4008,7 +4008,7 @@ dependencies = [
  "aws-lc-rs",
  "base64",
  "fs4",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "jsonwebtoken",
  "keyring",
  "reqwest",
@@ -4156,7 +4156,7 @@ version = "0.1.0-alpha.20"
 dependencies = [
  "base64",
  "chrono",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "lai-chatgpt-auth",
  "lai-contracts",
  "lai-core",
@@ -4176,7 +4176,7 @@ dependencies = [
 name = "lai-store"
 version = "0.1.0-alpha.20"
 dependencies = [
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "lai-contracts",
  "rusqlite",
  "serde",
@@ -4191,7 +4191,7 @@ version = "0.1.0-alpha.20"
 dependencies = [
  "async-stream",
  "axum",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "interprocess",
  "lai-contracts",
  "lai-core",
@@ -4212,7 +4212,7 @@ version = "0.1.0-alpha.20"
 dependencies = [
  "base64",
  "fs4",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "lai-contracts",
  "ring",
  "semver",
