@@ -177,6 +177,7 @@ const CLIENT_ROUTES: [&str; 7] = [
     "/selector-lab",
     "/playground",
     "/diagnostics",
+    "/settings",
 ];
 pub(super) async fn asset(State(state): State<Arc<Shared>>, method: Method, uri: Uri) -> Response {
     if method != Method::GET && method != Method::HEAD {

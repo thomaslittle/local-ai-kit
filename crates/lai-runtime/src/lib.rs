@@ -1,5 +1,6 @@
 //! Provider-independent, owner-scoped sessions. Creating a session never runs inference.
 mod artifact;
+mod costs;
 mod engine;
 mod journal;
 mod turn;

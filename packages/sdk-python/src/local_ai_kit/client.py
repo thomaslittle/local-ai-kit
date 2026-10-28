@@ -200,7 +200,7 @@ async def open_auto_transport(executable: str | None = None, **options):
     return await _open_private(helper, options)
 
 FAMILIES = {
-    'runtime': ('health','closeClient'), 'snapshot': ('get',), 'discovery': ('refresh','watch','cancel'),
+    'runtime': ('health','closeClient'), 'costs': ('read','setPrices'), 'snapshot': ('get',), 'discovery': ('refresh','watch','cancel'),
     'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list','page'),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
     'grants': ('request','list','revoke'), 'sessions': ('create','get','suspend','resume','updateOptions','close'),

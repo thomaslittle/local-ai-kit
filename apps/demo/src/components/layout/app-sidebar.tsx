@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowSquareOutIcon, CubeIcon, FlaskIcon, GaugeIcon, PlugsConnectedIcon, PulseIcon, SquaresFourIcon, ChatsIcon, type Icon } from '@phosphor-icons/react';
+import { GearIcon, ArrowSquareOutIcon, CubeIcon, FlaskIcon, GaugeIcon, PlugsConnectedIcon, PulseIcon, SquaresFourIcon, ChatsIcon, type Icon } from '@phosphor-icons/react';
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,7 @@ const NAV: { label: string; items: { page: Page; icon: Icon }[] }[] = [
       { page: 'Connections', icon: PlugsConnectedIcon },
       { page: 'Models', icon: CubeIcon },
       { page: 'Usage', icon: GaugeIcon },
+      { page: 'Settings', icon: GearIcon },
     ],
   },
   {

@@ -38,6 +38,7 @@ pub(crate) struct Cell {
     pub artifacts: Arc<Mutex<crate::artifact::ArtifactStore>>,
     pub output: Mutex<Vec<u8>>,
     pub image_input: bool,
+    costs: Arc<Mutex<crate::costs::CostLedger>>,
 }
 impl Cell {
     pub fn publish_artifact(
@@ -113,22 +114,37 @@ impl Cell {
             .map_err(|_| err(ErrorCode::ProviderUnavailable))?
             .append(Event {
                 session_id: state.view.id.clone(),
-                turn_id: turn,
+                turn_id: turn.clone(),
                 sequence: String::new(),
                 timestamp: Timestamp::now(),
                 adapter_id: "native".into(),
                 schema_version: "1.0".into(),
-                payload,
-            })
+                payload: payload.clone(),
+            })?;
+        if let Some(turn) = &turn {
+            self.costs
+                .lock()
+                .map_err(|_| err(ErrorCode::ProviderUnavailable))?
+                .observe(&self.owner, &state.view, turn, &payload);
+        }
+        Ok(())
     }
 }
 #[derive(Default)]
 pub struct Runtime {
+    costs: Arc<Mutex<crate::costs::CostLedger>>,
     sessions: Mutex<BTreeMap<String, Arc<Cell>>>,
     journals: Mutex<BTreeMap<String, Arc<Mutex<Journal>>>>,
     artifacts: Arc<Mutex<crate::artifact::ArtifactStore>>,
 }
 impl Runtime {
+    pub fn cost_usage(&self, owner: Option<&str>) -> Result<Vec<CostUsage>> {
+        Ok(self
+            .costs
+            .lock()
+            .map_err(|_| err(ErrorCode::ProviderUnavailable))?
+            .read(owner))
+    }
     pub fn artifact(
         &self,
         owner: &str,
@@ -211,6 +227,7 @@ impl Runtime {
                 artifacts: self.artifacts.clone(),
                 output: Mutex::new(Vec::new()),
                 image_input,
+                costs: self.costs.clone(),
             }),
         );
         Ok(view)

@@ -113,3 +113,7 @@ consumers (ADR-004). Isolated artifact size comparison pending.
 Integration update: merged `feat/web-bridge` (including status/mini-view) and
 `feat/landing-site` through `dbcbb1c`. Incoming video source/render claims are
 under review; they are not yet adopted as v1-qualified outputs.
+
+### V1-015 — Cost trends had no evidence contract (P1)
+
+Implemented native cost contracts, bounded owner-scoped runtime observations, exact decimal estimation, admin-only local price editing, source/date defaults, and an explicit unavailable basis. OpenRouter charges are accepted only from its documented HTTPS origins. Web overview/usage and Settings now consume the public SDK. See ADR-005 for scope and limits. Rust service/adapter and web builds executed; regression tests authored but not yet run. Native UI integration and final verification pending.

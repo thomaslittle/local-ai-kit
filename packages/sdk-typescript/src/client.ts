@@ -2,7 +2,7 @@ import { LocalAIError } from './errors.ts';
 import type { CallOptions, Handshake, Transport } from './types.ts';
 import type { MethodInputs, MethodOutputs, Snapshot, Event, InventoryChange } from './generated.ts';
 const families = {
-  runtime: ['health', 'closeClient'], discovery: ['refresh', 'watch', 'cancel'], snapshot: ['get'],
+  runtime: ['health', 'closeClient'], costs: ['read', 'setPrices'], discovery: ['refresh', 'watch', 'cancel'], snapshot: ['get'],
   connections: ['list', 'setupInstructions', 'authenticate', 'probe'], models: ['list', 'page'], usage: ['read'], capabilities: ['read'],
   selection: ['resolve', 'validate'], grants: ['request', 'list', 'revoke'],
   health: ['get'], issues: ['list', 'acknowledge', 'snooze'], notifications: ['poll', 'configure', 'ack'], apps: ['list', 'revoke'],

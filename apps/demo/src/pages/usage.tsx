@@ -1,3 +1,4 @@
+import { CostTrend } from '@/components/common/cost-trend';
 import { lazy, Suspense } from 'react';
 import { ClockIcon, GaugeIcon, LinkIcon, StackIcon } from '@phosphor-icons/react';
 import type { QuotaPool, UsageWindow } from '@local-ai-kit/sdk';
@@ -123,6 +124,7 @@ export default function UsagePage() {
         <StackIcon className="size-3" aria-hidden="true" />
         Quota windows come from the connection that owns them and are never summed across providers.
       </p>
+      <CostTrend />
     </div>
   );
 }

@@ -568,6 +568,158 @@
         ],
         "type": "object"
       },
+      "CostRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "amountUsd": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalString"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when either token count or a matching price is missing."
+          },
+          "basis": {
+            "description": "provider_reported, estimated, or unknown. Never an invoice total.",
+            "type": "string"
+          },
+          "nativeModelId": {
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelPrice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "providerId": {
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/CostUsage"
+          }
+        },
+        "required": [
+          "usage",
+          "providerId",
+          "nativeModelId",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "CostReport": {
+        "additionalProperties": false,
+        "properties": {
+          "canEditPrices": {
+            "type": "boolean"
+          },
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPrice"
+            },
+            "type": "array"
+          },
+          "pricesPersisted": {
+            "type": "boolean"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/CostRecord"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "storageError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "records",
+          "prices",
+          "scope",
+          "canEditPrices",
+          "pricesPersisted"
+        ],
+        "type": "object"
+      },
+      "CostUsage": {
+        "additionalProperties": false,
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "connectionId": {
+            "type": "string"
+          },
+          "inputTokens": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalString"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "modelId": {
+            "type": "string"
+          },
+          "observedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "outputTokens": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalString"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reportedUsd": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecimalString"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routeId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "turnId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "turnId",
+          "connectionId",
+          "routeId",
+          "modelId",
+          "observedAt",
+          "complete"
+        ],
+        "type": "object"
+      },
       "DataMode": {
         "enum": [
           "live",
@@ -1695,6 +1847,12 @@
           "connections.probe": {
             "$ref": "#/components/schemas/ConnectionParams"
           },
+          "costs.read": {
+            "$ref": "#/components/schemas/EmptyParams"
+          },
+          "costs.setPrices": {
+            "$ref": "#/components/schemas/SetPricesParams"
+          },
           "diagnostics.report": {
             "$ref": "#/components/schemas/EmptyParams"
           },
@@ -1815,6 +1973,8 @@
           "models.list",
           "models.page",
           "usage.read",
+          "costs.read",
+          "costs.setPrices",
           "capabilities.read",
           "selection.resolve",
           "selection.validate",
@@ -1884,6 +2044,15 @@
             "type": "array"
           },
           "connections.probe": true,
+          "costs.read": {
+            "$ref": "#/components/schemas/CostReport"
+          },
+          "costs.setPrices": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPrice"
+            },
+            "type": "array"
+          },
           "diagnostics.report": true,
           "discovery.refresh": {
             "$ref": "#/components/schemas/DiscoveryResult"
@@ -1997,6 +2166,8 @@
           "models.list",
           "models.page",
           "usage.read",
+          "costs.read",
+          "costs.setPrices",
           "capabilities.read",
           "selection.resolve",
           "selection.validate",
@@ -2144,6 +2315,38 @@
         },
         "required": [
           "modelId"
+        ],
+        "type": "object"
+      },
+      "ModelPrice": {
+        "additionalProperties": false,
+        "properties": {
+          "inputUsdPerMillion": {
+            "$ref": "#/components/schemas/DecimalString"
+          },
+          "nativeModelId": {
+            "type": "string"
+          },
+          "outputUsdPerMillion": {
+            "$ref": "#/components/schemas/DecimalString"
+          },
+          "providerId": {
+            "type": "string"
+          },
+          "reviewedAt": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "providerId",
+          "nativeModelId",
+          "inputUsdPerMillion",
+          "outputUsdPerMillion",
+          "reviewedAt",
+          "source"
         ],
         "type": "object"
       },
@@ -3454,6 +3657,21 @@
         ],
         "type": "object"
       },
+      "SetPricesParams": {
+        "additionalProperties": false,
+        "properties": {
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPrice"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "prices"
+        ],
+        "type": "object"
+      },
       "Snapshot": {
         "additionalProperties": false,
         "properties": {
@@ -4384,6 +4602,58 @@
                       },
                       "params": {
                         "$ref": "#/components/schemas/ConnectionParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "costs.read"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/EmptyParams"
+                      }
+                    },
+                    "required": [
+                      "jsonrpc",
+                      "id",
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "integer",
+                          "string"
+                        ]
+                      },
+                      "jsonrpc": {
+                        "const": "2.0"
+                      },
+                      "method": {
+                        "const": "costs.setPrices"
+                      },
+                      "params": {
+                        "$ref": "#/components/schemas/SetPricesParams"
                       }
                     },
                     "required": [

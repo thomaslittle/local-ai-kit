@@ -215,6 +215,18 @@ impl Chat {
             }
             let value = serde_json::from_str(&packet).map_err(|_| invalid())?;
             let frame = frames::decode(self.kind, &value)?;
+            // OpenRouter reports the charge in USD credits in the final SSE usage frame.
+            // Generic compatible endpoints may use a different currency or meaning.
+            if self.kind == HttpKind::Compatible && self.endpoint.reports_usd_cost() {
+                if let Some(cost) = value.pointer("/usage/cost").filter(|cost| cost.is_number()) {
+                    if let Ok(amount) = DecimalString::try_from(cost.to_string()) {
+                        cx.emit(EventPayload::Usage {
+                            unit: "cost_usd".into(),
+                            used: amount.into(),
+                        })?;
+                    }
+                }
+            }
             if terminal && !frame.text.is_empty() {
                 return Err(invalid());
             }

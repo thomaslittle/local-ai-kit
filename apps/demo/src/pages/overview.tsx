@@ -1,3 +1,4 @@
+import { CostTrend } from '@/components/common/cost-trend';
 import { ShieldCheckIcon, GaugeIcon } from '@phosphor-icons/react';
 import { Link } from '@tanstack/react-router';
 import type { Connection } from '@local-ai-kit/sdk';
@@ -66,6 +67,8 @@ export default function OverviewPage() {
           </div>
         ))}
       </dl>
+
+      <CostTrend />
 
       <section aria-labelledby="allowances-title">
         <div className="mb-4 flex items-baseline justify-between gap-4">

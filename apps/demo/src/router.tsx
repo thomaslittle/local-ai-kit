@@ -32,6 +32,7 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: '/usage', component: lazyRouteComponent(() => import('@/pages/usage')), head: () => title('Usage') }),
   createRoute({ getParentRoute: () => rootRoute, path: '/selector-lab', component: () => <SelectorsPage />, head: () => title('Selector lab') }),
   createRoute({ getParentRoute: () => rootRoute, path: '/playground', component: lazyRouteComponent(() => import('@/pages/playground')), head: () => title('Playground') }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: lazyRouteComponent(() => import('@/pages/settings')), head: () => title('Settings') }),
   createRoute({ getParentRoute: () => rootRoute, path: '/diagnostics', component: lazyRouteComponent(() => import('@/pages/diagnostics')), head: () => title('Diagnostics') }),
 ]);
 

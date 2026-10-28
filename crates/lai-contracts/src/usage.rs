@@ -36,7 +36,7 @@ impl DecimalString {
     pub fn as_str(&self) -> &str {
         &self.0
     }
-    fn decimal(&self) -> BigDecimal {
+    pub(crate) fn decimal(&self) -> BigDecimal {
         BigDecimal::from_str(&self.0).expect("validated decimal")
     }
 }

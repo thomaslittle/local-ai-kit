@@ -7,6 +7,7 @@ pub use execution::{
 };
 mod cache;
 mod catalog;
+mod costs;
 mod delivery;
 pub use delivery::NotificationSink;
 mod health;
@@ -33,6 +34,7 @@ use std::{
 pub type InventorySource = Arc<dyn Fn(&AtomicBool) -> Result<ScanResult> + Send + Sync>;
 pub type AppRevoker = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 pub struct NativeService {
+    cost_prices: RwLock<costs::Prices>,
     clients: Arc<RwLock<BTreeMap<String, ClientPolicy>>>,
     adapters: Vec<lai_contracts::AdapterDescriptor>,
     execution_state: execution::ExecutionState,
@@ -62,6 +64,7 @@ pub struct NativeService {
 impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
         Self {
+            cost_prices: RwLock::new(costs::Prices::default()),
             clients: Arc::new(RwLock::new(BTreeMap::new())),
             adapters: Vec::new(),
             execution_state: Default::default(),
