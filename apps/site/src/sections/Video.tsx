@@ -3,8 +3,8 @@ import { PROMO } from "../data/video";
 
 const CHAPTERS = [
   ["00:00", "Know your AI", "Every client, quota and reset time in one local view."],
-  ["00:24", "Build on it", "The exploded stack, from providers up to your app."],
-  ["00:38", "Connect", "Discovery, a revocable grant and the connected badge."],
+  ["00:26", "Build on it", "The exploded stack, from providers up to your app."],
+  ["00:36", "Connect", "Discovery, a revocable grant and the connected badge."],
 ];
 
 export function Video() {
@@ -14,8 +14,8 @@ export function Video() {
         <div className="head-split">
           <h2 id="video-title">One runtime, two stories, in under a minute.</h2>
           <p className="lead">
-            The same film in the hero and in the app: first what you can see, then what you can build.
-            Rendered with fframes from the same palette and geometry as this page.
+            A silent product tour: first what you can see, then what you can build.
+            The source uses fframes and the OriginLM palette.
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export function Video() {
                   <div>
                     <h3>The 52-second tour</h3>
                     <p>
-                      Rendering now. The final cut ships as H.264 and WebM with a poster frame, silent by
+                      In production. The planned cut is H.264 and WebM with a poster frame, silent by
                       design: no unlicensed music or voiceover.
                     </p>
                   </div>
@@ -50,7 +50,7 @@ export function Video() {
               </div>
             )}
             <figcaption>
-              1920×1080, H.264 and WebM. 52 seconds, silent. Made with fframes; the source is in media/video.
+              {PROMO.hasVideo ? "1920×1080, H.264 and WebM. 52 seconds, silent." : "Planned: 52 seconds at 1920×1080. Export verification pending."} Source: media/video.
             </figcaption>
           </figure>
 

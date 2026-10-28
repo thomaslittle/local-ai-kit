@@ -2,6 +2,7 @@
 import json
 import pathlib
 import re
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 data = json.loads((ROOT / 'brand/tokens.json').read_text())
@@ -19,5 +20,13 @@ for name, value in data['colors'].items():
     css.append(f'  --originlm-{kebab(name)}: {value};')
     rust.append(f'pub const {kebab(name).replace("-", "_").upper()}: u32 = 0x{value[1:]};')
 css.append('}')
-(ROOT / 'brand/tokens.css').write_text('\n'.join(css) + '\n')
-(ROOT / 'crates/lai-desktop/src/brand_tokens.rs').write_text('\n'.join(rust) + '\n')
+outputs = {
+    ROOT / 'brand/tokens.css': '\n'.join(css) + '\n',
+    ROOT / 'crates/lai-desktop/src/brand_tokens.rs': '\n'.join(rust) + '\n',
+}
+for path, expected in outputs.items():
+    if '--check' in sys.argv:
+        if not path.exists() or path.read_text() != expected:
+            raise SystemExit(f'Brand tokens are stale: {path.relative_to(ROOT)}; run python scripts/generate_brand_tokens.py')
+    else:
+        path.write_text(expected)

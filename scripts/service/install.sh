@@ -20,6 +20,18 @@ SOCKET="${LAI_BROKER_SOCKET:-$default_socket}"
 say() { printf '%s\n' "$*"; }
 fail() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
+# Newlines cannot be represented safely by these service-file templates.
+for path in "$BIN_DIR" "$STATE_DIR" "$SOCKET"; do
+  case "$path" in
+    /*) ;;
+    *) fail "service paths must be absolute" ;;
+  esac
+  case "$path" in
+    *'
+'*) fail "service paths must not contain newlines" ;;
+  esac
+done
+
 case "$(uname -s)" in
   Darwin) os=apple-darwin ;;
   Linux) os=unknown-linux-gnu ;;
@@ -43,7 +55,7 @@ say "Downloading $archive"
 curl -fsSL "$BASE/$archive" -o "$tmp/$archive" || fail "download failed"
 curl -fsSL "$BASE/SHA256SUMS" -o "$tmp/SHA256SUMS" || fail "checksums unavailable"
 
-expected="$(awk -v name=" $archive" '$0 ~ name {print $1}' "$tmp/SHA256SUMS" | head -n1)"
+expected="$(awk -v name="$archive" '$2 == name {print $1}' "$tmp/SHA256SUMS")"
 [ -n "$expected" ] || fail "no checksum for $archive"
 if command -v sha256sum >/dev/null 2>&1; then
   actual="$(sha256sum "$tmp/$archive" | awk '{print $1}')"
@@ -52,16 +64,21 @@ else
 fi
 [ "$expected" = "$actual" ] || fail "checksum mismatch for $archive"
 
-# A minisign key is optional; verify when the tool and a signature exist.
-if command -v minisign >/dev/null 2>&1 && [ -n "${LAI_MINISIGN_PUBKEY:-}" ]; then
+# A configured trust key must never silently downgrade to checksum-only.
+if [ -n "${LAI_MINISIGN_PUBKEY:-}" ]; then
+  command -v minisign >/dev/null 2>&1 || fail "minisign is required when a verification key is configured"
   curl -fsSL "$BASE/SHA256SUMS.minisig" -o "$tmp/SHA256SUMS.minisig" || fail "signature unavailable"
   minisign -Vm "$tmp/SHA256SUMS" -x "$tmp/SHA256SUMS.minisig" -P "$LAI_MINISIGN_PUBKEY" >/dev/null \
     || fail "checksum signature verification failed"
 fi
 
-tar -xzf "$tmp/$archive" -C "$tmp"
+# Extract only the expected member to stdout: archive paths/links cannot write
+# into the filesystem. A linked/missing member produces no executable payload.
+mkdir "$tmp/payload"
+tar -xzOf "$tmp/$archive" "helper-$target/local-ai-kit" > "$tmp/payload/local-ai-kit" || fail "helper missing from archive"
+[ -s "$tmp/payload/local-ai-kit" ] || fail "helper is empty"
 mkdir -p "$BIN_DIR" "$STATE_DIR" "$(dirname "$SOCKET")"
-install -m 0755 "$tmp/helper-$target/local-ai-kit" "$BIN_DIR/local-ai-kit"
+install -m 0755 "$tmp/payload/local-ai-kit" "$BIN_DIR/local-ai-kit"
 
 token="$STATE_DIR/broker-token.json"
 # Service files have their own escaping rules; shell word splitting is not one.
@@ -71,17 +88,6 @@ unit_quote() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g; s/%/%%/g; s/\$/$$/g'
   printf '"'
 }
-# Newlines cannot be represented safely by these service-file templates.
-for path in "$BIN_DIR" "$STATE_DIR" "$SOCKET"; do
-  case "$path" in
-    /*) ;;
-    *) fail "service paths must be absolute" ;;
-  esac
-  case "$path" in
-    *'
-'*) fail "service paths must not contain newlines" ;;
-  esac
-done
 
 if [ "$(uname -s)" = Darwin ]; then
   plist="$HOME/Library/LaunchAgents/dev.originlm.helper.plist"
