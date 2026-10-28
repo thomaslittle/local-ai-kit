@@ -126,11 +126,12 @@ class SharedFallbackTests(unittest.IsolatedAsyncioTestCase):
         shared = MagicMock()
         shared.request = AsyncMock(return_value={'protocolVersion': '2.0', 'methods': []})
         shared.close = AsyncMock()
-        private = AsyncMock(return_value=object())
+        private = AsyncMock(return_value=MagicMock())
         with (patch.object(client_module, 'resolve_helper', return_value='/fixture/helper'),
               patch.object(client_module.AsyncStdioTransport, 'open_broker', AsyncMock(return_value=shared)) as opening,
               patch.object(client_module, '_open_private', private)):
-            await client_module.open_auto_transport(token='a' * 64, passive=False)
+            result = await client_module.open_auto_transport(token='a' * 64, passive=False)
+            self.assertEqual(result.fallback_reason, 'FALLBACK_PROTOCOL_MISMATCH')
             shared.close.assert_awaited_once()
             private.assert_awaited_once()
             self.assertNotIn('passive', opening.call_args.kwargs)

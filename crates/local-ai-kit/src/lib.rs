@@ -24,7 +24,8 @@
 //!     Ok(())
 //! }
 //! ```
-use lai_contracts::{DomainError, ErrorCode, Result, Snapshot};
+pub use lai_contracts::{DomainError, ErrorCode, Snapshot};
+use lai_contracts::Result;
 use lai_control::BrokerClient;
 use lai_kit::{ClientPolicy, EmbeddedClient, Kit};
 use serde::Deserialize;
@@ -91,6 +92,7 @@ impl Default for StartOptions {
 /// A started runtime with its active [`Mode`].
 pub struct LocalAi {
     mode: Mode,
+    fallback_reason: Option<&'static str>,
     backend: Backend,
 }
 
@@ -111,6 +113,7 @@ enum Backend {
 #[serde(rename_all = "camelCase")]
 pub struct Status {
     pub mode: Mode,
+    pub fallback_reason: Option<&'static str>,
     pub revision: String,
     /// Provider display names, never account identities.
     pub providers: Vec<String>,
@@ -441,6 +444,7 @@ impl LocalAi {
                 "The configured helper must be an absolute executable file; fix LAI_HELPER_PATH or StartOptions.helper",
             ));
         }
+        let mut fallback_reason = None;
         let address = options.address.clone().unwrap_or_else(default_address);
         let token_file = options.token_file.clone().or_else(default_token_file);
         if let Some(path) = token_file.as_deref() {
@@ -450,10 +454,13 @@ impl LocalAi {
                         Ok(client) => {
                             return Ok(Self {
                                 mode: Mode::Shared,
+                                fallback_reason: None,
                                 backend: Backend::Shared(client),
                             });
                         }
-                        Err(error) if error.starts_with("PROTOCOL_INCOMPATIBLE:") => {}
+                        Err(error) if error.starts_with("PROTOCOL_INCOMPATIBLE:") => {
+                            fallback_reason = Some("FALLBACK_PROTOCOL_MISMATCH");
+                        }
                         Err(_) => {
                             return Err(denied(
                                 "The shared broker rejected this application's grant or returned an invalid response",
@@ -469,6 +476,7 @@ impl LocalAi {
                 .map_err(|_| denied("The private helper rejected its own grant"))?;
             return Ok(Self {
                 mode: Mode::Child,
+                fallback_reason,
                 backend: Backend::Child {
                     client,
                     _child: child,
@@ -497,9 +505,13 @@ impl LocalAi {
         };
         Ok(Self {
             mode: Mode::InProcess,
+            fallback_reason,
             backend: Backend::InProcess { client, runtime },
         })
     }
+
+    /// Why a shared protocol selected a private/embedded fallback, when applicable.
+    pub fn fallback_reason(&self) -> Option<&'static str> { self.fallback_reason }
 
     /// Which resolution step succeeded.
     pub fn mode(&self) -> Mode {
@@ -509,8 +521,8 @@ impl LocalAi {
     /// One JSON-RPC call. The helper and the shared broker use the same surface.
     pub fn call(&mut self, method: &str, params: Value) -> Result<Value> {
         match &mut self.backend {
-            Backend::Shared(client) => unwrap_value(client.call(method, params)),
-            Backend::Child { client, .. } => unwrap_value(client.call(method, params)),
+            Backend::Shared(client) => client.call_typed(method, params),
+            Backend::Child { client, .. } => client.call_typed(method, params),
             Backend::InProcess {
                 client, runtime, ..
             } => runtime.block_on(client.request::<Value>(method, params)),
@@ -520,8 +532,8 @@ impl LocalAi {
     /// The committed inventory snapshot.
     pub fn snapshot(&mut self) -> Result<Snapshot> {
         match &mut self.backend {
-            Backend::Shared(client) => unwrap_snapshot(client.snapshot()),
-            Backend::Child { client, .. } => unwrap_snapshot(client.snapshot()),
+            Backend::Shared(client) => typed_snapshot(client),
+            Backend::Child { client, .. } => typed_snapshot(client),
             Backend::InProcess {
                 client, runtime, ..
             } => runtime.block_on(client.snapshot()),
@@ -544,6 +556,7 @@ impl LocalAi {
             .and_then(|value| value.as_array().map(|apps| apps.len()));
         Ok(Status {
             mode: self.mode,
+            fallback_reason: self.fallback_reason,
             revision: snapshot.revision.clone(),
             providers: snapshot
                 .providers
@@ -556,17 +569,9 @@ impl LocalAi {
     }
 }
 
-fn unwrap_snapshot(value: std::result::Result<Snapshot, String>) -> Result<Snapshot> {
-    value.map_err(|_| {
-        DomainError::new(
-            ErrorCode::ProviderUnavailable,
-            "The broker snapshot is unavailable",
-        )
-    })
-}
-
-fn unwrap_value(value: std::result::Result<Value, String>) -> Result<Value> {
-    value.map_err(|_| DomainError::new(ErrorCode::ProviderUnavailable, "The broker request failed"))
+fn typed_snapshot(client: &mut BrokerClient) -> Result<Snapshot> {
+    serde_json::from_value(client.call_typed("snapshot.get", json!({}))?)
+        .map_err(|_| DomainError::new(ErrorCode::ProtocolIncompatible, "The broker returned an incompatible snapshot"))
 }
 
 #[cfg(test)]

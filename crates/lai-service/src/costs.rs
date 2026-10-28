@@ -56,8 +56,8 @@ impl NativeService {
             if !metadata.is_file() || metadata.len() > 131072 {
                 return Err(());
             }
-            let values: Vec<ModelPrice> =
-                serde_json::from_slice(&std::fs::read(&path).map_err(|_| ())?).map_err(|_| ())?;
+            let bytes = lai_platform::read_private_file(&path, 131072).map_err(|_| ())?;
+            let values: Vec<ModelPrice> = serde_json::from_slice(&bytes).map_err(|_| ())?;
             validate(&values).map_err(|_| ())?;
             Ok(Some(values))
         };

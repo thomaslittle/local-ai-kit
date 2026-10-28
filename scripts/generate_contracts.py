@@ -255,6 +255,7 @@ def client_stub(schema):
         lines.append(f'class {name}:')
         lines.append('    handshake: dict[str, Any]')
         lines.append('    mode: str')
+        lines.append('    fallback_reason: str | None')
         lines.extend(['    @property', f'    def events(self) -> _{prefix}Events: ...'])
         lines.extend(['    @property', f'    def auth(self) -> _{prefix}Auth: ...'])
         if asynchronous:

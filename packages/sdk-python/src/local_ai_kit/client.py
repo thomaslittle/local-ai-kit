@@ -189,6 +189,7 @@ async def open_auto_transport(executable: str | None = None, **options):
     token_file = options.pop('token_file', None)
     explicit_token = options.pop('token', None)
     token = explicit_token if explicit_token is not None else _shared_token(address, token_file)
+    fallback_reason = None
     if token:
         try:
             shared_options = {key: value for key, value in options.items() if key not in ('passive', 'probe_providers')}
@@ -208,7 +209,11 @@ async def open_auto_transport(executable: str | None = None, **options):
         except LocalAIError as error:
             if error.code not in ('RUNTIME_MISSING', 'TRANSPORT_CLOSED', 'PROTOCOL_INCOMPATIBLE'):
                 raise
-    return await _open_private(helper, options)
+            if error.code == 'PROTOCOL_INCOMPATIBLE':
+                fallback_reason = 'FALLBACK_PROTOCOL_MISMATCH'
+    transport = await _open_private(helper, options)
+    transport.fallback_reason = fallback_reason
+    return transport
 
 FAMILIES = {
     'runtime': ('health','closeClient'), 'costs': ('read','setPrices'), 'snapshot': ('get',), 'discovery': ('refresh','watch','cancel'),
@@ -271,6 +276,7 @@ class AsyncClient:
         self._transport, self._methods, self._closed = transport, frozenset(methods), False
         self.handshake = {**handshake, 'methods':tuple(methods)}
         self.mode = getattr(transport, 'mode', 'custom')
+        self.fallback_reason = getattr(transport, 'fallback_reason', None)
         return self
 
     @classmethod
@@ -357,6 +363,7 @@ class Client:
         self._runner, self._client, self._closed = runner, client, False
         self.handshake = client.handshake
         self.mode = client.mode
+        self.fallback_reason = client.fallback_reason
         return self
 
     @classmethod

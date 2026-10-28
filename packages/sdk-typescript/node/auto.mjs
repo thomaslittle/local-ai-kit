@@ -218,7 +218,11 @@ export async function openAutoTransport(options = {}) {
         throw error;
       }
     } catch (error) {
-      if (error instanceof LocalAIError && ['RUNTIME_MISSING', 'TRANSPORT_CLOSED', 'PROTOCOL_INCOMPATIBLE'].includes(error.code)) return openPrivateTransport(helper, options);
+      if (error instanceof LocalAIError && ['RUNTIME_MISSING', 'TRANSPORT_CLOSED', 'PROTOCOL_INCOMPATIBLE'].includes(error.code)) {
+        const privateTransport = await openPrivateTransport(helper, options);
+        if (error.code === 'PROTOCOL_INCOMPATIBLE') Object.assign(privateTransport, {fallbackReason: 'FALLBACK_PROTOCOL_MISMATCH'});
+        return privateTransport;
+      }
       throw error;
     }
   }

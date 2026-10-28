@@ -101,6 +101,7 @@ class _AsyncUsage:
 class AsyncClient:
     handshake: dict[str, Any]
     mode: str
+    fallback_reason: str | None
     @property
     def events(self) -> _AsyncEvents: ...
     @property
@@ -255,6 +256,7 @@ class _SyncUsage:
 class Client:
     handshake: dict[str, Any]
     mode: str
+    fallback_reason: str | None
     @property
     def events(self) -> _SyncEvents: ...
     @property

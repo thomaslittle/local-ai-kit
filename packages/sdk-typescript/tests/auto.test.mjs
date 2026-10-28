@@ -111,6 +111,7 @@ import('node:readline').then(({createInterface}) => {
   try {
     const transport = await openAutoTransport({executable:binary,address:'/fixture/shared',token:'a'.repeat(64),passive:false});
     assert.equal(transport.mode,'child');
+    assert.equal(transport.fallbackReason, 'FALLBACK_PROTOCOL_MISMATCH');
     await transport.close();
     await assert.rejects(openAutoTransport({executable:binary,address:'/fixture/denied',token:'a'.repeat(64)}), error=>error.code==='LOCAL_ACCESS_DENIED');
   } finally { rmSync(directory,{recursive:true,force:true}); }

@@ -137,3 +137,44 @@ fn rejects_oversized_response_without_waiting_for_newline() {
     assert!(error.contains("frame bound"), "{error}");
     task.join().unwrap();
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_valid_denial_preserves_the_connection_and_typed_error() {
+    let address = endpoint();
+    let service = Arc::new(NativeService::new(
+        Arc::new(|_| Ok(lai_discovery::ScanResult {
+            snapshot: Snapshot::empty(DataMode::Live), locations: Default::default(), metadata_probes: 0,
+        })), Duration::from_secs(1),
+    ));
+    let broker = Broker::start(service, &address).await.unwrap();
+    let token = broker.authorize_shared(ClientPolicy::passive(), None).unwrap();
+    tokio::task::spawn_blocking(move || {
+        let mut client = lai_control::BrokerClient::connect(&address, &token).unwrap();
+        let error = client.call_typed("apps.list", serde_json::json!({})).unwrap_err();
+        assert_eq!(error.code, ErrorCode::LocalAccessDenied);
+        assert!(!error.retryable);
+        assert!(client.call_typed("snapshot.get", serde_json::json!({})).is_ok());
+        client.close();
+    }).await.unwrap();
+    broker.close().await;
+}
+
+#[cfg(unix)]
+#[test]
+fn typed_remote_errors_keep_retry_hints_without_remote_message_content() {
+    let (address, task, _directory) = fake_broker(vec![
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"authenticated\":true}}\n".into(),
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"protocolVersion\":\"1.0\",\"methods\":[]}}\n".into(),
+        "{\"jsonrpc\":\"2.0\",\"id\":3,\"error\":{\"data\":{\"code\":\"RATE_LIMITED\",\"message\":\"secret fixture marker\",\"retryable\":true,\"retryAfterMs\":2500}}}\n".into(),
+        "{\"jsonrpc\":\"2.0\",\"id\":4,\"result\":{\"ok\":true}}\n".into(),
+    ]);
+    let mut client = lai_control::BrokerClient::connect(&address, &"a".repeat(64)).unwrap();
+    let error = client.call_typed("fixture.limited", serde_json::json!({})).unwrap_err();
+    assert_eq!(error.code, ErrorCode::RateLimited);
+    assert_eq!(error.retry_after_ms, Some(2500));
+    assert!(error.retryable);
+    assert!(!error.message.contains("secret fixture marker"));
+    assert_eq!(client.call_typed("fixture.next", serde_json::json!({})).unwrap()["ok"], true);
+    drop(client);
+    task.join().unwrap();
+}

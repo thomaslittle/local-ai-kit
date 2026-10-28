@@ -23,6 +23,8 @@ interface SnapshotMethods {
 export type LocalAIClient = Omit<Families, 'snapshot'> & {
   /** How the runtime is running: a shared broker, a private child, or a caller-supplied transport. */
   mode: TransportMode;
+  /** Present when an incompatible shared protocol selected a private helper. */
+  fallbackReason: 'FALLBACK_PROTOCOL_MISMATCH' | null;
   auth: { chatgpt: {
     status: TypedMethod<'auth.chatgpt.status'>;
     start: TypedMethod<'auth.chatgpt.start'>;
@@ -99,6 +101,7 @@ export async function createLocalAI(options: CreateLocalAIOptions = {}): Promise
   )) });
   return Object.assign(client, {
     mode: (transport as { mode?: TransportMode }).mode ?? 'custom',
+    fallbackReason: (transport as { fallbackReason?: 'FALLBACK_PROTOCOL_MISMATCH' }).fallbackReason ?? null,
     handshake: Object.freeze({ ...handshake, methods: Object.freeze([...handshake.methods]) }),
     async close() {
       if (closing) return closing;

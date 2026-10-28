@@ -101,17 +101,22 @@ pub fn run(
         }
         return Ok(3);
     }
-    let client = BrokerClient::from_token_file(&token_file, Some(&address)).ok();
-    let Some(mut client) = client else {
-        if json {
-            println!(
-                "{}",
-                json!({"running": true, "authorized": false, "reason": "LOCAL_ACCESS_DENIED", "address": address})
-            );
-        } else {
-            eprintln!("OriginLM helper: running, but this credential was rejected");
+    let mut client = match BrokerClient::from_token_file(&token_file, Some(&address)) {
+        Ok(client) => client,
+        Err(error) => {
+            let denied = error.starts_with("LOCAL_ACCESS_DENIED:") || error.starts_with("PERMISSION_DENIED:");
+            let reason = if denied { "LOCAL_ACCESS_DENIED" }
+                else if error.starts_with("PROTOCOL_INCOMPATIBLE:") { "PROTOCOL_INCOMPATIBLE" }
+                else { "CONNECTION_FAILED" };
+            if json {
+                println!("{}", json!({"running": true, "authorized": if denied { Some(false) } else { None }, "reason": reason, "address": address}));
+            } else if denied {
+                eprintln!("OriginLM helper: running, but this credential was rejected");
+            } else {
+                eprintln!("OriginLM helper: reachable, but the authenticated protocol connection failed ({reason}). Check the descriptor and runtime version.");
+            }
+            return Ok(if denied { 4 } else { 1 });
         }
-        return Ok(4);
     };
     let snapshot = client
         .snapshot()
