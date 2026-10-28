@@ -35,9 +35,9 @@ local; explicitly authorized provider operations can contact remote providers.
 ## Integration baseline
 
 - Main baseline: `9079e50`.
-- Distribution stack: `41af8dd` (`feat/service-install`).
+- Distribution stack integrated through `feat/web-bridge` (`cf3a0b6` / `a2e0ef1`), including status-tray `865dfb3`.
 - Landing branches merged with Hallmark's structure and original scene pointer
-  interactions. Visual reconciliation is still pending.
+  interactions. v1 now owns site/video; no further landing-site merges are permitted.
 - Master draft: https://github.com/thomaslittle/local-ai-kit/pull/55.
 
 ## Findings and disposition
@@ -45,15 +45,15 @@ local; explicitly authorized provider operations can contact remote providers.
 | ID | Priority | Finding | Fix / evidence |
 |---|---|---|---|
 | V1-001 | P1 | Private helper startup failure can leak owned children in TS, Python and Rust; timeout/error paths do not all reap processes. | Implemented: owned-process guard in Rust and cleanup spanning startup/bridge errors in TS/Python, including Python cancellation. Synthetic regressions added; execution deferred to final phase. |
-| V1-002 | P1 | Dependency-first shared connection and protocol fallback do not yet implement ADR-002 D9 consistently. | Open: trace authentication versus incompatibility and preserve fail-closed grants. |
-| V1-003 | P1 | GitHub reports active dependency advisories for undici, rustls, setuptools, fast-uri and lru. | Open: inspect affected locked paths and upstream patches; qualify bounded upgrades. |
+| V1-002 | P1 | Dependency-first shared connection and protocol fallback do not yet implement ADR-002 D9 consistently. | Implemented protocol mismatch fallback with grant denial kept fatal; structured status remains under review. |
+| V1-003 | P1 | GitHub reports active dependency advisories for undici, rustls, setuptools, fast-uri and lru. | Patched bounded dependencies; see 2026-10-28 dependency audit. Final qualification pending. |
 | V1-004 | P2 | ADR-002 privacy statement says nothing leaves the machine despite explicit remote provider operations. | Implemented: ADR-003, root privacy statement, ADR-002 correction and site copy distinguish local state from authorized remote provider traffic. |
 | V1-005 | P2 | Rust helper resolution silently ignores an invalid environment override; TS and Python reject it. | Implemented: Rust start rejects invalid configured overrides before attempting shared or embedded fallback. Regression added; execution pending. |
-| V1-006 | P2 | The integration has three independently maintained visual token systems. | Open: establish one brand source with generated consumer outputs. |
+| V1-006 | P2 | The integration has three independently maintained visual token systems. | Implemented brand/tokens.json and generated web/native/site/film values. Final visual lint pending. |
 
 | V1-007 | P1 | Default Unix uninstall deletes workspaces despite its keep-data promise; Windows unregisters without stopping its task. | Implemented: preserve workspaces unless purging; stop Windows task before removing it. Execution pending. |
 | V1-008 | P2 | Service file argument splitting breaks paths with spaces/XML characters; fallback socket differs from SDK discovery. | Implemented: serialize launchd arguments individually, quote systemd values, align fallback socket. Throwaway-prefix verification pending. |
-| V1-009 | P1 | Release packaging consumes unsigned artifacts; published archive names do not match installer expectations; Windows binary paths omit `.exe`. | Open: reconcile packaging and signing gates before release qualification. |
+| V1-009 | P1 | Release packaging consumes unsigned artifacts; published archive names do not match installer expectations; Windows binary paths omit `.exe`. | Implemented preparation-only workflow and matching archives, conservative wheel tags and private preview packs (ADR-007). Signing/publication not claimed. |
 
 This initial list is not an exhaustive audit. No P0 finding has been established;
 that is not a certification that none exists. Further findings are added while
@@ -62,9 +62,9 @@ reviewing each crate, package, workflow and product surface.
 ## Verification ledger
 
 - **Planned:** whole-product review, remediation, visual work, film, full check pass.
-- **Implemented:** upstream integration and private-helper lifecycle cleanup; invalid Rust override rejection.
+- **Implemented:** integration, lifecycle/security fixes, cost evidence and editable prices, dashboard/native improvements, shared 3D scene and 35-second film source.
 - **Fixture-tested:** no new results yet.
-- **Platform-executed:** Git integration on Linux only; no product execution yet.
+- **Platform-executed:** Linux web/site/native builds, headless example-mode captures, 1080p film render. Full suites and other OS execution still pending.
 - **Live-qualified:** none; no inference or account probing performed.
 
 ## Final acceptance
@@ -127,3 +127,38 @@ Replaced the seven translucent layers and packet dots with one deterministic fiv
 History compared each window to the final record of any window, so repeated multi-pool polls appended unchanged data. It also assigned the poll timestamp to stale observations. Now comparison is per pool/window, only fresh evidence is recorded, and timestamps come from the observation. Persistence atomically rewrites the bounded 6,000-record set with Unix mode 0600; loading is byte-bounded. Added regression tests (not yet executed). Moved platform state-directory resolution into lai-platform and reused it from the kit and desktop; a missing home/state directory now disables persistence rather than writing into the working directory.
 
 Native cost view and Settings price editor now consume costs.read/setPrices. Linux native build executed before the final history regression additions; final checks remain pending. Fixed the broker worker to exit when its command channel closes while offline. Mini-view unknown values and stale reset copy are corrected; no OS tray is claimed.
+
+### Execution rulings
+
+- The owner's explicit phase-F verification order takes precedence over generic per-task test gates. Builds and visual iterations are recorded separately from tests; no authored regression is claimed as passing before execution.
+- Keep this existing repository review ledger as the integration record rather than starting a parallel status document mid-review. The detailed user brief and ADRs remain the scope authority.
+- One maintained motion renderer replaces separate site and film scene implementations. The film's interactive preview player and unused 3D dependencies are removed; headless rendering is the supported workflow here.
+
+### V009 implementation update: release preparation
+
+Replaced the nonfunctional publish-on-tag pipeline with native five-target artifact
+preparation (ADR-007). Correct archive names/Windows suffix, exact size budget, built
+SDK, explicitly private preview packs, py3-none wheel ABI, conservative platform tags,
+source/checksum manifest and no unused signing output. Public signing/publication is
+not implemented or claimed. Windows installer now selects one exact bounded ZIP member,
+requires one exact checksum entry, and honors an optional pinned Authenticode signer
+without downgrade. Unsupported Windows ARM64 fails explicitly. Phase F checks pending.
+
+### V015 follow-up: small provider charges
+
+Normalize bounded scientific-notation JSON cost numbers into canonical plain decimal
+strings. Previously a real charge such as 1e-7 silently became unknown. Negative and
+oversized expansions remain rejected. Regression cases authored; execution deferred
+to Phase F with the rest of the checks.
+
+### V1-018 (P1): bounded, race-resistant grant descriptor reads
+
+Rust facade/control, TypeScript and Python validated a pathname then read the file
+again without a hard read bound. Python also assumed the JSON root was an object.
+Rust now shares `lai-platform::read_private_file`; SDK readers check the opened
+regular file, owner-only Unix permissions, identity and size, read at most 16 KiB
+plus one byte, and close handles on every path. Unix opens reject links and avoid
+blocking on swapped FIFOs. Windows checks regular-file identity/reparse semantics;
+ACL ownership is not claimed. Helper resolution also checks Unix execute permission
+and never ignores an invalid Rust environment override. Regression cases authored;
+Phase F execution pending.
