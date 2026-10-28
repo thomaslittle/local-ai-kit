@@ -8,6 +8,15 @@ the platform wheel that contains `_bin/`. During development set `LAI_HELPER_PAT
 to an absolute executable. No import downloads a replacement. Rust can embed the
 runtime when allowed and no helper exists; this is reported as `in_process`.
 
+## Packaged Electron cannot start the helper
+
+Set your packager's `asarUnpack` to include
+`node_modules/@local-ai-kit/cli-*/bin/**`. Electron cannot `spawn` a native binary
+through its virtual ASAR filesystem. The SDK selects the physical
+`.asar.unpacked` sibling and reports `HELPER_NOT_UNPACKED` if it is missing.
+Keep SDK/runtime access in the main process and use scoped IPC for the renderer.
+See [Electron’s ASAR limitations](https://www.electronjs.org/docs/latest/tutorial/asar-archives).
+
 ## The helper path is rejected
 
 `INVALID_EXECUTABLE` (or Rust's invalid request) means the explicit helper must be
@@ -77,3 +86,20 @@ OS/architecture, OriginLM source commit/package version, active mode, error code
 reproduction with synthetic data, and whether the issue is fixture-only or actually
 platform-executed. Exclude tokens, pairing codes, account identifiers, prompts and
 workspace contents. Report security vulnerabilities through [SECURITY.md](../../SECURITY.md).
+
+
+## Redirected state and uninstall
+
+The helper honors `LOCAL_AI_KIT_STATE_DIR`, otherwise the platform state directory:
+`XDG_STATE_HOME/local-ai-kit` (or `~/.local/state/local-ai-kit`) on Linux,
+`~/Library/Application Support/local-ai-kit` on macOS, and
+`LOCALAPPDATA/local-ai-kit` on Windows. Node/Python child transports preserve these
+standard directory variables. Pass provider-specific environment additions explicitly.
+
+The Unix service remover accepts `LAI_DATA_DIR` for an explicitly chosen data
+location; PowerShell accepts `-DataDir`. Ordinary removal keeps runtime data.
+`--purge`/`-Purge` removes the selected runtime and service state directories, and
+refuses a filesystem-root or home-directory target. Browser registrations for
+`com.local_ai_kit.host` are removed. Prepared native-host payload folders outside
+those installation/state roots remain project files; remove a known owned folder
+explicitly rather than deleting unrelated workspace contents.

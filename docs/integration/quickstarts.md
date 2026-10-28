@@ -119,7 +119,9 @@ async fn ai_snapshot() -> Result<local_ai_kit::Snapshot, String> {
 ```
 
 This is an integration into an existing Tauri app, not a complete generated Tauri
-scaffold. Keep executable paths, arbitrary RPC and grant construction out of renderer
+scaffold. Install [Tauri’s OS prerequisites](https://v2.tauri.app/start/prerequisites/)
+first. The shared Rust call pattern is executed here; a separate Tauri command-build
+attempt on this Linux host is blocked by missing GTK/WebKit development packages. Keep executable paths, arbitrary RPC and grant construction out of renderer
 input. For repeated use, retain the owned client in host state and close it on exit.
 
 ## Electron
@@ -128,7 +130,9 @@ Install the same local tarballs in your existing Electron app. Run the Node exam
 from a trusted main-process Connect handler after `app.whenReady()`. Expose only a
 narrow snapshot command through preload; keep context isolation enabled. Include
 `node_modules/@local-ai-kit/cli-*/bin/**` in the packager's `asarUnpack`. The helper must
-be a real executable outside the asar archive. Close the client when its owner exits.
+be a real executable outside the asar archive. The SDK resolves Electron’s
+`.asar.unpacked` path; `HELPER_NOT_UNPACKED` means the binary was not unpacked.
+Close the client when its owner exits.
 Do not run a Node helper transport in the renderer.
 
 ## GPUI

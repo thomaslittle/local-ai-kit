@@ -1,8 +1,10 @@
 # OriginLM v1 principal review
 
-Status: **in progress**, 2026-10-28. This is an integration review, not a release
-qualification. Findings remain open until a concrete change and verification
-result are recorded. No live account use is authorized by this review.
+Status: **local qualification passes; latest hosted CI pending**, 2026-10-28.
+The current [ship-readiness report](V1-SHIP-READINESS.md) and
+[verification record](V1-VERIFICATION.json) supersede investigation-time
+“pending” notes below. This is a source-preview integration review, not public
+release or live-provider qualification. No live account use is authorized.
 
 ## Architecture map
 
@@ -273,7 +275,7 @@ are no longer repeatedly renamed. Focused builds pass; fixture execution is pend
 ### V1-030 (P1): fresh review — Python broker environment and price serialization
 
 The fresh reviewer identified that Python auto startup applied caller env/cwd only
-to its bridge, not the private broker that performs discovery. It also found that
+to its bridge, not the private broker that performs discovery. It also raised
 a possible writer/reader size mismatch. The final test established that the existing
 64 KiB request limit already rejects such a table before saving; the additional
 128 KiB serialized-write guard preserves the reader boundary if request limits evolve. Implemented one validated process environment
@@ -317,3 +319,73 @@ socket path. Unix `sun_path` limits are smaller than normal filesystem paths.
 Node, Python and Rust now use a short `/tmp` endpoint when their normal temporary
 path exceeds 100 bytes; owner-only socket permissions and per-connection auth remain.
 The same long-home artifact consumers are the regression evidence. No inference.
+
+### V1-036 (P2): final responsive and accessibility qualification
+
+The rendered sweep found weak form boundaries, a collapsed mini-view image caused
+by generic placeholder CSS, and a narrow usage grid. Corrected the shared input
+contrast, restored the real image's intrinsic layout, made the usage grid shrink,
+and gave the sidebar trigger a 44px target. The selector test host now explicitly
+opens its intended route after Overview became the product default. No design
+finding is suppressed by replacing a required check.
+
+### V1-037 (P2): hero separation was mostly time-driven
+
+Scrolling now owns the full collapsed-to-exploded range, spring-damped in both
+directions. The camera intro is independent. A headless software-WebGL regression
+checks separation and reversal; reduced-motion and no-script cases retain the
+static scene and native layer disclosure. Both web apps share a 40,820-byte WOFF2
+asset converted losslessly from the licensed variable font, reducing the mobile
+critical path without changing glyphs or axes. Hardware frame-rate claims remain
+unqualified. Video work stopped at Thomas's direction; existing outputs are retained.
+
+### V1-038 (P2): independent finish review
+
+The first finish pass requested settled captures; waiting for lazy chart resolution
+and CSS-mask SVG decode corrected both capture artifacts. The scored pass then
+identified four changes: enlarge/lower the collapsed hero, repeat static layer names
+as readable HTML, show the native cost range and observation order, and replace a
+generic integration heading with the actual import/protocol promise. Implemented
+all four. Site framing is opt-in to the hero; existing media outputs are unchanged.
+Native chart geometry uses finite f64 display values while money remains exact in
+the contract. The independent scoring check confirms all four resolved, none partial or open.
+Builds and focused checks pass.
+
+### V1-039 (P2): CI used moving runner labels and macOS never acquired a runner
+
+GitHub cancelled the macOS ARM-labelled job before any step ran, reporting hosted
+runner capacity constraints. Pin the full matrix to supported Ubuntu 24.04,
+Windows 2025 and macOS 15 Intel images; retain both Mac architectures in artifact
+preparation. The dependency audit records the official catalog and failed-job link.
+This is an environment correction, not a fabricated test pass.
+
+### V1-040 (P2): uninstall and helper environments drifted from native paths
+
+The service removers still targeted the legacy native-host filename and missed
+XDG/macOS runtime data directories; Windows also registers the current host in
+HKCU. Removal now uses the canonical host name, configured XDG roots, macOS
+Application Support, and Windows runtime data override. Ordinary removal preserves
+data; explicit purge rejects a root/home alias before deleting anything. Windows
+removal has a filesystem fixture that stubs task/registry/other external operations.
+Node/Python children now preserve standard OS state/config variables as well as
+the toolkit's explicit state override. Four Unix removal regressions pass (the
+canonical-name cases failed before the fix), all 88 TS SDK tests and 40 Python
+tests pass; the Windows fixture awaits its actual Windows CI execution.
+
+### V1-041 (P2): the app shell nested a main landmark
+
+The generated SidebarInset already renders `main`; its inner page wrapper also
+used `main`. Keep the primitive's landmark and use a neutral inner layout wrapper.
+The existing route accessibility checks now assert that no nested main exists.
+This changes semantics without changing layout or introducing another primitive.
+
+### V1-042 (P1): Electron ASAR packages could not start their unpacked helper
+
+A real headless Electron ASAR consumer reproduced `spawn ENOTDIR`: filesystem
+checks accepted a virtual archive path even though native spawn cannot use it.
+The Node SDK now selects the physical `.asar.unpacked` helper in Electron and
+reports `HELPER_NOT_UNPACKED` when the packager omitted it. Ordinary Node resolution
+is unchanged. All helper launch sites normalize synchronous OS exceptions; invalid
+NUL-containing executable paths fail with a safe typed error. Both regressions
+failed before the fix; all 90 SDK tests pass. The final qualification record covers
+the packed-artifact Electron run separately from fixtures and other platforms.

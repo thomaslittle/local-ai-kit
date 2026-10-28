@@ -13,10 +13,9 @@ this focused follow-up; no account credentials were inspected.
 | ratatui / lru | ratatui 0.29 pins vulnerable lru 0.12; directly selecting lru 0.16.3 was rejected by Cargo. Adopt stable ratatui 0.30.2 and its compatible lru 0.18.5, with crossterm 0.29. Enable only the used crossterm backend. [June 19 release](https://github.com/ratatui/ratatui/releases/tag/ratatui-v0.30.2), [upstream lru fix](https://github.com/jeromefroe/lru-rs/pull/224). Workspace MSRV becomes 1.88 to reflect this dependency; the pinned compiler is newer. |
 | GPUI Kit | Keep 0.8.1, latest stable in the official registry and [October 26 release](https://github.com/longbridge/gpui-kit/releases/tag/v0.8.1). The October 25 audit predates its introduction; this records the missing review. |
 
-No fork patches or Git-only snapshots were adopted. These are **implemented
-lockfile/manifest updates**, not yet fixture-tested or platform-qualified.
-The final verification pass must exercise the terminal UI, native transport/TLS
-fixtures, JS tooling and clean Python packaging. No live provider operations
+No fork patches or Git-only snapshots were adopted. These were implemented before final verification. The complete local workspace
+tests, all-feature clippy, native transport/TLS fixtures, JS tooling and clean
+Python packaging now pass; see the [qualification report](review/V1-SHIP-READINESS.md). No live provider operations
 are needed. Windows and macOS results require their actual CI executions.
 
 ## Updater SemVer reuse
@@ -27,7 +26,7 @@ dependency of lai-update; no new version or fork patch. Official
 [Version precedence API](https://docs.rs/semver/1.0.28/semver/struct.Version.html#method.cmp_precedence)
 support numeric prerelease ordering and build-metadata-independent precedence.
 This removes the updater's incorrect string comparison and rejects invalid staging
-version syntax. Focused build and signed fixture tests are pending final verification.
+version syntax. Focused builds and signed updater fixture tests pass in the final local workspace matrix.
 
 
 ## CI runner baseline, 2026-10-28
@@ -42,3 +41,12 @@ This stabilizes the OS/architecture baseline rather than depending on a moving
 This pin does not qualify unsupported OS versions or all architectures.
 
 Evidence: [cancelled unacquired job](https://github.com/thomaslittle/local-ai-kit/actions/runs/40684248696/job/122802732310).
+
+## Electron packaging qualification tools
+
+Electron 45.1.0 and `@electron/asar` 4.3.1 were resolved from their official npm
+packages for the Linux headless ASAR consumer smoke. They live only in ignored
+verification tooling, not the SDK's dependency graph. The adopted path behavior
+follows [Electron's ASAR documentation](https://www.electronjs.org/docs/latest/tutorial/asar-archives):
+`spawn` needs the physical unpacked executable. This qualifies Linux packaging;
+macOS/Windows Electron applications and signing remain unexecuted here.
