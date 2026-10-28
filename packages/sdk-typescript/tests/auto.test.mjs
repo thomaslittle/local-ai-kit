@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chmodSync, readFileSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import {chmodSync, cpSync, mkdirSync, readFileSync, realpathSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {openSharedBrokerTransport} from '../node/index.mjs';
 import {readGrant} from '../node/grant.mjs';
 import {defaultAddress, defaultTokenFile, platformPackage, resolveHelper, openAutoTransport} from '../node/auto.mjs';
@@ -135,7 +136,7 @@ test('private broker receives only the approved environment and caller cwd', {sk
   writeFileSync(binary, '#!/bin/sh\nprintf "%s|%s|%s" "$PWD" "$EXPLICIT_VALUE" "$UNRELATED_SYNTHETIC_SECRET" > "$LAI_TEST_OUTPUT"\nprintf "invalid\\n"\nwhile read -r line; do :; done\n');
   try {
     await assert.rejects(openAutoTransport({executable: binary, token: '', cwd: directory, env: {LAI_TEST_OUTPUT: observed, EXPLICIT_VALUE: 'allowed'}}), /PROTOCOL_INVALID/);
-    assert.equal(readFileSync(observed, 'utf8'), `${directory}|allowed|`);
+    assert.equal(readFileSync(observed, 'utf8'), `${realpathSync(directory)}|allowed|`);
   } finally {
     if (previous === undefined) delete process.env.UNRELATED_SYNTHETIC_SECRET;
     else process.env.UNRELATED_SYNTHETIC_SECRET = previous;
@@ -168,4 +169,32 @@ import('node:readline').then(({createInterface}) => {
     await assert.rejects(openSharedBrokerTransport({executable:binary,address:'/fixture/shared',tokenFile:file,env:{START_MARKER:marker}}), error=>error.code==='LOCAL_ACCESS_DENIED');
     assert.throws(()=>readFileSync(marker), {code:'ENOENT'});
   } finally { rmSync(directory,{recursive:true,force:true}); }
+});
+
+test('Electron packaged helpers resolve to the real unpacked tree',async()=>{
+ const directory=mkdtempSync(join(tmpdir(),'lai-asar-'));
+ const name=platformPackage();if(!name){rmSync(directory,{recursive:true,force:true});return;}
+ const modules=join(directory,'app.asar','node_modules');
+ const sdk=join(modules,'@local-ai-kit','sdk');mkdirSync(sdk,{recursive:true});
+ cpSync(fileURLToPath(new URL('../node',import.meta.url)),join(sdk,'node'),{recursive:true});
+ cpSync(fileURLToPath(new URL('../dist',import.meta.url)),join(sdk,'dist'),{recursive:true});
+ writeFileSync(join(sdk,'package.json'),JSON.stringify({type:'module'}));
+ const platform=join(modules,name);mkdirSync(platform,{recursive:true});
+ const binary=process.platform==='win32'?'local-ai-kit.exe':'local-ai-kit';
+ writeFileSync(join(platform,'package.json'),JSON.stringify({name,bin:{'local-ai-kit':`bin/${binary}`}}));
+ const unpacked=join(directory,'app.asar.unpacked','node_modules',name,'bin',binary);
+ mkdirSync(join(unpacked,'..'),{recursive:true});writeFileSync(unpacked,'fixture');chmodSync(unpacked,0o755);
+ const descriptor=Object.getOwnPropertyDescriptor(process.versions,'electron');
+ const previous=process.env.LAI_HELPER_PATH;delete process.env.LAI_HELPER_PATH;
+ try {
+  const isolated=await import(pathToFileURL(join(sdk,'node','auto.mjs')).href);
+  assert.throws(()=>isolated.resolveHelper(),/RUNTIME_MISSING/);
+  Object.defineProperty(process.versions,'electron',{value:'fixture',configurable:true});
+  assert.equal(isolated.resolveHelper(),unpacked);
+  rmSync(unpacked);assert.throws(()=>isolated.resolveHelper(),/HELPER_NOT_UNPACKED/);
+ }finally{
+  if(descriptor)Object.defineProperty(process.versions,'electron',descriptor);else delete process.versions.electron;
+  if(previous===undefined)delete process.env.LAI_HELPER_PATH;else process.env.LAI_HELPER_PATH=previous;
+  rmSync(directory,{recursive:true,force:true});
+ }
 });

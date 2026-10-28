@@ -1,5 +1,4 @@
 /** Dependency-first transport. Nothing spawns or connects until this is called. */
-import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {accessSync, constants, readFileSync, statSync} from 'node:fs';
 import {homedir} from 'node:os';
@@ -8,7 +7,7 @@ import {tmpdir} from 'node:os';
 import {LocalAIError} from '../dist/errors.js';
 import {openBrokerTransport} from './index.mjs';
 import {readGrant} from './grant.mjs';
-import {processOptions} from './process.mjs';
+import {processOptions, spawnHelper} from './process.mjs';
 
 const fail = code => new LocalAIError(code);
 const require = createRequire(import.meta.url);
@@ -45,8 +44,16 @@ function fromPlatformPackage(platform, arch) {
     const relative = typeof manifest?.bin === 'string' ? manifest.bin : manifest?.bin?.['local-ai-kit'];
     if (typeof relative !== 'string' || !relative || relative.includes('\0')) return undefined;
     const binary = join(manifestPath, '..', relative);
+    // Electron's spawn cannot execute inside a virtual ASAR filesystem, even
+    // when fs.access succeeds. asarUnpack places the executable beside it.
+    if (process.versions.electron && /\.asar[/\\]/.test(binary)) {
+      const unpacked = binary.replace(/\.asar([/\\])/, '.asar.unpacked$1');
+      if (!usable(unpacked)) throw fail('HELPER_NOT_UNPACKED');
+      return unpacked;
+    }
     return usable(binary) ? binary : undefined;
-  } catch {
+  } catch (error) {
+    if (error instanceof LocalAIError) throw error;
     return undefined;
   }
 }
@@ -107,7 +114,7 @@ function probeArgs(options) {
 /** Start a parent-owned broker and connect to it through the stdio bridge. */
 async function openPrivateTransport(helper, options) {
   const address = uniqueAddress();
-  const child = spawn(helper, probeArgs({...options, address}), {
+  const child = spawnHelper(helper, probeArgs({...options, address}), {
     ...processOptions(options),
     shell: false,
     windowsHide: true,

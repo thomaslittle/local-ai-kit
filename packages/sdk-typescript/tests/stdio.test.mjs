@@ -67,3 +67,7 @@ test('standard OS data directories survive the minimal child environment',async(
  try{transport=await open();assert.deepEqual(await transport.request('test.directories'),expected);}
  finally{await transport?.close();for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}}
 });
+
+test('invalid native executable bytes produce a safe typed startup error',async()=>{
+ await assert.rejects(open({executable:process.execPath+'\0SHOULD_NOT_ESCAPE'}),error=>error.name==='LocalAIError'&&error.code==='INVALID_EXECUTABLE'&&!error.message.includes('SHOULD_NOT_ESCAPE'));
+});

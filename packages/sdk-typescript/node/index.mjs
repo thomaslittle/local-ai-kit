@@ -1,8 +1,7 @@
 /** Node-only transport. Import does not spawn, scan, read credentials, or connect. */
-import { spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
 import {readGrant} from './grant.mjs';
-import {processOptions} from './process.mjs';
+import {processOptions, spawnHelper} from './process.mjs';
 import { LocalAIError, remoteError, requireMethod } from '../dist/errors.js';
 const failCode=code=>new LocalAIError(code);
 const bounded=(v,min,max)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw failCode('INVALID_LIMIT');return v;};
@@ -24,14 +23,14 @@ class EventQueue {
 }
 /** Explicitly launch one approved native helper, without shell interpolation. */
 export async function openStdioTransport(options){
- if(typeof options.executable!=='string'||!isAbsolute(options.executable)||/\.(cmd|bat|ps1)$/i.test(options.executable))throw failCode('INVALID_EXECUTABLE');
+ if(typeof options.executable!=='string'||!isAbsolute(options.executable)||options.executable.includes('\0')||/\.(cmd|bat|ps1)$/i.test(options.executable))throw failCode('INVALID_EXECUTABLE');
  const args=options.args??[];
  if(!Array.isArray(args)||args.length>128||args.some(a=>typeof a!=='string'||a.includes('\0')||a.length>32768))throw failCode('INVALID_REQUEST');
  const max=bounded(options.maxFrameBytes??8388608,1024,16777216);
  const maxPending=bounded(options.maxPendingRequests??64,1,1024);
  const maxEvents=bounded(options.maxQueuedEvents??256,1,4096);
  const timeoutMs=bounded(options.timeoutMs??30000,1,3600000);
- const child=spawn(options.executable,[...args],{...processOptions(options),shell:false,windowsHide:true,stdio:['pipe','pipe','pipe']});
+ const child=spawnHelper(options.executable,[...args],{...processOptions(options),shell:false,windowsHide:true,stdio:['pipe','pipe','pipe']});
  const pending=new Map(),subscriptions=new Map();let sequence=0,buffer=Buffer.alloc(0),ended=false,closing;
  let resolveExit;const exited=new Promise(resolve=>{resolveExit=resolve;});
  function fail(error){
@@ -148,7 +147,7 @@ function validTokenFile(value,address){
  * openBrokerTransport and never starts a separate full scanner.
  */
 export async function openSharedBrokerTransport(options){
- if(typeof options.executable!=='string'||!isAbsolute(options.executable)||/\.(cmd|bat|ps1)$/i.test(options.executable))throw failCode('INVALID_EXECUTABLE');
+ if(typeof options.executable!=='string'||!isAbsolute(options.executable)||options.executable.includes('\0')||/\.(cmd|bat|ps1)$/i.test(options.executable))throw failCode('INVALID_EXECUTABLE');
  if(typeof options.address!=='string'||!options.address||options.address.length>200||options.address.includes('\0'))throw failCode('INVALID_REQUEST');
  if(typeof options.tokenFile!=='string'||!isAbsolute(options.tokenFile)||options.tokenFile.includes('\0'))throw failCode('INVALID_REQUEST');
  const startArgs=options.startArgs??[];
@@ -166,7 +165,7 @@ export async function openSharedBrokerTransport(options){
  };
  const existing=await attempt();
  if(existing)return existing;
- const child=spawn(options.executable,['serve','--ipc',options.address,'--independent','--token-file',options.tokenFile,...startArgs],{
+ const child=spawnHelper(options.executable,['serve','--ipc',options.address,'--independent','--token-file',options.tokenFile,...startArgs],{
   ...processConfig,shell:false,windowsHide:true,stdio:['pipe','pipe','pipe'],
  });
  child.stderr.on('data',()=>{});

@@ -56,11 +56,11 @@ class WindowsUninstall(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='originlm-uninstall-') as directory:
             base=pathlib.Path(directory);script=base/'fixture.ps1'
             script.write_text(r'''$ErrorActionPreference = 'Stop'
-$root = $env:ORIGINLM_FIXTURE_ROOT
-$install = Join-Path $root 'bin'
-$state = Join-Path $root 'state'
-$data = Join-Path $root 'runtime-data'
-$log = Join-Path $root 'external-operations.txt'
+$fixtureRoot = $env:ORIGINLM_FIXTURE_ROOT
+$install = Join-Path $fixtureRoot 'bin'
+$state = Join-Path $fixtureRoot 'state'
+$data = Join-Path $fixtureRoot 'runtime-data'
+$log = Join-Path $fixtureRoot 'external-operations.txt'
 New-Item -ItemType Directory -Force $install,$state,$data | Out-Null
 Set-Content (Join-Path $install 'local-ai-kit.exe') 'fixture'
 Set-Content (Join-Path $state 'keep.txt') 'fixture'
@@ -70,7 +70,7 @@ function Unregister-ScheduledTask { [CmdletBinding(SupportsShouldProcess)] param
 function Remove-Item {
   [CmdletBinding()] param([Parameter(Position=0)][string[]]$Path,[switch]$Force,[switch]$Recurse)
   foreach ($item in $Path) {
-    if ($item.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) {
+    if ($item.StartsWith($fixtureRoot, [StringComparison]::OrdinalIgnoreCase)) {
       Microsoft.PowerShell.Management\Remove-Item -LiteralPath $item -Force:$Force -Recurse:$Recurse -ErrorAction SilentlyContinue
     } else { Add-Content -LiteralPath $log -Value $item }
   }

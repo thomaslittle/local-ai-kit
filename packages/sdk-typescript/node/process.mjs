@@ -1,3 +1,4 @@
+import {spawn} from 'node:child_process';
 import {isAbsolute} from 'node:path';
 import {tmpdir} from 'node:os';
 import {LocalAIError} from '../dist/errors.js';
@@ -15,4 +16,10 @@ export function processOptions({cwd, env: overrides} = {}) {
     env[key] = value;
   }
   return {cwd: cwd ?? tmpdir(), env};
+}
+
+/** Normalize synchronous OS startup failures without exposing native details. */
+export function spawnHelper(executable, args, options) {
+  try { return spawn(executable, args, options); }
+  catch { throw new LocalAIError('RUNTIME_MISSING'); }
 }
