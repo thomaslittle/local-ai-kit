@@ -211,3 +211,12 @@ inventory scope and rejects mixed inventory/session queries. Pairing-code reques
 honor cancellation and a bounded deadline as RPCs already did. Regression fixtures
 are authored; SDK/transport builds passed before the final pairing deadline change.
 The full verification pass remains pending.
+
+### V1-024 (P1): live store could spin and omit its replay cursor
+
+Paginated catalog reads omitted cursor, health and issue evidence. The live store
+could immediately resubscribe after clean EOF/repeated gaps, and an old cleanup
+closure could abort a newer connection. Implemented: preserve all snapshot
+header fields, back off replay/reconnect attempts, bind cleanup to its own controller
+and clear pending coalesced reads on disconnect. The SDK build passes; regression
+fixtures are authored and await the final verification pass.

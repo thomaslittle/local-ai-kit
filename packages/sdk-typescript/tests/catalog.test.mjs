@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createLocalAI} from '../dist/index.js';
 import {readCatalogSnapshot} from '../dist/catalog.js';
-const header={protocolVersion:'1.0',revision:'r',observedAt:'2026-09-24T00:00:00Z',mode:'live',providers:[],installations:[],profiles:[],accounts:[],connections:[],routes:[{id:'route'}],quotaPools:[],diagnostics:[]};
+const header={protocolVersion:'1.0',revision:'r',observedAt:'2026-09-24T00:00:00Z',cursor:'4',health:{},issues:[],mode:'live',providers:[],installations:[],profiles:[],accounts:[],connections:[],routes:[{id:'route'}],quotaPools:[],diagnostics:[]};
 async function client(mode='normal'){
  let calls=[];
  const ai=await createLocalAI({transport:{async request(method,p){calls.push({method,p});
@@ -14,6 +14,8 @@ async function client(mode='normal'){
 test('construction never loads a catalog and paginated reads preserve all models',async()=>{
  const{ai,calls}=await client();assert.equal(calls.length,1);
  const snapshot=await readCatalogSnapshot(ai);assert.deepEqual(snapshot.models.map(m=>m.id),['m1','m2']);
+ assert.equal(snapshot.cursor,'4');
+ for(const field of ['cursor','health','issues']) assert.ok(calls.find(c=>c.method==='snapshot.get').p.fields.includes(field));
  assert.ok(calls.filter(c=>c.method==='snapshot.get').every(c=>!c.p.fields.includes('models')));
 });
 test('changed catalog is rejected rather than combining different account snapshots',async()=>{
