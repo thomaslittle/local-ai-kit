@@ -4318,6 +4318,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4744e383959f0db86ede514b809b1c53251889093803c05267acc7d4e7030d70"
 
 [[package]]
+name = "local-ai-kit"
+version = "0.1.0-alpha.20"
+dependencies = [
+ "lai-contracts",
+ "lai-control",
+ "lai-kit",
+ "lai-transports",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
