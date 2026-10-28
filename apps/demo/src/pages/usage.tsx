@@ -58,7 +58,7 @@ function WindowReading({ window }: { window: UsageWindow }) {
 
 function PoolCard({ pool, synthetic }: { pool: QuotaPool; synthetic: boolean }) {
   return (
-    <Card data-pool={pool.id} className="surface-interactive gap-0 bg-card/70 p-6 backdrop-blur-sm [--card-spacing:--spacing(0)]">
+    <Card data-pool={pool.id} className="gap-0 bg-card p-6 [--card-spacing:--spacing(0)]">
       <div className="mb-5 flex items-start justify-between gap-3">
         <h2 className="text-lg font-semibold tracking-tight">{pool.windows[0]?.label ?? pool.id}</h2>
         <Badge variant={pool.sharing === 'verified' ? 'success' : 'outline'}>{pool.sharing === 'verified' ? 'Verified sharing' : 'Sharing unknown'}</Badge>
@@ -78,7 +78,7 @@ function PoolCard({ pool, synthetic }: { pool: QuotaPool; synthetic: boolean }) 
 
 function Stat({ label, value, note }: { label: string; value: string; note: string }) {
   return (
-    <Card className="gap-1 bg-card/70 p-5 backdrop-blur-sm [--card-spacing:--spacing(0)]">
+    <Card className="gap-1 bg-card p-5 [--card-spacing:--spacing(0)]">
       <span className="text-3xl font-semibold tracking-tight tabular-nums">{value}</span>
       <span className="text-sm font-medium">{label}</span>
       <small className="text-xs text-muted-foreground">{note}</small>

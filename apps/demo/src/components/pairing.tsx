@@ -51,7 +51,6 @@ export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalA
 
   return (
     <main className="pairing-screen">
-      <div aria-hidden="true" className="ambient" />
       <Card className="pairing-card w-full max-w-lg gap-6 bg-card/80 py-7 backdrop-blur-xl [--card-spacing:--spacing(7)]">
         <CardHeader>
           <span className="mb-2 grid size-11 place-items-center rounded-xl bg-primary/10 text-brand-foreground ring-1 ring-primary/25">

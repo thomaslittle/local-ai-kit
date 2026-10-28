@@ -1,7 +1,8 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: OriginLM graphite and amber · display/body: Red Hat Display · signature: provider allowance evidence and observed costs · scope: app · sweep: pending v1 verification · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E3 S5 R4 V3 · weakest: E, existing nested surfaces and decoration; remove outer cards and ambient animation so evidence carries the screen */
 @import "../../../brand/tokens.css";
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/outfit";
 @plugin "@tailwindcss/typography";
 
 @font-face {
@@ -79,19 +80,9 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  --animate-float: float 10s ease-in-out infinite;
-  --animate-page-enter: page-enter 300ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-shimmer: shimmer 2.2s linear infinite;
   --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
-  @keyframes page-enter {
-    from { transform: translateY(0.5rem); }
-    to { transform: translateY(0); }
-  }
-  @keyframes float {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-    50% { transform: translate3d(2%, -3%, 0) scale(1.06); }
-  }
   @keyframes shimmer {
     from { background-position: 200% 0; }
     to { background-position: -200% 0; }
@@ -151,8 +142,6 @@
   --warning: var(--originlm-light-warning);
   --info: #4a6b8a;
   --brand-foreground: #9c6400;
-  --glow-a: rgb(235 163 26 / 0.22);
-  --glow-b: rgb(85 122 98 / 0.12);
 }
 
 .dark {
@@ -202,8 +191,6 @@
   --warning: var(--originlm-dark-warning);
   --info: #a9b29f;
   --brand-foreground: var(--originlm-amber);
-  --glow-a: rgb(235 163 26 / 0.20);
-  --glow-b: rgb(169 178 159 / 0.12);
 }
 
 @layer base {
@@ -238,61 +225,8 @@
 }
 
 @layer components {
-  /* Ambient backdrop: two soft glows behind the shell. */
-  .ambient {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .ambient::before,
-  .ambient::after {
-    content: "";
-    position: absolute;
-    width: 55vmax;
-    height: 55vmax;
-    border-radius: 9999px;
-    filter: blur(90px);
-    will-change: transform;
-  }
-  .ambient::before {
-    top: -32vmax;
-    right: -14vmax;
-    background: radial-gradient(closest-side, var(--glow-a), transparent);
-    @apply motion-safe:animate-float;
-  }
-  .ambient::after {
-    bottom: -34vmax;
-    left: 6vmax;
-    background: radial-gradient(closest-side, var(--glow-b), transparent);
-    animation-delay: -5s;
-    @apply motion-safe:animate-float;
-  }
-  .grid-fade {
-    background-image:
-      linear-gradient(to right, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
-    background-size: 2.25rem 2.25rem;
-    mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, #000 30%, transparent 75%);
-  }
-  .text-gradient {
-    background-image: linear-gradient(120deg, var(--foreground) 30%, color-mix(in oklch, var(--primary) 75%, var(--foreground)));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
   .surface {
-    @apply rounded-2xl border bg-card/80 backdrop-blur-sm;
-    box-shadow:
-      0 1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent) inset,
-      0 10px 30px -14px color-mix(in oklch, black 55%, transparent);
-  }
-  .surface-interactive {
-    @apply transition-[border-color,background-color,box-shadow] duration-200;
-  }
-  .surface-interactive:hover {
-    border-color: color-mix(in oklch, var(--primary) 40%, var(--border));
+    @apply rounded-xl border bg-card;
   }
   .shimmer {
     background-image: linear-gradient(110deg, transparent 30%, color-mix(in oklch, var(--foreground) 14%, transparent) 50%, transparent 70%);

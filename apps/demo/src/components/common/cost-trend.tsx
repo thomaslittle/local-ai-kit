@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { useActions, useDemo } from '@/state/context';
 
-const money = (value: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 6 }).format(value);
+const money = (value: number) => value !== 0 && Math.abs(value) < 0.000001 ? `$${value.toExponential(2)}` : new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 6 }).format(value);
 
 /** Bars preserve missing observations instead of drawing an invented continuous spend curve. */
 export function CostTrend() {

@@ -18,8 +18,12 @@ export default function DiagnosticsPage() {
         <p className="my-3 text-sm text-muted-foreground">Node.js, using a locally packed SDK and helper bundle.</p>
         <CodeBlock label="TypeScript">{`import { createLocalAI } from "@local-ai-kit/sdk";
 const ai = await createLocalAI();
-const snapshot = await ai.snapshot.get();
-await ai.close();`}</CodeBlock>
+try {
+  const snapshot = await ai.snapshot.get();
+  console.log(snapshot.revision);
+} finally {
+  await ai.close();
+}`}</CodeBlock>
       </section>
       <section data-capture="transport" className="border-y py-5">
         <h2 className="text-xl font-semibold">One public protocol</h2>
@@ -52,8 +56,9 @@ const ai = await createLocalAI({
 });
 
 const selection = ${JSON.stringify(selection, null, 2)};
-// Request grants and validate before starting a session.
-// No turn is started merely by creating or selecting a client.`}</CodeBlock>
+// Request host approval and validate before starting a session.
+// No turn starts merely by selecting a client.
+await ai.close();`}</CodeBlock>
       </Section>
       <Section title="Known preview boundaries" description="These are implementation limitations, not hidden successful fallbacks.">
         <p className="max-w-3xl text-sm text-muted-foreground">

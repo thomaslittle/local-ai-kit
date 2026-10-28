@@ -66,7 +66,7 @@ function PageOutlet() {
     );
   }
   return (
-    <div key={pathname} className="motion-safe:animate-page-enter">
+    <div key={pathname}>
       <Suspense fallback={<PageSkeleton />}>
         <Outlet />
       </Suspense>
@@ -110,7 +110,6 @@ export function AppShell() {
     <CSPProvider disableStyleElements>
       <TooltipProvider delay={200}>
       <HeadContent />
-      <div aria-hidden="true" className="ambient" />
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="min-w-0 bg-transparent">

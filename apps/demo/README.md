@@ -31,7 +31,7 @@ face. Sources and licences: `src/assets/brand/README.md` and
 | --- | --- |
 | UI | React 19 with the React Compiler (no manual `memo`/`useMemo` needed) |
 | Build | Vite 8 (Rolldown), TypeScript 7, separate `index.html` / `assets/*` files |
-| Styling | Tailwind CSS v4, shadcn/ui **base-mira** on Base UI, Phosphor icons, Outfit |
+| Styling | Tailwind CSS v4, shadcn/ui **base-mira** on Base UI, Phosphor icons, Red Hat Display |
 | Routing | TanStack Router, real path routes (see below) |
 | State | zustand vanilla store, components subscribe to slices |
 | Charts | shadcn charts on Recharts, lazy-loaded |
