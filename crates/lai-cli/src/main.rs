@@ -3,6 +3,7 @@ mod inventory;
 use inventory::source;
 use lai_service::InventorySource;
 mod broker_cli;
+mod status;
 mod endpoints;
 mod host;
 mod native_profiles;
@@ -19,6 +20,9 @@ Usage:
       [--os-notifications (requires an os-notifications build)]
   local-ai-kit connect --ipc LOCAL_ADDRESS
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
+  local-ai-kit status [--json] [--ipc ADDRESS] [--token-file ABSOLUTE_FILE]
+      Prints the running helper, its providers and connected apps.
+      Exit: 0 running, 3 not running, 4 credential rejected.
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
   local-ai-kit serve --http --port 4499 --assets ABSOLUTE_DIST_DIRECTORY
       [--allow-passive-discovery] [--allow-codex-metadata]
@@ -266,16 +270,19 @@ async fn execute(args: Args) -> Result<()> {
     }
 }
 fn main() -> std::process::ExitCode {
-    let result = (|| {
+    let result = (|| -> lai_contracts::Result<u8> {
         let args = Args::parse(std::env::args_os().skip(1))?;
         match args.action {
             Action::Help => {
                 println!("{HELP}");
-                return Ok(());
+                return Ok(0);
             }
             Action::Version => {
                 println!("local-ai-kit {}", env!("CARGO_PKG_VERSION"));
-                return Ok(());
+                return Ok(0);
+            }
+            Action::Status => {
+                return status::run(args.ipc.clone(), args.token_file.clone(), args.json);
             }
             _ => {}
         }
@@ -288,10 +295,10 @@ fn main() -> std::process::ExitCode {
         let result = runtime.block_on(execute(args));
         // Tokio stdin uses a blocking thread; an idle pipe must not hold shutdown forever.
         runtime.shutdown_timeout(Duration::from_millis(100));
-        result
+        result.map(|_| 0u8)
     })();
     match result {
-        Ok(()) => std::process::ExitCode::SUCCESS,
+        Ok(code) => std::process::ExitCode::from(code),
         Err(error) => {
             eprintln!("{error}");
             std::process::ExitCode::from(2)

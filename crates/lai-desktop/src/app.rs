@@ -212,6 +212,7 @@ pub struct Desktop {
     pub playground_error: Option<String>,
     pub revoke_confirm: Option<String>,
     pub toast: Option<(String, Instant)>,
+    pub mini_view: bool,
     pub broker: BrokerHandle,
     pub executor: ExecHandle,
     pub token_path: PathBuf,
@@ -345,6 +346,7 @@ impl Desktop {
             playground_error: None,
             revoke_confirm: None,
             toast: None,
+            mini_view: false,
             broker,
             executor,
             token_path,
@@ -937,6 +939,11 @@ impl Render for Desktop {
                     entity_keys.update(cx, |this, cx| this.toggle_theme(cx));
                 } else if command && key == "b" {
                     entity_keys.update(cx, |this, cx| this.toggle_sidebar(window, cx));
+                } else if command && event.keystroke.modifiers.shift && key == "m" {
+                    entity_keys.update(cx, |this, cx| {
+                        this.mini_view = !this.mini_view;
+                        cx.notify();
+                    });
                 }
             })
             .child(self.window_title_bar(&theme, entity.clone(), client_decorated))
@@ -998,8 +1005,9 @@ impl Render for Desktop {
                         .child(content.into_any_element()),
                 )
             })
-            .child(self.status_bar(&theme))
-            .children(self.palette_overlay(&theme, entity, window, cx))
+            .child(self.status_bar(&theme, entity.clone()))
+            .children(self.palette_overlay(&theme, entity.clone(), window, cx))
+            .children(self.mini_view_overlay(&theme, entity.clone()))
             .children(self.toast_overlay(&theme))
     }
 }
@@ -1451,7 +1459,7 @@ impl Desktop {
         )
     }
 
-    fn status_bar(&self, theme: &Theme) -> AnyElement {
+    fn status_bar(&self, theme: &Theme, entity: Entity<Self>) -> AnyElement {
         let revision = self
             .snapshot()
             .map(|s| s.revision.chars().take(18).collect::<String>())
@@ -1508,6 +1516,22 @@ impl Desktop {
                     .child(format!("observed {freshness} ago")),
             )
             .child(div().flex_1())
+            .child({
+                div()
+                    .id("mini-view-toggle")
+                    .h_flex()
+                    .gap_1()
+                    .cursor_pointer()
+                    .hover(|style| style.text_color(theme.foreground))
+                    .child(ui::icon(IconName::ChartPie, 11., theme.muted_foreground))
+                    .child("Today")
+                    .on_click(move |_, _, cx| {
+                        entity.update(cx, |this, cx| {
+                            this.mini_view = !this.mini_view;
+                            cx.notify();
+                        });
+                    })
+            })
             .child(
                 div()
                     .h_flex()
@@ -1705,6 +1729,139 @@ impl Desktop {
                 .inset_0()
                 .child(backdrop)
                 .child(panel)
+                .into_any_element(),
+        )
+    }
+
+    fn mini_view_overlay(&self, theme: &Theme, entity: Entity<Self>) -> Option<AnyElement> {
+        if !self.mini_view {
+            return None;
+        }
+        let rows = self
+            .snapshot()
+            .map(crate::data::quota_rows)
+            .unwrap_or_default();
+        let mut seen = std::collections::BTreeSet::new();
+        let rows: Vec<_> = rows
+            .into_iter()
+            .filter(|row| seen.insert(row.pool_id.clone()))
+            .take(4)
+            .collect();
+        let close = entity.clone();
+        let open = entity.clone();
+        Some(
+            div()
+                .absolute()
+                .top(px(52.))
+                .right(px(18.))
+                .w(px(320.))
+                .v_flex()
+                .gap_2()
+                .p_3()
+                .rounded(px(12.))
+                .border_1()
+                .border_color(theme.border)
+                .bg(theme.popover)
+                .shadow_lg()
+                .child(
+                    div()
+                        .h_flex()
+                        .justify_between()
+                        .items_center()
+                        .child(
+                            div()
+                                .text_size(px(12.5))
+                                .font_weight(FontWeight::MEDIUM)
+                                .child("Today"),
+                        )
+                        .child(
+                            div()
+                                .id("mini-close")
+                                .size(px(20.))
+                                .h_flex()
+                                .items_center()
+                                .justify_center()
+                                .rounded(px(6.))
+                                .cursor_pointer()
+                                .text_color(theme.muted_foreground)
+                                .hover(|style| style.bg(theme.secondary_hover))
+                                .child("×")
+                                .on_click(move |_, _, cx| {
+                                    close.update(cx, |this, cx| {
+                                        this.mini_view = false;
+                                        cx.notify();
+                                    });
+                                }),
+                        ),
+                )
+                .children(rows.iter().map(|row| {
+                    let remaining = row.remaining.unwrap_or(0.0);
+                    let reset = ui::format_countdown(row.resets_at.as_deref())
+                        .unwrap_or_else(|| "reset not reported".into());
+                    div()
+                        .h_flex()
+                        .items_center()
+                        .gap_2()
+                        .child(crate::icons::provider_tile(
+                            &row.provider_id,
+                            &row.pool_label,
+                            22.,
+                            theme,
+                        ))
+                        .child(
+                            div()
+                                .v_flex()
+                                .gap(px(1.))
+                                .flex_1()
+                                .min_w(px(0.))
+                                .child(
+                                    div()
+                                        .text_size(px(11.5))
+                                        .font_weight(FontWeight::MEDIUM)
+                                        .truncate()
+                                        .child(row.pool_label.clone()),
+                                )
+                                .child(
+                                    div()
+                                        .text_size(px(9.5))
+                                        .text_color(theme.muted_foreground)
+                                        .child(format!("resets in {reset}")),
+                                ),
+                        )
+                        .child(
+                            div()
+                                .font_family(theme.mono_font_family.clone())
+                                .text_size(px(14.))
+                                .child(format!("{:.0}%", remaining * 100.0)),
+                        )
+                        .into_any_element()
+                }))
+                .when(rows.is_empty(), |this| {
+                    this.child(
+                        div()
+                            .text_size(px(10.5))
+                            .text_color(theme.muted_foreground)
+                            .child("No provider-reported allowance yet."),
+                    )
+                })
+                .child(
+                    Button::new("mini-open-overview")
+                        .secondary()
+                        .label("Open Overview")
+                        .on_click(move |_, _, cx| {
+                            open.update(cx, |this, cx| {
+                                this.set_page(Page::Overview, cx);
+                                this.mini_view = false;
+                                cx.notify();
+                            });
+                        }),
+                )
+                .child(
+                    div()
+                        .text_size(px(9.))
+                        .text_color(theme.muted_foreground)
+                        .child("Optional mini view · Ctrl+Shift+M"),
+                )
                 .into_any_element(),
         )
     }
