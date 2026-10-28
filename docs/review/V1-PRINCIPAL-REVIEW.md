@@ -220,3 +220,10 @@ closure could abort a newer connection. Implemented: preserve all snapshot
 header fields, back off replay/reconnect attempts, bind cleanup to its own controller
 and clear pending coalesced reads on disconnect. The SDK build passes; regression
 fixtures are authored and await the final verification pass.
+
+### V1-025 (P1): resetting sensitive options bypassed host approval
+
+The React option editor asked the host before setting a billing/permission-sensitive
+value but skipped approval when removing the override. Provider defaults can change
+billing or permission too. Apply the same host approval to reset-to-default; preserve
+late-response selection checks. Regression fixture authored; execution pending.
