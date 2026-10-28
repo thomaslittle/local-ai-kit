@@ -1,3 +1,11 @@
+# @local-ai-kit/sdk
+
+```ts
+import {createLocalAI} from '@local-ai-kit/sdk';
+const ai = await createLocalAI(); // shared broker, or a private helper child
+console.log(ai.mode, (await ai.snapshot.get()).revision);
+```
+
 # Local AI Kit TypeScript SDK (`@local-ai-kit/sdk`)
 
 > Alpha. Not yet published to npm; install the tarball from a release bundle or build from source (see [distribution](../../docs/integration/distribution.md)).

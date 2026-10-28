@@ -95,6 +95,9 @@ class _AsyncUsage:
     async def read(self, params: EmptyParams | None = ..., **options: Any) -> List[QuotaPool]: ...
 
 class AsyncClient:
+    mode: str
+    @classmethod
+    async def auto(cls, executable: str | None = None, **options: Any) -> AsyncClient: ...
     handshake: dict[str, Any]
     @property
     def events(self) -> _AsyncEvents: ...
@@ -241,6 +244,9 @@ class _SyncUsage:
 
 class Client:
     handshake: dict[str, Any]
+    mode: str
+    @classmethod
+    def auto(cls, executable: str | None = None, **options: Any) -> Client: ...
     @property
     def events(self) -> _SyncEvents: ...
     @property

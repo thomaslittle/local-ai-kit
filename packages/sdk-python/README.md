@@ -1,3 +1,11 @@
+# local-ai-kit (Python)
+
+```python
+from local_ai_kit import Client
+ai = Client.auto()          # shared broker, or the bundled helper child
+print(ai.mode, ai.snapshot.get({"fields": ["revision"]}))
+```
+
 # Local AI Kit Python SDK (`local-ai-kit-preview`)
 
 > Alpha. Not yet published to PyPI; build the wheel from source or use the release bundle (see [distribution](../../docs/integration/distribution.md)).
