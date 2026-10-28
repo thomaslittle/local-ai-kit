@@ -1,45 +1,72 @@
 # OriginLM film
 
-Work in progress; no exported film is qualified yet.
+Revised cut rendered on Linux; final whole-product qualification remains pending. The previous 52-second
+cut is superseded by Thomas's physical-UI direction (2026-10-28).
 
-## Direction
+## Direction and timeline
 
-52 seconds, 1920×1080, 30 fps, silent (no third-party audio). First 26 seconds:
-know your AI, dashboard, allowances, models, evidence and problems. Last 26:
-one dependency, exploded local runtime, discovery, per-app grants, install.
-Graphite / amber / Red Hat Display, using actual synthetic-mode app captures.
-No fabricated testimonials, performance numbers, or live account footage.
+35 seconds, 1920×1080, 30 fps, silent. Graphite, amber and Red Hat Display.
+Actual example-mode app captures; no account footage or invented testimonials.
 
-Motion carries the amber connection line between shots. UI shots use restrained
-pans into the relevant real surface; the architecture shot separates the app,
-SDK, runtime and providers in depth with a returning signal pulse.
-
-## Timeline
-
-| Seconds | Shot |
+| Seconds | Chapter |
 |---|---|
-| 0–6 | Know all your AI |
-| 6–12 | Dashboard overview |
-| 12–17 | Usage and reset evidence |
-| 17–21 | Available models |
-| 21–26 | Unknowns and problems stay visible |
-| 26–30 | Build with what users already have |
-| 30–36 | Exploded app / SDK / runtime / provider layers |
-| 36–41 | Explicit discovery |
-| 41–46 | Per-app grants and connection status |
-| 46–52 | Source-preview install and OriginLM |
+| 0–3 | Scattered provider names snap into a grid |
+| 3–10 | Dashboard appears, then macro moves across quotas and cost evidence |
+| 10–19 | Shared three.js scene: macro, dolly out, five-layer explosion, collapse |
+| 19–23 | Example discovery grant, with execution permission separate |
+| 23–28 | Local-package install and discovery code snap into place |
+| 28–35 | Large logo/tagline lockup, then repository address |
+
+The web and film share `apps/site/src/scene/studio.ts`. Run the site on loopback
+5177, then `node media/video/scripts/render-studio.mjs` from the repository root.
+The script renders deterministic frames under `out/studio-frames/` and encodes
+`out/studio.mp4`. Copy that file to ignored `media/studio.mp4` before rendering the
+fframes project. This deliberately fails without footage instead of silently
+substituting an empty scene. The frame capture entry is development-only.
 
 ## Sources and rights
 
 - fframes: https://github.com/dmtrKovalenko/fframes, MIT; generator 1.3.0.
-  Installed from a local checkout of that upstream into `.verification/fframes-tools`
-  to avoid a second large download and global tool changes.
-- Red Hat Display: repository font and its OFL license, copied alongside the film.
+  Installed from an upstream checkout into `.verification/fframes-tools`.
+- Three.js: project dependency, MIT. Same renderer used by the site.
+- Red Hat Display: repository font and OFL license, copied alongside the film.
 - Product captures and logo: this repository, synthetic examples only.
+- No soundtrack or third-party stock material.
 
-## Planned outputs (not rendered yet)
+## Outputs
 
-`out/originlm-1080p.mp4`, `out/originlm-1080p.webm`,
+Rendered: `out/studio.mp4`, `out/studio-frames/`, `out/originlm-1080p.mp4`, `out/originlm-1080p.webm`,
 `out/see-your-ai-portrait.mp4`, `out/build-with-it-square.mp4`,
-`out/hero-loop.mp4`, `out/hero-loop.webm`, `out/poster.png`.
-Final verification will record codec, dimensions, duration and frame inspection.
+`out/hero-loop.mp4`, `out/hero-loop.webm`, `out/poster.jpg`.
+Final verification must record codecs, dimensions, durations, 1-second stills,
+caption contrast, and any remaining platform limits. See the Linux evidence below.
+
+## Linux render evidence, 2026-10-28
+
+Rendered the revised source at 1920×1080, 30 fps, 35 seconds using fframes 1.3.0
+at source `c2927a8a335d6c208339cb28da8adc5e0549ee5d`. The studio shot was rendered
+headlessly from the shared scene, 270 frames at 1920×1080. Inspected the exact
+10-second film frame against the quota macro and the whole-film contact sheet;
+the earlier midpoint-sampled sheet skipped the macro's first frame. Exact-second
+stills now select frames 0, 30, 60… rather than the midpoint of each second.
+
+Actual outputs (all ignored under `media/video/out/`):
+
+| File stem | Dimensions | Duration | Formats |
+|---|---|---|---|
+| originlm-1080p | 1920×1080 | 35 s | MP4 H.264, WebM VP9 |
+| see-your-ai-portrait | 1080×1920 | 7 s | MP4 H.264, WebM VP9 |
+| build-with-it-square | 1080×1080 | 9 s | MP4 H.264, WebM VP9 |
+| hero-loop | 1920×1080 | 6 s | MP4 H.264, WebM VP9 |
+
+`poster.jpg` is the final lockup; `stills/01.png` through `35.png` are the
+one-second inspection frames. `review-exact-seconds.jpg` is the contact sheet.
+The loop follows a three-second studio hold and its reverse, preserving matching
+poses at both boundaries. All outputs have no audio; the exporter removes the
+silent AAC stream generated by fframes. No 4K export is claimed.
+
+Film caption contrast against graphite: paper 16.36:1, muted 7.35:1, amber 8.03:1.
+Actual UI captures keep their own app tokens. The portrait cut retains its labeled
+example/estimated evidence; the square cut preserves the complete five-layer shot.
+The main assets have been staged locally for the site. This is Linux render and
+visual evidence, not completion of the final accessibility/performance/CI pass.

@@ -1,9 +1,10 @@
-use fframes::{EncoderOptions, RenderOptions, StaticMediaProvider, cli};
+#![recursion_limit = "512"]
+use fframes::{EncoderOptions, RenderOptions, MediaDirectory, cli};
 use fframes_skia_renderer::{
     SkiaFFramesRenderer, SkiaPipelineConcurrencyPolicy, SkiaPipelineConfig,
     vulkan::SkiaVulkanCtx,
 };
-use originlm_film::{ OriginlmFilmMedia, OriginlmFilmVideo, HEIGHT, WIDTH };
+use originlm_film::{ OriginlmFilmVideo, HEIGHT, WIDTH };
 use fframes::cli::clap; // the derive below expands to `clap::...`
 use std::process::ExitCode;
 
@@ -17,9 +18,10 @@ struct VideoArgs {
 
 fn main() -> ExitCode {
     let args = cli::parse::<VideoArgs>();
-    let media = OriginlmFilmMedia::prepare().expect("media");
+    let directory = MediaDirectory::read_folder(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("media")).expect("media directory");
+    let media = directory.process_media_source().expect("media including the rendered studio.mp4");
     let title = args.app.title.clone();
-    let video = OriginlmFilmVideo::new(&media, &title);
+    let video = OriginlmFilmVideo::new(&title);
     let gpu = SkiaVulkanCtx::new(WIDTH, HEIGHT).expect("GPU context");
 
     cli::new(
@@ -46,7 +48,5 @@ fn main() -> ExitCode {
         )
         .expect("skia renderer"),
     )
-    // `preview` opens the real-time GPU player.
-    .preview(fframes_native_player::cli_preview)
     .run()
 }

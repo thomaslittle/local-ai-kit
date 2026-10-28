@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Activity, Bell, CheckCircle, Gauge, Terminal } from "../components/Icon";
-import mark from "../assets/brand/originlm-mark-small-white.svg";
+
 
 const SURFACES = [
   { icon: Activity, title: "SDK badge", body: "The Rust facade exposes mode, providers and model counts." },
-  { icon: Gauge, title: "Tray or menu bar", body: "Planned: connected apps, models and a pause control." },
+  { icon: Gauge, title: "Desktop mini-view", body: "Ctrl+Shift+M opens allowances and reset times inside the app." },
   { icon: Bell, title: "Notifications", body: "The runtime records issues; OS notification delivery is not qualified." },
   { icon: Terminal, title: "CLI", body: "Inspect the runtime through the local-ai-kit-control terminal app." },
 ];
@@ -15,10 +15,10 @@ export function StatusDemo() {
   return (
     <div className="container status" aria-labelledby="status-title" role="group">
       <div className="head-split">
-        <h2 id="status-title">One badge, four surfaces, one source of truth.</h2>
+        <h2 id="status-title">Your AI status, close at hand.</h2>
         <p className="lead">
           Apps can show whether local AI is available without a modal, a permission wall or a settings
-          screen. The user decides what runs through explicit grants. Tray integration is planned.
+          screen. The user decides what runs through explicit grants. The desktop mini-view stays inside the app; this build has no OS tray integration.
         </p>
       </div>
 
@@ -59,35 +59,9 @@ export function StatusDemo() {
           </dl>
         </div>
 
-        <figure className="tray-figure" aria-label="Tray menu mockup" data-slot="tray">
-          <div className="tray">
-            <div className="tray-head">
-              <img src={mark} alt="" width={16} height={16} />
-              OriginLM
-              <span className="tray-status">running</span>
-            </div>
-            <div className="tray-section">
-              <h4>Connected apps</h4>
-              <div className="tray-item">Example Studio<small>usage, sessions</small></div>
-              <div className="tray-item">Editor Bridge<small>models</small></div>
-              <div className="tray-item" data-muted="true">Old Prototype<small>revoked</small></div>
-            </div>
-            <div className="tray-section">
-              <h4>Models available</h4>
-              <div className="tray-item">Claude Code<small>subscription</small></div>
-              <div className="tray-item">Codex<small>subscription</small></div>
-              <div className="tray-item">Ollama qwen<small>local</small></div>
-            </div>
-            <div className="tray-section">
-              <h4>Today</h4>
-              <div className="tray-item">128 turns<small>2 issues</small></div>
-            </div>
-            <div className="tray-actions">
-              <button type="button" disabled>Pause (preview)</button>
-              <button type="button" disabled>Open Control Center (preview)</button>
-            </div>
-          </div>
-          <figcaption>Planned tray interface with example values. This is not a shipped system tray.</figcaption>
+        <figure className="mini-view-figure" aria-label="Desktop in-app allowance mini-view" data-slot="mini-view">
+          <img src="/screens/desktop-mini-view.webp" alt="OriginLM example dashboard with the in-app Allowances panel open: known quota values and an explicitly unknown allowance." width={1440} height={920} loading="lazy" />
+          <figcaption>Actual desktop app, example data. Press Ctrl+Shift+M for the mini-view. No OS tray is provided.</figcaption>
         </figure>
       </div>
     </div>

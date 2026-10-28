@@ -1,42 +1,41 @@
-mod stage;
-use std::sync::Arc;
-//! OriginLM: a silent, evidence-based product film. All UI footage is example data.
-use fframes::{AudioMap, Color, Duration, FFramesContext, Frame, Scene, Scenes, Svgr, Transform, Video, animation::Easing, include_media_dir};
-include_media_dir!(pub struct OriginlmFilmMedia, "media");
+//! OriginLM's 35-second silent film. Captured UI is explicitly synthetic.
+#![recursion_limit = "512"]
+#[path = "brand.generated.rs"]
+mod brand;
+use fframes::{AudioMap, Color, Duration, FFramesContext, Frame, Scene, Scenes, Svgr, Video, SyncVideoFrameInput, FFramesSyncedVideoFrame};
 pub const WIDTH: usize = 1920;
 pub const HEIGHT: usize = 1080;
-const BG: &str = "#1e1a1b";
-const FG: &str = "#f5f1ed";
-const AMBER: &str = "#eba31a";
-const MUTED: &str = "#b9afa7";
-const FONT: &str = "Red Hat Display";
-
-pub struct OriginlmFilmVideo<'a> {
-    pub media: &'a OriginlmFilmMedia,
-    shots: Vec<Shot>,
+const BG: &str = brand::DARK_BACKGROUND;
+const FG: &str = brand::PAPER;
+const AMBER: &str = brand::AMBER;
+const MUTED: &str = brand::DARK_MUTED;
+const FONT: &str = brand::FONT;
+fn ease(time: f32) -> f32 { 1. - (1. - time.clamp(0., 1.)).powi(4) }
+fn spring(time: f32) -> f32 {
+    if time <= 0. { return 0.; }
+    let omega = 39_f32.sqrt();
+    1. - (-9. * time).exp() * ((omega * time).cos() + 9. / omega * (omega * time).sin())
 }
-impl<'a> OriginlmFilmVideo<'a> {
-    pub fn new(media: &'a OriginlmFilmMedia, _: &'a str) -> Self {
-        let stage = Arc::new(stage::LayerStage::new());
+fn mix(a: f32, b: f32, t: f32) -> f32 { a + (b-a)*t }
+
+pub struct OriginlmFilmVideo { shots: Vec<Shot> }
+impl OriginlmFilmVideo {
+    pub fn new(_: &str) -> Self {
         let shots = [
-            ("Know", 6., "Know all your AI.", "Whatever AI you already have.", None),
-            ("Overview", 6., "One place to look.", "Your accounts. Their reported allowances.", Some("overview.png")),
-            ("Allowances", 5., "See what is left.", "Usage, shared pools and reset evidence.", Some("usage.png")),
-            ("Models", 4., "Know your options.", "Models keep their provider and route.", Some("models.png")),
-            ("Evidence", 5., "Unknown stays unknown.", "Evidence and problems stay visible.", Some("diagnostics.png")),
-            ("Build", 4., "Build with it.", "One dependency. The AI your users have.", None),
-            ("Layers", 6., "A local runtime.", "Your app stays above the provider details.", None),
-            ("Discover", 5., "Start with discovery.", "Imports do nothing. Your app asks explicitly.", None),
-            ("Grants", 5., "Each app gets a grant.", "Discovery is not permission to execute.", None),
-            ("Origin", 6., "See your AI. Build with it.", "OriginLM · source preview", None),
-        ].into_iter().enumerate().map(|(kind,(name,seconds,title,caption,image))| Shot {kind,name,seconds,title,caption,image,stage:stage.clone()}).collect();
-        Self { media, shots }
+            ("Problem", 3., "Your AI is everywhere.", "Whatever AI you already have."),
+            ("See", 7., "Know all your AI.", "Usage. Reset times. Models. Estimated costs, clearly labeled."),
+            ("Build", 9., "Build with it.", "One dependency. A secure local runtime. Your users’ own AI."),
+            ("Connect", 4., "Permission belongs to you.", "An example grant. No account is connected or used in this film."),
+            ("Install", 5., "One dependency to begin.", "Local package preview. Registry release is not published yet."),
+            ("Origin", 7., "See your AI.", "Build with it."),
+        ].into_iter().enumerate().map(|(kind,(name,seconds,title,caption))| Shot {kind,name,seconds,title,caption}).collect();
+        Self { shots }
     }
 }
-impl std::fmt::Debug for OriginlmFilmVideo<'_> {
+impl std::fmt::Debug for OriginlmFilmVideo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.debug_struct("OriginlmFilmVideo").finish() }
 }
-impl Video for OriginlmFilmVideo<'_> {
+impl Video for OriginlmFilmVideo {
     const FPS: usize = 30;
     const WIDTH: usize = WIDTH;
     const HEIGHT: usize = HEIGHT;
@@ -52,65 +51,100 @@ impl Video for OriginlmFilmVideo<'_> {
     }
 }
 #[derive(Debug)]
-struct Shot { kind: usize, name: &'static str, seconds: f32, title: &'static str, caption: &'static str, image: Option<&'static str>, stage: Arc<stage::LayerStage> }
+struct Shot { kind: usize, name: &'static str, seconds: f32, title: &'static str, caption: &'static str }
 impl Scene for Shot {
     fn name(&self) -> &'static str {self.name}
     fn duration(&self) -> Duration<'_> {Duration::Seconds(self.seconds)}
     fn render_frame<'a>(&'a self, frame: Frame, ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
-        let t=frame.seconds();
-        let content = if let Some(file)=self.image {
-            ctx.get_image(file).map(|image| fframes::svgr!(
-                <g transform={frame.animate(fframes::timeline!(at 0.0 => 0.65, animate Transform::translate(0, 50) => Transform::translate(0, 0), Easing::EaseOut,))}>
-                    <image href={image.href()} x="320" y="290" width="1280" height="800"/>
-                    <rect x="320" y="990" width="1280" height="90" fill={BG}/>
-                </g>
-            )).unwrap_or_default()
-        } else { match self.kind {
-            0 => fframes::svgr!(<g>
-                <text x="160" y="590" fill={AMBER} font-family={FONT} font-size="70" font-weight="500">"Accounts. Allowances. Models."</text>
-                <path d="M160 680H1760" stroke="#514338" stroke-width="2"/>
-                <circle cy="680" r="8" fill={AMBER} cx={160. + (t / 6.) * 1600.}/>
-            </g>),
-            5 => fframes::svgr!(<g>
-                <text x="160" y="580" fill={AMBER} font-family={FONT} font-size="110" font-weight="600">"Rust + TypeScript + Python"</text>
-                <text x="160" y="710" fill={MUTED} font-family={FONT} font-size="46">"Tauri · Electron · GPUI · web"</text>
-            </g>),
-            6 => {
-                let image = self.stage.image(t);
-                fframes::svgr!(<image href={image.href()} x="220" y="250" width="1480" height="740"/>)
+        let t = frame.seconds();
+        let content = match self.kind {
+            0 => {
+                let names = ["Claude Code", "Codex", "Gemini", "OpenCode", "Ollama", "LM Studio"];
+                let chaos = [(90.,330.,-12.),(950.,290.,8.),(1390.,420.,-7.),(180.,760.,9.),(760.,680.,-10.),(1360.,800.,7.)];
+                names.iter().enumerate().map(|(index,name)| {
+                    let progress = spring(t - 0.65 - index as f32 * 0.065);
+                    let x = mix(chaos[index].0, 240. + (index % 3) as f32 * 500., progress);
+                    let y = mix(chaos[index].1, 430. + (index / 3) as f32 * 180., progress);
+                    let angle = mix(chaos[index].2, 0., progress);
+                    let transform = format!("translate({x} {y}) rotate({angle} 220 60)");
+                    fframes::svgr!(<g transform={transform}>
+                        <rect width="440" height="120" rx="18" fill={BG} stroke={AMBER} stroke-width="2"/>
+                        <text x="220" y="76" text-anchor="middle" fill={FG} font-family={FONT} font-size="42" font-weight="550">{*name}</text>
+                    </g>)
+                }).collect::<Svgr>()
             },
-            7 => fframes::svgr!(<g>
-                <path d="M160 350V820H1760" fill="none" stroke={AMBER} stroke-width="3"/>
-                <text x="210" y="470" font-family={FONT} font-size="46" fill={MUTED}>"import { createLocalAI } from '@local-ai-kit/sdk';"</text>
-                <g opacity={frame.animate(fframes::timeline!(at 0.8 => 1.2, animate 0.0 => 1.0, Easing::EaseOut,))}>
-                    <text x="210" y="600" font-family={FONT} font-size="54" fill={FG}>"const client = await createLocalAI();"</text>
-                </g>
-                <g opacity={frame.animate(fframes::timeline!(at 1.6 => 2.0, animate 0.0 => 1.0, Easing::EaseOut,))}>
-                    <text x="210" y="730" font-family={FONT} font-size="54" fill={AMBER}>"const snapshot = await client.snapshot.get();"</text>
-                </g>
-            </g>),
-            8 => fframes::svgr!(<g>
-                <text x="160" y="460" font-family={FONT} font-size="64" fill={FG}>"Your app"</text>
-                <path d="M160 510H1760" stroke="#514338" stroke-width="2"/>
-                <text x="160" y="610" font-family={FONT} font-size="56" fill={AMBER}>"Granted: passive discovery"</text>
-                <text x="160" y="710" font-family={FONT} font-size="48" fill={MUTED}>"Execution requires a separate permission."</text>
-                <text x="160" y="830" font-family={FONT} font-size="32" fill={MUTED}>"Illustrated grant · no account is connected in this film"</text>
-            </g>),
-            _ => fframes::svgr!(<g>
-                <text x="160" y="550" font-family={FONT} font-size="144" font-weight="700" fill={AMBER}>"OriginLM"</text>
-                <text x="160" y="710" font-family={FONT} font-size="48" fill={FG}>"github.com/thomaslittle/local-ai-kit"</text>
-                <text x="160" y="820" font-family={FONT} font-size="40" fill={MUTED}>"Build from source today. Registry release pending."</text>
-            </g>),
-        }};
-        fframes::svgr!(<g>
-            <text x="160" y="90" fill={AMBER} font-family={FONT} font-size="30" font-weight="600">{if self.kind<5 {"SEE YOUR AI"} else {"BUILD WITH IT"}}</text>
-            <g transform={frame.animate(fframes::timeline!(at 0.0 => 0.5, animate Transform::translate(0, 24) => Transform::translate(0, 0), Easing::EaseOut,))}>
-                <text x="160" y="205" fill={FG} font-family={FONT} font-size="92" font-weight="650">{self.title}</text>
-            </g>
-            {content}
-            <rect x="0" y="990" width={WIDTH} height="90" fill={BG}/>
-            <text x="160" y="1040" fill={MUTED} font-family={FONT} font-size="32">{self.caption}</text>
-            <text x="1760" y="90" text-anchor="end" fill={MUTED} font-family={FONT} font-size="28">{if self.image.is_some() {"EXAMPLE DATA"} else {"OriginLM"}}</text>
-        </g>)
+            1 => {
+                let enter = ease(t / 0.3);
+                let macro_ring = ease((t - 1.4) / 1.4);
+                let macro_cost = ease((t - 4.) / 1.6);
+                let scale = 1. + macro_ring * 0.35;
+                let x = 170. - macro_ring * 80. - macro_cost * 450.;
+                let y = 280. + (1. - enter) * 50.;
+                let transform = format!("translate({x} {y}) scale({scale})");
+                let image = ctx.get_image("dashboard-detail.png").expect("captured example overview");
+                fframes::svgr!(<g>
+                    <defs><clipPath id="dashboard-clip"><rect x="120" y="230" width="1680" height="700" rx="12"/></clipPath></defs>
+                    <g clip-path="url(#dashboard-clip)"><g transform={transform} opacity={enter}>
+                        <image href={image.href()} width="1580" height="560"/>
+                    </g></g>
+                </g>)
+            },
+            2 => {
+                let input = SyncVideoFrameInput { start_from: 0., looping: false, editor_fallback_image: None };
+                let image = frame.get_synced_video_frame(ctx, "studio.mp4", &input).expect("render the shared studio shot before building the film");
+                let image = image.into_image();
+                fframes::svgr!(<image href={image.href()} width={WIDTH} height={HEIGHT}/>)
+            },
+            3 => {
+                let grant = ctx.get_image("runtime.png").expect("captured public runtime panel");
+                let enter = spring(t);
+                let flipped = ease((t - 0.85) / 0.22);
+                let offset = (1. - enter) * 80.;
+                fframes::svgr!(<g>
+                    <g transform={format!("translate(140 {})", 350. + offset)}>
+                        <rect width="760" height="440" rx="20" fill={BG} stroke={AMBER} stroke-width="2"/>
+                        <text x="50" y="90" fill={FG} font-family={FONT} font-size="48" font-weight="600">"Your app"</text>
+                        <text x="50" y="170" fill={MUTED} font-family={FONT} font-size="32">"Example authorization"</text>
+                        <text x="50" y="265" fill={FG} font-family={FONT} font-size="38">"Allow discovery"</text>
+                        <rect x="570" y="220" width="130" height="58" rx="29" fill={AMBER} opacity={0.35 + flipped * 0.65}/>
+                        <circle cx={601. + flipped * 68.} cy="249" r="22" fill={FG}/>
+                        <text x="50" y="365" fill={MUTED} font-family={FONT} font-size="30">"Execution requires its own grant."</text>
+                    </g>
+                    <g transform={format!("translate(990 {})", 350. - offset)}>
+                        <image href={grant.href()} width="790" height="440"/>
+                    </g>
+                    <path d="M910 570H975" stroke={AMBER} stroke-width="2" opacity={flipped}/>
+                </g>)
+            },
+            4 => {
+                let (first, second, third) = (spring(t), spring(t - 0.14), spring(t - 0.28));
+                fframes::svgr!(<g>
+                    <text x={150. + (1. - first) * 80.} y="430" fill={AMBER} font-family={FONT} font-size="40" opacity={first.clamp(0.,1.)}>"npm install ./local-ai-kit-sdk-0.1.0-alpha.20.tgz"</text>
+                    <path d="M150 485H1770" stroke={AMBER} stroke-width="2"/>
+                    <text x={150. + (1. - second) * 80.} y="590" fill={FG} font-family={FONT} font-size="40" opacity={second.clamp(0.,1.)}>"import { createLocalAI } from '@local-ai-kit/sdk';"</text>
+                    <text x={150. + (1. - third) * 80.} y="700" fill={FG} font-family={FONT} font-size="46" opacity={third.clamp(0.,1.)}>"const ai = await createLocalAI();"</text>
+                    <text x={150. + (1. - third) * 80.} y="810" fill={AMBER} font-family={FONT} font-size="46" opacity={third.clamp(0.,1.)}>"const snapshot = await ai.snapshot.get();"</text>
+                </g>)
+            },
+            _ => {
+                let logo = ctx.get_image("originlm-white.png").expect("OriginLM logo");
+                let enter = ease(t / 0.5);
+                let y = (1. - enter) * 35.;
+                fframes::svgr!(<g transform={format!("translate(0 {y})")}>
+                    <image href={logo.href()} x="150" y="155" width="540" height="155"/>
+                    <text x="150" y="535" fill={FG} font-family={FONT} font-size="150" font-weight="650">"See your AI."</text>
+                    <text x="150" y="710" fill={AMBER} font-family={FONT} font-size="150" font-weight="650">"Build with it."</text>
+                    <text x="150" y="900" fill={FG} font-family={FONT} font-size="42" opacity={ease((t - 2.3) / 0.35)}>"github.com/thomaslittle/local-ai-kit"</text>
+                    <text x="150" y="975" fill={MUTED} font-family={FONT} font-size="30">"Source preview. No OriginLM account."</text>
+                </g>)
+            },
+        };
+        let heading = if self.kind == 5 { Svgr::default() } else { fframes::svgr!(<g>
+            <text x="140" y="150" fill={FG} font-family={FONT} font-size="88" font-weight="650">{self.title}</text>
+            <text x="1770" y="70" text-anchor="end" fill={MUTED} font-family={FONT} font-size="26">{if self.kind == 1 || self.kind == 2 {"Example data"} else {"OriginLM"}}</text>
+            <rect x="0" y="1000" width={WIDTH} height="80" fill={BG}/>
+            <text x="140" y="1050" fill={MUTED} font-family={FONT} font-size="29">{self.caption}</text>
+        </g>) };
+        fframes::svgr!(<g>{content}{heading}</g>)
     }
 }

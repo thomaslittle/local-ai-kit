@@ -2,9 +2,10 @@ import { Play } from "../components/Icon";
 import { PROMO } from "../data/video";
 
 const CHAPTERS = [
-  ["00:00", "Know your AI", "Every client, quota and reset time in one local view."],
-  ["00:26", "Build on it", "The exploded stack, from providers up to your app."],
-  ["00:36", "Connect", "Discovery, a revocable grant and the connected badge."],
+  ["00:03", "Know your AI", "Reported allowances, reset times and clearly labeled cost estimates."],
+  ["00:10", "Build on it", "The exploded stack, from providers up to your app."],
+  ["00:19", "Connect", "An example discovery grant, separate from execution permission."],
+  ["00:23", "Install", "A local package and the public discovery API."],
 ];
 
 export function Video() {
@@ -12,7 +13,7 @@ export function Video() {
     <section className="section video" id="video" aria-labelledby="video-title">
       <div className="container">
         <div className="head-split">
-          <h2 id="video-title">One runtime, two stories, in under a minute.</h2>
+          <h2 id="video-title">Two sides of OriginLM. In 35 seconds.</h2>
           <p className="lead">
             A silent product tour: first what you can see, then what you can build.
             The source uses fframes and the OriginLM palette.
@@ -40,17 +41,17 @@ export function Video() {
                 <div className="video-placeholder" data-keep>
                   <span className="video-play" aria-hidden="true"><Play size={26} /></span>
                   <div>
-                    <h3>The 52-second tour</h3>
+                    <h3>The 35-second tour</h3>
                     <p>
-                      In production. The planned cut is H.264 and WebM with a poster frame, silent by
-                      design: no unlicensed music or voiceover.
+                      The film is rendered separately from this source checkout. The product tour above
+                      covers the same features; see media/video for the reproducible film source.
                     </p>
                   </div>
                 </div>
               </div>
             )}
             <figcaption>
-              {PROMO.hasVideo ? "1920×1080, H.264 and WebM. 52 seconds, silent." : "Planned: 52 seconds at 1920×1080. Export verification pending."} Source: media/video.
+              {PROMO.hasVideo ? "1920×1080, H.264 and WebM. 35 seconds, silent." : "Film assets are not included in this build."} Source: media/video.
             </figcaption>
           </figure>
 
