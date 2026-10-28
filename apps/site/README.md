@@ -31,7 +31,8 @@ npm run preview -- --host 127.0.0.1 --port 5174
 - `src/scene/*` — the lazy 3D hero (React Three Fiber, drei, postprocessing).
 - `src/data/*` — layers, provider support matrix, integration snippets, video paths.
 - `src/assets/brand`, `src/assets/fonts` — brand artwork and Red Hat Display, copied from `apps/demo` with their notices.
-- `public/hero-poster.svg`, `public/video-poster.svg` — procedural posters, also used for reduced motion and before the 3D chunk loads.
+- `public/hero-poster.svg` — procedural poster, also used for reduced motion and before the 3D chunk loads.
+- `public/media/` — rendered film, WebM, poster and the 8 s loop used as the hero fallback asset.
 - `review/` — Playwright capture script and the latest 1440 px / 390 px screenshots.
 
 ## Hero 3D
