@@ -9,7 +9,7 @@ export interface PageMeta {
 }
 
 export const PAGES: readonly PageMeta[] = [
-  { page: 'Overview', path: '/overview', description: 'Discover the shape of your AI access.' },
+  { page: 'Overview', path: '/overview', description: 'Your AI, at a glance.' },
   { page: 'Connections', path: '/connections', description: 'Every account, profile, and access route stays distinct.' },
   { page: 'Models', path: '/models', description: 'A route-aware catalog. Native options, never guessed settings.' },
   { page: 'Usage', path: '/usage', description: 'The right units. The right windows. No fictional totals.' },
@@ -18,7 +18,7 @@ export const PAGES: readonly PageMeta[] = [
   { page: 'Diagnostics', path: '/diagnostics', description: 'Understand the evidence behind every public response.' },
 ];
 
-export const DEFAULT_PATH = '/selector-lab';
+export const DEFAULT_PATH = '/overview';
 
 export const pathFor = (page: Page): PageMeta['path'] => (PAGES.find((meta) => meta.page === page) ?? PAGES[4]).path;
 

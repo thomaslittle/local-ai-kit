@@ -1,5 +1,6 @@
 mod app;
 mod brand;
+mod brand_tokens;
 mod broker;
 mod data;
 mod history;
@@ -14,12 +15,14 @@ use gpui_kit::component::{ThemeMode, TitleBar};
 use gpui_kit::*;
 use std::{borrow::Cow, path::PathBuf, sync::Arc, time::Duration};
 
-fn parse_args() -> (PathBuf, u64) {
+fn parse_args() -> (PathBuf, u64, bool) {
     let mut token: Option<PathBuf> = None;
     let mut refresh = 30u64;
+    let mut example = false;
     let mut args = std::env::args().skip(1);
     while let Some(flag) = args.next() {
         match flag.as_str() {
+            "--example" => example = true,
             "--token-file" => token = args.next().map(PathBuf::from),
             "--refresh" => {
                 refresh = args
@@ -30,7 +33,7 @@ fn parse_args() -> (PathBuf, u64) {
             }
             "--help" | "-h" => {
                 println!(
-                    "local-ai-kit-desktop [--token-file PATH] [--refresh SECONDS]\n\
+                    "local-ai-kit-desktop [--token-file PATH] [--refresh SECONDS] [--example]\n\
                      Reads the shared broker over its public authenticated API."
                 );
                 std::process::exit(0);
@@ -38,11 +41,14 @@ fn parse_args() -> (PathBuf, u64) {
             _ => {}
         }
     }
+    if example {
+        return (PathBuf::from("example-mode-no-credential"), refresh, true);
+    }
     let token = token
         .or_else(|| std::env::var_os("LAI_DESKTOP_TOKEN_FILE").map(PathBuf::from))
         .or_else(default_token_file)
         .unwrap_or_else(|| PathBuf::from("admin-token.json"));
-    (token, refresh)
+    (token, refresh, example)
 }
 
 fn default_token_file() -> Option<PathBuf> {
@@ -58,7 +64,7 @@ fn default_token_file() -> Option<PathBuf> {
 }
 
 fn main() {
-    let (token_path, refresh) = parse_args();
+    let (token_path, refresh, example) = parse_args();
     let application = gpui_kit::application().with_assets(gpui_kit::assets::Assets);
     application.run(move |cx| {
         let _ = cx
@@ -97,7 +103,7 @@ fn main() {
         }
         options.icon = icon;
         gpui_kit::open_window(options, cx, move |window, cx| {
-            cx.new(|cx| Desktop::new(window, cx, token, refresh))
+            cx.new(|cx| Desktop::new(window, cx, token, refresh, example))
         })
         .expect("desktop window");
         let _ = Duration::from_secs(1);

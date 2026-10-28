@@ -238,6 +238,7 @@ impl Desktop {
         cx: &mut Context<Self>,
         token_path: PathBuf,
         refresh_seconds: u64,
+        example: bool,
     ) -> Self {
         let prefs = load_prefs();
         let dark = match std::env::var("LAI_DESKTOP_THEME").ok().as_deref() {
@@ -246,8 +247,12 @@ impl Desktop {
             _ => prefs.dark,
         };
         theme::install(cx, dark);
-        let broker = broker::spawn(token_path.clone(), Duration::from_secs(refresh_seconds));
-        let executor = broker::spawn_executor(token_path.clone());
+        let broker = broker::spawn(
+            token_path.clone(),
+            Duration::from_secs(refresh_seconds),
+            example,
+        );
+        let executor = broker::spawn_executor(token_path.clone(), example);
         let credential_kind = token_path
             .file_name()
             .map(|name| name.to_string_lossy().to_string())
@@ -1339,7 +1344,15 @@ impl Desktop {
                         div()
                             .text_size(px(11.5))
                             .text_color(theme.muted_foreground)
-                            .child(self.page.subtitle()),
+                            .child(
+                                if self.bundle.as_ref().is_some_and(|bundle| {
+                                    bundle.snapshot.mode == lai_contracts::DataMode::Synthetic
+                                }) {
+                                    "Example data. No accounts inspected; execution disabled."
+                                } else {
+                                    self.page.subtitle()
+                                },
+                            ),
                     ),
             )
             .child(

@@ -34,12 +34,41 @@ pub struct BrokerHandle {
     pub updates: Receiver<Bundle>,
 }
 
-pub fn spawn(token_file: PathBuf, refresh: Duration) -> BrokerHandle {
+pub fn spawn(token_file: PathBuf, refresh: Duration, example: bool) -> BrokerHandle {
     let (command_tx, command_rx) = std::sync::mpsc::channel();
     let (update_tx, update_rx) = std::sync::mpsc::channel();
     thread::Builder::new()
         .name("lai-broker".into())
-        .spawn(move || worker(token_file, refresh, command_rx, update_tx))
+        .spawn(move || {
+            if example {
+                let snapshot: Snapshot =
+                    serde_json::from_str(include_str!("../assets/example-snapshot.json"))
+                        .expect("bundled synthetic snapshot");
+                // Example mode never connects, probes, loads history or executes.
+                loop {
+                    if update_tx
+                        .send(Bundle {
+                            snapshot: snapshot.clone(),
+                            runtime: json!({"mode":"synthetic"}),
+                            apps: Vec::new(),
+                            apps_error: Some("Example mode has no connected applications.".into()),
+                            adapters: Vec::new(),
+                            history: Vec::new(),
+                            fetched_at: chrono::Utc::now().timestamp(),
+                            error: None,
+                        })
+                        .is_err()
+                    {
+                        break;
+                    }
+                    if command_rx.recv().is_err() {
+                        break;
+                    }
+                }
+            } else {
+                worker(token_file, refresh, command_rx, update_tx);
+            }
+        })
         .expect("broker worker");
     BrokerHandle {
         commands: command_tx,
@@ -247,12 +276,20 @@ pub struct ExecHandle {
     pub events: Receiver<ExecEvent>,
 }
 
-pub fn spawn_executor(token_file: PathBuf) -> ExecHandle {
+pub fn spawn_executor(token_file: PathBuf, example: bool) -> ExecHandle {
     let (command_tx, command_rx) = std::sync::mpsc::channel();
     let (event_tx, event_rx) = std::sync::mpsc::channel();
     thread::Builder::new()
         .name("lai-playground".into())
-        .spawn(move || executor(token_file, command_rx, event_tx))
+        .spawn(move || {
+            if example {
+                while command_rx.recv().is_ok() {
+                    let _ = event_tx.send(ExecEvent::Failed {
+                        error: "Execution is disabled in example mode. Connect a granted runtime to run a turn.".into(),
+                    });
+                }
+            } else { executor(token_file, command_rx, event_tx); }
+        })
         .expect("execution worker");
     ExecHandle {
         commands: command_tx,
