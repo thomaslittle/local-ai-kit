@@ -32,9 +32,10 @@ fn unavailable() -> DomainError {
 /// Decode and validate one image. Dimensions come from the PNG IHDR or JPEG SOF header.
 pub(crate) fn decode_image(params: &InputPutParams) -> Result<ImageInput> {
     if let Some(name) = &params.display_name
-        && (name.is_empty() || name.chars().count() > 128 || name.chars().any(char::is_control)) {
-            return Err(invalid("Input display name is invalid"));
-        }
+        && (name.is_empty() || name.chars().count() > 128 || name.chars().any(char::is_control))
+    {
+        return Err(invalid("Input display name is invalid"));
+    }
     if params.data_base64.is_empty() {
         return Err(invalid("Input image is empty"));
     }

@@ -105,43 +105,44 @@ pub fn parse_metadata(
             );
             let mut options = vec![];
             if entry["supportsEffort"] == true
-                && let Some(levels) = entry["supportedEffortLevels"].as_array() {
-                    if levels.len() > 64 {
-                        return Err(invalid());
-                    }
-                    let mut names = BTreeSet::new();
-                    let choices = levels
-                        .iter()
-                        .map(|v| {
-                            let value = text(v).filter(|v| v.len() <= 64).ok_or_else(invalid)?;
-                            if !names.insert(value) {
-                                return Err(invalid());
-                            }
-                            Ok(Choice {
-                                value: value.into(),
-                                label: value.into(),
-                                disabled_reason: None,
-                            })
-                        })
-                        .collect::<Result<Vec<_>>>()?;
-                    if !choices.is_empty() {
-                        options.push(OptionDescriptor {
-                            id: "reasoningEffort".into(),
-                            label: "Reasoning effort (session startup)".into(),
-                            scope: OptionScope::Session,
-                            revision: revision.clone(),
-                            control: OptionControl::Select {
-                                choices,
-                                default_value: None,
-                            },
-                            current_value: None,
-                            category: Some("reasoning".into()),
-                            source: Some(source.clone()),
-                            billing_sensitive: false,
-                            permission_sensitive: false,
-                        });
-                    }
+                && let Some(levels) = entry["supportedEffortLevels"].as_array()
+            {
+                if levels.len() > 64 {
+                    return Err(invalid());
                 }
+                let mut names = BTreeSet::new();
+                let choices = levels
+                    .iter()
+                    .map(|v| {
+                        let value = text(v).filter(|v| v.len() <= 64).ok_or_else(invalid)?;
+                        if !names.insert(value) {
+                            return Err(invalid());
+                        }
+                        Ok(Choice {
+                            value: value.into(),
+                            label: value.into(),
+                            disabled_reason: None,
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+                if !choices.is_empty() {
+                    options.push(OptionDescriptor {
+                        id: "reasoningEffort".into(),
+                        label: "Reasoning effort (session startup)".into(),
+                        scope: OptionScope::Session,
+                        revision: revision.clone(),
+                        control: OptionControl::Select {
+                            choices,
+                            default_value: None,
+                        },
+                        current_value: None,
+                        category: Some("reasoning".into()),
+                        source: Some(source.clone()),
+                        billing_sensitive: false,
+                        permission_sensitive: false,
+                    });
+                }
+            }
             report.models.push(Model {
                 id: route_model_key(route, id),
                 route_id: route.into(),

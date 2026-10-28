@@ -84,9 +84,10 @@ async fn authenticated(name: &str, token: &str) -> BufReader<lai_transports::loc
 async fn wait_token(path: &std::path::Path, deadline: Instant) -> Value {
     loop {
         if let Ok(bytes) = std::fs::read(path)
-            && let Ok(value) = serde_json::from_slice(&bytes) {
-                return value;
-            }
+            && let Ok(value) = serde_json::from_slice(&bytes)
+        {
+            return value;
+        }
         assert!(
             Instant::now() < deadline,
             "token file {} was not published",
@@ -244,9 +245,10 @@ async fn an_independent_broker_survives_consumer_disconnects_and_converges() {
     let deadline = Instant::now() + Duration::from_secs(15);
     let descriptor: Value = loop {
         if let Ok(bytes) = std::fs::read(&token_file)
-            && let Ok(value) = serde_json::from_slice(&bytes) {
-                break value;
-            }
+            && let Ok(value) = serde_json::from_slice(&bytes)
+        {
+            break value;
+        }
         assert!(
             Instant::now() < deadline,
             "broker did not publish a token file"

@@ -776,10 +776,11 @@ impl InventoryCache {
         let mut changed = Vec::new();
         for id in connections {
             if let Some(entry) = state.metadata.get_mut(id)
-                && !entry.invalidated {
-                    entry.invalidated = true;
-                    changed.push(id.clone());
-                }
+                && !entry.invalidated
+            {
+                entry.invalidated = true;
+                changed.push(id.clone());
+            }
             state.dirty.insert(id.clone());
             *state.connection_generations.entry(id.clone()).or_default() += 1;
         }
@@ -1248,11 +1249,12 @@ impl InventoryCache {
                         "inventory_failure",
                         changes,
                         0,
-                    ) {
-                        current.failure = Some((Instant::now(), error.clone()));
-                        current.storage_error = Some(error.clone());
-                        return Err(error);
-                    }
+                    )
+                {
+                    current.failure = Some((Instant::now(), error.clone()));
+                    current.storage_error = Some(error.clone());
+                    return Err(error);
+                }
                 *current = state;
                 Err(safe)
             }
@@ -1386,9 +1388,10 @@ impl InventoryCache {
             metadata.as_ref().map(|m| m.observed_at_ms).unwrap_or(0),
         )?;
         if let Some(metadata) = metadata
-            && let Some(entry) = state.metadata.get_mut(&metadata.report.connection_id) {
-                entry.report = metadata.report;
-            }
+            && let Some(entry) = state.metadata.get_mut(&metadata.report.connection_id)
+        {
+            entry.report = metadata.report;
+        }
         Ok(())
     }
 

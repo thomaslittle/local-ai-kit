@@ -119,9 +119,10 @@ impl Chat {
         // follow-up turns neither resend nor accumulate image payloads.
         let mut request = history.clone();
         if !cx.images().is_empty()
-            && let Some(last) = request.last_mut() {
-                *last = user_message(self.kind, &prompt, cx.images());
-            }
+            && let Some(last) = request.last_mut()
+        {
+            *last = user_message(self.kind, &prompt, cx.images());
+        }
         let (path, body) = match self.kind {
             HttpKind::Opencode => return Err(invalid()),
             HttpKind::Ollama => (
@@ -216,16 +217,18 @@ impl Chat {
             let frame = frames::decode(self.kind, &value)?;
             // OpenRouter reports the charge in USD credits in the final SSE usage frame.
             // Generic compatible endpoints may use a different currency or meaning.
-            if self.kind == HttpKind::Compatible && self.endpoint.reports_usd_cost()
+            if self.kind == HttpKind::Compatible
+                && self.endpoint.reports_usd_cost()
                 && let Some(cost) = value
                     .pointer("/usage/cost")
                     .and_then(serde_json::Value::as_number)
-                    && let Some(amount) = DecimalString::from_json_number(cost) {
-                        cx.emit(EventPayload::Usage {
-                            unit: "cost_usd".into(),
-                            used: amount.into(),
-                        })?;
-                    }
+                && let Some(amount) = DecimalString::from_json_number(cost)
+            {
+                cx.emit(EventPayload::Usage {
+                    unit: "cost_usd".into(),
+                    used: amount.into(),
+                })?;
+            }
             if terminal && !frame.text.is_empty() {
                 return Err(invalid());
             }

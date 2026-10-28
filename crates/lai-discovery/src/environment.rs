@@ -137,15 +137,16 @@ impl ScanEnvironment {
 fn home_from_vars(platform: HostPlatform, vars: &BTreeMap<String, String>) -> Result<PathBuf> {
     if platform == HostPlatform::Windows {
         if let Some(raw) = vars.get("HOME").map(String::as_str)
-            && !raw.is_empty() {
-                let path = PathBuf::from(raw);
-                // `is_absolute` rejects Git Bash `/home/user` and drive-relative
-                // `C:temp` on Windows. Both would otherwise follow the process
-                // cwd or the current drive's cwd.
-                if path.is_absolute() {
-                    return Ok(path);
-                }
+            && !raw.is_empty()
+        {
+            let path = PathBuf::from(raw);
+            // `is_absolute` rejects Git Bash `/home/user` and drive-relative
+            // `C:temp` on Windows. Both would otherwise follow the process
+            // cwd or the current drive's cwd.
+            if path.is_absolute() {
+                return Ok(path);
             }
+        }
         return present(vars, "USERPROFILE")
             .map(PathBuf::from)
             .ok_or_else(|| {

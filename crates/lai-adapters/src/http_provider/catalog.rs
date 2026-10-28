@@ -115,9 +115,9 @@ pub fn parse_catalog(
                 if let Some(architecture) = detail["model_info"]["general.architecture"].as_str()
                     && let Some(value) =
                         detail["model_info"][format!("{architecture}.context_length")].as_u64()
-                    {
-                        context = Observation::reported(value.to_string(), evidence(kind));
-                    }
+                {
+                    context = Observation::reported(value.to_string(), evidence(kind));
+                }
             }
             HttpKind::Lmstudio => {
                 support = Support::Supported;

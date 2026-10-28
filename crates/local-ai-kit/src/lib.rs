@@ -150,19 +150,21 @@ fn home_dir() -> Option<PathBuf> {
 /// The well-known address of a per-user shared broker.
 pub fn default_address() -> String {
     if let Some(value) = env::var_os("LAI_BROKER_ADDRESS")
-        && let Some(value) = value.to_str().filter(|value| valid_address(value)) {
-            return value.to_string();
-        }
+        && let Some(value) = value.to_str().filter(|value| valid_address(value))
+    {
+        return value.to_string();
+    }
     if cfg!(windows) {
         return "local-ai-kit-user".into();
     }
     if let Some(runtime) = env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from)
-        && runtime.is_absolute() {
-            return runtime
-                .join("local-ai-kit/user.sock")
-                .to_string_lossy()
-                .into();
-        }
+        && runtime.is_absolute()
+    {
+        return runtime
+            .join("local-ai-kit/user.sock")
+            .to_string_lossy()
+            .into();
+    }
     home_dir()
         .map(|home| home.join(".local-ai-kit/user.sock"))
         .unwrap_or_else(|| PathBuf::from("/tmp/local-ai-kit-user.sock"))
@@ -266,12 +268,13 @@ pub fn resolve_helper(explicit: Option<PathBuf>) -> Option<PathBuf> {
         return usable_helper(&path).then_some(path);
     }
     if let Ok(current) = env::current_exe()
-        && let Some(directory) = current.parent() {
-            let adjacent = directory.join(executable_name());
-            if usable_helper(&adjacent) {
-                return Some(adjacent);
-            }
+        && let Some(directory) = current.parent()
+    {
+        let adjacent = directory.join(executable_name());
+        if usable_helper(&adjacent) {
+            return Some(adjacent);
         }
+    }
     path_helper()
 }
 
@@ -456,25 +459,26 @@ impl LocalAi {
         let token_file = options.token_file.clone().or_else(default_token_file);
         if let Some(path) = token_file.as_deref()
             && let Some(token) = shared_token(path, &address)
-                && address_listening(&address, &token) {
-                    match BrokerClient::connect(&address, &token) {
-                        Ok(client) => {
-                            return Ok(Self {
-                                mode: Mode::Shared,
-                                fallback_reason: None,
-                                backend: Backend::Shared(client),
-                            });
-                        }
-                        Err(error) if error.starts_with("PROTOCOL_INCOMPATIBLE:") => {
-                            fallback_reason = Some("FALLBACK_PROTOCOL_MISMATCH");
-                        }
-                        Err(_) => {
-                            return Err(denied(
-                                "The shared broker rejected this application's grant or returned an invalid response",
-                            ));
-                        }
-                    }
+            && address_listening(&address, &token)
+        {
+            match BrokerClient::connect(&address, &token) {
+                Ok(client) => {
+                    return Ok(Self {
+                        mode: Mode::Shared,
+                        fallback_reason: None,
+                        backend: Backend::Shared(client),
+                    });
                 }
+                Err(error) if error.starts_with("PROTOCOL_INCOMPATIBLE:") => {
+                    fallback_reason = Some("FALLBACK_PROTOCOL_MISMATCH");
+                }
+                Err(_) => {
+                    return Err(denied(
+                        "The shared broker rejected this application's grant or returned an invalid response",
+                    ));
+                }
+            }
+        }
         if let Some(helper) = resolve_helper(options.helper.clone()) {
             let (child, descriptor) = spawn_private_helper(&helper, &options.policy)?;
             let client = BrokerClient::connect(&descriptor.address, &descriptor.token)

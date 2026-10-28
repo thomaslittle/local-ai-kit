@@ -87,15 +87,16 @@ pub fn parse_metadata(
         });
     }
     if kind == "chatgpt"
-        && let Some(plan) = text(&account["planType"]).filter(|plan| *plan != "unknown") {
-            report.plan = Observation::reported(
-                Plan {
-                    native_id: plan.into(),
-                    label: plan_label(plan).into(),
-                },
-                source.clone(),
-            );
-        }
+        && let Some(plan) = text(&account["planType"]).filter(|plan| *plan != "unknown")
+    {
+        report.plan = Observation::reported(
+            Plan {
+                native_id: plan.into(),
+                label: plan_label(plan).into(),
+            },
+            source.clone(),
+        );
+    }
     report.models = models::parse_models(route, &identity, native_models, &source)?;
     if let Some(rates) = rate_limits {
         report.quota_pools = usage::parse_usage(

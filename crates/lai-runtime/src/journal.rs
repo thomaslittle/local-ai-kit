@@ -38,9 +38,9 @@ impl Journal {
                 || self.records.front().is_some_and(|(e, _)| {
                     after.saturating_add(1) < e.sequence.parse::<u64>().unwrap_or(0)
                 }))
-            {
-                return Err(err(ErrorCode::EventGap));
-            }
+        {
+            return Err(err(ErrorCode::EventGap));
+        }
         let mut events = Vec::new();
         let mut bytes = 0;
         let mut cursor = after.unwrap_or_else(|| {

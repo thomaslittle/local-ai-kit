@@ -77,25 +77,26 @@ pub(super) fn parse_usage(
         // `codexRateLimitsToWindows` at
         // [4c18faf62c](https://github.com/pingdotgg/t3code/commit/4c18faf62c).
         if (native_id == "codex" || fallback == "codex")
-            && let Some(used) = individual_credit_used_percent(bucket.get("individualLimit")) {
-                let reading = UsageReading::try_from(UsageInput {
-                    unit: "percent".into(),
-                    used: DecimalString::try_from(used).map_err(|_| invalid())?,
-                    limit: Some(DecimalString::try_from("100".to_owned()).map_err(|_| invalid())?),
-                })
-                .map_err(|_| invalid())?;
-                let resets_at = bucket["individualLimit"]["resetsAt"]
-                    .as_i64()
-                    .and_then(|time| chrono::DateTime::from_timestamp(time, 0))
-                    .and_then(|dt| Timestamp::try_from(dt.to_rfc3339()).ok());
-                windows.push(UsageWindow {
-                    id: stable_id("window", &[&pool_id, "individual"]),
-                    label: "Monthly credit limit".into(),
-                    reading: Observation::reported(reading, source.clone()),
-                    resets_at,
-                    duration_seconds: None,
-                });
-            }
+            && let Some(used) = individual_credit_used_percent(bucket.get("individualLimit"))
+        {
+            let reading = UsageReading::try_from(UsageInput {
+                unit: "percent".into(),
+                used: DecimalString::try_from(used).map_err(|_| invalid())?,
+                limit: Some(DecimalString::try_from("100".to_owned()).map_err(|_| invalid())?),
+            })
+            .map_err(|_| invalid())?;
+            let resets_at = bucket["individualLimit"]["resetsAt"]
+                .as_i64()
+                .and_then(|time| chrono::DateTime::from_timestamp(time, 0))
+                .and_then(|dt| Timestamp::try_from(dt.to_rfc3339()).ok());
+            windows.push(UsageWindow {
+                id: stable_id("window", &[&pool_id, "individual"]),
+                label: "Monthly credit limit".into(),
+                reading: Observation::reported(reading, source.clone()),
+                resets_at,
+                duration_seconds: None,
+            });
+        }
         // Percent windows are not token estimates. Credits and spend controls need their own units.
         pools.push(QuotaPool {
             id: pool_id,

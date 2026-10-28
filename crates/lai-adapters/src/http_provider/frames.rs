@@ -118,9 +118,10 @@ pub fn decode(kind: HttpKind, v: &Value) -> Result<Frame> {
                                 return Err(no_tools());
                             }
                             if p["thought"] != true
-                                && let Some(text) = p.get("text") {
-                                    out.text.push_str(string(text)?);
-                                }
+                                && let Some(text) = p.get("text")
+                            {
+                                out.text.push_str(string(text)?);
+                            }
                         }
                     }
                     if let Some(reason) = c["finishReason"].as_str() {

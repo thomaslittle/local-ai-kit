@@ -17,19 +17,21 @@ fn home() -> Option<PathBuf> {
 
 fn default_address() -> String {
     if let Some(value) = std::env::var_os("LAI_BROKER_ADDRESS")
-        && let Some(value) = value.to_str().filter(|value| !value.is_empty()) {
-            return value.to_string();
-        }
+        && let Some(value) = value.to_str().filter(|value| !value.is_empty())
+    {
+        return value.to_string();
+    }
     if cfg!(windows) {
         return "local-ai-kit-user".into();
     }
     if let Some(runtime) = std::env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from)
-        && runtime.is_absolute() {
-            return runtime
-                .join("local-ai-kit/user.sock")
-                .to_string_lossy()
-                .into();
-        }
+        && runtime.is_absolute()
+    {
+        return runtime
+            .join("local-ai-kit/user.sock")
+            .to_string_lossy()
+            .into();
+    }
     home()
         .map(|home| home.join(".local-ai-kit/user.sock"))
         .unwrap_or_else(|| PathBuf::from("/tmp/local-ai-kit-user.sock"))

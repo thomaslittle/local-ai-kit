@@ -90,9 +90,9 @@ impl MetadataWatcher {
                             if name.as_deref().is_some_and(|n| NAMES.contains(&n))
                                 && let Some((_, connections)) =
                                     path.parent().and_then(|p| callback_targets.get(&key(p)))
-                                {
-                                    ids.extend(connections.iter().cloned());
-                                }
+                            {
+                                ids.extend(connections.iter().cloned());
+                            }
                         }
                     }
                     Err(_) => {

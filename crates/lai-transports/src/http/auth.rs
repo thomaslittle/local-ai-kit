@@ -125,10 +125,10 @@ pub(super) async fn pair(
             .service
             .register_execution(&client, grant.clone())
             .is_err()
-        {
-            state.service.close_client(&client);
-            return reject(StatusCode::SERVICE_UNAVAILABLE, "EXECUTION_UNAVAILABLE");
-        }
+    {
+        state.service.close_client(&client);
+        return reject(StatusCode::SERVICE_UNAVAILABLE, "EXECUTION_UNAVAILABLE");
+    }
     tokens.insert(
         hash(&token),
         Token {

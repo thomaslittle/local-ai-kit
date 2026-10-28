@@ -49,18 +49,21 @@ pub(super) async fn rpc(
         Err(e) => return bounded_json(e),
     };
     if request.method != "runtime.handshake"
-        && let Err(e) = authorize(&state, &headers, true) {
-            return *e;
-        }
+        && let Err(e) = authorize(&state, &headers, true)
+    {
+        return *e;
+    }
     let outcome = state
         .service
         .handle(&client, &request.method, request.params)
         .await;
-    if request.method == "runtime.handshake" && outcome.is_ok()
+    if request.method == "runtime.handshake"
+        && outcome.is_ok()
         && let Ok(mut tokens) = state.tokens.lock()
-            && let Some(token) = tokens.get_mut(&key) {
-                token.ready = true;
-            }
+        && let Some(token) = tokens.get_mut(&key)
+    {
+        token.ready = true;
+    }
     if ["grants.revoke", "runtime.closeClient"].contains(&request.method.as_str())
         && outcome.is_ok()
     {

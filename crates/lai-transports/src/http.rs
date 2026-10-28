@@ -81,9 +81,9 @@ impl HttpServer {
             && tokio::time::timeout(Duration::from_secs(3), &mut task)
                 .await
                 .is_err()
-            {
-                task.abort();
-            }
+        {
+            task.abort();
+        }
     }
     /// Host-side only: lets an embedding application authorize another explicit pairing.
     pub fn issue_pairing_code(&self) -> Result<String> {
