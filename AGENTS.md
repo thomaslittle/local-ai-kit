@@ -61,3 +61,23 @@ here and in linked guides; safety and permission boundaries remain unchanged.
 Use virtual homes, synthetic credentials, fake clients, and mock servers by default. Installing or configuring a dependency is not permission to consume an AI account. Live inference or paid checks require explicit authorization from the maintainers; missing account or platform access does not prevent fixture-based work. Do not launch extra hosted coding services or charge external AI APIs as part of a change.
 
 Record source commits, licenses, adapter operations, platforms, tests, and limits, and preserve upstream notices when reusing code. Do not publish to registries, buy or reset credits, sign releases, or alter unrelated local client settings. In every report distinguish **planned**, **implemented**, **fixture-tested**, **platform-executed**, and **live-qualified** status.
+
+## Dependency hygiene (owner direction, 2026-10-25)
+
+- At work start, check the important stack's official releases/registries and
+  dated release notes when its recorded review is missing or more than 7 days
+  old; also check before release and before relevant dependency changes. Review
+  urgent upstream advisories promptly, regardless of the review date.
+- Record review date, official source links, resolved version/Git SHA, local fork
+  patches, compatibility/pin rationale, and the upgrade decision in the linked
+  audit or existing dependency guidance. Distinguish latest stable, prerelease,
+  Git-only snapshots and supported compatibility pins; prefer compatible,
+  supported releases over blindly tracking HEAD.
+- Reuse a current review while pins/sources/advisories are unchanged; do not repeat
+  unchanged audits or add scheduled model wake-ups for this guidance. Coordinate
+  upgrades with active owners and preserve dirty work.
+- Validate adopted upgrades with focused builds and existing visual E2E/in-app
+  smoke of affected flows (or the smallest consuming flow for non-UI work). Add
+  no new unit tests for this maintenance; repeat checks only after a relevant
+  change or diagnosed failure. Record evidence and untested platform limits.
+- Latest bounded review: [2026-10-25 dependency audit](docs/dependency-audit-2026-10-25.md).
