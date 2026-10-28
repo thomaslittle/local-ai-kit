@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     target: "es2020",
+    sourcemap: true,
     assetsInlineLimit: 2048,
     rollupOptions: {
       output: {

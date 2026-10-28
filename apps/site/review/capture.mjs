@@ -14,6 +14,7 @@ const candidates = [
 const executablePath = candidates.find((path) => existsSync(path));
 
 const base = process.env.SITE_URL ?? "http://127.0.0.1:5174/";
+const desktopBase = base + (base.includes("?") ? "&" : "?") + "3d";
 
 const browser = await chromium.launch({
   executablePath,
@@ -49,7 +50,7 @@ page.on("console", (message) => {
 });
 page.on("pageerror", (error) => errors.push(error.message));
 
-await page.goto(base, { waitUntil: "domcontentloaded" });
+await page.goto(desktopBase, { waitUntil: "domcontentloaded" });
 await settle(page, 2600);
 await page.screenshot({ path: join(out, "desktop-hero.png") });
 await page.screenshot({ path: join(out, "desktop-full.png"), fullPage: true });

@@ -3,8 +3,9 @@ import { PROMO } from "../data/video";
 
 const CHAPTERS = [
   ["00:00", "Know your AI", "Every client, quota and reset time in one local view."],
-  ["00:24", "Build on it", "The exploded stack, from providers up to your app."],
-  ["00:38", "Connect", "Discovery, a revocable grant and the connected badge."],
+  ["00:18", "Build on it", "The exploded stack, from providers up to your app."],
+  ["00:30", "Connect", "Discovery, a revocable grant and the connected badge."],
+  ["00:41", "Install", "One user service, three SDKs, no admin rights."],
 ];
 
 export function Video() {

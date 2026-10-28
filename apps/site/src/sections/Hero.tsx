@@ -4,10 +4,16 @@ import { LAYERS, type Layer } from "../data/layers";
 
 const HeroScene = lazy(() => import("../scene/HeroScene"));
 
-function supportsWebGL() {
+function supportsWebGL(allowSoftware: boolean) {
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
+    const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    if (!gl) return false;
+    if (allowSoftware) return true;
+    const debug = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = debug ? String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)) : "";
+    // Software rasterizers (Lighthouse, headless CI, some VMs) cannot hold 60 fps.
+    return !/swiftshader|llvmpipe|software|basic render/i.test(renderer);
   } catch {
     return false;
   }
@@ -24,7 +30,9 @@ export function HeroStage() {
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || !supportsWebGL()) {
+    const force3d = new URLSearchParams(window.location.search).has("3d");
+    const smallViewport = window.innerWidth < 900;
+    if (reduced || smallViewport || !supportsWebGL(force3d)) {
       setStaticMode(true);
       return;
     }
