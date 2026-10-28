@@ -98,7 +98,7 @@ enum Backend {
     Shared(BrokerClient),
     Child {
         client: BrokerClient,
-        child: Child,
+        _child: OwnedHelper,
     },
     InProcess {
         client: EmbeddedClient,
@@ -344,15 +344,48 @@ fn child_args(address: &str, policy: &ClientPolicy) -> Vec<OsString> {
     args
 }
 
-fn spawn_private_helper(helper: &Path, policy: &ClientPolicy) -> Result<(Child, Descriptor)> {
+/// Own the process immediately, including while its startup handshake is pending.
+struct OwnedHelper(Child);
+
+impl std::ops::Deref for OwnedHelper {
+    type Target = Child;
+    fn deref(&self) -> &Child {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for OwnedHelper {
+    fn deref_mut(&mut self) -> &mut Child {
+        &mut self.0
+    }
+}
+
+impl Drop for OwnedHelper {
+    fn drop(&mut self) {
+        let _ = self.0.stdin.take();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while Instant::now() < deadline {
+            if self.0.try_wait().ok().flatten().is_some() {
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(25));
+        }
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
+fn spawn_private_helper(helper: &Path, policy: &ClientPolicy) -> Result<(OwnedHelper, Descriptor)> {
     let address = unique_address();
-    let mut child = Command::new(helper)
-        .args(child_args(&address, policy))
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|_| unavailable("The private helper could not start"))?;
+    let mut child = OwnedHelper(
+        Command::new(helper)
+            .args(child_args(&address, policy))
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|_| unavailable("The private helper could not start"))?,
+    );
     let stdout = child
         .stdout
         .take()
@@ -379,7 +412,11 @@ fn spawn_private_helper(helper: &Path, policy: &ClientPolicy) -> Result<(Child, 
         return Err(unavailable("The private helper did not become ready"));
     }
     match parse_descriptor(&line) {
-        Ok(descriptor) => Ok((child, descriptor)),
+        Ok(descriptor) if descriptor.address == address => Ok((child, descriptor)),
+        Ok(_) => Err(DomainError::new(
+            ErrorCode::ProtocolIncompatible,
+            "The private helper returned a different address",
+        )),
         Err(error) => {
             let _ = child.kill();
             Err(error)
@@ -396,6 +433,19 @@ impl LocalAi {
     /// Start with explicit options. A missing shared broker or helper is not an
     /// error; a shared broker that is listening but rejects the token is.
     pub fn start_with(options: StartOptions) -> Result<Self> {
+        if options
+            .helper
+            .as_deref()
+            .is_some_and(|path| !usable_helper(path))
+            || (options.helper.is_none()
+                && env::var_os("LAI_HELPER_PATH")
+                    .is_some_and(|path| !usable_helper(Path::new(&path))))
+        {
+            return Err(DomainError::new(
+                ErrorCode::InvalidRequest,
+                "The configured helper must be an absolute executable file; fix LAI_HELPER_PATH or StartOptions.helper",
+            ));
+        }
         let address = options.address.clone().unwrap_or_else(default_address);
         let token_file = options.token_file.clone().or_else(default_token_file);
         if let Some(path) = token_file.as_deref() {
@@ -417,7 +467,10 @@ impl LocalAi {
                 .map_err(|_| denied("The private helper rejected its own grant"))?;
             return Ok(Self {
                 mode: Mode::Child,
-                backend: Backend::Child { client, child },
+                backend: Backend::Child {
+                    client,
+                    _child: child,
+                },
             });
         }
         if !options.allow_in_process {
@@ -512,24 +565,6 @@ fn unwrap_value(value: std::result::Result<Value, String>) -> Result<Value> {
     value.map_err(|_| DomainError::new(ErrorCode::ProviderUnavailable, "The broker request failed"))
 }
 
-impl Drop for LocalAi {
-    fn drop(&mut self) {
-        if let Backend::Child { child, .. } = &mut self.backend {
-            // Closing the control channel is what stops a parent-owned broker.
-            let _ = child.stdin.take();
-            let deadline = Instant::now() + Duration::from_secs(2);
-            while Instant::now() < deadline {
-                if child.try_wait().ok().flatten().is_some() {
-                    return;
-                }
-                std::thread::sleep(Duration::from_millis(25));
-            }
-            let _ = child.kill();
-            let _ = child.wait();
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -561,6 +596,44 @@ mod tests {
         std::fs::write(&script, b"").unwrap();
         assert!(!usable_helper(&script));
         assert!(resolve_helper(Some(directory.path().join("missing"))).is_none());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn failed_private_descriptor_reaps_the_owned_process() {
+        use std::os::unix::fs::PermissionsExt;
+        let directory = tempfile::tempdir().unwrap();
+        let helper = directory.path().join("helper");
+        let pid_file = directory.path().join("pid");
+        // Synthetic child: no provider, home directory, or account access.
+        std::fs::write(
+            &helper,
+            format!(
+                "#!/bin/sh\necho $$ > '{}'\necho invalid\nwhile read line; do :; done\n",
+                pid_file.display()
+            ),
+        )
+        .unwrap();
+        std::fs::set_permissions(&helper, std::fs::Permissions::from_mode(0o700)).unwrap();
+        assert!(spawn_private_helper(&helper, &ClientPolicy::denied()).is_err());
+        let pid = std::fs::read_to_string(pid_file).unwrap();
+        let status = Command::new("kill")
+            .args(["-0", pid.trim()])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .unwrap();
+        assert!(!status.success(), "failed startup must reap its child");
+    }
+
+    #[test]
+    fn invalid_explicit_helper_never_falls_back() {
+        let directory = tempfile::tempdir().unwrap();
+        let result = LocalAi::start_with(StartOptions {
+            helper: Some(directory.path().join("missing")),
+            ..StartOptions::default()
+        });
+        assert!(result.is_err());
     }
 
     #[test]

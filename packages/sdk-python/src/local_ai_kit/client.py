@@ -111,54 +111,58 @@ async def _open_private(executable: str, options: dict) -> AsyncStdioTransport:
         )
     except (OSError, ValueError):
         raise LocalAIError('RUNTIME_MISSING') from None
+    async def stop():
+        if broker.stdin is not None:
+            broker.stdin.close()
+        try:
+            await asyncio.wait_for(broker.wait(), timeout=2)
+        except asyncio.TimeoutError:
+            if broker.returncode is None:
+                try:
+                    broker.kill()
+                except ProcessLookupError:
+                    pass
+            await broker.wait()
+
     try:
-        line = await asyncio.wait_for(broker.stdout.readline(), timeout=8)
-    except asyncio.TimeoutError:
-        broker.kill()
-        await broker.wait()
-        raise LocalAIError('RUNTIME_MISSING') from None
-    if not line or len(line) > 4097:
-        broker.kill()
-        await broker.wait()
-        raise LocalAIError('PROTOCOL_INCOMPATIBLE')
-    try:
-        descriptor = json.loads(line.decode('utf-8'))
-    except (UnicodeDecodeError, ValueError):
-        broker.kill()
-        await broker.wait()
-        raise LocalAIError('PROTOCOL_INCOMPATIBLE') from None
-    if (
-        not isinstance(descriptor, dict)
-        or descriptor.get('protocolVersion') != '1.0'
-        or descriptor.get('address') != address
-        or descriptor.get('independent') is True
-        or not isinstance(descriptor.get('token'), str)
-        or not re.fullmatch(r'[0-9a-f]{64}', descriptor['token'])
-    ):
-        broker.kill()
-        await broker.wait()
-        raise LocalAIError('PROTOCOL_INCOMPATIBLE')
-    transport = await AsyncStdioTransport.open_broker(
-        executable=executable,
-        address=descriptor['address'],
-        token=descriptor['token'],
-        **options,
-    )
+        try:
+            line = await asyncio.wait_for(broker.stdout.readline(), timeout=8)
+        except asyncio.TimeoutError:
+            raise LocalAIError('RUNTIME_MISSING') from None
+        except ValueError:
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE') from None
+        if not line or len(line) > 4096:
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+        try:
+            descriptor = json.loads(line.decode('utf-8'))
+        except (UnicodeDecodeError, ValueError):
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE') from None
+        if (
+            not isinstance(descriptor, dict)
+            or descriptor.get('protocolVersion') != '1.0'
+            or descriptor.get('address') != address
+            or descriptor.get('independent') is True
+            or not isinstance(descriptor.get('token'), str)
+            or not re.fullmatch(r'[0-9a-f]{64}', descriptor['token'])
+        ):
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+        transport = await AsyncStdioTransport.open_broker(
+            executable=executable,
+            address=descriptor['address'],
+            token=descriptor['token'],
+            **options,
+        )
+    except BaseException:
+        # Includes cancellation: a partially started broker still belongs to us.
+        await stop()
+        raise
     original_close = transport.close
 
     async def close():
         try:
             await original_close()
         finally:
-            try:
-                if broker.stdin is not None:
-                    broker.stdin.close()
-            finally:
-                try:
-                    await asyncio.wait_for(broker.wait(), timeout=2)
-                except asyncio.TimeoutError:
-                    broker.kill()
-                    await broker.wait()
+            await stop()
 
     transport.close = close  # type: ignore[method-assign]
     transport.mode = 'child'  # type: ignore[attr-defined]

@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chmodSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import {chmodSync, readFileSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {defaultAddress, defaultTokenFile, platformPackage, resolveHelper} from '../node/auto.mjs';
+import {defaultAddress, defaultTokenFile, platformPackage, resolveHelper, openAutoTransport} from '../node/auto.mjs';
 
 function helper() {
   const directory = mkdtempSync(join(tmpdir(), 'lai-helper-'));
@@ -74,4 +74,18 @@ test('shared broker defaults follow the environment', () => {
     else process.env.LAI_BROKER_TOKEN_FILE = previous.token;
   }
   assert.match(defaultTokenFile(), /broker-token\.json$/);
+});
+
+
+test('malformed private startup reaps the child before rejecting', {skip: process.platform === 'win32'}, async () => {
+  const {directory, binary} = helper();
+  const pidFile = join(directory, 'pid');
+  writeFileSync(binary, '#!/bin/sh\nprintf "%s" "$$" > "$LAI_TEST_PID"\nprintf "invalid\\n"\nwhile read -r line; do :; done\n');
+  try {
+    await assert.rejects(openAutoTransport({executable: binary, token: '', env: {LAI_TEST_PID: pidFile}}), /PROTOCOL_INVALID/);
+    const pid = Number(readFileSync(pidFile, 'utf8'));
+    assert.throws(() => process.kill(pid, 0), {code: 'ESRCH'});
+  } finally {
+    rmSync(directory, {recursive: true, force: true});
+  }
 });

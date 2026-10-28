@@ -44,11 +44,11 @@ local; explicitly authorized provider operations can contact remote providers.
 
 | ID | Priority | Finding | Fix / evidence |
 |---|---|---|---|
-| V1-001 | P1 | Private helper startup failure can leak owned children in TS, Python and Rust; timeout/error paths do not all reap processes. | Open: unify cleanup across startup and close, add synthetic lifecycle regressions. |
+| V1-001 | P1 | Private helper startup failure can leak owned children in TS, Python and Rust; timeout/error paths do not all reap processes. | Implemented: owned-process guard in Rust and cleanup spanning startup/bridge errors in TS/Python, including Python cancellation. Synthetic regressions added; execution deferred to final phase. |
 | V1-002 | P1 | Dependency-first shared connection and protocol fallback do not yet implement ADR-002 D9 consistently. | Open: trace authentication versus incompatibility and preserve fail-closed grants. |
 | V1-003 | P1 | GitHub reports active dependency advisories for undici, rustls, setuptools, fast-uri and lru. | Open: inspect affected locked paths and upstream patches; qualify bounded upgrades. |
 | V1-004 | P2 | ADR-002 privacy statement says nothing leaves the machine despite explicit remote provider operations. | Open: clarify local control plane versus authorized provider traffic across public copy. |
-| V1-005 | P2 | Rust helper resolution silently ignores an invalid environment override; TS and Python reject it. | Open: align explicit override failure semantics. |
+| V1-005 | P2 | Rust helper resolution silently ignores an invalid environment override; TS and Python reject it. | Implemented: Rust start rejects invalid configured overrides before attempting shared or embedded fallback. Regression added; execution pending. |
 | V1-006 | P2 | The integration has three independently maintained visual token systems. | Open: establish one brand source with generated consumer outputs. |
 
 This initial list is not an exhaustive audit. No P0 finding has been established;
@@ -58,7 +58,7 @@ reviewing each crate, package, workflow and product surface.
 ## Verification ledger
 
 - **Planned:** whole-product review, remediation, visual work, film, full check pass.
-- **Implemented:** upstream integration only.
+- **Implemented:** upstream integration and private-helper lifecycle cleanup; invalid Rust override rejection.
 - **Fixture-tested:** no new results yet.
 - **Platform-executed:** Git integration on Linux only; no product execution yet.
 - **Live-qualified:** none; no inference or account probing performed.

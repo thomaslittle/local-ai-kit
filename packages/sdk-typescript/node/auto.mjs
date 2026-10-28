@@ -6,7 +6,7 @@ import {homedir} from 'node:os';
 import {isAbsolute, join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {LocalAIError} from '../dist/errors.js';
-import {openBrokerTransport, openStdioTransport} from './index.mjs';
+import {openBrokerTransport} from './index.mjs';
 
 const fail = code => new LocalAIError(code);
 const require = createRequire(import.meta.url);
@@ -126,43 +126,58 @@ async function openPrivateTransport(helper, options) {
   });
   child.stderr.on('data', () => {});
   child.stdin.on('error', () => {});
-  const descriptor = await new Promise((resolve, reject) => {
-    let buffer = '';
-    const timer = setTimeout(() => finish(fail('RUNTIME_MISSING')), options.waitMs ?? 8000);
-    function finish(error, value) {
-      clearTimeout(timer);
-      child.stdout.off('data', onData);
-      child.off('error', onError);
-      if (error) reject(error); else resolve(value);
-    }
-    function onError() { finish(fail('RUNTIME_MISSING')); }
-    function onData(chunk) {
-      buffer += chunk.toString('utf8');
-      if (buffer.length > 4096) return finish(fail('PROTOCOL_INVALID'));
-      const end = buffer.indexOf('\n');
-      if (end === -1) return;
-      let value;
-      try { value = JSON.parse(buffer.slice(0, end)); } catch { return finish(fail('PROTOCOL_INVALID')); }
-      if (value?.protocolVersion !== '1.0' || value.address !== address || !/^[0-9a-f]{64}$/.test(value.token) || value.independent === true) {
-        return finish(fail('PROTOCOL_INVALID'));
-      }
-      finish(null, value);
-    }
-    child.stdout.on('data', onData);
-    child.once('error', onError);
+  const exited = new Promise(resolve => {
+    child.once('exit', resolve);
+    child.once('error', resolve);
   });
-  const stop = () => {
-    try { child.stdin.end(); } catch {}
-    const killer = setTimeout(() => { try { child.kill(); } catch {} }, 2000);
-    killer.unref?.();
-  };
+  let stopping;
+  const stop = () => stopping ??= (async () => {
+    child.stdin.end();
+    const killer = setTimeout(() => {
+      if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+    }, 2000);
+    try { await exited; } finally { clearTimeout(killer); }
+  })();
   try {
+    const descriptor = await new Promise((resolve, reject) => {
+      let buffer = '';
+      let settled = false;
+      const timer = setTimeout(() => finish(fail('RUNTIME_MISSING')), options.waitMs ?? 8000);
+      function finish(error, value) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        child.stdout.off('data', onData);
+        child.off('error', onError);
+        child.off('exit', onError);
+        if (error) reject(error); else resolve(value);
+      }
+      function onError() { finish(fail('RUNTIME_MISSING')); }
+      function onData(chunk) {
+        buffer += chunk.toString('utf8');
+        if (buffer.length > 4096) return finish(fail('PROTOCOL_INVALID'));
+        const end = buffer.indexOf('\n');
+        if (end === -1) return;
+        let value;
+        try { value = JSON.parse(buffer.slice(0, end)); } catch { return finish(fail('PROTOCOL_INVALID')); }
+        if (value?.protocolVersion !== '1.0' || value.address !== address || !/^[0-9a-f]{64}$/.test(value.token) || value.independent === true) {
+          return finish(fail('PROTOCOL_INVALID'));
+        }
+        finish(null, value);
+      }
+      child.stdout.on('data', onData);
+      child.once('error', onError);
+      child.once('exit', onError);
+    });
+
     const transport = await openBrokerTransport({...options, executable: helper, address: descriptor.address, token: descriptor.token});
     const close = transport.close.bind(transport);
-    transport.close = async () => { stop(); return close(); };
+    transport.close = async () => {
+      try { await close(); } finally { await stop(); }
+    };
     return Object.assign(transport, {mode: 'child'});
   } catch (error) {
-    stop();
+    await stop();
     throw error;
   }
 }

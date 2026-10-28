@@ -1,10 +1,11 @@
+import asyncio
 import os
 import pathlib
 import stat
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import importlib.util
 
@@ -76,6 +77,36 @@ class HelperResolutionTests(unittest.TestCase):
                 path.chmod(0o600)
                 self.assertEqual(client_module._shared_token('/tmp/x.sock', path), 'a' * 64)
                 self.assertIsNone(client_module._shared_token('/tmp/other.sock', path))
+
+
+class PrivateLifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_every_startup_failure_reaps_the_owned_broker(self):
+        for failure in (ValueError('oversized frame'), asyncio.CancelledError()):
+            with self.subTest(failure=type(failure).__name__):
+                broker = MagicMock()
+                broker.returncode = None
+                broker.stdout.readline = AsyncMock(side_effect=failure)
+                broker.wait = AsyncMock(return_value=0)
+                with patch.object(asyncio, 'create_subprocess_exec', AsyncMock(return_value=broker)):
+                    with self.assertRaises((LocalAIError, asyncio.CancelledError)):
+                        await client_module._open_private('/fixture/helper', {})
+                broker.wait.assert_awaited()
+                self.assertTrue(broker.stdin.close.called or broker.kill.called)
+
+    async def test_bridge_failure_reaps_the_owned_broker(self):
+        broker = MagicMock()
+        broker.returncode = None
+        broker.stdout.readline = AsyncMock(return_value=(
+            '{"protocolVersion":"1.0","address":"fixture","token":"' + 'a' * 64 + '"}\n'
+        ).encode())
+        broker.wait = AsyncMock(return_value=0)
+        with (patch.object(client_module, '_unique_address', return_value='fixture'),
+              patch.object(asyncio, 'create_subprocess_exec', AsyncMock(return_value=broker)),
+              patch.object(client_module.AsyncStdioTransport, 'open_broker',
+                           AsyncMock(side_effect=LocalAIError('LOCAL_ACCESS_DENIED')))):
+            with self.assertRaises(LocalAIError):
+                await client_module._open_private('/fixture/helper', {})
+        broker.wait.assert_awaited()
 
 
 if __name__ == '__main__':
