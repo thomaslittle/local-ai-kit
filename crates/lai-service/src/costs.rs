@@ -2,6 +2,8 @@ use crate::{NativeService, denied, params};
 use lai_contracts::*;
 use std::{collections::BTreeSet, path::PathBuf, sync::RwLock};
 
+const MAX_PRICE_BYTES: usize = 131072;
+
 pub(crate) struct Prices {
     values: Vec<ModelPrice>,
     path: Option<PathBuf>,
@@ -53,10 +55,10 @@ impl NativeService {
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
                 Err(_) => return Err(()),
             };
-            if !metadata.is_file() || metadata.len() > 131072 {
+            if !metadata.is_file() || metadata.len() > MAX_PRICE_BYTES as u64 {
                 return Err(());
             }
-            let bytes = lai_platform::read_private_file(&path, 131072).map_err(|_| ())?;
+            let bytes = lai_platform::read_private_file(&path, MAX_PRICE_BYTES).map_err(|_| ())?;
             let values: Vec<ModelPrice> = serde_json::from_slice(&bytes).map_err(|_| ())?;
             validate(&values).map_err(|_| ())?;
             Ok(Some(values))
@@ -84,6 +86,10 @@ impl NativeService {
             return Err(denied());
         }
         validate(&prices)?;
+        let serialized = serde_json::to_vec_pretty(&prices).map_err(|_| params::invalid())?;
+        if serialized.len() > MAX_PRICE_BYTES {
+            return Err(DomainError::new(ErrorCode::FrameTooLarge, "Price table exceeds 128 KiB; shorten sources or remove rows"));
+        }
         let mut current = self.cost_prices.write().map_err(|_| denied())?;
         if let Some(path) = &current.path {
             let write = || -> std::io::Result<()> {
@@ -104,7 +110,7 @@ impl NativeService {
                 }
                 let result = (|| {
                     let mut file = options.open(&temporary)?;
-                    file.write_all(&serde_json::to_vec_pretty(&prices)?)?;
+                    file.write_all(&serialized)?;
                     file.sync_all()?;
                     drop(file);
                     std::fs::rename(&temporary, path)
