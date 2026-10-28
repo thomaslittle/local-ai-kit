@@ -17,3 +17,5 @@ pub const LIGHT_MUTED: u32 = 0x6b635c;
 pub const LIGHT_SUCCESS: u32 = 0x557a62;
 pub const LIGHT_WARNING: u32 = 0x9a6b14;
 pub const LIGHT_DANGER: u32 = 0xb4544a;
+pub const DARK_INPUT: u32 = 0x807975;
+pub const LIGHT_INPUT: u32 = 0x6b635c;

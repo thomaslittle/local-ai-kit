@@ -33,6 +33,7 @@ pub fn apply(cx: &mut App, dark: bool) {
             c.background = rgb(brand::DARK_BACKGROUND).into();
             c.foreground = rgb(brand::PAPER).into();
             c.border = rgb(brand::DARK_BORDER).into();
+            c.input = rgb(brand::DARK_INPUT).into();
             c.muted = rgb(brand::DARK_RAISED).into();
             c.muted_foreground = rgb(brand::DARK_MUTED).into();
             c.accent = rgb(0x3A3233).into();
@@ -111,6 +112,7 @@ pub fn apply(cx: &mut App, dark: bool) {
             c.background = rgb(brand::PAPER).into();
             c.foreground = rgb(brand::GRAPHITE).into();
             c.border = rgb(brand::LIGHT_BORDER).into();
+            c.input = rgb(brand::LIGHT_INPUT).into();
             c.muted = rgb(0xF1EDE4).into();
             c.muted_foreground = rgb(brand::LIGHT_MUTED).into();
             c.accent = rgb(0xF0E9DC).into();

@@ -34,5 +34,5 @@ for path, expected in outputs.items():
     if '--check' in sys.argv:
         if not path.exists() or path.read_text() != expected:
             raise SystemExit(f'Brand tokens are stale: {path.relative_to(ROOT)}; run python scripts/generate_brand_tokens.py')
-    else:
+    elif not path.exists() or path.read_text() != expected:
         path.write_text(expected)

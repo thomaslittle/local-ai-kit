@@ -1,7 +1,7 @@
 @import "../../../../brand/tokens.css";
 @font-face {
   font-family: "Red Hat Display Variable";
-  src: url("../assets/fonts/RedHatDisplay-Variable.ttf") format("truetype");
+  src: url("../../../../brand/fonts/RedHatDisplay-Variable.woff2") format("woff2");
   font-weight: 300 900;
   font-style: normal;
   font-display: swap;
