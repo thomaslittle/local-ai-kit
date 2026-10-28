@@ -1,14 +1,15 @@
-# local-ai-kit (Python)
+# Local AI Kit Python SDK (`local-ai-kit-preview`)
+
+> Alpha. Not yet published to PyPI; prepare a local platform wheel from source (see [quickstarts](../../docs/integration/quickstarts.md)).
 
 ```python
 from local_ai_kit import Client
-ai = Client.auto()          # shared broker, or the bundled helper child
-print(ai.mode, ai.snapshot.get({"fields": ["revision"]}))
+with Client.auto() as ai:
+    print(ai.mode, ai.fallback_reason, ai.snapshot.get()['revision'])
 ```
 
-# Local AI Kit Python SDK (`local-ai-kit-preview`)
-
-> Alpha. Not yet published to PyPI; build the wheel from source or use the release bundle (see [distribution](../../docs/integration/distribution.md)).
+Automatic startup uses a granted shared broker or the packaged private helper.
+A protocol mismatch can select the private helper; authorization failure is fatal.
 
 An async-first native-helper client with a synchronous facade. Python 3.11+, no runtime third-party dependencies. Imports do not inspect the filesystem, read accounts, start a process, or make network requests.
 
@@ -31,6 +32,6 @@ Requests have bounded frames, correlation, deadlines, native error redaction, no
 
 Only safe environment names are inherited by default. The caller explicitly supplies any additional environment entries. This is not a sandbox; the native helper must enforce grants, workspace/tool restrictions, billing, approvals, and cleanup of agent descendants. The SDK terminates only its own helper.
 
-Domain types are generated from the Rust contracts (`local_ai_kit.generated`, plain `TypedDict`s). Responses stay dictionaries preserving the server's evidence and native values. There is no independent Python HTTP transport; use stdio. No discovery/provider logic is duplicated in Python.
+Domain types are generated from the Rust contracts (`local_ai_kit.generated`, plain `TypedDict`s). Responses stay dictionaries preserving the server's evidence and native values. There is no independent Python HTTP transport; use automatic startup, local IPC or stdio. No discovery/provider logic is duplicated in Python.
 
 Tests: `python -m unittest discover -s packages/sdk-python/tests -v` from the repository root. All account values in fixtures are synthetic. The package is marked private and is not published to a registry.
