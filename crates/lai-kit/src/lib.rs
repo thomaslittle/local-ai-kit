@@ -13,7 +13,8 @@ pub use lai_service::{ExecutionGrant, InventorySource, NativeService};
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 pub use service_builder::{
-    build_service_with_chatgpt, build_service_with_declarations, build_service_with_endpoints,
+    build_service_with_chatgpt, build_service_with_cursor_usage,
+    build_service_with_declarations, build_service_with_endpoints,
     build_service_with_registries, build_service_with_state, default_state_dir,
 };
 use std::{

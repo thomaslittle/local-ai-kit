@@ -26,6 +26,8 @@ Usage:
       [--allow-writes] [--allow-native-policy] [--review-native-requests] [--allow-paid-options]
       [--warm-metadata] [--no-metadata-cache]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
+  --allow-usage cursor additionally reads Cursor's own dashboard allowances with the
+  session token stored by Cursor; the token is never logged, serialized or exported.
   --executable-only-provider PROVIDER may repeat for known discovery providers; retains private executable candidates without publishing their profiles or routes.
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode, muse.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
@@ -152,7 +154,7 @@ async fn execute(args: Args) -> Result<()> {
         }
         Ok(result)
     });
-    let service = lai_kit::build_service_with_chatgpt(
+    let service = lai_kit::build_service_with_cursor_usage(
         inventory,
         args.allow_execution,
         registry,
@@ -160,6 +162,7 @@ async fn execute(args: Args) -> Result<()> {
         declarations,
         state_dir,
         chatgpt,
+        args.usage_providers.contains("cursor"),
     );
     #[cfg(feature = "os-notifications")]
     if args.os_notifications {

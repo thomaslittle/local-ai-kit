@@ -121,6 +121,33 @@ pub fn build_service_with_chatgpt(
     state_dir: Option<std::path::PathBuf>,
     chatgpt: Option<(Arc<AuthManager>, String)>,
 ) -> Arc<NativeService> {
+    build_service_with_cursor_usage(
+        source,
+        execute,
+        registry,
+        native_registry,
+        declarations,
+        state_dir,
+        chatgpt,
+        false,
+    )
+}
+
+/// Same as [`build_service_with_chatgpt`], with an explicit grant for provider
+/// surfaces that need a local session token to read allowances. Only Cursor
+/// currently has such a surface; the host must opt in with
+/// `--allow-usage cursor`.
+#[allow(clippy::too_many_arguments)]
+pub fn build_service_with_cursor_usage(
+    source: InventorySource,
+    execute: bool,
+    registry: Arc<Registry>,
+    native_registry: Arc<NativeRegistry>,
+    declarations: Arc<BillingDeclarations>,
+    state_dir: Option<std::path::PathBuf>,
+    chatgpt: Option<(Arc<AuthManager>, String)>,
+    cursor_usage: bool,
+) -> Arc<NativeService> {
     let metadata_registry = registry.clone();
     let metadata_native = native_registry.clone();
     let metadata_declarations = declarations.clone();
@@ -143,6 +170,7 @@ pub fn build_service_with_chatgpt(
                     native_profile,
                     native_browser,
                     chatgpt,
+                    cursor_usage,
                 )
                 .await?;
                 declarations.apply(&provider, &mut report);
@@ -164,6 +192,7 @@ pub fn build_service_with_chatgpt(
         chatgpt,
     )
 }
+#[allow(clippy::too_many_arguments)]
 async fn probe_metadata(
     located: lai_discovery::LocatedClient,
     connection: String,
@@ -172,6 +201,7 @@ async fn probe_metadata(
     native_profile: Option<lai_adapters::native_clients::config::NativeProfile>,
     native_browser: Option<std::path::PathBuf>,
     chatgpt: Option<(Arc<AuthManager>, String)>,
+    cursor_usage: bool,
 ) -> lai_contracts::Result<lai_contracts::ConnectionMetadata> {
     if located.provider_id == "codex_managed" {
         let (auth, app_name) = chatgpt.ok_or_else(|| {
@@ -264,16 +294,9 @@ async fn probe_metadata(
             })?;
             lai_adapters::muse::probe(&executable, &connection, &route).await
         }
-        "cursor" => tokio::task::spawn_blocking(move || {
-            lai_adapters::cursor::read_cached(located, &connection, &route)
-        })
-        .await
-        .map_err(|_| {
-            DomainError::new(
-                ErrorCode::ProviderUnavailable,
-                "Cursor metadata worker unavailable",
-            )
-        })?,
+        "cursor" => {
+            lai_adapters::cursor::probe(located, &connection, &route, cursor_usage).await
+        }
         _ => Err(DomainError::new(
             ErrorCode::CapabilityUnsupported,
             "No metadata adapter registered",
