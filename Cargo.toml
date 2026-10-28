@@ -3,11 +3,11 @@ resolver = "3"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.0-alpha.18"
+version = "0.1.0-alpha.20"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/thomaslittle/local-ai-kit"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }

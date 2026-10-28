@@ -10,7 +10,7 @@ pub const TOKSCALE_REPOSITORY: &str = "junhoyeo/tokscale";
 pub const TOKSCALE_COMMIT: &str = "1d9a9395418efc6952944b794097935d7d6fa1e8";
 /// Audited T3 Code commit. Released builds do not fetch this revision.
 pub const T3CODE_REPOSITORY: &str = "pingdotgg/t3code";
-pub const T3CODE_COMMIT: &str = "cfafb4bb54d244e4612f5681aad3832ea64cb0fb";
+pub const T3CODE_COMMIT: &str = "e9236274a3a6e0c731a7df4092db1e686f039068";
 
 /// Why a discovery rule is trusted. Higher ranks win when sources disagree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -220,6 +220,16 @@ pub fn discovery_rules() -> Vec<DiscoveryRule> {
             evidence: t3code("packages/provider-pi/src/server/usage.ts piUsageReader.directories"),
         },
         DiscoveryRule {
+            id: "fx-home",
+            provider_id: "fx",
+            role: RuleRole::ProfileHome,
+            basis: RuleBasis::UpstreamOss,
+            summary: "~/.fx holds fx sessions. There is no home override. The fx command is not launched.",
+            evidence: t3code(
+                "packages/provider-fx/src/server/driver.ts sessions under ~/.fx; status.ts command fx",
+            ),
+        },
+        DiscoveryRule {
             id: "opencode-native-bin",
             provider_id: "opencode",
             role: RuleRole::ProfileHome,
@@ -306,6 +316,7 @@ pub fn profile_roots(provider_id: &str, env: &ScanEnvironment) -> Vec<PathBuf> {
         "pi" => overridden(env, &["PI_CODING_AGENT_DIR"], || {
             vec![join_relative(&env.home, ".pi/agent")]
         }),
+        "fx" => vec![join_relative(&env.home, ".fx")],
         "ollama" => vec![join_relative(&env.home, ".ollama")],
         "lmstudio" => overridden(env, &["LM_STUDIO_HOME"], || {
             vec![join_relative(&env.home, ".lmstudio")]

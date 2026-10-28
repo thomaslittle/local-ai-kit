@@ -6,6 +6,7 @@ mod broker_cli;
 mod endpoints;
 mod host;
 mod native_profiles;
+mod status;
 use args::{Action, Args};
 use lai_contracts::{DomainError, ErrorCode, Result};
 use serde_json::json;
@@ -19,6 +20,9 @@ Usage:
       [--os-notifications (requires an os-notifications build)]
   local-ai-kit connect --ipc LOCAL_ADDRESS
   local-ai-kit scan --json [--home ABSOLUTE_DIRECTORY] [--executable-only-provider PROVIDER]
+  local-ai-kit status [--json] [--ipc ADDRESS] [--token-file ABSOLUTE_FILE]
+      Prints the running helper, its providers and connected apps.
+      Exit: 0 running, 3 not running, 4 credential rejected.
   local-ai-kit serve --stdio [--allow-passive-discovery] [--allow-codex-metadata] [--home ABSOLUTE_DIRECTORY]
   local-ai-kit serve --http --port 4499 --assets ABSOLUTE_DIST_DIRECTORY
       [--allow-passive-discovery] [--allow-codex-metadata]
@@ -26,6 +30,8 @@ Usage:
       [--allow-writes] [--allow-native-policy] [--review-native-requests] [--allow-paid-options]
       [--warm-metadata] [--no-metadata-cache]
   Reusable provider grants: --allow-metadata PROVIDER --allow-execution PROVIDER
+  --allow-usage cursor additionally reads Cursor's own dashboard allowances with the
+  session token stored by Cursor; the token is never logged, serialized or exported.
   --executable-only-provider PROVIDER may repeat for known discovery providers; retains private executable candidates without publishing their profiles or routes.
   Execution providers: codex, claude_code, gemini_cli, antigravity, grok, ollama, lmstudio, openai_api, anthropic_api, gemini_api, xai_api, compatible_api, opencode, muse.
   --endpoints ABSOLUTE_JSON registers local or API endpoints without contacting them.
@@ -152,7 +158,7 @@ async fn execute(args: Args) -> Result<()> {
         }
         Ok(result)
     });
-    let service = lai_kit::build_service_with_chatgpt(
+    let service = lai_kit::build_service_with_cursor_usage(
         inventory,
         args.allow_execution,
         registry,
@@ -160,6 +166,7 @@ async fn execute(args: Args) -> Result<()> {
         declarations,
         state_dir,
         chatgpt,
+        args.usage_providers.contains("cursor"),
     );
     #[cfg(feature = "os-notifications")]
     if args.os_notifications {
@@ -167,12 +174,12 @@ async fn execute(args: Args) -> Result<()> {
     }
     service.enable_autonomous_refresh(args.metadata_providers.clone());
     service.enable_inventory_refresh(args.allow_passive);
-    if matches!(args.action, Action::Serve) && !args.no_metadata_cache {
-        if let Some(directory) = host::default_state_dir(args.home.as_deref()) {
-            if let Err(error) = service.enable_state_store(directory.join("state.db")) {
-                eprintln!("storage: {error}");
-            }
-        }
+    if matches!(args.action, Action::Serve)
+        && !args.no_metadata_cache
+        && let Some(directory) = host::default_state_dir(args.home.as_deref())
+        && let Err(error) = service.enable_state_store(directory.join("state.db"))
+    {
+        eprintln!("storage: {error}");
     }
     if matches!(args.action, Action::Serve) {
         service.start_background_tasks();
@@ -263,16 +270,19 @@ async fn execute(args: Args) -> Result<()> {
     }
 }
 fn main() -> std::process::ExitCode {
-    let result = (|| {
+    let result = (|| -> lai_contracts::Result<u8> {
         let args = Args::parse(std::env::args_os().skip(1))?;
         match args.action {
             Action::Help => {
                 println!("{HELP}");
-                return Ok(());
+                return Ok(0);
             }
             Action::Version => {
                 println!("local-ai-kit {}", env!("CARGO_PKG_VERSION"));
-                return Ok(());
+                return Ok(0);
+            }
+            Action::Status => {
+                return status::run(args.ipc.clone(), args.token_file.clone(), args.json);
             }
             _ => {}
         }
@@ -285,10 +295,10 @@ fn main() -> std::process::ExitCode {
         let result = runtime.block_on(execute(args));
         // Tokio stdin uses a blocking thread; an idle pipe must not hold shutdown forever.
         runtime.shutdown_timeout(Duration::from_millis(100));
-        result
+        result.map(|_| 0u8)
     })();
     match result {
-        Ok(()) => std::process::ExitCode::SUCCESS,
+        Ok(code) => std::process::ExitCode::from(code),
         Err(error) => {
             eprintln!("{error}");
             std::process::ExitCode::from(2)

@@ -1,16 +1,29 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: OriginLM graphite and amber · display/body: Red Hat Display · signature: provider allowance evidence and observed costs · scope: app · sweep: Floor 0 FAIL; 34 automated accessibility checks pass; finish-review: subagent, capture artifacts resolved, no product findings · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E3 S5 R4 V3 · weakest: E, existing nested surfaces and decoration; remove outer cards and ambient animation so evidence carries the screen */
+/* Hallmark · answered F18 · shadcn data-slot separator and sidebar-gap are layout primitives, not image slots: one draws a hairline and the other reserves sidebar width. Sidebar controls have 44px targets. */
+/* Hallmark · dismissed 29 · dialog/sheet/select backdrop blur belongs to temporary modal overlays that separate active controls from the background, not to dashboard surfaces. */
+/* Hallmark · answered F17 · capability cells show one icon; their longer conditional explanation is sr-only text for assistive technology, not a visible four-line table label. */
+@import "../../../brand/tokens.css";
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/outfit";
 @plugin "@tailwindcss/typography";
 
-/* Theme: true-neutral surfaces, a crimson
-   accent (hue 22.7), Outfit, shadcn base-mira, Phosphor icons. Tokens follow
-   shadcn's Tailwind v4 convention: oklch variables mapped through `@theme inline`.
-   `:root` is the light palette; `.dark` (set on <html>) is the default workspace. */
+@font-face {
+  font-family: "Red Hat Display Variable";
+  src: url("../../../brand/fonts/RedHatDisplay-Variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Theme: OriginLM. Graphite `var(--originlm-graphite)` surfaces, amber `var(--originlm-amber)` accent,
+   off-white `var(--originlm-paper)` light theme, Red Hat Display, shadcn base-mira, Phosphor
+   icons. Tokens follow shadcn's Tailwind v4 convention. `:root` is the light
+   palette; `.dark` (set on <html>) is the default workspace. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Outfit Variable", -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--originlm-font);
   --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 
   --color-background: var(--background);
@@ -70,19 +83,9 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  --animate-float: float 10s ease-in-out infinite;
-  --animate-page-enter: page-enter 300ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-shimmer: shimmer 2.2s linear infinite;
   --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
-  @keyframes page-enter {
-    from { transform: translateY(0.5rem); }
-    to { transform: translateY(0); }
-  }
-  @keyframes float {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-    50% { transform: translate3d(2%, -3%, 0) scale(1.06); }
-  }
   @keyframes shimmer {
     from { background-position: 200% 0; }
     to { background-position: -200% 0; }
@@ -96,105 +99,101 @@
 :root {
   color-scheme: light;
   --radius: 0.45rem;
-  --theme-hue: 22.7;
-  --theme-chroma: 0.2;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.56 var(--theme-chroma) var(--theme-hue));
-  --primary-foreground: oklch(0.98 0.01 var(--theme-hue));
-  --secondary: oklch(0.967 0 0);
-  --secondary-foreground: oklch(0.21 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.86 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.56 0.2 22.7);
-  --chart-2: oklch(0.6 0.15 250);
-  --chart-3: oklch(0.62 0.14 165);
-  --chart-4: oklch(0.72 0.15 80);
-  --chart-5: oklch(0.58 0.2 305);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.56 var(--theme-chroma) var(--theme-hue));
-  --sidebar-primary-foreground: oklch(0.98 0.01 var(--theme-hue));
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: var(--border);
-  --sidebar-ring: oklch(0.708 0 0);
-  --surface-subtle: oklch(0 0 0 / 3%);
-  --surface: oklch(0 0 0 / 4%);
-  --raised: oklch(0 0 0 / 7%);
-  --surface-hover: oklch(0 0 0 / 9%);
-  --accent-subtle: oklch(0.56 0.2 22.7 / 7%);
-  --accent-surface: oklch(0.56 0.2 22.7 / 10%);
-  --accent-strong: oklch(0.56 0.2 22.7 / 16%);
+  --theme-hue: 76;
+  --theme-chroma: 0.15;
+  --background: var(--originlm-paper);
+  --foreground: var(--originlm-graphite);
+  --card: var(--originlm-paper);
+  --card-foreground: var(--originlm-graphite);
+  --popover: var(--originlm-paper);
+  --popover-foreground: var(--originlm-graphite);
+  --primary: var(--originlm-amber);
+  --primary-foreground: var(--originlm-graphite);
+  --secondary: #f1ede4;
+  --secondary-foreground: var(--originlm-graphite);
+  --muted: #f1ede4;
+  --muted-foreground: var(--originlm-light-muted);
+  --accent: #f0e9dc;
+  --accent-foreground: var(--originlm-graphite);
+  --destructive: var(--originlm-light-danger);
+  --border: var(--originlm-light-border);
+  --input: var(--originlm-light-input);
+  --ring: #c98a12;
+  --chart-1: #c98a12;
+  --chart-2: var(--originlm-light-success);
+  --chart-3: #4a6b8a;
+  --chart-4: var(--originlm-light-warning);
+  --chart-5: #6e5d87;
+  --sidebar: #f3f0e9;
+  --sidebar-foreground: var(--originlm-graphite);
+  --sidebar-primary: #b47400;
+  --sidebar-primary-foreground: #fff9ef;
+  --sidebar-accent: #e7dfd2;
+  --sidebar-accent-foreground: var(--originlm-graphite);
+  --sidebar-border: var(--originlm-light-border);
+  --sidebar-ring: #c98a12;
+  --surface-subtle: rgb(35 31 32 / 4%);
+  --surface: rgb(35 31 32 / 5%);
+  --raised: rgb(35 31 32 / 8%);
+  --surface-hover: rgb(35 31 32 / 10%);
+  --accent-subtle: rgb(235 163 26 / 8%);
+  --accent-surface: rgb(235 163 26 / 12%);
+  --accent-strong: rgb(235 163 26 / 20%);
   --seam: var(--border);
-  --text-faint: oklch(0.5 0 0);
-  --success: oklch(0.5 0.13 160);
-  --warning: oklch(0.5 0.13 65);
-  --info: oklch(0.5 0.14 250);
-  --brand-foreground: oklch(0.47 0.2 22.7);
-  --glow-a: oklch(0.7 0.18 22.7 / 0.18);
-  --glow-b: oklch(0.7 0.12 250 / 0.14);
+  --text-faint: var(--originlm-light-muted);
+  --success: var(--originlm-light-success);
+  --warning: var(--originlm-light-warning);
+  --info: #4a6b8a;
+  --brand-foreground: #9c6400;
 }
 
 .dark {
   color-scheme: dark;
-  /* Background ≈ #0a0a0a, matches the showcase hero. */
-  --background: oklch(0.085 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.14 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.19 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.55 var(--theme-chroma) var(--theme-hue));
-  --primary-foreground: oklch(0.98 0.01 var(--theme-hue));
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.22 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.65 0.22 25);
-  --border: oklch(0.255 0 0);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.55 var(--theme-chroma) var(--theme-hue) / 45%);
-  --chart-1: oklch(0.68 0.2 22.7);
-  --chart-2: oklch(0.72 0.13 250);
-  --chart-3: oklch(0.76 0.14 165);
-  --chart-4: oklch(0.82 0.14 85);
-  --chart-5: oklch(0.7 0.18 305);
-  --sidebar: oklch(0.14 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.7 0.2 var(--theme-hue));
-  --sidebar-primary-foreground: oklch(0.98 0.01 var(--theme-hue));
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: var(--border);
-  --sidebar-ring: oklch(0.55 var(--theme-chroma) var(--theme-hue) / 30%);
-  --surface-subtle: oklch(1 0 0 / 3%);
-  --surface: oklch(1 0 0 / 6%);
-  --raised: oklch(1 0 0 / 10%);
-  --surface-hover: oklch(1 0 0 / 12%);
-  --accent-subtle: oklch(0.55 0.2 22.7 / 10%);
-  --accent-surface: oklch(0.55 0.2 22.7 / 16%);
-  --accent-strong: oklch(0.55 0.2 22.7 / 24%);
+  /* Graphite workspace: the desktop shell's dark surfaces. */
+  --background: var(--originlm-dark-background);
+  --foreground: var(--originlm-paper);
+  --card: var(--originlm-dark-card);
+  --card-foreground: var(--originlm-paper);
+  --popover: var(--originlm-dark-raised);
+  --popover-foreground: var(--originlm-paper);
+  --primary: var(--originlm-amber);
+  --primary-foreground: var(--originlm-graphite);
+  --secondary: var(--originlm-dark-card);
+  --secondary-foreground: var(--originlm-paper);
+  --muted: var(--originlm-dark-raised);
+  --muted-foreground: var(--originlm-dark-muted);
+  --accent: var(--originlm-dark-border);
+  --accent-foreground: var(--originlm-paper);
+  --destructive: var(--originlm-dark-danger);
+  --border: var(--originlm-dark-border);
+  --input: var(--originlm-dark-input);
+  --ring: color-mix(in srgb, var(--originlm-amber) 45%, transparent);
+  --chart-1: var(--originlm-amber);
+  --chart-2: var(--originlm-scene-sage);
+  --chart-3: color-mix(in srgb, var(--originlm-amber) 55%, var(--originlm-paper));
+  --chart-4: var(--originlm-scene-terracotta);
+  --chart-5: var(--originlm-scene-text);
+  --sidebar: var(--originlm-dark-background);
+  --sidebar-foreground: var(--originlm-paper);
+  --sidebar-primary: var(--originlm-amber);
+  --sidebar-primary-foreground: var(--originlm-graphite);
+  --sidebar-accent: var(--originlm-dark-border);
+  --sidebar-accent-foreground: var(--originlm-paper);
+  --sidebar-border: var(--originlm-dark-border);
+  --sidebar-ring: color-mix(in srgb, var(--originlm-amber) 30%, transparent);
+  --surface-subtle: color-mix(in srgb, var(--originlm-paper) 3%, transparent);
+  --surface: color-mix(in srgb, var(--originlm-paper) 6%, transparent);
+  --raised: color-mix(in srgb, var(--originlm-paper) 10%, transparent);
+  --surface-hover: color-mix(in srgb, var(--originlm-paper) 12%, transparent);
+  --accent-subtle: color-mix(in srgb, var(--originlm-amber) 10%, transparent);
+  --accent-surface: color-mix(in srgb, var(--originlm-amber) 16%, transparent);
+  --accent-strong: color-mix(in srgb, var(--originlm-amber) 24%, transparent);
   --seam: var(--border);
-  --text-faint: oklch(0.62 0 0);
-  --success: oklch(0.78 0.15 160);
-  --warning: oklch(0.82 0.14 80);
-  --info: oklch(0.76 0.12 245);
-  --brand-foreground: oklch(0.78 0.14 22.7);
-  --glow-a: oklch(0.55 0.2 22.7 / 0.22);
-  --glow-b: oklch(0.6 0.12 250 / 0.12);
+  --text-faint: var(--originlm-dark-muted);
+  --success: var(--originlm-dark-success);
+  --warning: var(--originlm-dark-warning);
+  --info: var(--originlm-scene-sage);
+  --brand-foreground: var(--originlm-amber);
 }
 
 @layer base {
@@ -229,61 +228,8 @@
 }
 
 @layer components {
-  /* Ambient backdrop: two soft glows behind the shell. */
-  .ambient {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .ambient::before,
-  .ambient::after {
-    content: "";
-    position: absolute;
-    width: 55vmax;
-    height: 55vmax;
-    border-radius: 9999px;
-    filter: blur(90px);
-    will-change: transform;
-  }
-  .ambient::before {
-    top: -32vmax;
-    right: -14vmax;
-    background: radial-gradient(closest-side, var(--glow-a), transparent);
-    @apply motion-safe:animate-float;
-  }
-  .ambient::after {
-    bottom: -34vmax;
-    left: 6vmax;
-    background: radial-gradient(closest-side, var(--glow-b), transparent);
-    animation-delay: -5s;
-    @apply motion-safe:animate-float;
-  }
-  .grid-fade {
-    background-image:
-      linear-gradient(to right, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
-    background-size: 2.25rem 2.25rem;
-    mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, #000 30%, transparent 75%);
-  }
-  .text-gradient {
-    background-image: linear-gradient(120deg, var(--foreground) 30%, color-mix(in oklch, var(--primary) 75%, var(--foreground)));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
   .surface {
-    @apply rounded-2xl border bg-card/80 backdrop-blur-sm;
-    box-shadow:
-      0 1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent) inset,
-      0 10px 30px -14px color-mix(in oklch, black 55%, transparent);
-  }
-  .surface-interactive {
-    @apply transition-[border-color,background-color,box-shadow] duration-200;
-  }
-  .surface-interactive:hover {
-    border-color: color-mix(in oklch, var(--primary) 40%, var(--border));
+    @apply rounded-xl border bg-card;
   }
   .shimmer {
     background-image: linear-gradient(110deg, transparent 30%, color-mix(in oklch, var(--foreground) 14%, transparent) 50%, transparent 70%);
@@ -320,3 +266,9 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 7.5rem;
 }
+
+/* Preserve native meter semantics while sharing the brand palette across engines. */
+.usage-meter { appearance: none; border: 0; border-radius: 3px; background: var(--muted); }
+.usage-meter::-webkit-meter-bar { border: 0; border-radius: 3px; background: var(--muted); }
+.usage-meter::-webkit-meter-optimum-value { background: var(--primary); border-radius: 3px; }
+.usage-meter::-moz-meter-bar { background: var(--primary); border-radius: 3px; }

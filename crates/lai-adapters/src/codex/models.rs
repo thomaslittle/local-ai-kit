@@ -129,6 +129,42 @@ pub(super) fn parse_models(
     }
     Ok(models)
 }
+/// Point the service-tier control at the tier Codex has saved in `config/read`.
+/// Only a tier the model already advertises is selected. `fast` is the saved
+/// name for the `priority` choice. Reimplemented from T3 Code
+/// `applyConfiguredCodexServiceTier` at
+/// [3b844dab5c](https://github.com/pingdotgg/t3code/commit/3b844dab5c).
+pub fn apply_configured_service_tier(models: &mut [Model], configured: &str) {
+    let configured = configured.trim();
+    if configured.is_empty() || configured.len() > 64 {
+        return;
+    }
+    for model in models {
+        for option in &mut model.options {
+            if option.id != "serviceTier" {
+                continue;
+            }
+            let OptionControl::Select { choices, .. } = &option.control else {
+                continue;
+            };
+            let selected = choices
+                .iter()
+                .find(|choice| choice.disabled_reason.is_none() && choice.value == configured)
+                .or_else(|| {
+                    if configured == "fast" {
+                        choices.iter().find(|choice| {
+                            choice.disabled_reason.is_none() && choice.value == "priority"
+                        })
+                    } else {
+                        None
+                    }
+                });
+            if let Some(choice) = selected {
+                option.current_value = Some(Value::String(choice.value.clone()));
+            }
+        }
+    }
+}
 fn choices(value: Option<&Value>, key: &str, label: &str) -> Result<Vec<Choice>> {
     let Some(value) = value else {
         return Ok(Vec::new());

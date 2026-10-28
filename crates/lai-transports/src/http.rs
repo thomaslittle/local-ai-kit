@@ -77,13 +77,12 @@ impl HttpServer {
         if let Some(stop) = self.stop.take() {
             let _ = stop.send(());
         }
-        if let Some(mut task) = self.task.take() {
-            if tokio::time::timeout(Duration::from_secs(3), &mut task)
+        if let Some(mut task) = self.task.take()
+            && tokio::time::timeout(Duration::from_secs(3), &mut task)
                 .await
                 .is_err()
-            {
-                task.abort();
-            }
+        {
+            task.abort();
         }
     }
     /// Host-side only: lets an embedding application authorize another explicit pairing.

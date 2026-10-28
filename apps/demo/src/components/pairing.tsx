@@ -51,13 +51,11 @@ export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalA
 
   return (
     <main className="pairing-screen">
-      <div aria-hidden="true" className="ambient" />
-      <Card className="pairing-card w-full max-w-lg gap-6 bg-card/80 py-7 backdrop-blur-xl [--card-spacing:--spacing(7)]">
+      <Card className="pairing-card w-full max-w-lg gap-6 bg-card py-7 [--card-spacing:--spacing(7)]">
         <CardHeader>
           <span className="mb-2 grid size-11 place-items-center rounded-xl bg-primary/10 text-brand-foreground ring-1 ring-primary/25">
             <KeyIcon className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-[0.65rem] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Local AI Kit</span>
           <h1 data-slot="card-title" className="text-2xl font-semibold tracking-tight">
             Connect your local runtime
           </h1>
@@ -82,7 +80,7 @@ export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalA
                   submit();
                 }
               }}
-              className="font-mono tracking-[0.2em]"
+              className="font-mono"
             />
           </Field>
           <div className="flex flex-wrap gap-2">
@@ -102,7 +100,7 @@ export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalA
           </p>
           {onExampleData ? (
             <div className="grid gap-3 border-t pt-5">
-              <p className="text-center text-[0.65rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">Or</p>
+              <p className="text-center text-[0.65rem] font-semibold text-muted-foreground">Or</p>
               <Button variant="outline" onClick={onExampleData} className="h-auto w-full justify-start gap-3 rounded-xl px-3.5 py-3 text-left whitespace-normal">
                 <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-lg bg-info/10 text-info ring-1 ring-info/25">
                   <FlaskIcon className="size-4.5" />

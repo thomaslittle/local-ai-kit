@@ -115,4 +115,15 @@ mod tests {
         assert!(muse.passive_discovery && muse.metadata && muse.text_sessions);
         assert!(muse.native_tool_approval && muse.cancellation && muse.persistent_resumption);
     }
+
+    #[test]
+    fn fx_stays_passive_inventory() {
+        let fx = super::descriptors()
+            .into_iter()
+            .find(|d| d.id == "fx")
+            .unwrap();
+        assert_eq!(fx.name, "fx");
+        assert!(fx.passive_discovery);
+        assert!(!fx.metadata && !fx.text_sessions && !fx.cancellation);
+    }
 }

@@ -28,6 +28,18 @@ pub fn parse_status(output: &str) -> (Observation<AuthState>, Observation<Billin
         Observation::unknown("NATIVE_MODEL_ROUTE_BILLING_NOT_REPORTED"),
     )
 }
+/// An expired access token prints the logged-out line, then the CLI refreshes
+/// it in that process. One more `grok models` after that process exits tells a
+/// refresh from a real logout. Reimplemented from T3 Code
+/// `packages/provider-grok/src/server/status.ts` at
+/// [a2157eced7](https://github.com/pingdotgg/t3code/commit/a2157eced7).
+/// An unknown recheck keeps the logged-out result.
+pub fn login_recheck_replaces(
+    first: &Observation<AuthState>,
+    recheck: &Observation<AuthState>,
+) -> bool {
+    first.fresh_value() == Some(&AuthState::Unauthenticated) && recheck.fresh_value().is_some()
+}
 fn invalid() -> DomainError {
     DomainError::new(
         ErrorCode::IntegrationRestricted,
@@ -69,17 +81,31 @@ pub async fn probe(
     let executable = supported_executable(&located)?;
     let temp = tempfile::tempdir().map_err(|_| invalid())?;
     let env = probe_environment();
-    let output = capture(
-        LaunchSpec {
-            executable: executable.clone(),
-            args: vec!["models".into()],
-            cwd: temp.path().into(),
-            env: env.clone(),
-        },
-        Duration::from_secs(8),
-    )
-    .await?;
-    let (auth, billing) = parse_status(&output);
+    let spec = LaunchSpec {
+        executable: executable.clone(),
+        args: vec!["models".into()],
+        cwd: temp.path().into(),
+        env: env.clone(),
+    };
+    let output = capture(spec, Duration::from_secs(8)).await?;
+    let (mut auth, mut billing) = parse_status(&output);
+    if auth.fresh_value() == Some(&AuthState::Unauthenticated) {
+        let again = capture(
+            LaunchSpec {
+                executable: executable.clone(),
+                args: vec!["models".into()],
+                cwd: temp.path().into(),
+                env: env.clone(),
+            },
+            Duration::from_secs(8),
+        )
+        .await?;
+        let (recheck_auth, recheck_billing) = parse_status(&again);
+        if login_recheck_replaces(&auth, &recheck_auth) {
+            auth = recheck_auth;
+            billing = recheck_billing;
+        }
+    }
     if auth.fresh_value() != Some(&AuthState::Authenticated) {
         return Ok(ConnectionMetadata {
             connection_id: connection,

@@ -1,3 +1,4 @@
+import { RuntimeEvidence } from '@/components/common/runtime-evidence';
 import { ArrowsClockwiseIcon } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { CodeBlock } from '@/components/common/code-block';
@@ -11,6 +12,26 @@ export default function DiagnosticsPage() {
   const selection = useDemo((state) => state.selection);
   return (
     <div className="grid gap-5">
+      <RuntimeEvidence />
+      <section data-capture="sdk" className="border-y py-5">
+        <h2 className="text-xl font-semibold">One dependency</h2>
+        <p className="my-3 text-sm text-muted-foreground">Node.js, using a locally packed SDK and helper bundle.</p>
+        <CodeBlock label="TypeScript">{`import { createLocalAI } from "@local-ai-kit/sdk";
+const ai = await createLocalAI();
+try {
+  const snapshot = await ai.snapshot.get();
+  console.log(snapshot.revision);
+} finally {
+  await ai.close();
+}`}</CodeBlock>
+      </section>
+      <section data-capture="transport" className="border-y py-5">
+        <h2 className="text-xl font-semibold">One public protocol</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Protocol {handshake?.protocolVersion ?? 'not negotiated'}. Methods advertised by this runtime:</p>
+        <ul className="mt-4 flex flex-wrap gap-3">
+          {handshake?.methods.slice(0, 6).map((method) => <li key={method} className="rounded-md border px-3 py-2 font-mono text-sm">{method}</li>)}
+        </ul>
+      </section>
       <Section title="SDK / protocol inspector" description="Only normalized public responses are shown. No credentials are displayed.">
         <Button variant="outline" size="sm" onClick={() => void actions.refreshDiagnostics()}>
           <ArrowsClockwiseIcon data-icon="inline-start" />
@@ -35,8 +56,9 @@ const ai = await createLocalAI({
 });
 
 const selection = ${JSON.stringify(selection, null, 2)};
-// Request grants and validate before starting a session.
-// No turn is started merely by creating or selecting a client.`}</CodeBlock>
+// Request host approval and validate before starting a session.
+// No turn starts merely by selecting a client.
+await ai.close();`}</CodeBlock>
       </Section>
       <Section title="Known preview boundaries" description="These are implementation limitations, not hidden successful fallbacks.">
         <p className="max-w-3xl text-sm text-muted-foreground">

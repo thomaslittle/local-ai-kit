@@ -9,10 +9,7 @@ export function PageHeading() {
   return (
     <div className="mb-8 flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <span className="mb-3 block text-[0.65rem] font-semibold tracking-[0.2em] text-brand-foreground uppercase">
-          {live ? 'Connected workspace' : 'SDK & selection preview'}
-        </span>
-        <h1 id="page-title" className="text-gradient text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 id="page-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
           {page}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">{description}</p>

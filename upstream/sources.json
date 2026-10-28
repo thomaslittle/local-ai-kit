@@ -34,6 +34,9 @@
         "passive CLI locations for providers T3 Code actually scans",
         "ChatGPT OAuth refresh and identity-token rules",
         "Grok health-probe environment that disables the CLI updater",
+        "one Grok login recheck, Codex code-mode host, plan labels, configured service tier, individual credits, and Claude monthly spend",
+        "passive fx command and ~/.fx inventory",
+        "ACP session notices kept out of assistant text",
         "the distinction between local model servers, cloud CLIs, and the T3 Connect relay"
       ],
       "doesNotConsume": [
@@ -41,6 +44,8 @@
         "ChatGPT multi-account handoff",
         "Codex shadow homes",
         "the bundled Cursor SDK",
+        "fx execution, login probes, and a hard-coded effort",
+        "rewritten model short names and seven-day new badges",
         "T3 product UI, orchestration, and release signing"
       ]
     },

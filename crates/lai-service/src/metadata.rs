@@ -347,6 +347,19 @@ pub(crate) fn merge_report(snapshot: &mut Snapshot, report: &ConnectionMetadata,
         "metadata_stale"
     } else if report.auth.fresh_value() == Some(&AuthState::Authenticated) {
         "metadata_ready"
+    } else if report.account.is_some()
+        && !matches!(
+            report.auth,
+            lai_contracts::Observation::Known {
+                value: AuthState::Unauthenticated | AuthState::Expired,
+                ..
+            }
+        )
+    {
+        // A local account cache proves a session exists but not that it is
+        // currently valid. That is not an auth failure, so it must not ask the
+        // user to sign in again.
+        "metadata_cached"
     } else {
         "needs_auth"
     }

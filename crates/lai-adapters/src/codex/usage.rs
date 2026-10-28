@@ -72,6 +72,31 @@ pub(super) fn parse_usage(
                 duration_seconds,
             });
         }
+        // Enterprise monthly credits are a separate allowance. They are reported
+        // only when Codex includes `individualLimit`. Reimplemented from T3 Code
+        // `codexRateLimitsToWindows` at
+        // [4c18faf62c](https://github.com/pingdotgg/t3code/commit/4c18faf62c).
+        if (native_id == "codex" || fallback == "codex")
+            && let Some(used) = individual_credit_used_percent(bucket.get("individualLimit"))
+        {
+            let reading = UsageReading::try_from(UsageInput {
+                unit: "percent".into(),
+                used: DecimalString::try_from(used).map_err(|_| invalid())?,
+                limit: Some(DecimalString::try_from("100".to_owned()).map_err(|_| invalid())?),
+            })
+            .map_err(|_| invalid())?;
+            let resets_at = bucket["individualLimit"]["resetsAt"]
+                .as_i64()
+                .and_then(|time| chrono::DateTime::from_timestamp(time, 0))
+                .and_then(|dt| Timestamp::try_from(dt.to_rfc3339()).ok());
+            windows.push(UsageWindow {
+                id: stable_id("window", &[&pool_id, "individual"]),
+                label: "Monthly credit limit".into(),
+                reading: Observation::reported(reading, source.clone()),
+                resets_at,
+                duration_seconds: None,
+            });
+        }
         // Percent windows are not token estimates. Credits and spend controls need their own units.
         pools.push(QuotaPool {
             id: pool_id,
@@ -83,4 +108,24 @@ pub(super) fn parse_usage(
         });
     }
     Ok(pools)
+}
+
+/// `remainingPercent` is what is left of the monthly credit allowance.
+/// A missing or non-finite value is not a zero balance.
+fn individual_credit_used_percent(limit: Option<&Value>) -> Option<String> {
+    let remaining = limit?.get("remainingPercent")?.as_f64()?;
+    if !remaining.is_finite() || !(0.0..=100.0).contains(&remaining) {
+        return None;
+    }
+    Some(percent_decimal(100.0 - remaining))
+}
+
+fn percent_decimal(value: f64) -> String {
+    let text = format!("{value:.6}");
+    let trimmed = text.trim_end_matches('0').trim_end_matches('.');
+    if trimmed.is_empty() {
+        "0".into()
+    } else {
+        trimmed.to_owned()
+    }
 }

@@ -41,6 +41,11 @@ class UpstreamT3CodeTests(unittest.TestCase):
         groups = sync.classify_diff_files(diff)
         self.assertIn("apps/server/src/provider/CodexProvider.ts", groups["provider"])
         self.assertIn("packages/shared/src/shell.ts", groups["provider"])
+        self.assertEqual(
+            sync.classify_path("packages/effect-acp/src/client.ts"),
+            "provider",
+        )
+        self.assertEqual(sync.classify_path("packages/provider-fx/src/server/driver.ts"), "provider")
         self.assertIn(".github/workflows/release.yml", groups["orchestration"])
         self.assertIn("apps/server/src/cloud/CloudLink.ts", groups["orchestration"])
 

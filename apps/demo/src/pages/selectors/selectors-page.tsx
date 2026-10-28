@@ -25,7 +25,7 @@ function VariantTabs() {
           value={id}
           data-variant={id}
           title={description}
-          className="group/tab h-auto justify-start gap-2.5 rounded-xl border bg-card/50 px-3 py-2.5 text-left text-xs font-medium text-muted-foreground hover:border-primary/30 hover:bg-card hover:text-foreground aria-pressed:border-primary/50 aria-pressed:bg-accent-surface aria-pressed:text-foreground aria-pressed:shadow-[0_0_24px_-10px_var(--primary)]"
+          className="group/tab h-auto justify-start gap-2.5 rounded-xl border bg-card/50 px-3 py-2.5 text-left text-xs font-medium text-muted-foreground hover:border-primary/30 hover:bg-card hover:text-foreground aria-pressed:border-primary/50 aria-pressed:bg-accent-surface aria-pressed:text-foreground"
         >
           <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors group-aria-pressed/tab:bg-primary group-aria-pressed/tab:text-primary-foreground">
             <Icon className="size-3.5" aria-hidden="true" />

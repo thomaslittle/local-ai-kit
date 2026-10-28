@@ -1,6 +1,6 @@
 use lai_adapters::codex::{ManagedIdentity, managed_metadata};
 use lai_adapters::process::{LaunchSpec, codex_metadata};
-use lai_contracts::ErrorCode;
+use lai_contracts::{ErrorCode, OptionControl};
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
@@ -42,7 +42,7 @@ async fn native_protocol_reads_metadata_without_starting_threads_or_turns() {
     let methods = std::fs::read_to_string(tmp.path().join("methods.log")).unwrap();
     assert_eq!(
         methods,
-        "initialize\ninitialized\naccount/read\nmodel/list\nmodel/list\naccount/rateLimits/read\n"
+        "initialize\ninitialized\naccount/read\nmodel/list\nmodel/list\nconfig/read\naccount/rateLimits/read\n"
     );
     assert!(
         !serde_json::to_string(&report)
@@ -64,6 +64,7 @@ async fn unauthenticated_client_does_not_fetch_model_or_usage_catalog() {
     assert!(report.models.is_empty());
     let methods = std::fs::read_to_string(tmp.path().join("methods.log")).unwrap();
     assert!(!methods.contains("model/list"));
+    assert!(!methods.contains("config/read"));
 }
 
 #[tokio::test]
@@ -112,6 +113,38 @@ async fn managed_route_requires_codex_0157_or_newer() {
     .await
     .unwrap_err();
     assert_eq!(error.code, ErrorCode::ProtocolIncompatible);
+}
+#[tokio::test]
+async fn saved_fast_tier_selects_priority_and_does_not_add_a_tier() {
+    let tmp = tempfile::tempdir().unwrap();
+    let report = codex_metadata(
+        launch("service-tier", tmp.path()),
+        "connection",
+        "route",
+        Duration::from_secs(5),
+    )
+    .await
+    .unwrap();
+    let option = report.models[0]
+        .options
+        .iter()
+        .find(|option| option.id == "serviceTier")
+        .unwrap();
+    assert_eq!(
+        option.current_value.as_ref(),
+        Some(&serde_json::json!("priority"))
+    );
+    let OptionControl::Select {
+        choices,
+        default_value,
+    } = &option.control
+    else {
+        panic!("service tier is a select");
+    };
+    assert_eq!(default_value.as_deref(), Some("flex"));
+    assert!(choices.iter().any(|choice| choice.value == "priority"));
+    assert!(!choices.iter().any(|choice| choice.value == "fast"));
+    assert!(report.models[1].options.is_empty());
 }
 #[tokio::test]
 async fn quota_endpoint_failure_keeps_account_catalog_and_redacts_error() {

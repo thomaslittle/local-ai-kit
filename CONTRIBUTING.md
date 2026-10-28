@@ -21,7 +21,9 @@ Requirements: Rust (the pinned toolchain installs itself from `rust-toolchain.to
 git clone https://github.com/thomaslittle/local-ai-kit.git
 cd local-ai-kit
 npm ci --ignore-scripts
-python -m venv .venv-build && python -m pip install -r scripts/requirements-build.txt   # activate the venv first
+python -m venv .venv-build
+# Activate .venv-build using your shell, then:
+python -m pip install -r scripts/requirements-build.txt
 npx --no-install playwright install chromium
 npm run build
 cargo build --locked -p lai-cli

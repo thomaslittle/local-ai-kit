@@ -29,12 +29,12 @@ export function createLiveSnapshotStore(
   let dirty = false;
 
   const schedule = () => {
-    if (disposed) return;
+    if (disposed || !controller || controller.signal.aborted) return;
     dirty = true;
     if (pending || reading) return;
     pending = setTimeout(() => {
       pending = undefined;
-      if (disposed || reading) return;
+      if (disposed || !controller || controller.signal.aborted || reading) return;
       if (!dirty) return;
       dirty = false;
       reading = true;
@@ -70,25 +70,37 @@ export function createLiveSnapshotStore(
           // The journal no longer replays this cursor: full resynchronization is
           // the only correct recovery. Do not guess at missing changes.
           try { await store.load(); } catch { /* surfaced through state */ }
-          continue;
         }
         // A revoked or closed client must not spin. A transient error backs off.
-        if (error instanceof LocalAIError && ['CLOSED', 'LOCAL_ACCESS_DENIED', 'TRANSPORT_CLOSED'].includes(error.code)) return;
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (error instanceof LocalAIError && ['CLOSED', 'LOCAL_ACCESS_DENIED', 'PERMISSION_DENIED', 'AUTH_REQUIRED', 'HTTP_401', 'HTTP_403', 'TRANSPORT_CLOSED'].includes(error.code)) return;
       }
+      // EOF and repeated gaps must not create a synchronous reconnect loop.
+      await new Promise<void>(resolve => {
+        if (signal.aborted) { resolve(); return; }
+        const finish = () => { clearTimeout(timer); signal.removeEventListener('abort', finish); resolve(); };
+        const timer = setTimeout(finish, 1000);
+        signal.addEventListener('abort', finish, { once: true });
+      });
     }
   };
 
+  // Preserve the base method before extending this same object.
+  const disposeSnapshot = store.dispose.bind(store);
   return Object.assign(store, {
     connect() {
       if (started || disposed) return () => {};
       started = true;
-      controller = new AbortController();
-      void run(controller.signal);
+      const connection = new AbortController();
+      controller = connection;
+      void run(connection.signal);
       return () => {
-        controller?.abort();
+        connection.abort();
+        if (controller !== connection) return;
         controller = undefined;
         started = false;
+        if (pending) clearTimeout(pending);
+        pending = undefined;
+        dirty = false;
       };
     },
     dispose() {
@@ -97,7 +109,7 @@ export function createLiveSnapshotStore(
       pending = undefined;
       controller?.abort();
       controller = undefined;
-      store.dispose();
+      disposeSnapshot();
     },
   });
 }

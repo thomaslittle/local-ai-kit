@@ -5,7 +5,7 @@ from .errors import LocalAIError
 
 
 def encode_request(identifier: int, method: str, params: Any, max_bytes: int) -> bytes:
-    if not isinstance(method, str) or len(method) > 128 or not re.fullmatch(r'[A-Za-z][A-Za-z0-9]*\.[A-Za-z][A-Za-z0-9]*', method):
+    if not isinstance(method, str) or len(method) > 128 or not re.fullmatch(r'[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+', method):
         raise LocalAIError('INVALID_METHOD')
     try:
         raw = (json.dumps({'jsonrpc':'2.0','id':identifier,'method':method,'params':params}, ensure_ascii=False, allow_nan=False, separators=(',', ':')) + '\n').encode('utf-8')

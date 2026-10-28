@@ -68,6 +68,77 @@ fn pi_profile_follows_the_t3code_snapshot() {
 }
 
 #[test]
+fn fx_profile_follows_the_t3code_snapshot_and_is_not_launched() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../upstream/t3code/snapshot.json");
+    let snapshot: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+    let fx = definitions().iter().find(|item| item.id == "fx").unwrap();
+    let commands: Vec<_> = snapshot["adopted"]["fx"]["commands"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item.as_str().unwrap())
+        .collect();
+    assert_eq!(fx.commands, commands.as_slice());
+    assert_eq!(snapshot["adopted"]["fx"]["execution"], false);
+
+    let root = tempfile::tempdir().unwrap();
+    let home = root.path().join("home");
+    let bin = root.path().join("bin");
+    fs::create_dir_all(home.join(".fx/skills/review")).unwrap();
+    fs::create_dir_all(&bin).unwrap();
+    fs::write(
+        home.join(".fx/skills/review/SKILL.md"),
+        b"DO_NOT_READ_FX_SKILL",
+    )
+    .unwrap();
+    let binary = bin.join("fx");
+    fs::write(&binary, b"DO_NOT_EXECUTE").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut permissions = fs::metadata(&binary).unwrap().permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(&binary, permissions).unwrap();
+    }
+    let mut env = ScanEnvironment::for_home(home.clone(), HostPlatform::Linux);
+    env.search_path = vec![bin];
+    assert_eq!(
+        profile_roots("fx", &env),
+        vec![join_relative(
+            &home,
+            snapshot["adopted"]["fx"]["profileRelative"]
+                .as_str()
+                .unwrap()
+        )]
+    );
+    assert!(session_stores("fx", &profile_roots("fx", &env)[0]).is_empty());
+    assert!(
+        discovery_rules()
+            .iter()
+            .any(|rule| rule.id == "fx-home" && rule.provider_id == "fx")
+    );
+    let result = Scanner::new(MetadataOnly)
+        .scan(&env, &AtomicBool::new(false), |_| {})
+        .unwrap();
+    let connection = result
+        .snapshot
+        .connections
+        .iter()
+        .find(|connection| connection.provider_id == "fx")
+        .unwrap();
+    assert_eq!(connection.status, "detected");
+    let location = result.locations.get(&connection.id).unwrap();
+    assert_eq!(location.executable.as_deref(), Some(binary.as_path()));
+    assert_eq!(fs::read_to_string(&binary).unwrap(), "DO_NOT_EXECUTE");
+    assert!(
+        !serde_json::to_string(&result.snapshot)
+            .unwrap()
+            .contains("DO_NOT_READ_FX_SKILL")
+    );
+}
+
+#[test]
 fn pi_configuration_and_off_path_opencode_are_inventory_only() {
     let root = tempfile::tempdir().unwrap();
     let home = root.path().join("home");

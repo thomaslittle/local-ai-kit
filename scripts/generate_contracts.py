@@ -254,12 +254,16 @@ def client_stub(schema):
         name = 'AsyncClient' if asynchronous else 'Client'
         lines.append(f'class {name}:')
         lines.append('    handshake: dict[str, Any]')
+        lines.append('    mode: str')
+        lines.append('    fallback_reason: str | None')
         lines.extend(['    @property', f'    def events(self) -> _{prefix}Events: ...'])
         lines.extend(['    @property', f'    def auth(self) -> _{prefix}Auth: ...'])
         if asynchronous:
             lines.extend(['    @classmethod', '    async def connect(cls, transport: Any) -> AsyncClient: ...'])
+            lines.extend(['    @classmethod', '    async def auto(cls, executable: str | None = ..., **options: Any) -> AsyncClient: ...'])
         else:
             lines.extend(['    @classmethod', '    def from_stdio(cls, **options: Any) -> Client: ...'])
+            lines.extend(['    @classmethod', '    def auto(cls, executable: str | None = ..., **options: Any) -> Client: ...'])
         for family in families:
             lines.extend(['    @property', f'    def {family}(self) -> _{prefix}{family.title()}: ...'])
         lines.extend([f'    {"async " if asynchronous else ""}def request(self, method: str, params: Any = ..., **options: Any) -> Any: ...',

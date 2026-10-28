@@ -47,7 +47,7 @@ function PanelHeader({ selected }: { selected: Candidate }) {
   return (
     <div className="relative border-b bg-linear-to-br from-accent-subtle via-transparent to-transparent p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-[0.65rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">Selected route</span>
+        <span className="text-[0.65rem] font-semibold text-muted-foreground">Selected route</span>
         <Button
           variant="ghost"
           size="sm"

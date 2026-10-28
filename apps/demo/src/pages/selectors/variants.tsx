@@ -405,7 +405,7 @@ export function MobileVariant({ candidates }: VariantProps) {
           )}
           <span className="flex items-center gap-1" aria-hidden="true">
             {Array.from({ length: STEPS }, (_, index) => (
-              <span key={index} className={cn('h-1.5 rounded-full transition-all', index === step ? 'w-5 bg-primary' : 'w-1.5 bg-border')} />
+              <span key={index} className={cn('h-1.5 rounded-full transition-colors', index === step ? 'w-5 bg-primary' : 'w-1.5 bg-border')} />
             ))}
           </span>
           <Badge variant="outline">{`${step + 1} / ${STEPS}`}</Badge>

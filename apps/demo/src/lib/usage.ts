@@ -23,7 +23,7 @@ export interface Reading {
 export function readingOf(window: UsageWindow): Reading | null {
   const value = known(window.reading);
   if (!value) return null;
-  const hasTotal = value.limit != null && typeof value.usedFraction === 'number';
+  const hasTotal = value.limit != null && typeof value.usedFraction === 'number' && Number.isFinite(value.usedFraction);
   return {
     window,
     used: value.used,

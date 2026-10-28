@@ -1,12 +1,226 @@
 """Async-first client and a small synchronous facade over the same implementation."""
 import asyncio
+import json
+import os
+import pathlib
 import re
+import sys
+import stat
+import tempfile
+import time
 from typing import Any
 from .errors import LocalAIError
-from .stdio import AsyncStdioTransport
+from .stdio import AsyncStdioTransport, _process_options
+
+PLATFORM_PACKAGES = {
+    ('linux', 'x86_64'): '@local-ai-kit/cli-linux-x64',
+    ('linux', 'aarch64'): '@local-ai-kit/cli-linux-arm64',
+    ('darwin', 'arm64'): '@local-ai-kit/cli-darwin-arm64',
+    ('darwin', 'x86_64'): '@local-ai-kit/cli-darwin-x64',
+    ('win32', 'amd64'): '@local-ai-kit/cli-win32-x64',
+}
+BINARY_NAME = 'local-ai-kit.exe' if sys.platform == 'win32' else 'local-ai-kit'
+
+
+def _usable(path: str | None) -> bool:
+    if not path or not isinstance(path, str) or not pathlib.Path(path).is_absolute() or '\0' in path:
+        return False
+    if path.lower().endswith(('.cmd', '.bat', '.ps1')):
+        return False
+    candidate = pathlib.Path(path)
+    return candidate.is_file() and os.access(candidate, os.X_OK)
+
+
+def resolve_helper(executable: str | None = None) -> str:
+    """The helper binary: explicit, then LAI_HELPER_PATH, then the bundled one."""
+    if executable is not None and not _usable(executable):
+        raise LocalAIError('INVALID_EXECUTABLE')
+    if _usable(executable):
+        return executable  # type: ignore[return-value]
+    override = os.environ.get('LAI_HELPER_PATH')
+    if override is not None and not _usable(override):
+        raise LocalAIError('INVALID_EXECUTABLE')
+    if _usable(override):
+        return override  # type: ignore[return-value]
+    bundled = pathlib.Path(__file__).resolve().parent / '_bin' / BINARY_NAME
+    if _usable(str(bundled)):
+        return str(bundled)
+    raise LocalAIError('RUNTIME_MISSING')
+
+
+def default_address() -> str:
+    configured = os.environ.get('LAI_BROKER_ADDRESS')
+    if configured:
+        return configured
+    if sys.platform == 'win32':
+        return 'local-ai-kit-user'
+    runtime = os.environ.get('XDG_RUNTIME_DIR')
+    if runtime and pathlib.Path(runtime).is_absolute():
+        return str(pathlib.Path(runtime) / 'local-ai-kit' / 'user.sock')
+    return str(pathlib.Path.home() / '.local-ai-kit' / 'user.sock')
+
+
+def default_token_file() -> pathlib.Path:
+    configured = os.environ.get('LAI_BROKER_TOKEN_FILE')
+    if configured:
+        return pathlib.Path(configured)
+    return pathlib.Path.home() / '.local-ai-kit' / 'broker-token.json'
+
+
+def _shared_token(address: str, token_file: str | os.PathLike | None = None) -> str | None:
+    try:
+        path = pathlib.Path(token_file) if token_file is not None else default_token_file()
+        info = path.lstat()
+        if not stat.S_ISREG(info.st_mode):
+            return None
+        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_BINARY', 0)
+        with os.fdopen(os.open(path, flags), 'rb') as stream:
+            opened = os.fstat(stream.fileno())
+            if not stat.S_ISREG(opened.st_mode) or opened.st_size > 16384 or (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino):
+                return None
+            if sys.platform != 'win32' and opened.st_mode & 0o077:
+                return None
+            data = stream.read(16385)
+        if len(data) > 16384:
+            return None
+        descriptor = json.loads(data.decode('utf-8'))
+        if not isinstance(descriptor, dict):
+            return None
+        if 'address' in descriptor and descriptor['address'] != address:
+            return None
+        token = descriptor.get('token')
+        if not isinstance(token, str) or not re.fullmatch(r'[0-9a-f]{64}', token):
+            return None
+        return token
+    except (OSError, ValueError):
+        return None
+
+
+def _unique_address() -> str:
+    suffix = f'{os.getpid()}-{int(time.time() * 1000)}-{os.urandom(3).hex()}'
+    if sys.platform == 'win32':
+        return f'local-ai-kit-private-{suffix}'
+    name = f'local-ai-kit-{suffix}.sock'
+    candidate = str(pathlib.Path(tempfile.gettempdir()) / name)
+    # Stay below the smallest supported Unix sun_path bound, including UTF-8.
+    return candidate if len(os.fsencode(candidate)) <= 100 else str(pathlib.Path('/tmp') / name)
+
+
+async def _open_private(executable: str, options: dict) -> AsyncStdioTransport:
+    process_options = _process_options(options.get('cwd'), options.get('env'))
+    address = _unique_address()
+    args = [executable, 'serve', '--ipc', address]
+    if options.pop('passive', True):
+        args.append('--allow-passive-discovery')
+    for provider in options.pop('probe_providers', []):
+        if not isinstance(provider, str) or not re.fullmatch(r'[a-z0-9_]{1,32}', provider):
+            raise LocalAIError('INVALID_REQUEST')
+        args.extend(['--allow-metadata', provider])
+    try:
+        broker = await asyncio.create_subprocess_exec(
+            *args,
+            **process_options,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+    except (OSError, ValueError):
+        raise LocalAIError('RUNTIME_MISSING') from None
+    async def stop():
+        if broker.stdin is not None:
+            broker.stdin.close()
+        try:
+            await asyncio.wait_for(broker.wait(), timeout=2)
+        except asyncio.TimeoutError:
+            if broker.returncode is None:
+                try:
+                    broker.kill()
+                except ProcessLookupError:
+                    pass
+            await broker.wait()
+
+    try:
+        try:
+            line = await asyncio.wait_for(broker.stdout.readline(), timeout=8)
+        except asyncio.TimeoutError:
+            raise LocalAIError('RUNTIME_MISSING') from None
+        except ValueError:
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE') from None
+        if not line or len(line) > 4096:
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+        try:
+            descriptor = json.loads(line.decode('utf-8'))
+        except (UnicodeDecodeError, ValueError):
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE') from None
+        if (
+            not isinstance(descriptor, dict)
+            or descriptor.get('protocolVersion') != '1.0'
+            or descriptor.get('address') != address
+            or descriptor.get('independent') is True
+            or not isinstance(descriptor.get('token'), str)
+            or not re.fullmatch(r'[0-9a-f]{64}', descriptor['token'])
+        ):
+            raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+        transport = await AsyncStdioTransport.open_broker(
+            executable=executable,
+            address=descriptor['address'],
+            token=descriptor['token'],
+            **options,
+        )
+    except BaseException:
+        # Includes cancellation: a partially started broker still belongs to us.
+        await stop()
+        raise
+    original_close = transport.close
+
+    async def close():
+        try:
+            await original_close()
+        finally:
+            await stop()
+
+    transport.close = close  # type: ignore[method-assign]
+    transport.mode = 'child'  # type: ignore[attr-defined]
+    return transport
+
+
+async def open_auto_transport(executable: str | None = None, **options):
+    """Resolve a transport: a granted shared broker first, then a private child."""
+    helper = resolve_helper(executable)
+    address = options.pop('address', None) or default_address()
+    if not isinstance(address, str) or not address or len(address) > 200 or '\0' in address:
+        raise LocalAIError('INVALID_REQUEST')
+    token_file = options.pop('token_file', None)
+    explicit_token = options.pop('token', None)
+    token = explicit_token if explicit_token is not None else _shared_token(address, token_file)
+    fallback_reason = None
+    if token:
+        try:
+            shared_options = {key: value for key, value in options.items() if key not in ('passive', 'probe_providers')}
+            transport = await AsyncStdioTransport.open_broker(executable=helper, address=address, token=token, **shared_options)
+            try:
+                handshake = await transport.request('runtime.handshake', {'protocolVersion': '1.0', 'clientName': 'local-ai-kit-auto'})
+                if not isinstance(handshake, dict) or not isinstance(handshake.get('protocolVersion'), str) or not re.fullmatch(r'1\.\d+', handshake['protocolVersion']):
+                    raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+                methods = handshake.get('methods')
+                if not isinstance(methods, list) or len(methods) > 512 or any(not isinstance(method, str) for method in methods):
+                    raise LocalAIError('PROTOCOL_INCOMPATIBLE')
+                transport.mode = 'shared'  # type: ignore[attr-defined]
+                return transport
+            except BaseException:
+                await transport.close()
+                raise
+        except LocalAIError as error:
+            if error.code not in ('RUNTIME_MISSING', 'TRANSPORT_CLOSED', 'PROTOCOL_INCOMPATIBLE'):
+                raise
+            if error.code == 'PROTOCOL_INCOMPATIBLE':
+                fallback_reason = 'FALLBACK_PROTOCOL_MISMATCH'
+    transport = await _open_private(helper, options)
+    transport.fallback_reason = fallback_reason
+    return transport
 
 FAMILIES = {
-    'runtime': ('health','closeClient'), 'snapshot': ('get',), 'discovery': ('refresh','watch','cancel'),
+    'runtime': ('health','closeClient'), 'costs': ('read','setPrices'), 'snapshot': ('get',), 'discovery': ('refresh','watch','cancel'),
     'connections': ('list','setupInstructions','authenticate','probe'), 'models': ('list','page'),
     'usage': ('read',), 'capabilities': ('read',), 'selection': ('resolve','validate'),
     'grants': ('request','list','revoke'), 'sessions': ('create','get','suspend','resume','updateOptions','close'),
@@ -65,7 +279,23 @@ class AsyncClient:
         self = cls()
         self._transport, self._methods, self._closed = transport, frozenset(methods), False
         self.handshake = {**handshake, 'methods':tuple(methods)}
+        self.mode = getattr(transport, 'mode', 'custom')
+        self.fallback_reason = getattr(transport, 'fallback_reason', None)
         return self
+
+    @classmethod
+    async def auto(cls, executable: str | None = None, **options):
+        """Connect without naming a binary or transport.
+
+        Tries a granted shared broker, then a private parent-owned helper. Raises
+        RUNTIME_MISSING only when no helper binary is bundled or configured.
+        """
+        transport = await open_auto_transport(executable, **options)
+        try:
+            return await cls.connect(transport)
+        except BaseException:
+            await transport.close()
+            raise
 
     def __getattr__(self, name):
         if name == 'auth':
@@ -116,6 +346,30 @@ class AsyncClient:
 
 
 class Client:
+    @classmethod
+    def auto(cls, executable: str | None = None, **options):
+        """Synchronous dependency-first connect. See AsyncClient.auto."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+        else:
+            raise LocalAIError('USE_ASYNC_CLIENT')
+        runner = asyncio.Runner()
+        async def connect():
+            return await AsyncClient.auto(executable, **options)
+        try:
+            client = runner.run(connect())
+        except BaseException:
+            runner.close()
+            raise
+        self = cls()
+        self._runner, self._client, self._closed = runner, client, False
+        self.handshake = client.handshake
+        self.mode = client.mode
+        self.fallback_reason = client.fallback_reason
+        return self
+
     @classmethod
     def from_stdio(cls, **options):
         try:

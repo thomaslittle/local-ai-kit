@@ -48,21 +48,21 @@ pub(super) async fn rpc(
         Ok(None) => return StatusCode::NO_CONTENT.into_response(),
         Err(e) => return bounded_json(e),
     };
-    if request.method != "runtime.handshake" {
-        if let Err(e) = authorize(&state, &headers, true) {
-            return *e;
-        }
+    if request.method != "runtime.handshake"
+        && let Err(e) = authorize(&state, &headers, true)
+    {
+        return *e;
     }
     let outcome = state
         .service
         .handle(&client, &request.method, request.params)
         .await;
-    if request.method == "runtime.handshake" && outcome.is_ok() {
-        if let Ok(mut tokens) = state.tokens.lock() {
-            if let Some(token) = tokens.get_mut(&key) {
-                token.ready = true;
-            }
-        }
+    if request.method == "runtime.handshake"
+        && outcome.is_ok()
+        && let Ok(mut tokens) = state.tokens.lock()
+        && let Some(token) = tokens.get_mut(&key)
+    {
+        token.ready = true;
     }
     if ["grants.revoke", "runtime.closeClient"].contains(&request.method.as_str())
         && outcome.is_ok()
@@ -102,6 +102,7 @@ pub(super) async fn diagnostics(State(s): State<Arc<Shared>>, h: HeaderMap) -> R
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct EventQuery {
+    scope: Option<String>,
     session_id: Option<String>,
     after: Option<String>,
 }
@@ -114,11 +115,19 @@ pub(super) async fn events(
         Ok(q) => q,
         Err(_) => return reject(StatusCode::BAD_REQUEST, "INVALID_REQUEST"),
     };
-    if query.session_id.as_ref().is_some_and(|s| s.len() > 256)
-        || query
-            .after
-            .as_ref()
-            .is_some_and(|s| s.len() > 20 || s.parse::<u64>().is_err())
+    if query
+        .scope
+        .as_deref()
+        .is_some_and(|scope| scope != "inventory")
+        || (query.scope.is_some() && query.session_id.is_some())
+        || query.session_id.as_ref().is_some_and(|s| s.len() > 256)
+        || query.after.as_ref().is_some_and(|s| {
+            if query.scope.as_deref() == Some("inventory") {
+                s.is_empty() || s.len() > 128 || s.chars().any(char::is_control)
+            } else {
+                s.len() > 20 || s.parse::<u64>().is_err()
+            }
+        })
     {
         return reject(StatusCode::BAD_REQUEST, "INVALID_REQUEST");
     }
@@ -131,6 +140,9 @@ pub(super) async fn events(
         Err(_) => return reject(StatusCode::TOO_MANY_REQUESTS, "STREAM_LIMIT"),
     };
     let mut params = json!({});
+    if let Some(scope) = query.scope {
+        params["scope"] = json!(scope);
+    }
     if let Some(id) = query.session_id {
         params["sessionId"] = json!(id);
     }
@@ -169,7 +181,7 @@ pub(super) async fn events(
         .into_response()
 }
 /// Exact single-segment client-side routes of the demo SPA; each serves `index.html`.
-const CLIENT_ROUTES: [&str; 7] = [
+const CLIENT_ROUTES: [&str; 8] = [
     "/overview",
     "/connections",
     "/models",
@@ -177,6 +189,7 @@ const CLIENT_ROUTES: [&str; 7] = [
     "/selector-lab",
     "/playground",
     "/diagnostics",
+    "/settings",
 ];
 pub(super) async fn asset(State(state): State<Arc<Shared>>, method: Method, uri: Uri) -> Response {
     if method != Method::GET && method != Method::HEAD {

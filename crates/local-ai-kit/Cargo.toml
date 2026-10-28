@@ -1,0 +1,29 @@
+[package]
+name = "local-ai-kit"
+description = "Dependency-first client for the local AI runtime: shared broker, private helper, or in-process"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+name = "local_ai_kit"
+path = "src/lib.rs"
+
+[dependencies]
+lai-platform = { path = "../lai-platform" }
+lai-contracts = { path = "../lai-contracts" }
+lai-control = { path = "../lai-control", default-features = false }
+lai-kit = { path = "../lai-kit" }
+lai-transports = { path = "../lai-transports" }
+serde.workspace = true
+serde_json.workspace = true
+tokio = { version = "1", features = ["rt-multi-thread", "time"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

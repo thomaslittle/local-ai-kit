@@ -1,6 +1,6 @@
-# Developer showcase
+# OriginLM · Developer showcase
 
-A React application that consumes only the public TypeScript SDK and the selector core. By default it pairs with the native helper and shows what is actually detected on your machine; clearly labeled example data is only a fallback when no runtime is paired. The app itself never reads a credential, keyring, or provider client; all of that stays in the native helper.
+The OriginLM React application that consumes only the public TypeScript SDK and the selector core. By default it pairs with the native helper and shows what is actually detected on your machine; clearly labeled example data is only a fallback when no runtime is paired. The app itself never reads a credential, keyring, or provider client; all of that stays in the native helper.
 
 ## Run it
 
@@ -17,13 +17,21 @@ It starts the **native helper**, so the demo shows what is actually detected on 
 
 For tests and scripted scenarios only, `node apps/demo/server.mjs --fixture` serves the built UI with a loopback fixture service (`/#demo-fixture&staleAuth=1&...`).
 
+## Brand
+
+The shell uses the OriginLM treatment: the app icon (graphite symbol on the
+amber `#EBA31A` tile) in the sidebar header, the graphite/amber/off-white palette
+in both themes, and Red Hat Display (variable TTF, OFL 1.1) as the interface
+face. Sources and licences: `src/assets/brand/README.md` and
+`src/assets/fonts/README.md`.
+
 ## Stack
 
 | Concern | Choice |
 | --- | --- |
 | UI | React 19 with the React Compiler (no manual `memo`/`useMemo` needed) |
 | Build | Vite 8 (Rolldown), TypeScript 7, separate `index.html` / `assets/*` files |
-| Styling | Tailwind CSS v4, shadcn/ui **base-mira** on Base UI, Phosphor icons, Outfit |
+| Styling | Tailwind CSS v4, shadcn/ui **base-mira** on Base UI, Phosphor icons, Red Hat Display |
 | Routing | TanStack Router, real path routes (see below) |
 | State | zustand vanilla store, components subscribe to slices |
 | Charts | shadcn charts on Recharts, lazy-loaded |

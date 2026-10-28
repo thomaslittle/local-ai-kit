@@ -7,6 +7,7 @@ pub use execution::{
 };
 mod cache;
 mod catalog;
+mod costs;
 mod delivery;
 pub use delivery::NotificationSink;
 mod health;
@@ -33,6 +34,7 @@ use std::{
 pub type InventorySource = Arc<dyn Fn(&AtomicBool) -> Result<ScanResult> + Send + Sync>;
 pub type AppRevoker = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 pub struct NativeService {
+    cost_prices: RwLock<costs::Prices>,
     clients: Arc<RwLock<BTreeMap<String, ClientPolicy>>>,
     adapters: Vec<lai_contracts::AdapterDescriptor>,
     execution_state: execution::ExecutionState,
@@ -62,6 +64,7 @@ pub struct NativeService {
 impl NativeService {
     pub fn new(source: InventorySource, ttl: Duration) -> Self {
         Self {
+            cost_prices: RwLock::new(costs::Prices::default()),
             clients: Arc::new(RwLock::new(BTreeMap::new())),
             adapters: Vec::new(),
             execution_state: Default::default(),
@@ -381,10 +384,9 @@ impl NativeService {
                 | "discovery.refresh"
                 | "turns.start"
                 | "sessions.create"
-        ) {
-            if let Ok(mut interest) = self.client_interest.lock() {
-                interest.insert(client.to_owned(), tokio::time::Instant::now());
-            }
+        ) && let Ok(mut interest) = self.client_interest.lock()
+        {
+            interest.insert(client.to_owned(), tokio::time::Instant::now());
         }
         // Staged images and turn text have separate bounds and closed typed params.
         if method == "inputs.put" {
@@ -443,10 +445,10 @@ impl NativeService {
                     close_result?;
                     // Remote revocation can fail after local sign-out. Never
                     // restore secrets or report the local disconnect as failed.
-                    if let Err(error) = disconnect {
-                        if error.code != "REVOCATION_UNCONFIRMED" {
-                            return Err(map_auth(error));
-                        }
+                    if let Err(error) = disconnect
+                        && error.code != "REVOCATION_UNCONFIRMED"
+                    {
+                        return Err(map_auth(error));
                     }
                     Ok(serde_json::json!({}))
                 }

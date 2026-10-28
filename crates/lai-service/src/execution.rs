@@ -1004,10 +1004,10 @@ impl NativeService {
                         images,
                     )
                     .await?;
-                if !request.inputs.is_empty() {
-                    if let Ok(mut inputs) = self.execution_state.inputs.lock() {
-                        inputs.consume(&request.inputs);
-                    }
+                if !request.inputs.is_empty()
+                    && let Ok(mut inputs) = self.execution_state.inputs.lock()
+                {
+                    inputs.consume(&request.inputs);
                 }
                 Ok(started)
             }

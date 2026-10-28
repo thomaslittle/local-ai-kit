@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowSquareOutIcon, CubeIcon, FlaskIcon, GaugeIcon, PlugsConnectedIcon, PulseIcon, SquaresFourIcon, ChatsIcon, type Icon } from '@phosphor-icons/react';
+import { GearIcon, ArrowSquareOutIcon, CubeIcon, FlaskIcon, GaugeIcon, PlugsConnectedIcon, PulseIcon, SquaresFourIcon, ChatsIcon, type Icon } from '@phosphor-icons/react';
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +16,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
+import { BrandMark } from '@/components/layout/brand-mark';
 import { pathFor, usePageMeta } from '@/lib/pages';
 import { useDemo } from '@/state/context';
 import type { Page } from '@/state/types';
@@ -28,6 +29,7 @@ const NAV: { label: string; items: { page: Page; icon: Icon }[] }[] = [
       { page: 'Connections', icon: PlugsConnectedIcon },
       { page: 'Models', icon: CubeIcon },
       { page: 'Usage', icon: GaugeIcon },
+      { page: 'Settings', icon: GearIcon },
     ],
   },
   {
@@ -39,17 +41,6 @@ const NAV: { label: string; items: { page: Page; icon: Icon }[] }[] = [
     ],
   },
 ];
-
-function BrandMark() {
-  return (
-    <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md ring-1 ring-white/15">
-      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z" />
-        <path d="m4 7.5 8 4.5 8-4.5M12 12v9" />
-      </svg>
-    </span>
-  );
-}
 
 function NavItem({ page, icon: IconComponent }: { page: Page; icon: Icon }) {
   const active = usePageMeta().page === page;
@@ -74,14 +65,10 @@ export function AppSidebar() {
       <SidebarHeader className="p-3">
         <Link
           to="/overview"
-          aria-label="Local AI Kit home"
-          className="flex items-center gap-2.5 rounded-xl p-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          aria-label="OriginLM home"
+          className="inline-flex w-fit rounded-[26%] p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         >
           <BrandMark />
-          <span className="grid min-w-0 leading-tight group-data-[collapsible=icon]:hidden">
-            <strong className="truncate text-[0.95rem] font-semibold tracking-tight">Local AI Kit</strong>
-            <small className="truncate text-[0.6rem] font-semibold tracking-[0.16em] text-muted-foreground uppercase">Developer showcase</small>
-          </span>
         </Link>
       </SidebarHeader>
       <SidebarContent>

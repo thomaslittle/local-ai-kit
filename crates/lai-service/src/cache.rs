@@ -211,7 +211,10 @@ fn mark_snapshot_stale(snapshot: &mut Snapshot) {
     for connection in &mut snapshot.connections {
         mark_observation_stale(&mut connection.auth);
         mark_observation_stale(&mut connection.plan);
-        if connection.status == "metadata_ready" {
+        if matches!(
+            connection.status.as_str(),
+            "metadata_ready" | "metadata_cached"
+        ) {
             connection.status = "metadata_stale".into();
         }
     }
@@ -772,11 +775,11 @@ impl InventoryCache {
         let mut state = self.state.lock().map_err(|_| unavailable())?;
         let mut changed = Vec::new();
         for id in connections {
-            if let Some(entry) = state.metadata.get_mut(id) {
-                if !entry.invalidated {
-                    entry.invalidated = true;
-                    changed.push(id.clone());
-                }
+            if let Some(entry) = state.metadata.get_mut(id)
+                && !entry.invalidated
+            {
+                entry.invalidated = true;
+                changed.push(id.clone());
             }
             state.dirty.insert(id.clone());
             *state.connection_generations.entry(id.clone()).or_default() += 1;
@@ -1238,19 +1241,19 @@ impl InventoryCache {
                 next.health = summarize(&issues, state.hydrated);
                 next.issues = issues;
                 let changes = diff_snapshot(&state.snapshot, &next);
-                if !changes.is_empty() {
-                    if let Err(error) = self.commit_locked(
+                if !changes.is_empty()
+                    && let Err(error) = self.commit_locked(
                         &mut state,
                         &mut next,
                         None,
                         "inventory_failure",
                         changes,
                         0,
-                    ) {
-                        current.failure = Some((Instant::now(), error.clone()));
-                        current.storage_error = Some(error.clone());
-                        return Err(error);
-                    }
+                    )
+                {
+                    current.failure = Some((Instant::now(), error.clone()));
+                    current.storage_error = Some(error.clone());
+                    return Err(error);
                 }
                 *current = state;
                 Err(safe)
@@ -1384,10 +1387,10 @@ impl InventoryCache {
             changes,
             metadata.as_ref().map(|m| m.observed_at_ms).unwrap_or(0),
         )?;
-        if let Some(metadata) = metadata {
-            if let Some(entry) = state.metadata.get_mut(&metadata.report.connection_id) {
-                entry.report = metadata.report;
-            }
+        if let Some(metadata) = metadata
+            && let Some(entry) = state.metadata.get_mut(&metadata.report.connection_id)
+        {
+            entry.report = metadata.report;
         }
         Ok(())
     }

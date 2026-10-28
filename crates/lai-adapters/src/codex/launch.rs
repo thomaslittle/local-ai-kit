@@ -3,6 +3,7 @@ use lai_contracts::{ConnectionMetadata, DomainError, ErrorCode, Result};
 use lai_discovery::LocatedClient;
 use std::{
     collections::BTreeMap,
+    io::Read,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -11,6 +12,84 @@ fn missing() -> DomainError {
         ErrorCode::RuntimeMissing,
         "A supported native Codex executable is unavailable",
     )
+}
+fn incomplete_codex() -> DomainError {
+    DomainError::new(
+        ErrorCode::RuntimeMissing,
+        "Codex needs the adjacent codex-code-mode-host executable",
+    )
+}
+/// Native Codex ships `codex-code-mode-host` beside the binary. Launchers and
+/// version-manager shims resolve their own payload, so a shebang, a non-`.exe`
+/// Windows launcher, or a volta/mise/aqua shim is enough. Reimplemented from
+/// T3 Code `CodexInstallation.ts` (`hasCodeModeHost`) at
+/// [348888a767](https://github.com/pingdotgg/t3code/commit/348888a767).
+fn codex_binary_is_launchable(path: &Path) -> bool {
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    let stem = name.rsplit_once('.').map(|(stem, _)| stem).unwrap_or(&name);
+    if matches!(stem, "volta-shim" | "mise" | "aqua-proxy") {
+        return true;
+    }
+    if cfg!(windows) {
+        let extension = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        if extension != "exe" {
+            return true;
+        }
+        if let Some(file_stem) = path.file_stem().and_then(|stem| stem.to_str()) {
+            let parent = path.parent().unwrap_or(Path::new("."));
+            for marker in [".bunx", ".shim"] {
+                if non_empty_file(&parent.join(format!("{file_stem}{marker}"))) {
+                    return true;
+                }
+            }
+        }
+    } else if starts_with_shebang(path) {
+        return true;
+    }
+    let host_name = if cfg!(windows) {
+        "codex-code-mode-host.exe"
+    } else {
+        "codex-code-mode-host"
+    };
+    let host = path.parent().unwrap_or(Path::new(".")).join(host_name);
+    if !non_empty_file(&host) {
+        return false;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::metadata(&host).is_ok_and(|meta| meta.permissions().mode() & 0o111 != 0)
+    }
+    #[cfg(not(unix))]
+    {
+        true
+    }
+}
+fn non_empty_file(path: &Path) -> bool {
+    std::fs::metadata(path).is_ok_and(|meta| meta.is_file() && meta.len() > 0)
+}
+fn starts_with_shebang(path: &Path) -> bool {
+    let mut file = match std::fs::File::open(path) {
+        Ok(file) => file,
+        Err(_) => return false,
+    };
+    let mut header = [0_u8; 2];
+    file.read_exact(&mut header).is_ok() && header == *b"#!"
+}
+fn ensure_launchable(path: PathBuf) -> Result<PathBuf> {
+    if codex_binary_is_launchable(&path) {
+        Ok(path)
+    } else {
+        Err(incomplete_codex())
+    }
 }
 
 pub fn resolve_executable(candidate: &Path) -> Result<PathBuf> {
@@ -33,7 +112,7 @@ pub fn resolve_executable(candidate: &Path) -> Result<PathBuf> {
         return Err(missing());
     }
     if name.eq_ignore_ascii_case("codex.exe") {
-        return Ok(candidate.to_owned());
+        return ensure_launchable(candidate.to_owned());
     }
     let wrapper = name.eq_ignore_ascii_case("codex.cmd")
         || name.eq_ignore_ascii_case("codex.ps1")
@@ -55,7 +134,7 @@ pub fn resolve_executable(candidate: &Path) -> Result<PathBuf> {
         for root in roots {
             let binary = root.join(format!("vendor/{target}/bin/codex.exe"));
             if binary.is_file() {
-                return Ok(binary);
+                return ensure_launchable(binary);
             }
         }
         return Err(missing());
@@ -65,7 +144,7 @@ pub fn resolve_executable(candidate: &Path) -> Result<PathBuf> {
         #[cfg(windows)]
         return Err(missing());
         #[cfg(not(windows))]
-        return Ok(candidate.to_owned());
+        return ensure_launchable(candidate.to_owned());
     }
     Err(missing())
 }

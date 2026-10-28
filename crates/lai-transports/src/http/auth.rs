@@ -120,15 +120,14 @@ pub(super) async fn pair(
     // Every client paired with this helper acts for the one host application
     // that launched it; durable resume tokens follow that application.
     let _ = state.service.set_app_identity(&client, "http-host");
-    if let Some(grant) = &state.options.execution {
-        if state
+    if let Some(grant) = &state.options.execution
+        && state
             .service
             .register_execution(&client, grant.clone())
             .is_err()
-        {
-            state.service.close_client(&client);
-            return reject(StatusCode::SERVICE_UNAVAILABLE, "EXECUTION_UNAVAILABLE");
-        }
+    {
+        state.service.close_client(&client);
+        return reject(StatusCode::SERVICE_UNAVAILABLE, "EXECUTION_UNAVAILABLE");
     }
     tokens.insert(
         hash(&token),

@@ -8,7 +8,7 @@ import {createFixtureService} from './fixture/service.mjs';
 const HERE=dirname(fileURLToPath(import.meta.url));
 const DIST=resolve(HERE,'dist');
 const MIME={html:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',svg:'image/svg+xml',woff2:'font/woff2'};
-const CLIENT_ROUTES=new Set(['/overview','/connections','/models','/usage','/selector-lab','/playground','/diagnostics']);
+const CLIENT_ROUTES=new Set(['/overview','/connections','/models','/usage','/selector-lab','/playground','/diagnostics','/settings']);
 const SEGMENT=/^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 export async function createFixtureServer({port=0}={}){
  if(!Number.isInteger(port)||port<0||port>65535)throw Error('INVALID_PORT');
@@ -80,7 +80,7 @@ if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.u
  if(!process.argv.includes('--fixture')){console.error('This preview server requires --fixture. It never discovers real accounts.');process.exitCode=2;}
  else{
   const index=process.argv.indexOf('--port'),port=index<0?4499:Number(process.argv[index+1]);
-  const app=await createFixtureServer({port});console.log(`Local AI Kit synthetic showcase: ${app.url}`);
+  const app=await createFixtureServer({port});console.log(`OriginLM synthetic showcase: ${app.url}`);
   for(const signal of ['SIGINT','SIGTERM'])process.once(signal,async()=>{await app.close();process.exit(0);});
  }
 }

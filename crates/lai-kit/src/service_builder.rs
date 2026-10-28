@@ -67,28 +67,7 @@ pub const PERSISTENT_PROVIDERS: [&str; 5] =
     ["codex", "codex_managed", "claude_code", "opencode", "muse"];
 /// The kit's per-user state directory (holds `resume.key`). With a virtual
 /// `home` it stays inside that home. Nothing is created here.
-pub fn default_state_dir(home: Option<&std::path::Path>) -> Option<std::path::PathBuf> {
-    if let Some(home) = home {
-        return Some(home.join(".local-ai-kit"));
-    }
-    let var = |name: &str| {
-        std::env::var_os(name)
-            .map(std::path::PathBuf::from)
-            .filter(|p| p.is_absolute())
-    };
-    if let Some(dir) = var("LOCAL_AI_KIT_STATE_DIR") {
-        return Some(dir);
-    }
-    if cfg!(windows) {
-        var("LOCALAPPDATA").map(|p| p.join("local-ai-kit"))
-    } else if cfg!(target_os = "macos") {
-        var("HOME").map(|p| p.join("Library/Application Support/local-ai-kit"))
-    } else {
-        var("XDG_STATE_HOME")
-            .or_else(|| var("HOME").map(|p| p.join(".local/state")))
-            .map(|p| p.join("local-ai-kit"))
-    }
-}
+pub use lai_platform::default_state_dir;
 /// Like [`build_service_with_declarations`]; `state_dir` enables durable
 /// resume tokens that survive helper restarts.
 pub fn build_service_with_state(
@@ -121,6 +100,33 @@ pub fn build_service_with_chatgpt(
     state_dir: Option<std::path::PathBuf>,
     chatgpt: Option<(Arc<AuthManager>, String)>,
 ) -> Arc<NativeService> {
+    build_service_with_cursor_usage(
+        source,
+        execute,
+        registry,
+        native_registry,
+        declarations,
+        state_dir,
+        chatgpt,
+        false,
+    )
+}
+
+/// Same as [`build_service_with_chatgpt`], with an explicit grant for provider
+/// surfaces that need a local session token to read allowances. Only Cursor
+/// currently has such a surface; the host must opt in with
+/// `--allow-usage cursor`.
+#[allow(clippy::too_many_arguments)]
+pub fn build_service_with_cursor_usage(
+    source: InventorySource,
+    execute: bool,
+    registry: Arc<Registry>,
+    native_registry: Arc<NativeRegistry>,
+    declarations: Arc<BillingDeclarations>,
+    state_dir: Option<std::path::PathBuf>,
+    chatgpt: Option<(Arc<AuthManager>, String)>,
+    cursor_usage: bool,
+) -> Arc<NativeService> {
     let metadata_registry = registry.clone();
     let metadata_native = native_registry.clone();
     let metadata_declarations = declarations.clone();
@@ -143,12 +149,16 @@ pub fn build_service_with_chatgpt(
                     native_profile,
                     native_browser,
                     chatgpt,
+                    cursor_usage,
                 )
                 .await?;
                 declarations.apply(&provider, &mut report);
                 Ok(report)
             })
         }));
+    if let Some(directory) = &state_dir {
+        service = service.with_cost_prices(directory.clone());
+    }
     if let Some((auth, _)) = &chatgpt {
         service = service.with_chatgpt_auth(auth.clone());
     }
@@ -164,6 +174,7 @@ pub fn build_service_with_chatgpt(
         chatgpt,
     )
 }
+#[allow(clippy::too_many_arguments)]
 async fn probe_metadata(
     located: lai_discovery::LocatedClient,
     connection: String,
@@ -172,6 +183,7 @@ async fn probe_metadata(
     native_profile: Option<lai_adapters::native_clients::config::NativeProfile>,
     native_browser: Option<std::path::PathBuf>,
     chatgpt: Option<(Arc<AuthManager>, String)>,
+    cursor_usage: bool,
 ) -> lai_contracts::Result<lai_contracts::ConnectionMetadata> {
     located.validate_executable()?;
     if located.provider_id == "codex_managed" {
@@ -265,16 +277,7 @@ async fn probe_metadata(
             })?;
             lai_adapters::muse::probe(&executable, &connection, &route).await
         }
-        "cursor" => tokio::task::spawn_blocking(move || {
-            lai_adapters::cursor::read_cached(located, &connection, &route)
-        })
-        .await
-        .map_err(|_| {
-            DomainError::new(
-                ErrorCode::ProviderUnavailable,
-                "Cursor metadata worker unavailable",
-            )
-        })?,
+        "cursor" => lai_adapters::cursor::probe(located, &connection, &route, cursor_usage).await,
         _ => Err(DomainError::new(
             ErrorCode::CapabilityUnsupported,
             "No metadata adapter registered",

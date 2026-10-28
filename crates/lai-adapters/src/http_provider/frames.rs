@@ -117,10 +117,10 @@ pub fn decode(kind: HttpKind, v: &Value) -> Result<Frame> {
                             if p.get("functionCall").is_some() {
                                 return Err(no_tools());
                             }
-                            if p["thought"] != true {
-                                if let Some(text) = p.get("text") {
-                                    out.text.push_str(string(text)?);
-                                }
+                            if p["thought"] != true
+                                && let Some(text) = p.get("text")
+                            {
+                                out.text.push_str(string(text)?);
                             }
                         }
                     }

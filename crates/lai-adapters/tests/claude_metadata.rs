@@ -65,6 +65,32 @@ fn private_initialization_fields_and_secrets_do_not_escape() {
     assert!(!text.contains("user_output_styles"));
 }
 #[test]
+fn enterprise_monthly_spend_prefers_the_enabled_budget() {
+    let usage = json!({"rate_limits_available":true,"rate_limits":{"five_hour":{"utilization":12,"resets_at":null},"spend":{"enabled":true,"used":{"amount_minor":4631,"currency":"USD","exponent":2},"limit":{"amount_minor":50000,"currency":"USD","exponent":2}},"extra_usage":{"is_enabled":true,"used_credits":30000,"monthly_limit":50000,"utilization":60}}});
+    let report = parse_metadata("c", "r", &init(), Some(&usage)).unwrap();
+    assert_eq!(report.quota_pools[0].windows.len(), 2);
+    let spend = report.quota_pools[0]
+        .windows
+        .iter()
+        .find(|window| window.id == "monthly_spend")
+        .unwrap();
+    assert_eq!(spend.label, "Monthly spend");
+    assert_eq!(spend.reading.fresh_value().unwrap().used.as_str(), "9.262");
+    assert!(
+        !report.quota_pools[0]
+            .windows
+            .iter()
+            .any(|window| window.id == "extra_usage")
+    );
+}
+#[test]
+fn disabled_spend_and_extra_usage_do_not_invent_a_budget() {
+    let usage = json!({"rate_limits_available":true,"rate_limits":{"five_hour":{"utilization":12,"resets_at":null},"spend":{"enabled":false},"extra_usage":{"is_enabled":false,"utilization":40}}});
+    let report = parse_metadata("c", "r", &init(), Some(&usage)).unwrap();
+    assert_eq!(report.quota_pools[0].windows.len(), 1);
+    assert_eq!(report.quota_pools[0].windows[0].id, "five_hour");
+}
+#[test]
 fn unavailable_usage_is_not_zero() {
     let r = parse_metadata("c", "r", &init(), None).unwrap();
     assert!(r.quota_pools.is_empty());

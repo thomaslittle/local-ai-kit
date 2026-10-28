@@ -120,3 +120,34 @@ test('plain text HTTP failures never disclose body content',async()=>{
  const t=createHttpTransport(config(async()=>new Response('secret synthetic-token',{status:403})));
  await assert.rejects(t.request('snapshot.get'),e=>e.code==='HTTP_403'&&!String(e).includes('synthetic-token'));
 });
+
+test('nested auth RPC names survive HTTP method validation', async () => {
+ const t=createHttpTransport(config(async(_url,init)=>{
+  const body=JSON.parse(init.body);assert.equal(body.method,'auth.chatgpt.status');
+  return response(body.id,{state:'signed_out'});
+ }));
+ assert.deepEqual(await t.request('auth.chatgpt.status'),{state:'signed_out'});
+ await t.close();
+});
+test('inventory SSE subscriptions preserve scope and reject mixed session queries', async () => {
+ let calls=0;
+ const t=createHttpTransport(config(async(url)=>{
+  calls++;assert.equal(new URL(url).searchParams.get('scope'),'inventory');
+  return new Response(stream(['event: update\ndata: {"sequence":"1"}\n\n']),{headers:{'content-type':'text/event-stream'}});
+ }));
+ assert.deepEqual(await collect(t.subscribe({scope:'inventory'})),[{sequence:'1'}]);
+ await assert.rejects(collect(t.subscribe({scope:'inventory',sessionId:'session'})),/INVALID_REQUEST/);
+ assert.equal(calls,1);await t.close();
+});
+test('pairing code requests honor cancellation and a bounded deadline', async () => {
+ const fetch=(_url,init)=>new Promise((_resolve,reject)=>init.signal.addEventListener('abort',()=>reject(init.signal.reason),{once:true}));
+ await assert.rejects(getPairingCode({baseUrl:'http://localhost',fetch,timeoutMs:10}),/TIMEOUT/);
+ const abort=new AbortController();abort.abort();
+ await assert.rejects(issuePairingCode({baseUrl:'http://localhost',fetch,signal:abort.signal}),/CANCELLED/);
+});
+
+test('an expired HTTP replay cursor becomes EVENT_GAP for live-store resynchronization',async()=>{
+ const t=createHttpTransport(config(async()=>new Response('{}',{status:409,headers:{'content-type':'application/json'}})));
+ await assert.rejects(collect(t.subscribe({scope:'inventory',after:'old-epoch:1'})),/EVENT_GAP/);
+ await t.close();
+});

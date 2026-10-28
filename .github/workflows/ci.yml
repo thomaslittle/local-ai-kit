@@ -14,9 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-24.04, windows-2025, macos-15-intel]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    # Cold macOS Intel builds compile debug/tests, clippy, then release artifacts.
+    # The measured debug + lint stages alone take about 36 minutes.
+    timeout-minutes: 75
     env:
       CARGO_INCREMENTAL: '0'
       CARGO_BUILD_JOBS: '2'
@@ -42,7 +44,17 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - name: Install pinned Rust
-        run: rustup toolchain install 1.97.1 --profile minimal --component rustfmt --component clippy
+        run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy
+      - name: Install Linux desktop build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libfontconfig1-dev libfreetype6-dev pkg-config \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev \
+            libx11-dev libxcursor-dev libxrandr-dev libxi-dev \
+            libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+            libgl1-mesa-dev
       - name: Install build-only dependencies
         run: |
           npm ci --ignore-scripts

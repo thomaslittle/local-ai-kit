@@ -4,8 +4,10 @@ for the current user only; --unregister removes only an unchanged registration.
 """
 import argparse,hashlib,json,os,pathlib,re,shutil,sys
 NAME='com.local_ai_kit.host'
-def prepare(binary,destination,extension_id,args=None):
-    if not re.fullmatch('[a-p]{32}',extension_id):raise ValueError('Invalid extension ID')
+def prepare(binary,destination,extension_id,args=None,browser='chrome'):
+    if browser=='firefox':
+        if not re.fullmatch('[A-Za-z0-9._-]{1,64}@[A-Za-z0-9.-]{1,64}',extension_id):raise ValueError('Invalid Firefox extension ID')
+    elif not re.fullmatch('[a-p]{32}',extension_id):raise ValueError('Invalid extension ID')
     binary=pathlib.Path(binary).resolve(strict=True);destination=pathlib.Path(destination).absolute()
     if not binary.is_file():raise ValueError('Native binary required')
     args=['--allow-passive-discovery'] if args is None else list(args)
@@ -14,9 +16,15 @@ def prepare(binary,destination,extension_id,args=None):
     target=destination/('local-ai-kit-native-host.exe' if os.name=='nt' else 'local-ai-kit-native-host')
     try:
         shutil.copy2(binary,target);target.chmod(0o700)
-        origin='chrome-extension://'+extension_id+'/'
-        config=target.with_suffix('.json');config.write_text(json.dumps({'allowedOrigins':[origin],'args':args},indent=2)+'\n',encoding='utf-8');config.chmod(0o600)
-        manifest=destination/(NAME+'.json');manifest.write_text(json.dumps({'name':NAME,'description':'Local AI Kit authorized native connector','path':str(target),'type':'stdio','allowed_origins':[origin]},indent=2)+'\n',encoding='utf-8');manifest.chmod(0o600)
+        if browser=='firefox':
+            config_data={'allowedExtensions':[extension_id],'args':args}
+            manifest_data={'name':NAME,'description':'Local AI Kit authorized native connector','path':str(target),'type':'stdio','allowed_extensions':[extension_id]}
+        else:
+            origin='chrome-extension://'+extension_id+'/'
+            config_data={'allowedOrigins':[origin],'args':args}
+            manifest_data={'name':NAME,'description':'Local AI Kit authorized native connector','path':str(target),'type':'stdio','allowed_origins':[origin]}
+        config=target.with_suffix('.json');config.write_text(json.dumps(config_data,indent=2)+'\n',encoding='utf-8');config.chmod(0o600)
+        manifest=destination/(NAME+'.json');manifest.write_text(json.dumps(manifest_data,indent=2)+'\n',encoding='utf-8');manifest.chmod(0o600)
         receipt={'formatVersion':1,'files':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in [target,config,manifest]}}
         (destination/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf-8')
         return manifest
@@ -33,9 +41,12 @@ def verify(manifest):
     return manifest
 
 def platform_target(browser):
-    if browser not in ['chrome','chromium','edge']:raise ValueError('Unsupported browser')
+    if browser not in ['chrome','chromium','edge','firefox']:raise ValueError('Unsupported browser')
     if os.name=='nt':
+        if browser=='firefox':return r'Software\Mozilla\NativeMessagingHosts'+'\\'+NAME
         return {'chrome':r'Software\Google\Chrome','chromium':r'Software\Chromium','edge':r'Software\Microsoft\Edge'}[browser]+'\\NativeMessagingHosts\\'+NAME
+    if browser=='firefox':
+        return (pathlib.Path.home()/'Library/Application Support/Mozilla/NativeMessagingHosts' if sys.platform=='darwin' else pathlib.Path.home()/'.mozilla'/'native-messaging-hosts')/(NAME+'.json')
     if sys.platform=='darwin':base=pathlib.Path.home()/'Library/Application Support'/{'chrome':'Google/Chrome','chromium':'Chromium','edge':'Microsoft Edge'}[browser]
     else:base=pathlib.Path(os.environ.get('XDG_CONFIG_HOME',str(pathlib.Path.home()/'.config')))/{'chrome':'google-chrome','chromium':'chromium','edge':'microsoft-edge'}[browser]
     return base/'NativeMessagingHosts'/(NAME+'.json')
@@ -65,7 +76,7 @@ def register(manifest,browser,remove=False):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--binary',type=pathlib.Path);parser.add_argument('--destination',type=pathlib.Path);parser.add_argument('--extension-id');parser.add_argument('--browser',choices=['chrome','chromium','edge'],default='chrome')
+    parser.add_argument('--binary',type=pathlib.Path);parser.add_argument('--destination',type=pathlib.Path);parser.add_argument('--extension-id');parser.add_argument('--browser',choices=['chrome','chromium','edge','firefox'],default='chrome')
     parser.add_argument('--install',action='store_true');parser.add_argument('--unregister',type=pathlib.Path);parser.add_argument('--allow-metadata',action='append',default=[]);parser.add_argument('--allow-execution',action='append',default=[]);parser.add_argument('--workspace',type=pathlib.Path)
     args=parser.parse_args()
     if args.unregister:
@@ -78,7 +89,7 @@ def main():
         if not args.workspace or not set(args.allow_execution)<=set(args.allow_metadata):parser.error('Execution needs workspace and matching metadata grants')
         for provider in args.allow_execution:flags.extend(['--allow-execution',provider])
         flags.extend(['--workspace',str(args.workspace.resolve(strict=True))])
-    manifest=prepare(args.binary,args.destination,args.extension_id,flags)
+    manifest=prepare(args.binary,args.destination,args.extension_id,flags,args.browser)
     if args.install:register(manifest,args.browser)
     print('Native host manifest:',manifest)
     print('Registered for current user.' if args.install else 'Prepared only; no browser or registry settings changed. Add --install to register.')

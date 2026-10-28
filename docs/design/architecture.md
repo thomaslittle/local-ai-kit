@@ -1,3 +1,100 @@
+# OriginLM implementation architecture
+
+Current review: 2026-10-28. This section describes implemented boundaries. The
+original specification is retained below as historical design, not release evidence.
+Qualification remains in [the principal review](../review/V1-PRINCIPAL-REVIEW.md).
+OriginLM is the product name; `local-ai-kit`, `lai-*` and `@local-ai-kit/*` remain
+stable source/package/protocol identifiers (ADR-003).
+
+```mermaid
+flowchart TD
+  Dashboard[Web control center / GPUI / terminal] --> Client[Public SDK or BrokerClient]
+  Consumer[Tauri / Electron / GPUI / Node / Python] --> Resolve[Automatic resolver]
+  Resolve --> Shared[Granted shared IPC broker]
+  Resolve --> Child[Owned private helper]
+  Resolve --> Embedded[Rust embedded fallback]
+  Client --> Transport[stdio / IPC / Native Messaging / same-origin HTTP]
+  Shared --> Service[lai-service]
+  Child --> Service
+  Embedded --> Kit[lai-kit composition]
+  Kit --> Service
+  Transport --> Service
+  Service --> Discovery[lai-discovery and lai-core inventory]
+  Service --> Runtime[lai-runtime sessions / grants / events]
+  Service --> Store[lai-store local evidence]
+  Runtime --> Providers[lai-adapters provider-native behavior]
+  Providers --> Platform[lai-platform bounded OS boundaries]
+  Contract[lai-contracts] --> Generator[generate_contracts.py]
+  Generator --> Generated[JSON Schema / OpenAPI / TS / Python]
+```
+
+## Ownership and lifecycle
+
+`local-ai-kit` is the Rust automatic facade; `lai-kit` composes the embedded service.
+The CLI owns executable/service lifetimes. SDK imports are inert. Automatic startup
+prefers a compatible, already-granted shared broker, then an owned child; Rust can
+embed only if allowed and no helper exists. A protocol mismatch is observable as
+`FALLBACK_PROTOCOL_MISMATCH`. Grant denial remains fatal. Closing an app releases its
+own work; it does not shut down a shared broker or another client's sessions.
+
+Private helpers use a unique local address and parent control channel. Startup failures
+and cancellation reap owned children. Service-manager crash recovery is separate from
+SDK process ownership. A native control client bounds frames to 1 MiB, bounds its
+connect wait and applies a single request deadline, then discards failed streams.
+SDK event queues are bounded; gaps are errors to recover from, not silently lost events.
+
+## Authorization and transports
+
+The service is the common contract boundary. Unix sockets/Windows pipes authenticate
+with scoped descriptors; private descriptors are one-use. Owner-only regular-file reads
+are bounded and validate the opened file. Windows ACL ownership is not inferred from
+Unix mode bits. HTTP is loopback, same-origin and explicitly paired. Native Messaging
+registration scopes the host to exact extension identities. A website content bridge
+and cross-origin loopback/PNA are not implemented. The service installer enables IPC,
+not a general HTTP listener.
+
+Discovery, identity metadata, workspace access and execution are separate decisions.
+Snapshots retain provider/profile/account/connection/route/model/billing/pool identity
+and field-level freshness. No universal token balance or model-effort enum is invented.
+Provider terms and native client policies remain in force. See the
+[threat model](../security/threat-model.md) and [support matrix](../adapters/SUPPORT-MATRIX.md).
+
+## Data, costs and UI
+
+`lai-platform` owns platform state-path selection. The kit persists evidence through
+`lai-store`; the desktop uses a separate bounded history under its state directory.
+Polling the same observation does not manufacture new samples. Example data is labeled
+and separated from real data in both apps. The native mini-view is in-app, not an OS tray.
+
+The runtime observes at most 256 turn-cost records in memory, scoped by application.
+`costs.read` prefers documented provider-reported USD charges; otherwise canonical Rust
+decimal arithmetic estimates from both token counts and an exact model-price row.
+Unknown inputs remain unknown. `costs.setPrices` is administrator-only, validates rows
+and atomically saves an owner-only local table when storage is configured. This is not
+account-wide spending or a subscription invoice (ADR-005).
+
+The web store owns client state; React views subscribe to slices. GPUI uses background
+broker workers and view updates. `selector-core` is framework-free; `react` and `ui-react`
+are optional consumers. `brand/tokens.json` generates shared core colors/type for web,
+native, site and film. Site/film share one opaque five-screen three.js scene with actual
+example UI captures, lazy web loading and a static reduced-motion/no-WebGL fallback.
+
+## Packaging and generated source
+
+Contracts are authored in Rust and regenerated into protocol/SDK artifacts. Never edit
+those outputs by hand. Runtime handshake determines method availability; generated
+shapes alone do not grant access. Package versions and wire protocol versions are distinct.
+The preparation workflow creates unsigned local artifacts for five native targets and
+cannot publish (ADR-007). Registry installs, signing and hosted downloads are not claimed.
+
+Decisions: [ADR-002](ADR-002-dependency-first-distribution.md), [ADR-003](ADR-003-v1-product-boundaries.md),
+[ADR-004](ADR-004-control-client-and-web-evidence.md), [ADR-005](ADR-005-cost-evidence.md),
+[ADR-006](ADR-006-shared-motion-scene.md), [ADR-007](ADR-007-release-preparation.md).
+
+---
+
+## Historical specification (2026-09-24)
+
 # Local AI Kit — Product and Architecture Specification
 
 **Status:** original design specification (2026-09-24). The implementation follows this design but has diverged in detail; for what exists today see the [support matrix](../adapters/SUPPORT-MATRIX.md) and the [implementation ledger](../implementation/LEDGER.md).

@@ -65,7 +65,8 @@ type TestGlobals = typeof globalThis & {
     initialClient = await createLocalAI({ transport });
   }
   // In-memory history: the offline test page has no real URL to push state onto.
-  const router = createTestRouter();
+  // This suite exercises all selector variants; the product default is Overview.
+  const router = createTestRouter('/selector-lab');
   const demo = createDemoStore({
     navigate: (page) => void router.navigate({ to: pathFor(page) }),
     connectFixture,

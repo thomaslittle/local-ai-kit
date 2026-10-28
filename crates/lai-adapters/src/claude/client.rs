@@ -300,13 +300,13 @@ impl ClaudeAgent {
                 .validate(value)
                 .map_err(|_| invalid())?;
         }
-        if let Some(previous) = &self.options {
-            if previous != &options {
-                return Err(DomainError::new(
-                    ErrorCode::OptionUnsupported,
-                    "This client applies effort at session startup; create a new session",
-                ));
-            }
+        if let Some(previous) = &self.options
+            && previous != &options
+        {
+            return Err(DomainError::new(
+                ErrorCode::OptionUnsupported,
+                "This client applies effort at session startup; create a new session",
+            ));
         }
         if let Some(mut spec) = self.spec.take() {
             spec.args

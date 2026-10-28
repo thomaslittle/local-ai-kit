@@ -1,6 +1,20 @@
 # Local AI Kit TypeScript SDK (`@local-ai-kit/sdk`)
 
-> Alpha. Not yet published to npm; install the tarball from a release bundle or build from source (see [distribution](../../docs/integration/distribution.md)).
+> Alpha. Not yet published to npm; prepare local SDK/helper tarballs from source (see [quickstarts](../../docs/integration/quickstarts.md)).
+
+```ts
+import { createLocalAI } from '@local-ai-kit/sdk';
+const ai = await createLocalAI();
+try {
+  console.log(ai.mode, ai.fallbackReason, (await ai.snapshot.get()).revision);
+} finally {
+  await ai.close();
+}
+```
+
+Automatic startup uses a granted shared broker or the packaged private helper.
+An incompatible broker protocol may select the private helper; denied authorization
+never triggers fallback. Requests themselves are not automatically retried.
 
 Browser-safe HTTP/JSON-RPC and SSE client, plus a separate Node stdio entry point. No package import scans, reads credentials, starts processes, or makes requests. No provider-specific discovery logic lives here.
 
@@ -11,7 +25,8 @@ const ai = await createLocalAI({
 });
 try {
   const snapshot = await ai.snapshot.get();
-  // Request grants explicitly before enrichment or execution.
+  // Host-approved policy is required for enrichment or execution.
+  // grants.request reports requires_host_approval; it does not grant access.
 } finally {
   await ai.close();
 }
@@ -25,7 +40,7 @@ Domain and RPC types are generated from the Rust contracts (`src/generated.ts`);
 
 - Protocol-major handshake and advertised-method checks.
 - HTTP requests use bearer headers, omit cookies, and reject redirects; literal loopback hosts only.
-- Request deadlines, AbortSignal propagation, explicit close, no automatic retries/fallback.
+- Request deadlines, AbortSignal propagation, explicit close, no automatic RPC retries.
 - Frame/body bounds, response ID validation, redacted error messages.
 - SSE preserves UTF-8/chunk/line boundaries and reports explicit event gaps.
 - Stdio launches only the explicitly supplied absolute binary with `shell:false`; approved environment names only, no inherited loader injection.

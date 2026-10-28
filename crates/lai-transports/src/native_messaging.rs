@@ -14,6 +14,28 @@ pub fn valid_origin(origin: &str) -> bool {
         .and_then(|s| s.strip_suffix('/'))
         .is_some_and(|id| id.len() == 32 && id.bytes().all(|b| (b'a'..=b'p').contains(&b)))
 }
+/// Firefox identifies the caller by extension id (`name@domain`) rather than a
+/// `chrome-extension://` origin.
+pub fn valid_extension_id(value: &str) -> bool {
+    let Some((name, domain)) = value.split_once('@') else {
+        return false;
+    };
+    !name.is_empty()
+        && !domain.is_empty()
+        && value.len() <= 128
+        && name.len() <= 64
+        && domain.len() <= 64
+        && name
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
+        && domain
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b".-".contains(&b))
+}
+/// Either browser identity shape accepted at the host boundary.
+pub fn valid_caller(value: &str) -> bool {
+    valid_origin(value) || valid_extension_id(value)
+}
 async fn exact<R: AsyncRead + Unpin>(r: &mut R, b: &mut [u8]) -> Result<()> {
     tokio::time::timeout(Duration::from_secs(10), r.read_exact(b))
         .await
@@ -104,7 +126,7 @@ pub async fn serve_native<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
     origin: &str,
     allowed: &[String],
 ) -> Result<()> {
-    if !valid_origin(origin) || allowed.len() > 32 || !allowed.iter().any(|v| v == origin) {
+    if !valid_caller(origin) || allowed.len() > 32 || !allowed.iter().any(|v| v == origin) {
         return Err(problem(ErrorCode::LocalAccessDenied));
     }
     let (to_service, service_input) = tokio::io::duplex(65536);

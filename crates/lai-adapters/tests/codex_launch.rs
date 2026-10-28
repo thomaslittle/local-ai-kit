@@ -1,4 +1,21 @@
 use lai_adapters::codex::{managed_launch_spec, resolve_executable};
+use std::path::Path;
+
+fn write_host(dir: &Path) {
+    let host = dir.join(if cfg!(windows) {
+        "codex-code-mode-host.exe"
+    } else {
+        "codex-code-mode-host"
+    });
+    std::fs::write(&host, b"host").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut permissions = std::fs::metadata(&host).unwrap().permissions();
+        permissions.set_mode(0o755);
+        std::fs::set_permissions(&host, permissions).unwrap();
+    }
+}
 
 #[test]
 fn managed_codex_launch_isolated_and_uses_responses_provider() {
@@ -6,7 +23,8 @@ fn managed_codex_launch_isolated_and_uses_responses_provider() {
     let executable = temp
         .path()
         .join(if cfg!(windows) { "codex.exe" } else { "codex" });
-    std::fs::write(&executable, []).unwrap();
+    std::fs::write(&executable, b"native").unwrap();
+    write_host(temp.path());
     let home = temp.path().join("managed-home");
     let spec =
         managed_launch_spec(&executable, &home, temp.path(), "SENTINEL_ACCESS_TOKEN").unwrap();
@@ -41,12 +59,22 @@ fn managed_codex_launch_isolated_and_uses_responses_provider() {
     }
 }
 #[test]
-fn direct_native_executable_is_preserved() {
+fn direct_native_executable_needs_its_adjacent_host() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp
         .path()
         .join(if cfg!(windows) { "codex.exe" } else { "codex" });
-    std::fs::write(&path, []).unwrap();
+    std::fs::write(&path, b"native").unwrap();
+    assert!(resolve_executable(&path).is_err());
+    write_host(temp.path());
+    assert_eq!(resolve_executable(&path).unwrap(), path);
+}
+#[cfg(not(windows))]
+#[test]
+fn shebang_launcher_does_not_need_the_adjacent_host() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("codex");
+    std::fs::write(&path, b"#!/usr/bin/env bash\n").unwrap();
     assert_eq!(resolve_executable(&path).unwrap(), path);
 }
 #[test]
@@ -65,6 +93,7 @@ fn known_windows_npm_wrapper_resolves_to_packaged_native_binary() {
     ));
     std::fs::create_dir_all(bin.parent().unwrap()).unwrap();
     std::fs::write(&bin, []).unwrap();
+    write_host(bin.parent().unwrap());
     assert_eq!(resolve_executable(&wrapper).unwrap(), bin);
 }
 #[test]
@@ -93,5 +122,6 @@ fn extensionless_npm_shim_uses_the_native_package_not_a_shell() {
     ));
     std::fs::create_dir_all(bin.parent().unwrap()).unwrap();
     std::fs::write(&bin, []).unwrap();
+    write_host(bin.parent().unwrap());
     assert_eq!(resolve_executable(&shim).unwrap(), bin);
 }

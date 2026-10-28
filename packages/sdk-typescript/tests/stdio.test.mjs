@@ -55,3 +55,19 @@ test('stderr is drained but not returned or logged',async()=>{
 test('server event gap fails only its subscription and preserves request transport',async()=>{
  const t=await open();try{const iterator=t.subscribe({after:'manual'})[Symbol.asyncIterator]();await iterator.next();assert.deepEqual(await t.request('test.gap'),{ok:true});await assert.rejects(iterator.next(),/EVENT_GAP/);assert.deepEqual(await t.request('test.echo',{alive:true}),{alive:true});}finally{await t.close();}
 });
+test('stdio carries nested auth method identifiers without relaxing malformed names',async()=>{
+ const t=await open();try{assert.deepEqual(await t.request('auth.chatgpt.status',{synthetic:true}),{synthetic:true});for(const method of ['auth..status','.auth.status','auth.status.'])await assert.rejects(t.request(method),/INVALID_METHOD/);}finally{await t.close();}
+});
+
+test('standard OS data directories survive the minimal child environment',async()=>{
+ const keys=['XDG_STATE_HOME','APPDATA','LOCALAPPDATA','LOCAL_AI_KIT_STATE_DIR'];
+ const previous=Object.fromEntries(keys.map(key=>[key,process.env[key]]));
+ const expected=Object.fromEntries(keys.map(key=>[key,'synthetic-state-directory']));
+ Object.assign(process.env,expected);let transport;
+ try{transport=await open();assert.deepEqual(await transport.request('test.directories'),expected);}
+ finally{await transport?.close();for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}}
+});
+
+test('invalid native executable bytes produce a safe typed startup error',async()=>{
+ await assert.rejects(open({executable:process.execPath+'\0SHOULD_NOT_ESCAPE'}),error=>error.name==='LocalAIError'&&error.code==='INVALID_EXECUTABLE'&&!error.message.includes('SHOULD_NOT_ESCAPE'));
+});

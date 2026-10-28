@@ -1,0 +1,35 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "page",
+  "shape": "feature-stack",
+  "theme": "brand",
+  "axes": "dark/grotesk-sans/warm",
+  "hero": "Stage",
+  "nav": "three-part bar",
+  "footer": "statement",
+  "imagery": "screenshots 2 (capture.mjs)",
+  "photos": 0,
+  "entry": "hero",
+  "fingerprint": "stage/split-halves/table/pinned/band-switcher/vertical-tabs/index-table/statement/film/statement-footer",
+  "sections": [
+   "hero",
+   "paths+comparison",
+   "how",
+   "install+status",
+   "integrations",
+   "providers",
+   "security",
+   "video",
+   "footer-cta"
+  ],
+  "signature": "the shared five-screen perspective stack beside the head",
+  "waived": [
+   "39b",
+   "47b"
+  ],
+  "prompt": "a local desktop app that shows every AI client, model, account and quota on your machine, and the one dependency developers add to put the user own AI in their app",
+  "date": "2026-10-28"
+ }
+]
