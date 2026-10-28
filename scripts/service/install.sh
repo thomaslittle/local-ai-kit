@@ -2,12 +2,12 @@
 # OriginLM background service installer for macOS and Linux.
 # No admin rights: one binary in the user's path and one user-level service.
 #
-#   curl -fsSL https://<site>/install.sh | sh
+#   LAI_RELEASE_BASE="$ORIGINLM_RELEASE_BASE" sh scripts/service/install.sh
 #
 # Environment overrides: LAI_RELEASE_BASE, LAI_BIN_DIR, LAI_STATE_DIR.
 set -eu
 
-BASE="${LAI_RELEASE_BASE:-https://<site>/releases/latest/download}"
+BASE="${LAI_RELEASE_BASE:?Set LAI_RELEASE_BASE to the prepared release archive endpoint; no hosted release is published yet}"
 BIN_DIR="${LAI_BIN_DIR:-$HOME/.local/bin}"
 STATE_DIR="${LAI_STATE_DIR:-$HOME/.local-ai-kit}"
 if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
@@ -136,5 +136,5 @@ UNIT
 fi
 
 say "Socket: $SOCKET"
-say "Uninstall: curl -fsSL https://<site>/uninstall.sh | sh"
+say "Uninstall from the source checkout: sh scripts/service/uninstall.sh"
 say "Status: systemctl --user status originlm-helper   /   launchctl print gui/\$(id -u)/dev.originlm.helper"

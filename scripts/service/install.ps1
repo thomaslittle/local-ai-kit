@@ -1,9 +1,9 @@
 # OriginLM background service installer for Windows.
 # No admin rights: one binary under LOCALAPPDATA and one logon task.
 #
-#   irm https://<site>/install.ps1 | iex
+#   & ./scripts/service/install.ps1 -ReleaseBase $OriginLMReleaseBase
 param(
-  [string]$ReleaseBase = 'https://<site>/releases/latest/download',
+  [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$ReleaseBase,
   [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'OriginLM\bin'),
   [string]$StateDir = (Join-Path $env:USERPROFILE '.local-ai-kit')
 )
@@ -54,7 +54,7 @@ try {
   Start-ScheduledTask -TaskName 'OriginLM Helper'
 
   Write-Host "Installed. Task: OriginLM Helper (Task Scheduler logon task)"
-  Write-Host "Uninstall: irm https://<site>/uninstall.ps1 | iex"
+  Write-Host "Uninstall from the source checkout: & ./scripts/service/uninstall.ps1"
 } finally {
   Remove-Item -Recurse -Force $temp -ErrorAction SilentlyContinue
 }

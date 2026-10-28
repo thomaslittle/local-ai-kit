@@ -12,7 +12,10 @@ is allowed to see.
 | --- | --- |
 | 0 | running and this credential is accepted |
 | 3 | no helper is listening (or no descriptor is configured) |
-| 4 | the helper is running but rejected this credential |
+| 4 | the helper explicitly rejected this credential |
+| 1 | connection, descriptor, protocol or other runtime failure; authorization is unknown |
+
+Illustrative shape (counts are example values, not a product claim):
 
 ```json
 {

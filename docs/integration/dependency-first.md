@@ -1,6 +1,7 @@
 # Dependency-first clients
 
-An application can use local AI by installing a dependency. It does not need the
+This unpublished source preview supports local packed artifacts and Cargo path dependencies.
+See [quickstarts](quickstarts.md) for concrete local installation. An application can use local AI by installing a dependency. It does not need the
 standalone app, the broker or the control center, and it never installs them.
 
 Every client resolves in the same order:
@@ -9,6 +10,9 @@ Every client resolves in the same order:
 2. **Private helper**: a child process owned by this application.
 3. **In-process** runtime — Rust only, and only when no helper binary exists.
 
+Automatic clients expose `fallbackReason` (TS), `fallback_reason` (Python), or
+`fallback_reason()` (Rust), set to `FALLBACK_PROTOCOL_MISMATCH` when a shared
+version mismatch selected a private/embedded runtime. Otherwise it is null/None.
 The active mode is always observable, and a missing standalone install is never
 an error. A shared broker that is listening but rejects the grant is an error,
 not a reason to fall back.
@@ -17,7 +21,7 @@ not a reason to fall back.
 
 ```toml
 [dependencies]
-local-ai-kit = "0.1"
+local-ai-kit = { path = "/absolute/path/to/local-ai-kit/crates/local-ai-kit" }
 ```
 
 ```rust
@@ -46,8 +50,10 @@ Tauri and GPUI use this crate. `LocalAi` also exposes `call`, `scan` and
 import {createLocalAI} from '@local-ai-kit/sdk';
 
 const ai = await createLocalAI(); // no transport argument
-const snapshot = await ai.snapshot.get();
-console.log(ai.mode); // 'shared' | 'child'
+try {
+  const snapshot = await ai.snapshot.get();
+  console.log(ai.mode, snapshot.revision);
+} finally { await ai.close(); }
 ```
 
 The helper ships as per-platform optional dependencies, the way esbuild and Biome
@@ -61,13 +67,13 @@ do:
 
 The SDK resolves `@local-ai-kit/cli-<platform>/package.json` and the binary it
 declares, so installation is a normal dependency update: no postinstall script,
-no download at import time. Works in Node, Electron's main process and Bun.
+no download at import time. The Node transport is intended for Node and Electron's main process; Bun execution must be qualified separately.
 Renderer processes use the web bridge instead.
 
 `node scripts/npm-platform-packages.mjs --binary <path> --target <triple> --out <dir>`
 builds those packages for a release. The workspace `package.json` stays free of
-platform dependencies so `npm ci` is identical on every machine; the release
-workflow adds the optional dependencies before publishing.
+platform dependencies so `npm ci` is identical on every machine; the preparation
+workflow stages private local packs with matching optional dependencies.
 
 An explicit transport still works exactly as before:
 `createLocalAI({transport: await openSharedBrokerTransport({...})})`.
@@ -77,8 +83,8 @@ An explicit transport still works exactly as before:
 ```python
 from local_ai_kit import Client
 
-ai = Client.auto()
-print(ai.mode, ai.snapshot.get({"fields": ["revision"]}))
+with Client.auto() as ai:
+    print(ai.mode, ai.snapshot.get({"fields": ["revision"]}))
 ```
 
 (`AsyncClient.auto()` is the async form.) Wheels bundle the helper under
@@ -101,7 +107,7 @@ time; all work starts on the first call.
 The helper is started as `serve --ipc <unique socket>` with the parent-owned
 lifetime: it prints one single-use descriptor and stops when the application
 closes its control channel or exits. It never publishes a reusable token file,
-so a crashed app cannot leave a broker behind. The socket lives in the OS
+so the broker can detect parent-channel closure; OS crash/shutdown behavior still needs platform qualification. The socket lives in the OS
 temporary directory with an owner-restricted, per-process name.
 
 ## Safety rules that did not change
@@ -115,5 +121,5 @@ temporary directory with an owner-restricted, per-process name.
 ## Publishing
 
 Nothing is published by this repository without the maintainer's approval. The
-release workflow in Phase 2 builds these artifacts, prints a dry-run manifest and
-requires registry credentials before uploading.
+release workflow prepares unsigned local artifacts only, with no publication
+authority. See [release gates](../release/PUBLISHING.md).

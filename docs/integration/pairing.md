@@ -21,7 +21,7 @@ The server validates the Host header and denies foreign Origin and cross-site br
 ## TypeScript SDK
 
 ```ts
-import { getPairingCode } from 'local-ai-kit';
+import { getPairingCode, issuePairingCode } from '@local-ai-kit/sdk';
 
 const pairing = await getPairingCode({ baseUrl: 'http://127.0.0.1:4499' });
 // pairing.code is the active one-use code; pairing.expiresInSeconds is its remaining lifetime.

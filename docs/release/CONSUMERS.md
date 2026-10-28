@@ -1,7 +1,8 @@
 # Dependency updates for consumers
 
 Consumers should receive a new release as an ordinary dependency-bump pull
-request, never through a bespoke updater. Copy the configuration for the
+request, never through a bespoke updater. These registry configurations describe a future
+published release; today use local artifacts or pinned source revisions. Copy the configuration for the
 ecosystem you use into the consumer repository.
 
 ## npm (Renovate)
@@ -94,8 +95,8 @@ updates:
 - Treat a helper bump like any dependency change: run the app's own tests and
   one real flow; the SDK's protocol handshake already negotiates versions.
 - A version mismatch with a running shared broker falls back to the app's
-  private helper and is reported in the status surface, so a consumer update is
-  never blocked on every user updating the dashboard.
+  private helper when one is available. The active mode and `FALLBACK_PROTOCOL_MISMATCH` reason are exposed by automatic
+  clients. Authorization denial never selects another runtime.
 - Never pin a platform package manually. Install the SDK; the optional
   dependency resolves the right binary, or `LAI_HELPER_PATH` overrides it during
   development.

@@ -45,7 +45,7 @@ local; explicitly authorized provider operations can contact remote providers.
 | ID | Priority | Finding | Fix / evidence |
 |---|---|---|---|
 | V1-001 | P1 | Private helper startup failure can leak owned children in TS, Python and Rust; timeout/error paths do not all reap processes. | Implemented: owned-process guard in Rust and cleanup spanning startup/bridge errors in TS/Python, including Python cancellation. Synthetic regressions added; execution deferred to final phase. |
-| V1-002 | P1 | Dependency-first shared connection and protocol fallback do not yet implement ADR-002 D9 consistently. | Implemented protocol mismatch fallback with grant denial kept fatal; structured status remains under review. |
+| V1-002 | P1 | Dependency-first shared connection and protocol fallback do not yet implement ADR-002 D9 consistently. | Implemented protocol mismatch fallback with grant denial kept fatal; structured fallback reason is now exposed. Verification pending. |
 | V1-003 | P1 | GitHub reports active dependency advisories for undici, rustls, setuptools, fast-uri and lru. | Patched bounded dependencies; see 2026-10-28 dependency audit. Final qualification pending. |
 | V1-004 | P2 | ADR-002 privacy statement says nothing leaves the machine despite explicit remote provider operations. | Implemented: ADR-003, root privacy statement, ADR-002 correction and site copy distinguish local state from authorized remote provider traffic. |
 | V1-005 | P2 | Rust helper resolution silently ignores an invalid environment override; TS and Python reject it. | Implemented: Rust start rejects invalid configured overrides before attempting shared or embedded fallback. Regression added; execution pending. |
@@ -93,7 +93,7 @@ from grant denial. TS/Python negotiate while choosing the shared transport, clos
 an incompatible connection, and start their private helper; denied grants remain
 fatal. Python only falls back for explicitly classified unavailable transports,
 not arbitrary domain errors, and excludes private-only options from shared
-connection arguments. Structured mismatch status reporting remains pending.
+connection arguments. Automatic clients now expose FALLBACK_PROTOCOL_MISMATCH in TS fallbackReason, Python fallback_reason and Rust fallback_reason()/status. Execution remains pending.
 
 V1-012 (P1): the Rust embedded fallback started Tokio background tasks before
 constructing/entering its runtime. Runtime construction and entry now precede
@@ -162,3 +162,31 @@ blocking on swapped FIFOs. Windows checks regular-file identity/reparse semantic
 ACL ownership is not claimed. Helper resolution also checks Unix execute permission
 and never ignores an invalid Rust environment override. Regression cases authored;
 Phase F execution pending.
+
+### V1-019 (P2): documentation and marketing drift
+
+Replaced invalid site sample APIs/host IDs, unstated registry prerequisites, the
+machine-specific native token path and hosted installer placeholders. Added current
+architecture, source/local-package quickstarts, user dashboard guide, troubleshooting,
+privacy and explicit extension/pairing limits. Native Snapshot/error types are exported
+from the dependency-first facade so consumers do not need a second contract dependency.
+Python preview version aligns with alpha.20. All snippets remain pending Phase F execution;
+Tauri/Electron/GPUI integration fragments are labeled as integrations into existing apps.
+
+### V1-020 (P2): status conflated connection failure with denied grants
+
+CLI status now distinguishes an explicit authorization denial (exit 4) from malformed
+descriptors, incompatible protocols and transport failures (exit 1, authorization unknown).
+BrokerClient's connect itself has a two-second bound in addition to its request deadline.
+Automatic clients expose an explicit protocol-mismatch fallback reason. No grant denial
+is downgraded into a private fallback. Existing synthetic regressions extended; unrun.
+
+### V1-021 (P1): a domain denial poisoned the control connection
+
+The earlier transport cleanup discarded a stream after any RPC error, including a
+fully parsed permission denial. A non-admin control client requesting apps.list then
+lost access to later permitted reads. Only incomplete/invalid transport exchanges now
+invalidate the stream. `BrokerClient::call_typed` preserves canonical codes and bounded
+retry hints while suppressing untrusted error bodies; the Rust facade uses it directly.
+A denial-then-snapshot fixture and retry-hint/redaction fixture are authored; execution
+pending. Price-file loading also uses the common bounded opened-file reader.

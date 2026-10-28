@@ -13,7 +13,7 @@ operation-specific.
 
 OriginLM is built on Local AI Kit, a Rust toolkit with an embedded library, a standalone native helper, authenticated local transports, TypeScript and Python SDKs, and optional React selectors. Your application does not have to reproduce client-specific paths, metadata parsers, or streaming protocols for each AI client a user might have installed.
 
-> **Alpha.** The native service, supported execution adapters, SDKs, selectors, and installable bundles work, but the API can still change between `0.1.0-alpha.N` releases. Nothing is published to npm, PyPI, or crates.io yet; use [GitHub release bundles](https://github.com/thomaslittle/local-ai-kit/releases) or build from source. Provider coverage is operation-specific: read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) before relying on a provider.
+> **Source preview.** The API can change between `0.1.0-alpha.N` revisions. Nothing is published to npm, PyPI, or crates.io yet. Start with the [source install guide](docs/integration/install.md) or [local SDK quickstarts](docs/integration/quickstarts.md). The v1 branch is under [principal review](docs/review/V1-PRINCIPAL-REVIEW.md); signing and release qualification are not complete. Provider coverage is operation-specific: read the [support matrix](docs/adapters/SUPPORT-MATRIX.md) before relying on a provider.
 
 ## What it does
 
