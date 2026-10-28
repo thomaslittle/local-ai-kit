@@ -169,11 +169,33 @@ pub async fn start(located_executable: &Path, cwd: &Path) -> Result<ManagedServe
 }
 
 /// Live metadata: a short-lived server answers `/provider`, then dies.
+/// Live metadata: OpenCode 2 answers from its running local service; OpenCode
+/// 1.x gets a short-lived kit-owned server so `/provider` can be read.
 pub async fn probe(
     located_executable: &Path,
     connection: &str,
     route: &str,
 ) -> Result<ConnectionMetadata> {
+    let executable = resolve_executable(located_executable)?;
+    let cwd = std::env::current_dir().map_err(|_| {
+        DomainError::new(
+            ErrorCode::ProviderUnavailable,
+            "OpenCode working directory is unavailable",
+        )
+    })?;
+    let version = capture(
+        LaunchSpec {
+            executable,
+            args: vec!["--version".into()],
+            cwd,
+            env: BTreeMap::new(),
+        },
+        Duration::from_secs(4),
+    )
+    .await?;
+    if super::version::installed_major(&version) == Some(2) {
+        return super::v2_service::probe(connection, route, &version).await;
+    }
     let dir = tempfile::Builder::new()
         .prefix("lai-opencode-probe-")
         .tempdir()

@@ -36,6 +36,7 @@ pub struct Args {
     pub allow_native_policy: bool,
     pub allow_paid: bool,
     pub metadata_providers: BTreeSet<String>,
+    pub usage_providers: BTreeSet<String>,
     pub execution_providers: BTreeSet<String>,
     pub executable_only_providers: BTreeSet<String>,
 }
@@ -101,6 +102,7 @@ impl Args {
             allow_native_policy: false,
             allow_paid: false,
             metadata_providers: BTreeSet::new(),
+            usage_providers: BTreeSet::new(),
             execution_providers: BTreeSet::new(),
             executable_only_providers: BTreeSet::new(),
         };
@@ -111,6 +113,7 @@ impl Args {
             if !seen.insert(flag.to_owned())
                 && ![
                     "--allow-metadata",
+                    "--allow-usage",
                     "--allow-execution",
                     "--executable-only-provider",
                 ]
@@ -200,6 +203,14 @@ impl Args {
                     }
                     args.executable_only_providers.insert(provider);
                 }
+                "--allow-usage" if matches!(args.action, Action::Serve) => {
+                    let provider = input
+                        .next()
+                        .and_then(|v| v.into_string().ok())
+                        .filter(|v| v == "cursor")
+                        .ok_or_else(invalid)?;
+                    args.usage_providers.insert(provider);
+                }
                 "--allow-metadata" | "--allow-execution"
                     if matches!(args.action, Action::Serve) =>
                 {
@@ -285,6 +296,12 @@ impl Args {
         }
         if seen.contains("--allow-codex-execution") {
             args.execution_providers.insert("codex".into());
+        }
+        if !args.usage_providers.is_empty()
+            && args.usage_providers.is_disjoint(&args.metadata_providers)
+        {
+            // Usage is part of a metadata probe, so it cannot be granted alone.
+            return Err(invalid());
         }
         if !args
             .executable_only_providers
@@ -424,6 +441,33 @@ mod tests {
         );
         assert!(parse(&["serve", "--stdio", "--allow-codex-execution"]).is_err());
     }
+    #[test]
+    fn cursor_usage_is_a_separate_grant_that_requires_the_metadata_grant() {
+        let args = parse(&[
+            "serve",
+            "--stdio",
+            "--allow-metadata",
+            "cursor",
+            "--allow-usage",
+            "cursor",
+        ])
+        .unwrap();
+        assert!(args.metadata_providers.contains("cursor"));
+        assert!(args.usage_providers.contains("cursor"));
+        assert!(parse(&["serve", "--stdio", "--allow-usage", "cursor"]).is_err());
+        assert!(
+            parse(&[
+                "serve",
+                "--stdio",
+                "--allow-metadata",
+                "cursor",
+                "--allow-usage",
+                "codex"
+            ])
+            .is_err()
+        );
+    }
+
     #[test]
     fn unsafe_or_conflicting_flags_are_rejected() {
         for args in [

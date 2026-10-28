@@ -28,6 +28,7 @@ fn managed_codex_is_inert_isolated_and_stable() {
     first.locations.insert(
         "native-codex".into(),
         lai_discovery::LocatedClient {
+            executable_identity: None,
             provider_id: "codex".into(),
             profile_home: tmp.path().join("personal-codex"),
             executable: Some(codex.clone()),

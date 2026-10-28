@@ -84,7 +84,13 @@ fn validate(spec: &LaunchSpec) -> Result<()> {
 /// streams for protocol peers; otherwise every stream is closed.
 fn wrapped_command(spec: LaunchSpec, stdio: bool) -> Result<process_wrap::tokio::CommandWrap> {
     validate(&spec)?;
-    let mut command = Command::new(&spec.executable);
+    #[cfg(unix)]
+    let identity = lai_discovery::resolve_executable(&spec.executable)?;
+    #[cfg(unix)]
+    let executable = &identity.resolved;
+    #[cfg(not(unix))]
+    let executable = &spec.executable;
+    let mut command = Command::new(executable);
     command.args(spec.args).current_dir(spec.cwd).env_clear();
     if stdio {
         command
@@ -135,6 +141,8 @@ fn wrapped_command(spec: LaunchSpec, stdio: bool) -> Result<process_wrap::tokio:
     {
         command.wrap(process_wrap::tokio::ProcessGroup::leader());
     }
+    #[cfg(unix)]
+    identity.validate()?;
     Ok(command)
 }
 /// Stable identity of a Codex `account/read` account: the auth kind and the

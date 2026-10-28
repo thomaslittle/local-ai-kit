@@ -76,6 +76,7 @@ fn setup(model_image: bool, agent_image: bool) -> (Arc<NativeService>, Seen) {
                         (
                             c.id.clone(),
                             LocatedClient {
+                                executable_identity: None,
                                 provider_id: "test".into(),
                                 profile_home: std::env::temp_dir(),
                                 executable: None,

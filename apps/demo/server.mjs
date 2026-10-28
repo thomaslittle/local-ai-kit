@@ -80,7 +80,7 @@ if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.u
  if(!process.argv.includes('--fixture')){console.error('This preview server requires --fixture. It never discovers real accounts.');process.exitCode=2;}
  else{
   const index=process.argv.indexOf('--port'),port=index<0?4499:Number(process.argv[index+1]);
-  const app=await createFixtureServer({port});console.log(`Local AI Kit synthetic showcase: ${app.url}`);
+  const app=await createFixtureServer({port});console.log(`OriginLM synthetic showcase: ${app.url}`);
   for(const signal of ['SIGINT','SIGTERM'])process.once(signal,async()=>{await app.close();process.exit(0);});
  }
 }
