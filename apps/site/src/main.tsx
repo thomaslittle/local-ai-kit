@@ -1,13 +1,11 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import "./styles/site.css";
 import App from "./App";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Root element missing");
 
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const page = <StrictMode><App /></StrictMode>;
+if (root.hasChildNodes()) hydrateRoot(root, page);
+else createRoot(root).render(page);

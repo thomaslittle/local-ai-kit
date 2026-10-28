@@ -3,10 +3,10 @@ import { Activity, Bell, CheckCircle, Gauge, Terminal } from "../components/Icon
 import mark from "../assets/brand/originlm-mark-small-white.svg";
 
 const SURFACES = [
-  { icon: Activity, title: "SDK badge", body: "ai.status() returns mode, providers and connected apps." },
-  { icon: Gauge, title: "Tray or menu bar", body: "Connected apps and models, Pause, Open Control Center. No popups." },
-  { icon: Bell, title: "Notifications", body: "Only decisions the user must make: a new app, a signed-out provider." },
-  { icon: Terminal, title: "CLI", body: "The same status in the terminal with originlm status." },
+  { icon: Activity, title: "SDK badge", body: "The Rust facade exposes mode, providers and model counts." },
+  { icon: Gauge, title: "Tray or menu bar", body: "Planned: connected apps, models and a pause control." },
+  { icon: Bell, title: "Notifications", body: "The runtime records issues; OS notification delivery is not qualified." },
+  { icon: Terminal, title: "CLI", body: "Inspect the runtime through the local-ai-kit-control terminal app." },
 ];
 
 export function StatusDemo() {
@@ -18,7 +18,7 @@ export function StatusDemo() {
         <h2 id="status-title">One badge, four surfaces, one source of truth.</h2>
         <p className="lead">
           Apps can show whether local AI is available without a modal, a permission wall or a settings
-          screen. The user decides what runs, and the tray is where they change their mind.
+          screen. The user decides what runs through explicit grants. Tray integration is planned.
         </p>
       </div>
 
@@ -26,7 +26,7 @@ export function StatusDemo() {
         <div className="status-demo">
           <h3>Try the badge</h3>
           <p>
-            In a real app this is rendered from <code>ai.status()</code>. The fallback state links to
+            This interactive example illustrates a consumer status badge. The fallback state links to
             the installer instead of failing silently.
           </p>
           <div className="segmented" role="group" aria-label="Demo connection state">
@@ -83,11 +83,11 @@ export function StatusDemo() {
               <div className="tray-item">128 turns<small>2 issues</small></div>
             </div>
             <div className="tray-actions">
-              <button type="button">Pause</button>
-              <button type="button">Open Control Center</button>
+              <button type="button" disabled>Pause (preview)</button>
+              <button type="button" disabled>Open Control Center (preview)</button>
             </div>
           </div>
-          <figcaption>Mockup with example values. The real tray is on by default and easy to disable.</figcaption>
+          <figcaption>Planned tray interface with example values. This is not a shipped system tray.</figcaption>
         </figure>
       </div>
     </div>

@@ -1,2 +1,4 @@
 review/video/
 *.tmp.mjs
+
+.prerender/

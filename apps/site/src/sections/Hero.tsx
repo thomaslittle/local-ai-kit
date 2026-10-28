@@ -21,6 +21,7 @@ export function HeroStage() {
   const [active, setActive] = useState<Layer | null>(null);
   const [quality, setQuality] = useState<"full" | "light">("full");
   const [staticMode, setStaticMode] = useState(false);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -50,7 +51,7 @@ export function HeroStage() {
 
   return (
     <figure className="hero-figure">
-      <div className="hero-stage" ref={stageRef} data-static={staticMode || undefined} data-ready={ready || undefined}>
+      <div className="hero-stage" ref={stageRef} data-static={staticMode || paused || undefined} data-ready={ready && !paused || undefined}>
         <img
           className="stage-fallback"
           src="/hero-poster.svg"
@@ -60,7 +61,7 @@ export function HeroStage() {
           fetchPriority="high"
         />
 
-        {enabled && !staticMode && (
+        {enabled && !staticMode && !paused && (
           <Suspense fallback={null}>
             <HeroScene
               stageEl={stageRef.current}
@@ -104,6 +105,12 @@ export function HeroStage() {
           ))}
         </ul>
       </div>
+      {!staticMode && enabled && (
+        <button className="stage-motion" type="button" aria-pressed={paused}
+          onClick={() => setPaused(!paused)}>
+          {paused ? "Play animation" : "Pause animation"}
+        </button>
+      )}
       <figcaption>
         {staticMode
           ? "The OriginLM stack, one runtime from the providers up to your app."

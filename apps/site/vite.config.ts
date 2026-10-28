@@ -7,9 +7,9 @@ export default defineConfig({
   build: {
     target: "es2020",
     assetsInlineLimit: 2048,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        advancedChunks: {
+        codeSplitting: {
           groups: [
             { name: "three-core", test: /node_modules[\\/]three[\\/]/ },
             { name: "react-vendor", test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },

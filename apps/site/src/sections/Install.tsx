@@ -14,37 +14,37 @@ type Command = {
 const TRACKS: Record<Track, { title: string; blurb: string; badge: string; commands: Command[]; foot: string }> = {
   app: {
     title: "Get the app",
-    blurb: "The control center, the tray, and the service every SDK finds.",
-    badge: "user service",
+    blurb: "Build the native control center and local service from source.",
+    badge: "source preview",
     commands: [
       {
         id: "unix",
         label: "macOS / Linux",
-        command: "curl -fsSL https://originlm.dev/install.sh | sh",
-        note: "launchd LaunchAgent on macOS, systemd --user unit on Linux",
+        command: "cargo run -p lai-desktop -- --example",
+        note: "Run from a source checkout; example mode reads no accounts",
       },
       {
         id: "windows",
         label: "Windows",
-        command: "irm https://originlm.dev/install.ps1 | iex",
-        note: "Task Scheduler logon task, no admin rights",
+        command: "cargo run -p lai-desktop -- --example",
+        note: "Run from a source checkout; Windows desktop qualification is pending",
       },
     ],
-    foot: "Installs one binary into a user-level location and registers a user service. No admin rights, no system-wide paths. Uninstall stops and removes the unit, binary and state descriptor.",
+    foot: "The one-line service installer is prepared in scripts/service. Hosted downloads and signed installers are not published yet. See the installation guide for the current source workflow.",
   },
   project: {
     title: "Add to your project",
     blurb: "The SDK speaks to the service, or bundles the helper itself.",
     badge: "pre-release",
     commands: [
-      { id: "npm", label: "npm", command: "npm install @local-ai-kit/sdk" },
-      { id: "pnpm", label: "pnpm", command: "pnpm add @local-ai-kit/sdk" },
-      { id: "bun", label: "bun", command: "bun add @local-ai-kit/sdk" },
-      { id: "yarn", label: "yarn", command: "yarn add @local-ai-kit/sdk" },
-      { id: "cargo", label: "cargo", command: "cargo add local-ai-kit" },
-      { id: "pip", label: "pip", command: "pip install local-ai-kit-preview" },
+      { id: "npm", label: "npm", command: "npm install ./local-ai-kit-sdk.tgz" },
+      { id: "pnpm", label: "pnpm", command: "pnpm add ./local-ai-kit-sdk.tgz" },
+      { id: "bun", label: "bun", command: "bun add ./local-ai-kit-sdk.tgz" },
+      { id: "yarn", label: "yarn", command: "yarn add ./local-ai-kit-sdk.tgz" },
+      { id: "cargo", label: "cargo", command: "cargo add local-ai-kit --path ./local-ai-kit/crates/local-ai-kit" },
+      { id: "pip", label: "pip", command: "pip install ./local_ai_kit_preview.whl" },
     ],
-    foot: "Packages are pre-release: install the SDK tarball from a release bundle or build from source until the first public release. Cargo links the runtime; npm and Python clients speak the local protocol.",
+    foot: "Use the actual tarball or wheel filename from your local bundle; the filenames above illustrate local installation. Registry packages are not published. Cargo links the runtime; npm and Python clients speak the local protocol.",
   },
 };
 
