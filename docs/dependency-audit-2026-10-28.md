@@ -28,3 +28,17 @@ dependency of lai-update; no new version or fork patch. Official
 support numeric prerelease ordering and build-metadata-independent precedence.
 This removes the updater's incorrect string comparison and rejects invalid staging
 version syntax. Focused build and signed fixture tests are pending final verification.
+
+
+## CI runner baseline, 2026-10-28
+
+The current `macos-latest` full-verification job was cancelled before any step
+executed: GitHub's check annotations reported that no hosted runner acquired the
+job and noted macOS ARM capacity constraints. Pin the main matrix to Ubuntu 24.04,
+Windows Server 2025 and macOS 15 Intel. These are supported image labels in the
+[official runner-image catalog](https://github.com/actions/runner-images#available-images).
+This stabilizes the OS/architecture baseline rather than depending on a moving
+`latest` label. The preparation workflow still builds macOS ARM and Intel artifacts.
+This pin does not qualify unsupported OS versions or all architectures.
+
+Evidence: [cancelled unacquired job](https://github.com/thomaslittle/local-ai-kit/actions/runs/40684248696/job/122802732310).
