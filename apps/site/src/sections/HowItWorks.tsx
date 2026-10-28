@@ -6,7 +6,7 @@ const STEPS = [
     id: "discover",
     label: "Discover",
     title: "Discover what is already there",
-    body: "A passive inventory of installations, profiles and endpoints. It reads install locations and provider-reported metadata — never browser cookies, and never on import.",
+    body: "A passive inventory of installations, profiles and endpoints. It reads install locations and provider-reported metadata, never browser cookies, and never on import.",
     code: `// Passive inventory: locations, profiles, endpoints.
 await ai.discovery.refresh({ level: "passive" });
 const { connections, providers } = await ai.snapshot.get();`,
@@ -41,22 +41,15 @@ const turn = await ai.turns.start({
 
 function DiscoverVisual() {
   return (
-    <div className="discover-list" aria-hidden="true">
-      {[
-        ["CC", "Claude Code", "authenticated · plan reported", "fresh"],
-        ["CX", "Codex", "detected · metadata not read", "passive"],
-        ["CU", "Cursor", "signed in · cached metadata", "stale"],
-        ["OL", "Ollama", "local endpoint · 7 models", "offline"],
-      ].map(([glyph, name, detail, state]) => (
-        <div className="discover-row" key={name}>
-          <span>{glyph}</span>
-          <div>
-            <b>{name}</b> <small>{detail}</small>
-          </div>
-          <span className={`chip ${state === "fresh" ? "chip--ok" : state === "stale" || state === "offline" ? "chip--warn" : ""}`}>{state}</span>
-        </div>
-      ))}
-    </div>
+    <figure className="shot shot--panel" data-slot="connections" data-kind="product">
+      <img
+        src="/screens/control-center-connections.webp"
+        width={2880}
+        height={1800}
+        loading="lazy"
+        alt="The control center's Connections screen with example data: authenticated profiles for Codex, Antigravity, Grok and OpenCode, each with plan, profile, account and installation."
+      />
+    </figure>
   );
 }
 
@@ -64,10 +57,10 @@ function GrantVisual() {
   return (
     <div className="grant-card" aria-hidden="true">
       <div className="grant-head">
-        <span className="app-icon">A</span>
+        <span className="app-icon" aria-hidden="true">E</span>
         <div>
-          <strong>Acme Studio</strong>
-          <small>requesting access · 127.0.0.1</small>
+          <strong>Example Studio</strong>
+          <small>requesting access from 127.0.0.1</small>
         </div>
       </div>
       <div className="grant-list">
@@ -75,7 +68,7 @@ function GrantVisual() {
           ["Usage and quota snapshot", false],
           ["Model catalog", false],
           ["Run sessions", false],
-          ["Workspace · ~/Projects/acme", true],
+          ["Workspace ~/Projects/example", true],
         ].map(([label, off]) => (
           <div className="grant-item" key={String(label)} data-off={off}>
             <span>{label}</span>
@@ -90,13 +83,13 @@ function GrantVisual() {
 function SessionVisual() {
   return (
     <div className="session-card" aria-hidden="true">
-      <div className="session-line"><span>route</span><code>claude-code · subscription</code></div>
-      <div className="session-line"><span>model</span><code>native id · revision 7f2c</code></div>
-      <div className="session-line"><span>workspace</span><code>~/Projects/acme</code></div>
+      <div className="session-line"><span>route</span><code>claude-code/subscription</code></div>
+      <div className="session-line"><span>model</span><code>native-id@7f2c</code></div>
+      <div className="session-line"><span>workspace</span><code>~/Projects/example</code></div>
       <div className="session-stream">
-        <span><i>●</i> session ready · grant verified</span>
-        <span><i>●</i> turn started · owned cancellation</span>
-        <span><i>●</i> native approval requested · once</span>
+        <span>session ready, grant verified</span>
+        <span>turn started, owned cancellation</span>
+        <span>native approval requested once</span>
       </div>
     </div>
   );
@@ -139,41 +132,40 @@ export function HowItWorks() {
   }
 
   return (
-    <section className="section" id="how" aria-labelledby="how-title" ref={sectionRef}>
+    <section className="section how" id="how" aria-labelledby="how-title" ref={sectionRef}>
       <div className="container">
-        <div className="section-head reveal">
-          <span className="eyebrow">How it works</span>
+        <div className="head-split">
           <h2 id="how-title">Discover, grant, session. The same three steps for every client.</h2>
-          <p className="lede">
+          <p className="lead">
             Nothing is automatic except the safe part. The runtime stages discovery, apps ask for a
             scoped grant, and execution only starts inside a session the host owns.
           </p>
         </div>
 
         <div className="how-grid">
-          <div className="how-steps reveal" role="tablist" aria-label="How OriginLM works" aria-orientation="vertical">
+          <ol className="how-steps" role="tablist" aria-label="How OriginLM works" aria-orientation="vertical">
             {STEPS.map((step, index) => (
-              <button
-                key={step.id}
-                type="button"
-                role="tab"
-                className="how-step"
-                aria-selected={active === index}
-                aria-controls={`how-panel-${step.id}`}
-                id={`how-tab-${step.id}`}
-                data-active={active === index}
-                onClick={() => select(index)}
-              >
-                <span className="how-num">0{index + 1}</span>
-                <span>
-                  <h3>{step.title}</h3>
-                  <p>{step.body}</p>
-                </span>
-              </button>
+              <li key={step.id} role="presentation">
+                <button
+                  type="button"
+                  role="tab"
+                  className="how-step"
+                  aria-selected={active === index}
+                  aria-controls={`how-panel-${step.id}`}
+                  id={`how-tab-${step.id}`}
+                  data-active={active === index}
+                  onClick={() => select(index)}
+                >
+                  <span className="how-step-text">
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </span>
+                </button>
+              </li>
             ))}
-          </div>
+          </ol>
 
-          <div className="how-panels reveal">
+          <div className="how-panels">
             {STEPS.map((step, index) => {
               const Visual = VISUALS[index];
               return (
@@ -189,7 +181,7 @@ export function HowItWorks() {
                   <div className="how-visual">
                     <Visual />
                   </div>
-                  <CodeBlock code={step.code} title={`${step.label.toLowerCase()} · sdk`} />
+                  <CodeBlock code={step.code} title={`${step.id}.ts`} />
                 </div>
               );
             })}

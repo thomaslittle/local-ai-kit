@@ -21,13 +21,13 @@ const TRACKS: Record<Track, { title: string; blurb: string; badge: string; comma
         id: "unix",
         label: "macOS / Linux",
         command: "curl -fsSL https://originlm.dev/install.sh | sh",
-        note: "launchd LaunchAgent on macOS · systemd --user unit on Linux",
+        note: "launchd LaunchAgent on macOS, systemd --user unit on Linux",
       },
       {
         id: "windows",
         label: "Windows",
         command: "irm https://originlm.dev/install.ps1 | iex",
-        note: "Task Scheduler logon task · no admin rights",
+        note: "Task Scheduler logon task, no admin rights",
       },
     ],
     foot: "Installs one binary into a user-level location and registers a user service. No admin rights, no system-wide paths. Uninstall stops and removes the unit, binary and state descriptor.",
@@ -76,96 +76,90 @@ export function Install() {
   }
 
   return (
-    <section className="section" id="install" aria-labelledby="install-title">
-      <div className="container">
-        <div className="section-head reveal">
-          <span className="eyebrow">Install</span>
-          <h2 id="install-title">Two tracks. One runtime.</h2>
-          <p className="lede">
-            Install it for the dashboard and every app built on it just works. Add it to a project and
-            the user's existing AI clients become your backend.
+    <div className="container install">
+      <div className="head-split">
+        <h2 id="install-title">Two tracks. One runtime.</h2>
+        <p className="lead">
+          Install it for the dashboard and every app built on it just works. Add it to a project and
+          the user’s existing AI clients become your backend.
+        </p>
+      </div>
+
+      <div className="install-shell">
+        <div className="install-tracks" role="tablist" aria-label="Install track" aria-orientation="vertical">
+          {(Object.keys(TRACKS) as Track[]).map((key) => {
+            const item = TRACKS[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                id={`${trackId}-${key}`}
+                aria-selected={track === key}
+                aria-controls={`${trackId}-panel`}
+                tabIndex={track === key ? 0 : -1}
+                className="track-card"
+                onClick={() => chooseTrack(key)}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                    event.preventDefault();
+                    chooseTrack(key === "app" ? "project" : "app");
+                    document.getElementById(`${trackId}-${key === "app" ? "project" : "app"}`)?.focus();
+                  }
+                }}
+              >
+                <span className="track-card-top">
+                  {key === "app" ? <Plug size={18} /> : <Terminal size={18} />}
+                  <strong>{item.title}</strong>
+                </span>
+                <span className="track-card-blurb">{item.blurb}</span>
+                <code>{key === "app" ? "curl, powershell" : "npm, pnpm, bun, yarn, cargo, pip"}</code>
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          className="install-panel"
+          role="tabpanel"
+          id={`${trackId}-panel`}
+          aria-labelledby={`${trackId}-${track}`}
+        >
+          <div className="install-panel-head">
+            <h3>{data.title}</h3>
+            <span className="install-badge">{data.badge}</span>
+          </div>
+
+          <div className="install-tabs" role="tablist" aria-label={`${data.title} packages`}>
+            {data.commands.map((command, index) => (
+              <button
+                key={command.id}
+                ref={(node) => { tabRefs.current[command.id] = node; }}
+                type="button"
+                role="tab"
+                className="install-tab"
+                aria-selected={current.id === command.id}
+                tabIndex={current.id === command.id ? 0 : -1}
+                onClick={() => setTab(command.id)}
+                onKeyDown={(event) => onTabKey(event, index)}
+              >
+                {command.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="install-cmd">
+            <span className="prompt" aria-hidden="true">$</span>
+            <code>{current.command}</code>
+            <CopyButton value={current.command} label="Copy" className="copy-btn--lg" />
+          </div>
+
+          <p className="install-foot">
+            {current.note ? <><strong>{current.note}.</strong> </> : null}
+            {data.foot}
           </p>
         </div>
-
-        <div className="install-shell">
-          <div className="install-tracks reveal" role="tablist" aria-label="Install track" aria-orientation="vertical">
-            {(Object.keys(TRACKS) as Track[]).map((key) => {
-              const item = TRACKS[key];
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  role="tab"
-                  id={`${trackId}-${key}`}
-                  aria-selected={track === key}
-                  aria-controls={`${trackId}-panel`}
-                  tabIndex={track === key ? 0 : -1}
-                  className="track-card"
-                  onClick={() => chooseTrack(key)}
-                  onKeyDown={(event) => {
-                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                      event.preventDefault();
-                      chooseTrack(key === "app" ? "project" : "app");
-                      document.getElementById(`${trackId}-${key === "app" ? "project" : "app"}`)?.focus();
-                    }
-                  }}
-                >
-                  <span className="track-card-top">
-                    <strong>{item.title}</strong>
-                    {key === "app" ? <Plug size={17} /> : <Terminal size={17} />}
-                  </span>
-                  <p>{item.blurb}</p>
-                  <code>{key === "app" ? "curl · powershell" : "npm · pnpm · bun · yarn · cargo · pip"}</code>
-                </button>
-              );
-            })}
-          </div>
-
-          <div
-            className="install-panel reveal"
-            role="tabpanel"
-            id={`${trackId}-panel`}
-            aria-labelledby={`${trackId}-${track}`}
-          >
-            <div className="install-panel-head">
-              <div>
-                <h3>{data.title}</h3>
-                <p>{data.blurb}</p>
-              </div>
-              <span className="install-badge">{data.badge}</span>
-            </div>
-
-            <div className="install-tabs" role="tablist" aria-label={`${data.title} packages`}>
-              {data.commands.map((command, index) => (
-                <button
-                  key={command.id}
-                  ref={(node) => { tabRefs.current[command.id] = node; }}
-                  type="button"
-                  role="tab"
-                  className="install-tab"
-                  aria-selected={current.id === command.id}
-                  tabIndex={current.id === command.id ? 0 : -1}
-                  onClick={() => setTab(command.id)}
-                  onKeyDown={(event) => onTabKey(event, index)}
-                >
-                  {command.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="install-cmd">
-              <span className="prompt" aria-hidden="true">$</span>
-              <code>{current.command}</code>
-              <CopyButton value={current.command} label="Copy" className="copy-btn--lg" />
-            </div>
-
-            <p className="install-foot">
-              {current.note ? <><strong>{current.note}.</strong> </> : null}
-              {data.foot}
-            </p>
-          </div>
-        </div>
       </div>
-    </section>
+    </div>
   );
 }

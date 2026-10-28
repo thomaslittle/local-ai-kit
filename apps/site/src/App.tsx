@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Nav } from "./components/Nav";
 import { Footer } from "./components/Footer";
 import { Hero } from "./sections/Hero";
@@ -13,59 +12,32 @@ import { StatusDemo } from "./sections/StatusDemo";
 import { Video } from "./sections/Video";
 import { FinalCta } from "./sections/FinalCta";
 
-function useReveal() {
-  useEffect(() => {
-    const nodes = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
-    if (!("IntersectionObserver" in window)) {
-      nodes.forEach((node) => node.classList.add("is-visible"));
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        }
-      },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
-    );
-    nodes.forEach((node) => observer.observe(node));
-    // Off-screen sections become visible after first paint even if the visitor (or a
-    // full-page screenshot) never scrolls them into view.
-    const fallback = window.setTimeout(() => {
-      nodes.forEach((node) => node.classList.add("is-visible"));
-    }, 1400);
-    return () => {
-      observer.disconnect();
-      window.clearTimeout(fallback);
-    };
-  }, []);
-}
-
+/* Eight sections and the footer. Paths carries the category comparison, Install carries the
+   status surfaces, and the closing action lives in the footer's statement. */
 export default function App() {
-  useReveal();
-
   return (
     <>
       <a className="skip-link" href="#main">Skip to content</a>
-      <div className="ambient" aria-hidden="true" />
       <Nav />
       <main id="main">
         <Hero />
-        <Paths />
-        <Comparison />
-        <Install />
+        <section className="section paths" aria-labelledby="paths-title">
+          <Paths />
+          <Comparison />
+        </section>
         <HowItWorks />
+        <section className="section band install-band" id="install" aria-labelledby="install-title">
+          <Install />
+          <StatusDemo />
+        </section>
         <Integrations />
         <Providers />
         <Security />
-        <StatusDemo />
         <Video />
-        <FinalCta />
       </main>
-      <Footer />
+      <Footer>
+        <FinalCta />
+      </Footer>
     </>
   );
 }

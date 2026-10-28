@@ -30,57 +30,57 @@ export function Nav() {
   }, [open]);
 
   return (
-    <>
-      <nav className="nav" data-scrolled={scrolled} aria-label="Primary">
-        <div className="container">
-          <a className="nav-logo" href="#top" aria-label="OriginLM home">
-            <img src={logo} alt="OriginLM" width={1705} height={336} />
-          </a>
+    <nav className="nav" data-scrolled={scrolled} aria-label="Primary">
+      <div className="container nav-bar">
+        <a className="nav-logo" href="#top" aria-label="OriginLM home">
+          <img src={logo} alt="OriginLM" width={1705} height={336} />
+        </a>
 
-          <ul className="nav-links">
-            {LINKS.map((link) => (
-              <li key={link.href}><a href={link.href}>{link.label}</a></li>
-            ))}
-          </ul>
-
-          <div className="nav-actions">
-            <a
-              className="nav-icon-link"
-              href="https://github.com/thomaslittle/local-ai-kit"
-              aria-label="OriginLM on GitHub"
-            >
-              <Github size={18} />
-            </a>
-            <a className="btn btn-primary" href="#install">Get OriginLM</a>
-            <button
-              type="button"
-              className="nav-toggle"
-              aria-label={open ? "Close menu" : "Open menu"}
-              aria-expanded={open}
-              aria-controls="mobile-menu"
-              onClick={() => setOpen((value) => !value)}
-            >
-              {open ? <Close size={18} /> : <Menu size={18} />}
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="nav-mobile" id="mobile-menu" data-open={open}>
-        <ul>
+        <ul className="nav-links">
           {LINKS.map((link) => (
-            <li key={link.href}>
-              <a href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
-            </li>
+            <li key={link.href}><a href={link.href}>{link.label}</a></li>
           ))}
-          <li><a href="#install" onClick={() => setOpen(false)}>Install</a></li>
-          <li>
-            <a href="https://github.com/thomaslittle/local-ai-kit" onClick={() => setOpen(false)}>
-              GitHub
-            </a>
-          </li>
         </ul>
+
+        <div className="nav-actions">
+          <a
+            className="nav-icon-link"
+            href="https://github.com/thomaslittle/local-ai-kit"
+            aria-label="OriginLM on GitHub"
+          >
+            <Github size={18} />
+          </a>
+          <a className="btn btn-primary btn-sm" href="#install">Get OriginLM</a>
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            onClick={() => setOpen((value) => !value)}
+          >
+            {open ? <Close size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
-    </>
+
+      {open && (
+        <div className="nav-mobile" id="mobile-menu" data-open={open}>
+          <ul className="container">
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
+              </li>
+            ))}
+            <li><a href="#install" onClick={() => setOpen(false)}>Install</a></li>
+            <li>
+              <a href="https://github.com/thomaslittle/local-ai-kit" onClick={() => setOpen(false)}>
+                GitHub
+              </a>
+            </li>
+          </ul>
+        </div>
+      )}
+    </nav>
   );
 }

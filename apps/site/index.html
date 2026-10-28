@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OriginLM — all your AI in one place, one dependency for every app</title>
+    <title>OriginLM: all your AI in one place, one dependency for every app</title>
     <meta
       name="description"
-      content="OriginLM is a local control center for every AI client, model, account and subscription on your machine — and the one dependency that puts the user's own AI in your app."
+      content="OriginLM is a local control center for every AI client, model, account and subscription on your machine, and the one dependency that puts the user's own AI in your app."
     />
     <meta name="theme-color" content="#1e1a1b" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="canonical" href="https://originlm.dev/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="OriginLM — one dependency for all your AI" />
+    <meta property="og:title" content="OriginLM: one dependency for all your AI" />
     <meta
       property="og:description"
       content="See and use every AI provider on your machine in one local dashboard. The same runtime is the SDK that puts the user's own AI in your app."
@@ -31,16 +31,23 @@
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
       }
     </script>
+    <style>
+      /* Hallmark · noscript fallback only; the page's system and stamp live in src/styles/site.css */
+      html, body { overflow-x: clip; }
+      :root { --ns-paper: #171314; --ns-ink: #faf9f5; --ns-accent: #eba31a; --ns-font: system-ui, sans-serif; }
+      .noscript { max-width: 44rem; margin: 4rem auto; padding: 0 1.5rem; font-family: var(--ns-font); color: var(--ns-ink); background: var(--ns-paper); }
+      .noscript a { color: var(--ns-accent); }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <noscript>
-      <div style="max-width: 44rem; margin: 4rem auto; padding: 0 1.5rem; font-family: system-ui, sans-serif; color: #faf9f5; background: #1e1a1b">
+      <div class="noscript">
         <h1>OriginLM</h1>
         <p>
           See and use all your AI in one place. One dependency for every app. This page needs JavaScript for the
           interactive demo; the
-          <a style="color: #eba31a" href="https://github.com/thomaslittle/local-ai-kit">documentation and source</a>
+          <a href="https://github.com/thomaslittle/local-ai-kit">documentation and source</a>
           do not.
         </p>
       </div>

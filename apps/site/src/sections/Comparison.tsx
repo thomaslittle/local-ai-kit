@@ -1,4 +1,4 @@
-import { CheckCircle, Compass } from "../components/Icon";
+import { CheckCircle } from "../components/Icon";
 
 const ROWS = [
   {
@@ -40,54 +40,46 @@ const ROWS = [
 
 export function Comparison() {
   return (
-    <section className="section" aria-labelledby="compare-title">
-      <div className="container">
-        <div className="section-head section-head--wide reveal">
-          <span className="eyebrow">The category gap</span>
-          <h2 id="compare-title">Everyone builds one-off usage widgets. None are also a full dev platform.</h2>
-          <p className="lede">
-            Tracking AI usage is becoming a feature in every client. What is missing is the layer underneath:
-            one local runtime that both reads the truth and lets applications act on it.
-          </p>
-        </div>
-
-        <div className="compare-wrap reveal">
-          <div className="compare-scroll">
-            <table className="compare">
-              <caption className="visually-hidden">
-                Single-provider usage widgets compared with OriginLM across seven capabilities.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Capability</th>
-                  <th scope="col">A single-provider usage widget</th>
-                  <th scope="col">OriginLM</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ROWS.map((row) => (
-                  <tr key={row.label}>
-                    <th scope="row">{row.label}</th>
-                    <td>{row.widget}</td>
-                    <td>
-                      <span className="yes"><CheckCircle size={16} />{row.origin}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <p className="compare-note">
-          <Compass size={14} />
-          <span>
-            The left column describes the product category in general, not a named product. OriginLM claims
-            follow the <a href="https://github.com/thomaslittle/local-ai-kit/blob/main/docs/adapters/SUPPORT-MATRIX.md">support matrix</a>,
-            including where a provider reports nothing and we show unknown rather than a guess.
-          </span>
+    <div className="container compare-block">
+      <div className="head-split head-split--tight">
+        <h2 id="compare-title">Everyone builds one-off usage widgets. None are also a full dev platform.</h2>
+        <p className="lead">
+          Tracking AI usage is becoming a feature in every client. What is missing is the layer underneath:
+          one local runtime that both reads the truth and lets applications act on it.
         </p>
       </div>
-    </section>
+
+      <div className="compare-scroll" role="region" aria-label="Comparison table" tabIndex={0}>
+        <table className="compare">
+          <caption className="visually-hidden">
+            Single-provider usage widgets compared with OriginLM across seven capabilities.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Capability</th>
+              <th scope="col">A single-provider usage widget</th>
+              <th scope="col" className="compare-us">OriginLM</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ROWS.map((row) => (
+              <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                <td>{row.widget}</td>
+                <td className="compare-us">
+                  <span className="yes"><CheckCircle size={16} />{row.origin}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="fine-print">
+        The left column describes the product category in general, not a named product. OriginLM claims
+        follow the <a href="https://github.com/thomaslittle/local-ai-kit/blob/main/docs/adapters/SUPPORT-MATRIX.md">support matrix</a>,
+        including where a provider reports nothing and we show unknown rather than a guess.
+      </p>
+    </div>
   );
 }

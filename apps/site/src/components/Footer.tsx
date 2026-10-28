@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Github } from "./Icon";
 import logo from "../assets/brand/originlm-horizontal-white.svg";
 
@@ -33,22 +34,20 @@ const COLUMNS = [
   },
 ];
 
-export function Footer() {
+export function Footer({ children }: { children?: ReactNode }) {
   return (
     <footer className="footer">
       <div className="container">
+        {children}
+
         <div className="footer-grid">
           <div className="footer-brand">
             <img src={logo} alt="OriginLM" width={1705} height={336} />
             <p>
               A local control center for every AI client on your machine, and the one dependency that
-              puts the user's own AI in your app. Private by design.
+              puts the user’s own AI in your app. Private by design.
             </p>
-            <a
-              className="btn btn-ghost"
-              style={{ marginTop: "1.25rem" }}
-              href="https://github.com/thomaslittle/local-ai-kit"
-            >
+            <a className="btn btn-ghost" href="https://github.com/thomaslittle/local-ai-kit">
               <Github size={16} /> Star on GitHub
             </a>
           </div>
@@ -66,9 +65,9 @@ export function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <span>© 2026 OriginLM · MIT-licensed · local-first</span>
+          <span>© 2026 OriginLM. MIT-licensed and local-first.</span>
           <span>
-            No telemetry on this page. <a href="https://github.com/thomaslittle/local-ai-kit/blob/main/docs/security/threat-model.md">Read the threat model</a>.
+            No telemetry on this page. <a href="https://github.com/thomaslittle/local-ai-kit/blob/main/docs/security/threat-model.md">Threat model</a>
           </span>
         </div>
       </div>

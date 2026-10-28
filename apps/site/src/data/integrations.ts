@@ -154,7 +154,7 @@ with Client.from_stdio(
     description: "In a browser, the extension plus Native Messaging host is the primary bridge. No port opens for it.",
     language: "TypeScript · extension page",
     meta: ["native messaging", "no port", "origin approval"],
-    note: "Each origin needs a one-time, revocable approval. The page receives results only — never credentials. Loopback pairing is the fallback.",
+    note: "Each origin needs a one-time, revocable approval. The page receives results only, never credentials. Loopback pairing is the fallback.",
     code: `import { createLocalAI, createNativeMessagingTransport } from "@local-ai-kit/sdk";
 
 // Only after the user's explicit Connect action, in the extension page.

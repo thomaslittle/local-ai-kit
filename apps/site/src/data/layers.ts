@@ -19,7 +19,7 @@ export const LAYERS: Layer[] = [
     id: "dashboard",
     label: "",
     title: "The same runtime, on screen",
-    detail: "Usage, quotas, reset times, models, routes and issues — read from the same local state.",
+    detail: "Usage, quotas, reset times, models, routes and issues, read from the same local state.",
     meta: "see your AI",
   },
   {

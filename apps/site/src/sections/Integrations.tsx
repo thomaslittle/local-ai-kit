@@ -7,7 +7,6 @@ export function Integrations() {
   const [active, setActive] = useState(INTEGRATIONS[0].id);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const current = INTEGRATIONS.find((item) => item.id === active) ?? INTEGRATIONS[0];
-  const index = INTEGRATIONS.indexOf(current);
 
   function onKey(event: React.KeyboardEvent, position: number) {
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
@@ -22,18 +21,17 @@ export function Integrations() {
   }
 
   return (
-    <section className="section" id="integrations" aria-labelledby="integrations-title">
+    <section className="section integrations-section" id="integrations" aria-labelledby="integrations-title">
       <div className="container">
-        <div className="section-head section-head--wide reveal">
-          <span className="eyebrow">Integrations</span>
+        <div className="head-split">
           <h2 id="integrations-title">Real code for the framework you actually ship.</h2>
-          <p className="lede">
+          <p className="lead">
             Every example talks to the same protocol. Pick your host: in-process Rust, a stdio helper,
             or the browser extension bridge. None of them read credentials on import.
           </p>
         </div>
 
-        <div className="integrations reveal">
+        <div className="integrations">
           <div className="integration-tabs" role="tablist" aria-label="Framework integrations" aria-orientation="vertical">
             {INTEGRATIONS.map((item, position) => (
               <button
@@ -49,7 +47,7 @@ export function Integrations() {
                 onClick={() => setActive(item.id)}
                 onKeyDown={(event) => onKey(event, position)}
               >
-                {item.name}
+                <span>{item.name}</span>
                 <small>{item.tag}</small>
               </button>
             ))}
@@ -63,17 +61,16 @@ export function Integrations() {
             tabIndex={0}
           >
             <div className="integration-intro">
-              <span className="eyebrow" style={{ marginBottom: "0.4rem" }}>{String(index + 1).padStart(2, "0")} / {String(INTEGRATIONS.length).padStart(2, "0")}</span>
               <h3>{current.title}</h3>
               <p>{current.description}</p>
-              <div className="integration-meta">
-                {current.meta.map((item) => <span className="chip" key={item}>{item}</span>)}
-              </div>
+              <ul className="integration-meta" aria-label={`${current.name} properties`}>
+                {current.meta.map((item) => <li key={item}>{item}</li>)}
+              </ul>
             </div>
             <CodeBlock code={current.code} title={current.language} />
             <div className="integration-foot">
-              <span>{current.note}</span>
-              <a className="btn-link" href="https://github.com/thomaslittle/local-ai-kit/tree/main/examples">
+              <p>{current.note}</p>
+              <a className="text-link" href="https://github.com/thomaslittle/local-ai-kit/tree/main/examples">
                 Examples <ArrowUpRight size={13} />
               </a>
             </div>
