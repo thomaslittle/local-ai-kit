@@ -22,7 +22,9 @@ impl Desktop {
                     .map(|address| address.to_string())
             })
             .unwrap_or_else(|| "unavailable".into());
-        let state_dir = crate::history::state_dir();
+        let state_dir = crate::history::state_dir()
+            .map(|path| path.display().to_string())
+            .unwrap_or_else(|| "Unavailable; preferences are not persisted".into());
         let entity_theme = cx.entity();
         let entity_refresh = cx.entity();
         let entity_dir = cx.entity();
@@ -34,6 +36,7 @@ impl Desktop {
             .px(px(ui::PAGE_PAD))
             .pb(px(36.))
             .gap_4()
+            .child(self.price_settings(cx))
             .child(
                 div()
                     .v_flex()
@@ -129,9 +132,9 @@ impl Desktop {
                                     .text_size(px(10.))
                                     .text_color(theme.muted_foreground)
                                     .cursor_pointer()
-                                    .child(format!("{}", state_dir.display()))
+                                    .child(state_dir.clone())
                                     .on_click(move |_, _, cx| {
-                                        let dir = state_dir.display().to_string();
+                                        let dir = state_dir.clone();
                                         entity_dir.update(cx, |this, cx| {
                                             cx.write_to_clipboard(
                                                 gpui::ClipboardItem::new_string(dir),

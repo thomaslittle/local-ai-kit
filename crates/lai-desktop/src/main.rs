@@ -52,12 +52,14 @@ fn parse_args() -> (PathBuf, u64, bool) {
 }
 
 fn default_token_file() -> Option<PathBuf> {
-    let home = std::env::var("HOME").ok()?;
-    let state = PathBuf::from(&home).join(".local/state/local-ai-kit/fedora-shared");
+    if let Some(path) = std::env::var_os("LAI_BROKER_TOKEN_FILE") {
+        return Some(PathBuf::from(path));
+    }
+    let home = std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })?;
+    let state = PathBuf::from(home).join(".local-ai-kit");
     [
-        state.join("control-admin-token.json"),
-        state.join("control-token.json"),
-        PathBuf::from(&home).join(".local-ai-kit/broker-admin-token.json"),
+        state.join("broker-admin-token.json"),
+        state.join("broker-token.json"),
     ]
     .into_iter()
     .find(|path| path.is_file())

@@ -117,3 +117,13 @@ under review; they are not yet adopted as v1-qualified outputs.
 ### V1-015 — Cost trends had no evidence contract (P1)
 
 Implemented native cost contracts, bounded owner-scoped runtime observations, exact decimal estimation, admin-only local price editing, source/date defaults, and an explicit unavailable basis. OpenRouter charges are accepted only from its documented HTTPS origins. Web overview/usage and Settings now consume the public SDK. See ADR-005 for scope and limits. Rust service/adapter and web builds executed; regression tests authored but not yet run. Native UI integration and final verification pending.
+
+### V1-016 — Motion assets contradicted the requested physical UI direction (P1)
+
+Replaced the seven translucent layers and packet dots with one deterministic five-layer three.js scene. The site, offline film capture and generated poster now share the camera/material implementation. Real example-mode UI textures include quota rings, reset countdowns, cost evidence, SDK code, public methods and grants. Removed React Three Fiber, Drei and the separate postprocessing dependency; the new lazy scene build is approximately 145 KB gzip. Added a CSS-perspective UI stack below the hero. Film recut to 35 seconds is in progress; no final visual/performance qualification claimed.
+
+### V1-017 — Desktop polling fabricated fresh history and grew storage without a disk bound (P1)
+
+History compared each window to the final record of any window, so repeated multi-pool polls appended unchanged data. It also assigned the poll timestamp to stale observations. Now comparison is per pool/window, only fresh evidence is recorded, and timestamps come from the observation. Persistence atomically rewrites the bounded 6,000-record set with Unix mode 0600; loading is byte-bounded. Added regression tests (not yet executed). Moved platform state-directory resolution into lai-platform and reused it from the kit and desktop; a missing home/state directory now disables persistence rather than writing into the working directory.
+
+Native cost view and Settings price editor now consume costs.read/setPrices. Linux native build executed before the final history regression additions; final checks remain pending. Fixed the broker worker to exit when its command channel closes while offline. Mini-view unknown values and stale reset copy are corrected; no OS tray is claimed.

@@ -2,7 +2,7 @@
 mod native;
 mod paths;
 use lai_contracts::Result;
-pub use paths::child_path;
+pub use paths::{child_path, default_state_dir};
 use std::path::{Path, PathBuf};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EntryKind {

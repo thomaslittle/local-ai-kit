@@ -172,13 +172,13 @@ impl Default for Prefs {
     }
 }
 
-fn prefs_path() -> PathBuf {
-    crate::history::state_dir().join("prefs.json")
+fn prefs_path() -> Option<PathBuf> {
+    crate::history::state_dir().map(|path| path.join("prefs.json"))
 }
 
 fn load_prefs() -> Prefs {
-    std::fs::read(prefs_path())
-        .ok()
+    prefs_path()
+        .and_then(|path| std::fs::read(path).ok())
         .and_then(|bytes| serde_json::from_slice(&bytes).ok())
         .unwrap_or_default()
 }
@@ -197,6 +197,8 @@ pub struct Desktop {
     pub palette_query: String,
     pub search: Entity<InputState>,
     pub prompt: Entity<TextareaState>,
+    pub price_fields: [Entity<InputState>; 6],
+    pub price_edit_index: Option<usize>,
     pub query: String,
     pub selected_connection: Option<String>,
     pub selected_model: Option<String>,
@@ -262,6 +264,20 @@ impl Desktop {
         let palette_input = cx
             .new(|cx| InputState::new(window, cx).placeholder("Jump to a page, model or action…"));
         let search = cx.new(|cx| InputState::new(window, cx).placeholder("Search models…"));
+        let price_fields = std::array::from_fn(|index| {
+            cx.new(|cx| {
+                InputState::new(window, cx).placeholder(
+                    [
+                        "Provider ID",
+                        "Exact model ID",
+                        "Input USD per million",
+                        "Output USD per million",
+                        "YYYY-MM-DD",
+                        "Source or local rationale",
+                    ][index],
+                )
+            })
+        });
         let prompt = cx.new(|cx| {
             TextareaState::new(window, cx)
                 .placeholder("Describe a small test request. Nothing runs until you press Run.")
@@ -337,6 +353,8 @@ impl Desktop {
             palette_query: String::new(),
             search,
             prompt,
+            price_fields,
+            price_edit_index: None,
             query: String::new(),
             selected_connection: None,
             selected_model: None,
@@ -353,7 +371,7 @@ impl Desktop {
             playground_error: None,
             revoke_confirm: None,
             toast: None,
-            mini_view: false,
+            mini_view: example && std::env::var_os("LAI_DESKTOP_MINI_VIEW").is_some(),
             broker,
             executor,
             token_path,
@@ -631,7 +649,9 @@ impl Desktop {
             providers_inspector: self.providers_inspector,
         };
         if let Ok(bytes) = serde_json::to_vec_pretty(&prefs) {
-            let path = prefs_path();
+            let Some(path) = prefs_path() else {
+                return;
+            };
             if let Some(parent) = path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
@@ -1766,7 +1786,7 @@ impl Desktop {
         let mut seen = std::collections::BTreeSet::new();
         let rows: Vec<_> = rows
             .into_iter()
-            .filter(|row| seen.insert(row.pool_id.clone()))
+            .filter(|row| seen.insert((row.pool_id.clone(), row.window_id.clone())))
             .take(4)
             .collect();
         let close = entity.clone();
@@ -1794,12 +1814,12 @@ impl Desktop {
                             div()
                                 .text_size(px(12.5))
                                 .font_weight(FontWeight::MEDIUM)
-                                .child("Today"),
+                                .child("Allowances"),
                         )
                         .child(
                             div()
                                 .id("mini-close")
-                                .size(px(20.))
+                                .size(px(32.))
                                 .h_flex()
                                 .items_center()
                                 .justify_center()
@@ -1817,9 +1837,13 @@ impl Desktop {
                         ),
                 )
                 .children(rows.iter().map(|row| {
-                    let remaining = row.remaining.unwrap_or(0.0);
+                    let remaining = row
+                        .remaining
+                        .map(|value| format!("{:.0}% left", value * 100.0))
+                        .unwrap_or_else(|| "Unknown".into());
                     let reset = ui::format_countdown(row.resets_at.as_deref())
-                        .unwrap_or_else(|| "reset not reported".into());
+                        .map(|value| format!("Resets in {value}"))
+                        .unwrap_or_else(|| "Reset not reported".into());
                     div()
                         .h_flex()
                         .items_center()
@@ -1847,14 +1871,18 @@ impl Desktop {
                                     div()
                                         .text_size(px(9.5))
                                         .text_color(theme.muted_foreground)
-                                        .child(format!("resets in {reset}")),
+                                        .child(format!(
+                                            "{}: {reset}{}",
+                                            row.window_label,
+                                            if row.fresh { "" } else { " (stale)" }
+                                        )),
                                 ),
                         )
                         .child(
                             div()
                                 .font_family(theme.mono_font_family.clone())
                                 .text_size(px(14.))
-                                .child(format!("{:.0}%", remaining * 100.0)),
+                                .child(remaining),
                         )
                         .into_any_element()
                 }))
@@ -1882,7 +1910,7 @@ impl Desktop {
                     div()
                         .text_size(px(9.))
                         .text_color(theme.muted_foreground)
-                        .child("Optional mini view · Ctrl+Shift+M"),
+                        .child("Optional mini view (Ctrl+Shift+M)"),
                 )
                 .into_any_element(),
         )

@@ -169,7 +169,7 @@ pub(super) async fn events(
         .into_response()
 }
 /// Exact single-segment client-side routes of the demo SPA; each serves `index.html`.
-const CLIENT_ROUTES: [&str; 7] = [
+const CLIENT_ROUTES: [&str; 8] = [
     "/overview",
     "/connections",
     "/models",

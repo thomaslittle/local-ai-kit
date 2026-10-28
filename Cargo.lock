@@ -4092,6 +4092,7 @@ dependencies = [
  "image",
  "lai-contracts",
  "lai-control",
+ "lai-platform",
  "serde",
  "serde_json",
 ]

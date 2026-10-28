@@ -747,6 +747,7 @@ impl Desktop {
                     )
                     .child(attention_card),
             )
+            .child(self.cost_trend(cx))
             .into_any_element()
     }
 }

@@ -17,3 +17,27 @@ pub fn child_path(root: &Path, name: &str) -> Result<PathBuf> {
     }
     Ok(root.join(name))
 }
+
+/// Resolve platform state storage without creating directories or reading files.
+pub fn default_state_dir(home: Option<&std::path::Path>) -> Option<std::path::PathBuf> {
+    if let Some(home) = home {
+        return Some(home.join(".local-ai-kit"));
+    }
+    let var = |name: &str| {
+        std::env::var_os(name)
+            .map(std::path::PathBuf::from)
+            .filter(|p| p.is_absolute())
+    };
+    if let Some(dir) = var("LOCAL_AI_KIT_STATE_DIR") {
+        return Some(dir);
+    }
+    if cfg!(windows) {
+        var("LOCALAPPDATA").map(|p| p.join("local-ai-kit"))
+    } else if cfg!(target_os = "macos") {
+        var("HOME").map(|p| p.join("Library/Application Support/local-ai-kit"))
+    } else {
+        var("XDG_STATE_HOME")
+            .or_else(|| var("HOME").map(|p| p.join(".local/state")))
+            .map(|p| p.join("local-ai-kit"))
+    }
+}
