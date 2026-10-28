@@ -16,6 +16,16 @@ Reimplemented in Rust, with no T3 Code source copied: one Grok login recheck, th
 
 `python scripts/upstream_t3code.py --offline` passed. `cargo fmt --all --check` and `cargo clippy --workspace --all-targets --all-features --locked -- -D warnings` passed on Linux. `python scripts/verify.py --profile all` passed, including workspace Rust tests, SDK tests, generation checks, React Doctor, and the demo browser suite. This pass is fixture-tested. It is not live-qualified and was not platform-executed on Windows or macOS.
 
+## October 23 bounded Unix executable symlink candidate
+
+Implemented executable-only Unix resolution and logical/physical identity checks.
+The single focused discovery-to-probe fixture is Linux/WSL2 platform-executed with
+synthetic metadata and no inference; no broad test campaign was run. Retarget,
+replacement and bounded invalid-link/data-read cases pass in that fixture.
+[Evidence](../qualification/evidence/2026-10-23-unix-executable-symlink/README.md).
+macOS, actual accounts, atomic handle execution and release/service replacement
+are not qualified or performed by this source-only candidate.
+
 ## October 22 native SDK bootstrap CI follow-up (release held)
 
 Clean source `aeecd15` passes Windows artifact provenance/licenses/SBOM,

@@ -1,0 +1,98 @@
+{
+  "baseCommit": "9a40e503c82e3efc15991382322ccf30bc00f806",
+  "platform": "Linux/WSL2 x86_64",
+  "runs": {
+    "red": {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "lai-kit",
+        "--test",
+        "unix_executable_symlink",
+        "--",
+        "--nocapture"
+      ],
+      "exitCode": 101,
+      "seconds": 2.0136125449999995,
+      "peakBytes": 106,
+      "stop": null,
+      "platform": "Linux"
+    },
+    "red-online": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "lai-kit",
+        "--test",
+        "unix_executable_symlink",
+        "--",
+        "--nocapture"
+      ],
+      "exitCode": 101,
+      "seconds": 450.06826546,
+      "peakBytes": 844369211,
+      "stop": null,
+      "platform": "Linux"
+    },
+    "green": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "lai-kit",
+        "--test",
+        "unix_executable_symlink",
+        "--",
+        "--nocapture"
+      ],
+      "exitCode": 0,
+      "seconds": 383.14807980800003,
+      "peakBytes": 905691815,
+      "stop": null,
+      "platform": "Linux"
+    },
+    "green-final": {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "lai-kit",
+        "--test",
+        "unix_executable_symlink",
+        "--",
+        "--nocapture"
+      ],
+      "exitCode": 0,
+      "seconds": 38.135060729,
+      "peakBytes": 897613102,
+      "stop": null,
+      "platform": "Linux"
+    }
+  },
+  "sourceSha256": {
+    "crates/lai-platform/src/executable.rs": "407e1359537e22635dbe6d4976073b926dd40bbff8e499d124b95c94c1f114e1",
+    "crates/lai-platform/src/lib.rs": "25484a8f8d629b13083d8dbf4bc6c32eb609b4ff8be4d70fb474d26efc005258",
+    "crates/lai-platform/src/native.rs": "9b19a2deb3fd09d35aefa0af79a16d7946110c59a27c3d63fa03f9fa8b3fb997",
+    "crates/lai-discovery/src/scanner.rs": "6610d12fa8449fdcfe99c31bb442b435109c02001396e2d227d2504d4d0cebb4",
+    "crates/lai-discovery/src/lib.rs": "a42b56073efcb21fa48ef4e11370e7115a43ca09877caca02ea1a6db5b444f7d",
+    "crates/lai-adapters/src/codex/launch.rs": "2b35c9aeaf9367dff282becbcd97c3498fb7bc966c3fba633a48d14226d2d633",
+    "crates/lai-adapters/src/process.rs": "a32ad4ec3e9d9f5497c2ba53d3bc87554a52ba61da3632dabe858def40c0bfe3",
+    "crates/lai-adapters/src/native_clients/config.rs": "e2891440d568c9643a2bacc45a2329c1bc056a2f39a33b9415f7e01b47f3ecb1",
+    "crates/lai-kit/src/service_builder.rs": "cf50d9b369b3756a7f758f7c88c6cc6a930ed63bf17fa6f54abcb711c311c64e",
+    "crates/lai-kit/tests/unix_executable_symlink.rs": "e144ef74f8670452bcacd0aa05eaaa32a61f53feb99d1f9ea30933ac41f166b4",
+    "Cargo.lock": "603d573ce2939e2d9e680a2bcb5c498341c8070fd40a2ea0b207ddb8b091047f"
+  },
+  "grants": "isolated in-process synthetic metadata policy only",
+  "providerInference": false,
+  "realAccountContact": false,
+  "sharedBinaryReplacement": false,
+  "macosExecution": "unavailable/unqualified"
+}

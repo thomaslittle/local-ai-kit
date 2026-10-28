@@ -1509,6 +1509,7 @@ mod refresh_generation_tests {
                 locations: BTreeMap::from([(
                     "personal".into(),
                     LocatedClient {
+                        executable_identity: None,
                         provider_id: "test".into(),
                         profile_home: PathBuf::from("synthetic"),
                         executable: None,

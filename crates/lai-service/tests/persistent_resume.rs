@@ -68,6 +68,7 @@ fn helper(state: Option<&Path>, workspace: &Path, resumable: bool) -> Helper {
                     (
                         c.id.clone(),
                         LocatedClient {
+                            executable_identity: None,
                             provider_id: "test".into(),
                             profile_home: std::env::temp_dir(),
                             executable: None,
@@ -428,6 +429,7 @@ async fn missing_native_history_is_resume_unavailable_not_a_new_chat() {
                             (
                                 c.id.clone(),
                                 LocatedClient {
+                                    executable_identity: None,
                                     provider_id: "test".into(),
                                     profile_home: std::env::temp_dir(),
                                     executable: None,

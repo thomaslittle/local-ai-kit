@@ -159,6 +159,7 @@ impl Registry {
             scan.locations.insert(
                 id.clone(),
                 LocatedClient {
+                    executable_identity: None,
                     provider_id: provider.into(),
                     profile_home: PathBuf::new(),
                     executable: None,

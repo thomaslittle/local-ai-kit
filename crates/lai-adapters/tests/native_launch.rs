@@ -191,6 +191,7 @@ async fn clients_that_cannot_remove_their_tools_refuse_text_only_sessions() {
         let p = profile(root.path(), provider, exe);
         file(&p.executable);
         let located = lai_discovery::LocatedClient {
+            executable_identity: None,
             provider_id: provider.id().into(),
             profile_home: p.profile_home.clone(),
             executable: Some(p.executable.clone()),

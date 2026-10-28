@@ -101,6 +101,7 @@ impl<F: LocalFilesystem> Scanner<F> {
             cancelled(cancel)?;
             let executable_only = self.executable_only_providers.contains(definition.id);
             let mut binaries = BTreeSet::new();
+            let mut identities = BTreeMap::new();
             let extra_dirs = definition.extra_directories(env);
             let configured = definition.executable_override(env);
             if let Some(path) = configured {
@@ -108,6 +109,17 @@ impl<F: LocalFilesystem> Scanner<F> {
                 match self.filesystem.probe(path) {
                     Ok(EntryKind::File) => {
                         binaries.insert(path.clone());
+                    }
+                    Ok(EntryKind::Symlink) if env.platform != HostPlatform::Windows => {
+                        if let Ok(identity) = self.filesystem.resolve_executable(path) {
+                            identities.insert(path.clone(), identity);
+                            binaries.insert(path.clone());
+                        } else {
+                            result.snapshot.diagnostics.push(format!(
+                                "{}_CONFIGURED_EXECUTABLE_UNAVAILABLE",
+                                definition.id
+                            ));
+                        }
                     }
                     _ => result.snapshot.diagnostics.push(format!(
                         "{}_CONFIGURED_EXECUTABLE_UNAVAILABLE",
@@ -136,6 +148,18 @@ impl<F: LocalFilesystem> Scanner<F> {
                         match self.filesystem.probe(&path) {
                             Ok(EntryKind::File) => {
                                 binaries.insert(path);
+                            }
+                            Ok(EntryKind::Symlink) if env.platform != HostPlatform::Windows => {
+                                match self.filesystem.resolve_executable(&path) {
+                                    Ok(identity) => {
+                                        identities.insert(path.clone(), identity);
+                                        binaries.insert(path);
+                                    }
+                                    Err(_) if !executable_only => result.snapshot.diagnostics.push(
+                                        format!("{}_EXECUTABLE_SYMLINK_UNAVAILABLE", definition.id),
+                                    ),
+                                    Err(_) => {}
+                                }
                             }
                             Ok(EntryKind::Symlink) if !executable_only => result
                                 .snapshot
@@ -182,6 +206,7 @@ impl<F: LocalFilesystem> Scanner<F> {
                     result.locations.insert(
                         key,
                         LocatedClient {
+                            executable_identity: identities.get(&executable).cloned(),
                             provider_id: definition.id.into(),
                             profile_home: env.home.clone(),
                             executable: Some(executable),
@@ -258,7 +283,18 @@ impl<F: LocalFilesystem> Scanner<F> {
                 for (installation_index, executable) in executables.iter().cloned().enumerate() {
                     let binary_key = executable
                         .as_ref()
-                        .map(|path| path_key(path))
+                        .map(|path| {
+                            let logical = path_key(path);
+                            identities
+                                .get(path)
+                                .map(|identity| {
+                                    stable_id(
+                                        "executable-binding",
+                                        &[&logical, &format!("{identity:?}")],
+                                    )
+                                })
+                                .unwrap_or(logical)
+                        })
                         .unwrap_or_else(|| format!("configuration-only-{}", definition.id));
                     let installation_id = stable_id(
                         "installation",
@@ -334,6 +370,10 @@ impl<F: LocalFilesystem> Scanner<F> {
                     result.locations.insert(
                         connection_id,
                         LocatedClient {
+                            executable_identity: executable
+                                .as_ref()
+                                .and_then(|path| identities.get(path))
+                                .cloned(),
                             provider_id: definition.id.into(),
                             profile_home: root.clone(),
                             executable,

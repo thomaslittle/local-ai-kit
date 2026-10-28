@@ -23,6 +23,10 @@ This matrix separates implemented mechanics from provider facts that may be unkn
 | xAI API | Explicit API route configuration | API credential reference is route configuration, not Grok subscription evidence | API plan/quota unknown unless explicitly reported | Reported catalog/capability evidence | Implemented | Adapter sends Responses `input_image` parts (fixture-tested shape), but the catalog reports no `input.image`, so image turns are rejected | No provider tool execution; owned request cancellation | No | Separate from native Grok profiles. |
 | Compatible API | Explicit user-configured endpoint | Endpoint and API-key route configuration only | Unknown unless the endpoint reports supported fields | User-supplied or endpoint-reported metadata | Implemented for the documented text subset | Adapter sends Chat Completions `image_url` parts (fixture-tested shape), but no endpoint metadata reports `input.image`, so image turns are rejected | No provider tool execution; owned request cancellation | No | No model-name heuristics, assumed prices, or silent fallback. |
 
+## Unix executable command links
+
+Known Unix command candidates can resolve bounded executable symlinks while retaining logical and resolved identity. This is executable discovery, not publisher or account verification. See [supported behavior and platform evidence](unix-executable-links.md); macOS and live-account qualification are separate.
+
 ## Cross-cutting implementation
 
 Image input (`inputs.put` plus `turns.start` `inputs`) is gated twice: the selected model must report `input.image` as supported, and the session's adapter must carry images. Either failure is a typed `CAPABILITY_UNSUPPORTED` before any provider call; images are never dropped. "Fixture-tested" means request shapes checked against the loopback HTTP fixture, `acp_peer.py`, `claude_peer.py` or `execution_peer.py` (Codex); image bytes are never written to events or logs. Apart from that one Claude Code check, no live provider has received an image from this toolkit.

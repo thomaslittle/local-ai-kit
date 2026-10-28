@@ -185,6 +185,7 @@ async fn probe_metadata(
     chatgpt: Option<(Arc<AuthManager>, String)>,
     cursor_usage: bool,
 ) -> lai_contracts::Result<lai_contracts::ConnectionMetadata> {
+    located.validate_executable()?;
     if located.provider_id == "codex_managed" {
         let (auth, app_name) = chatgpt.ok_or_else(|| {
             DomainError::new(
@@ -342,6 +343,7 @@ fn build_execution(
                 );
                 let native_browser = execution_native.browser_blocker.clone();
                 Box::pin(async move {
+                    input.located.validate_executable()?;
                     if input.located.provider_id == "codex_managed" {
                         let (auth, app_name) = chatgpt.ok_or_else(|| DomainError::new(
                             ErrorCode::CapabilityUnsupported, "Managed ChatGPT integration is unavailable",
