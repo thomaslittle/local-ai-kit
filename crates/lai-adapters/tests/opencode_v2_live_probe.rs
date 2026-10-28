@@ -30,11 +30,8 @@ async fn probes_the_local_service() {
                 "{} · {} · {:?}",
                 window.label,
                 match &window.reading {
-                    lai_contracts::Observation::Known { value, .. } => format!(
-                        "used {} {}",
-                        value.used.as_str(),
-                        value.unit
-                    ),
+                    lai_contracts::Observation::Known { value, .. } =>
+                        format!("used {} {}", value.used.as_str(), value.unit),
                     _ => "unknown".into(),
                 },
                 window.resets_at.as_ref().map(|t| t.as_str())
@@ -49,7 +46,11 @@ async fn probes_through_the_installed_path() {
     let home = std::env::var("HOME").unwrap();
     let path = std::path::PathBuf::from(home).join(".opencode/bin/opencode");
     match lai_adapters::opencode::server::probe(&path, "connection_test", "route_test").await {
-        Ok(metadata) => println!("ok models={} pools={}", metadata.models.len(), metadata.quota_pools.len()),
+        Ok(metadata) => println!(
+            "ok models={} pools={}",
+            metadata.models.len(),
+            metadata.quota_pools.len()
+        ),
         Err(error) => panic!("probe failed: {:?} {}", error.code, error.message),
     }
 }

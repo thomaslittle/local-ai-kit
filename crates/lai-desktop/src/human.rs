@@ -85,10 +85,10 @@ fn readable_code(code: &str) -> String {
 pub fn without_provider_prefix(name: &str, provider: &str) -> String {
     let trimmed = name.trim();
     for separator in [" · ", " - ", " — ", ": "] {
-        if let Some(rest) = trimmed.strip_prefix(&format!("{provider}{separator}")) {
-            if !rest.is_empty() {
-                return rest.to_string();
-            }
+        if let Some(rest) = trimmed.strip_prefix(&format!("{provider}{separator}"))
+            && !rest.is_empty()
+        {
+            return rest.to_string();
         }
     }
     trimmed.to_string()

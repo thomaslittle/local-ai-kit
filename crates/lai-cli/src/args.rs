@@ -297,7 +297,8 @@ impl Args {
         if seen.contains("--allow-codex-execution") {
             args.execution_providers.insert("codex".into());
         }
-        if !args.usage_providers.is_empty() && args.usage_providers.is_disjoint(&args.metadata_providers)
+        if !args.usage_providers.is_empty()
+            && args.usage_providers.is_disjoint(&args.metadata_providers)
         {
             // Usage is part of a metadata probe, so it cannot be granted alone.
             return Err(invalid());
@@ -454,15 +455,17 @@ mod tests {
         assert!(args.metadata_providers.contains("cursor"));
         assert!(args.usage_providers.contains("cursor"));
         assert!(parse(&["serve", "--stdio", "--allow-usage", "cursor"]).is_err());
-        assert!(parse(&[
-            "serve",
-            "--stdio",
-            "--allow-metadata",
-            "cursor",
-            "--allow-usage",
-            "codex"
-        ])
-        .is_err());
+        assert!(
+            parse(&[
+                "serve",
+                "--stdio",
+                "--allow-metadata",
+                "cursor",
+                "--allow-usage",
+                "codex"
+            ])
+            .is_err()
+        );
     }
 
     #[test]

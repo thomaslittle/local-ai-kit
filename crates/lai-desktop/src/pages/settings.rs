@@ -132,7 +132,7 @@ impl Desktop {
                                     .child(format!("{}", state_dir.display()))
                                     .on_click(move |_, _, cx| {
                                         let dir = state_dir.display().to_string();
-                                        let _ = entity_dir.update(cx, |this, cx| {
+                                        entity_dir.update(cx, |this, cx| {
                                             cx.write_to_clipboard(
                                                 gpui::ClipboardItem::new_string(dir),
                                             );

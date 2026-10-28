@@ -140,11 +140,10 @@ impl History {
     }
 
     fn persist(&mut self, appended: &[Sample]) {
-        if self.last_written.is_none() {
-            if let Some(parent) = self.path.parent() {
-                let _ = fs::create_dir_all(parent);
-            }
-            // One durable header rewrite is not needed: the file is JSON-lines.
+        if self.last_written.is_none()
+            && let Some(parent) = self.path.parent()
+        {
+            let _ = fs::create_dir_all(parent);
         }
         let Ok(mut file) = fs::OpenOptions::new()
             .create(true)

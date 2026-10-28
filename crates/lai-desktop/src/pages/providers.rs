@@ -319,7 +319,7 @@ impl Desktop {
                                     .label("Refresh metadata")
                                     .icon(IconName::RefreshCw)
                                     .on_click(move |_, _, cx| {
-                                        let _ = entity_probe.update(cx, |this, cx| {
+                                        entity_probe.update(cx, |this, cx| {
                                             let _ = this.broker.commands.send(
                                                 crate::broker::Command::Probe(probe_id.clone()),
                                             );

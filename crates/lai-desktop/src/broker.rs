@@ -6,7 +6,7 @@ use lai_contracts::Snapshot;
 use lai_control::BrokerClient;
 use serde_json::{Value, json};
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::mpsc::{Receiver, Sender, TryRecvError},
     thread,
     time::{Duration, Instant},
@@ -47,7 +47,7 @@ pub fn spawn(token_file: PathBuf, refresh: Duration) -> BrokerHandle {
     }
 }
 
-fn connect(token_file: &PathBuf) -> Result<BrokerClient, String> {
+fn connect(token_file: &Path) -> Result<BrokerClient, String> {
     if std::env::var_os("LAI_DEBUG").is_some() {
         eprintln!("[debug] connecting with {}", token_file.display());
     }

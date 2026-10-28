@@ -108,7 +108,7 @@ impl Desktop {
                             .icon(IconName::Copy)
                             .on_click(move |_, _, cx| {
                                 let revision = revision.clone();
-                                let _ = entity_copy.update(cx, |this, cx| {
+                                entity_copy.update(cx, |this, cx| {
                                     cx.write_to_clipboard(gpui::ClipboardItem::new_string(
                                         revision,
                                     ));
@@ -131,7 +131,7 @@ impl Desktop {
                                 );
                                 let path = lai_control::default_export_path();
                                 let result = lai_control::write_export(&path, &document);
-                                let _ = entity_export.update(cx, |this, cx| {
+                                entity_export.update(cx, |this, cx| {
                                     match result {
                                         Ok(()) => this.toast(format!(
                                             "Redacted report written to {}",
