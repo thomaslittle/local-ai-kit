@@ -294,9 +294,7 @@ async fn probe_metadata(
             })?;
             lai_adapters::muse::probe(&executable, &connection, &route).await
         }
-        "cursor" => {
-            lai_adapters::cursor::probe(located, &connection, &route, cursor_usage).await
-        }
+        "cursor" => lai_adapters::cursor::probe(located, &connection, &route, cursor_usage).await,
         _ => Err(DomainError::new(
             ErrorCode::CapabilityUnsupported,
             "No metadata adapter registered",

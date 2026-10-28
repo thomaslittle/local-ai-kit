@@ -893,10 +893,10 @@ impl Render for Desktop {
 
         // Expire toasts after a few seconds without a timer: the poll loop
         // notifies regularly, so this is refreshed with the next update.
-        if let Some((_, at)) = &self.toast {
-            if at.elapsed() > Duration::from_secs(6) {
-                self.toast = None;
-            }
+        if let Some((_, at)) = &self.toast
+            && at.elapsed() > Duration::from_secs(6)
+        {
+            self.toast = None;
         }
 
         let page_body: AnyElement = match self.page {
@@ -1022,11 +1022,7 @@ impl Desktop {
                     .items_center()
                     .justify_center()
                     .cursor_pointer()
-                    .text_color(if danger {
-                        theme.muted_foreground
-                    } else {
-                        theme.muted_foreground
-                    })
+                    .text_color(theme.muted_foreground)
                     .hover(move |style| {
                         if danger {
                             style.bg(theme.danger).text_color(theme.danger_foreground)
@@ -1540,13 +1536,14 @@ impl Desktop {
             ToggleSidebar,
             ResetLayout,
         }
-        let mut results: Vec<(
+        type PaletteResult = (
             String,
             String,
             Option<Page>,
             Option<String>,
             Option<PaletteAction>,
-        )> = Vec::new();
+        );
+        let mut results: Vec<PaletteResult> = Vec::new();
         if "toggle sidebar".contains(&query) || "sidebar".contains(&query) {
             results.push((
                 "Toggle sidebar".into(),

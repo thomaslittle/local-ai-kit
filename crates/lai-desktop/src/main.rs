@@ -97,10 +97,7 @@ fn main() {
         }
         options.icon = icon;
         gpui_kit::open_window(options, cx, move |window, cx| {
-            cx.new(|cx| {
-                let view = Desktop::new(window, cx, token, refresh);
-                view
-            })
+            cx.new(|cx| Desktop::new(window, cx, token, refresh))
         })
         .expect("desktop window");
         let _ = Duration::from_secs(1);

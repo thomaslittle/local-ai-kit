@@ -39,7 +39,8 @@ fn state_path() -> Option<PathBuf> {
 }
 
 fn service() -> Result<(String, String)> {
-    let path = state_path().ok_or_else(|| unavailable("OpenCode state directory is unavailable"))?;
+    let path =
+        state_path().ok_or_else(|| unavailable("OpenCode state directory is unavailable"))?;
     read_service(&path)
 }
 
@@ -57,7 +58,8 @@ fn read_service(path: &Path) -> Result<(String, String)> {
             return Err(denied("OpenCode service descriptor is not owner-only"));
         }
     }
-    let bytes = fs::read(path).map_err(|_| unavailable("OpenCode service descriptor is unreadable"))?;
+    let bytes =
+        fs::read(path).map_err(|_| unavailable("OpenCode service descriptor is unreadable"))?;
     let value: Value = serde_json::from_slice(&bytes)
         .map_err(|_| unavailable("OpenCode service descriptor is malformed"))?;
     let url = value["url"]
@@ -91,9 +93,8 @@ fn service_evidence(reference: &str) -> EvidenceSource {
 }
 
 fn decimal(value: f64) -> Result<DecimalString> {
-    DecimalString::try_from(value.max(0.0).round().to_string()).map_err(|_| {
-        DomainError::new(ErrorCode::InvalidRequest, "OpenCode usage value is invalid")
-    })
+    DecimalString::try_from(value.max(0.0).round().to_string())
+        .map_err(|_| DomainError::new(ErrorCode::InvalidRequest, "OpenCode usage value is invalid"))
 }
 
 fn quota_windows(connection: &str, route: &str, limits: &Value) -> Result<Vec<QuotaPool>> {
@@ -131,10 +132,7 @@ fn quota_windows(connection: &str, route: &str, limits: &Value) -> Result<Vec<Qu
             })
             .and_then(|secs| DateTime::from_timestamp(secs, 0))
             .and_then(|stamp| {
-                Timestamp::try_from(
-                    stamp.to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
-                )
-                .ok()
+                Timestamp::try_from(stamp.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)).ok()
             });
         windows.push(UsageWindow {
             id: stable_id("window", &[&pool_id, key]),
@@ -159,11 +157,7 @@ fn quota_windows(connection: &str, route: &str, limits: &Value) -> Result<Vec<Qu
 
 /// Probe the running service. `connection` and `route` are the discovered
 /// OpenCode ids; `version` is the CLI's reported version string.
-pub async fn probe(
-    connection: &str,
-    route: &str,
-    version: &str,
-) -> Result<ConnectionMetadata> {
+pub async fn probe(connection: &str, route: &str, version: &str) -> Result<ConnectionMetadata> {
     let (url, password) = service()?;
     let endpoint = Endpoint::new(
         &format!("{url}/"),
@@ -187,9 +181,14 @@ pub async fn probe(
         .await
         .ok();
 
-    let mut metadata = super::catalog_v2::catalog(connection, route, &providers, &models, &BTreeMap::new())?;
+    let mut metadata =
+        super::catalog_v2::catalog(connection, route, &providers, &models, &BTreeMap::new())?;
     metadata.version = observed(
-        version.trim().trim_start_matches("opencode ").trim_start_matches('v').to_string(),
+        version
+            .trim()
+            .trim_start_matches("opencode ")
+            .trim_start_matches('v')
+            .to_string(),
         service_evidence("OpenCode CLI --version"),
     );
     metadata.auth = match limits.as_ref() {

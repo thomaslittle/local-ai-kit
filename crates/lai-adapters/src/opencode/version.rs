@@ -14,7 +14,11 @@ pub(crate) fn installed_major(output: &str) -> Option<u32> {
     }
     let release = value.split(['-', '+']).next().unwrap_or("");
     let parts: Vec<_> = release.split('.').collect();
-    if parts.len() != 3 || parts.iter().any(|part| part.is_empty() || !part.bytes().all(|c| c.is_ascii_digit())) {
+    if parts.len() != 3
+        || parts
+            .iter()
+            .any(|part| part.is_empty() || !part.bytes().all(|c| c.is_ascii_digit()))
+    {
         return None;
     }
     parts[0].parse().ok()

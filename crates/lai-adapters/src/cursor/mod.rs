@@ -292,7 +292,9 @@ struct UsageSnapshot {
 }
 
 fn percent(value: &Value) -> Option<f64> {
-    value.as_f64().filter(|p| p.is_finite() && (0.0..=1000.0).contains(p))
+    value
+        .as_f64()
+        .filter(|p| p.is_finite() && (0.0..=1000.0).contains(p))
 }
 
 fn epoch_ms(value: &Value) -> Option<Timestamp> {
@@ -375,7 +377,11 @@ fn quota_pool(
     let total = snapshot.total_percent?;
     let pool_id = stable_id(
         "quota",
-        &[connection, account.unwrap_or("no-account"), "cursor-included"],
+        &[
+            connection,
+            account.unwrap_or("no-account"),
+            "cursor-included",
+        ],
     );
     let mut windows = vec![UsageWindow {
         id: stable_id("window", &[&pool_id, "total"]),
@@ -462,7 +468,10 @@ pub async fn probe(
         "CURSOR_MODEL_CATALOG_FROM_CLIENT".into(),
     ];
     if allow_usage {
-        if let Some(token) = cached_fields.as_ref().and_then(|fields| fields.token.as_ref()) {
+        if let Some(token) = cached_fields
+            .as_ref()
+            .and_then(|fields| fields.token.as_ref())
+        {
             match usage(token).await {
                 Ok(snapshot) => {
                     let usage_source = EvidenceSource {

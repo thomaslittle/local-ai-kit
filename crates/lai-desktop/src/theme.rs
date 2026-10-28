@@ -46,7 +46,7 @@ pub fn apply(cx: &mut App, dark: bool) {
             c.secondary_active = rgb(0x3B3334).into();
             c.danger = rgb(0xE0776B).into();
             c.danger_foreground = rgb(0x231F20).into();
-            c.danger_hover = rgb(0xE98a7e).into();
+            c.danger_hover = rgb(0xE98A7E).into();
             c.danger_active = rgb(0xC4695E).into();
             c.success = rgb(0x7CC08F).into();
             c.success_foreground = rgb(0x0E1A12).into();
@@ -104,7 +104,7 @@ pub fn apply(cx: &mut App, dark: bool) {
             c.button_secondary_active = rgb(0x3B3334).into();
             c.button_danger = rgb(0xE0776B).into();
             c.button_danger_foreground = rgb(0x231F20).into();
-            c.button_danger_hover = rgb(0xE98a7e).into();
+            c.button_danger_hover = rgb(0xE98A7E).into();
             c.button_danger_active = rgb(0xC4695E).into();
         } else {
             c.background = rgb(0xFAF9F5).into();
