@@ -85,14 +85,17 @@ export function HeroStage() {
   return (
     <figure className="hero-figure">
       <div className="hero-stage" ref={stageRef} data-static={staticMode || paused || undefined} data-ready={ready && !paused && !staticMode && visible || undefined}>
+        <picture>
+        <source media="(max-width: 40rem)" srcSet="/scene/poster-mobile.webp" />
         <img
           className="stage-fallback"
           src="/scene/poster.webp"
           alt="The OriginLM stack, exploded: your app, SDK, transport, runtime and providers, shown with real OriginLM screens in example mode."
-          width={1200}
-          height={760}
+          width={1440}
+          height={1000}
           fetchPriority="high"
         />
+        </picture>
 
         {enabled && !staticMode && !paused && visible && (
           <SceneBoundary onFailure={() => setStaticMode(true)}>
@@ -152,6 +155,10 @@ export function HeroStage() {
           ? "The OriginLM stack, one runtime from the providers up to your app."
           : "The OriginLM stack, pulled apart as you scroll. Hover a layer to read what it does."}
       </figcaption>
+      <details className="layer-key">
+        <summary>Explore the five layers</summary>
+        <dl>{LAYERS.map((layer) => <div key={layer.id}><dt>{layer.title}</dt><dd>{layer.detail}</dd></div>)}</dl>
+      </details>
     </figure>
   );
 }

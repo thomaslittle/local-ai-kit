@@ -4,17 +4,18 @@ import { CodeBlock } from "../components/CodeBlock";
 
 const BUILD_SNIPPET = `import { createLocalAI } from "@local-ai-kit/sdk";
 
-const ai = await createLocalAI({ transport });
-const snapshot = await ai.snapshot.get();
+const ai = await createLocalAI();
+try {
+  // Read evidence through the same runtime as the dashboard.
+  const snapshot = await ai.snapshot.get();
+  const { providers, models, quotaPools } = snapshot;
+  console.log({ providers, models, quotaPools });
+} finally {
+  await ai.close();
+}
 
-// The same state the dashboard reads.
-const { providers, models, quotaPools } = snapshot;
-
-// Nothing runs until the host asks, with a grant.
-const session = await ai.sessions.create({
-  selection: { routeId, modelId, revision },
-  workspaceId,
-});`;
+// Discovery does not authorize inference.
+// Execution needs a selected route and scoped grants.`;
 
 export function Paths() {
   return (
@@ -32,14 +33,14 @@ export function Paths() {
           <div className="half-copy">
             <h3 id="see-title">See your AI</h3>
             <p>
-              <strong>For everyone who uses AI.</strong> A local control center for every client, model,
-              account and subscription on your machine. No more guessing which plan you are on or how close
-              you are to a limit.
+              <strong>For everyone who uses AI.</strong> A local control center for supported clients, models,
+              accounts and subscriptions. See reported allowances and reset times, with missing or stale
+              evidence clearly marked.
             </p>
             <ul className="ticks">
-              <li><CheckCircle size={16} /> Usage and quotas with reset times and pace</li>
+              <li><CheckCircle size={16} /> Reported usage, quotas and reset times</li>
               <li><CheckCircle size={16} /> Models per route, subscription or metered</li>
-              <li><CheckCircle size={16} /> Cost and usage trends, plus issues that need attention</li>
+              <li><CheckCircle size={16} /> Observed cost trends and reported issues</li>
             </ul>
           </div>
           <LayeredScreens />
@@ -49,8 +50,8 @@ export function Paths() {
           <div className="half-copy">
             <h3 id="build-title">Build with it</h3>
             <p>
-              <strong>For developers.</strong> Put the user’s own AI in your app with one dependency. No
-              provider SDKs, no API keys to collect, no setup wizard to rebuild for every client.
+              <strong>For developers.</strong> Put the user’s own AI in your app with one dependency. One
+              canonical runtime for discovery and supported provider operations, with permission scoped to your app.
             </p>
             <ul className="ticks">
               <li><CheckCircle size={16} /> Typed SDKs for Rust, npm and Python</li>

@@ -15,12 +15,14 @@ const { connections, providers } = await ai.snapshot.get();`,
     id: "grant",
     label: "Grant",
     title: "Ask for exactly what you need",
-    body: "Discovery is not permission. A host requests a scoped grant for routes, workspaces and whether metered billing is allowed. The user can revoke it per app.",
-    code: `// Scoped, explicit, revocable by the user.
-const grant = await ai.grants.request({
+    body: "Discovery is not permission. The SDK can request host approval; that request does not grant access. A trusted host supplies policy for routes, workspaces and metered billing.",
+    code: `// A request only; the trusted host must approve policy.
+const request = await ai.grants.request({
   scopes: ["snapshot.read", "sessions.run"],
   connectionIds: [selectedConnection],
-});`,
+  allowPaid: false,
+});
+// Result: { status: "requires_host_approval" }`,
   },
   {
     id: "session",
@@ -60,7 +62,7 @@ function GrantVisual() {
         <span className="app-icon" aria-hidden="true">E</span>
         <div>
           <strong>Example Studio</strong>
-          <small>requesting access from 127.0.0.1</small>
+          <small>Illustrative permission request</small>
         </div>
       </div>
       <div className="grant-list">
@@ -100,6 +102,7 @@ const VISUALS = [DiscoverVisual, GrantVisual, SessionVisual];
 export function HowItWorks() {
   const [active, setActive] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const manualUntil = useRef(0);
 
   useEffect(() => {
@@ -135,10 +138,10 @@ export function HowItWorks() {
     <section className="section how" id="how" aria-labelledby="how-title" ref={sectionRef}>
       <div className="container">
         <div className="head-split">
-          <h2 id="how-title">Discover, grant, session. The same three steps for every client.</h2>
+          <h2 id="how-title">Discover, grant, session. Permission before execution.</h2>
           <p className="lead">
-            Nothing is automatic except the safe part. The runtime stages discovery, apps ask for a
-            scoped grant, and execution only starts inside a session the host owns.
+            These SDK fragments assume a connected client and a host-selected route and workspace.
+            A grant request alone never enables execution.
           </p>
         </div>
 
@@ -149,6 +152,17 @@ export function HowItWorks() {
                 <button
                   type="button"
                   role="tab"
+                  ref={(node) => { tabRefs.current[index] = node; }}
+                  tabIndex={active === index ? 0 : -1}
+                  onKeyDown={(event) => {
+                    const keys = ["ArrowDown", "ArrowUp", "Home", "End"];
+                    if (!keys.includes(event.key)) return;
+                    event.preventDefault();
+                    const next = event.key === "Home" ? 0 : event.key === "End" ? STEPS.length - 1
+                      : (index + (event.key === "ArrowDown" ? 1 : -1) + STEPS.length) % STEPS.length;
+                    select(next);
+                    tabRefs.current[next]?.focus();
+                  }}
                   className="how-step"
                   aria-selected={active === index}
                   aria-controls={`how-panel-${step.id}`}

@@ -174,10 +174,10 @@ p { color: var(--color-muted); }
 
 .hero { display: flex; align-items: center; min-height: calc(100dvh - 72px); padding-block: var(--space-xl) var(--space-2xl); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--space-lg); align-items: center; }
-.hero-copy { padding-bottom: var(--space-2xl); }
+.hero-copy { padding-bottom: 0; }
 .hero h1 { font-size: clamp(2.5rem, 3.4vw + 0.6rem, 4.25rem); line-height: 1.02; max-width: 12ch; }
 .hero h1 .line { display: block; }
-.hero h1 .line-second { margin-top: var(--space-xs); max-width: 18ch; font-size: 0.56em; line-height: 1.12; letter-spacing: -0.015em; }
+.hero h1 .line-second { margin-top: var(--space-xs); max-width: 18ch; font-size: 1em; line-height: 1.12; letter-spacing: -0.015em; }
 .hero-sub { margin-top: var(--space-lg); max-width: 40ch; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-xl); }
 .hero-note { margin-top: var(--space-md); max-width: 44ch; font-size: var(--text-sm); color: var(--color-muted); }
@@ -492,7 +492,9 @@ p { color: var(--color-muted); }
 
 @media (max-width: 40rem) {
   .hero h1 { font-size: 2.6rem; }
-  .hero-stage { height: 360px; }
+  .hero-stage { height: 340px; }
+  .hero-grid { gap: var(--space-lg); }
+  .stage-fallback { padding: 0; }
   .install-panel, .integration-panel, .security-foot { padding: var(--space-lg) var(--space-md); }
   .install-cmd { grid-template-columns: auto minmax(0, 1fr); }
   .install-cmd .copy-btn { grid-column: 1 / -1; justify-self: start; }
@@ -523,3 +525,15 @@ p { color: var(--color-muted); }
 .layered-screens figcaption { position: absolute; bottom: var(--space-sm); font-size: var(--text-sm); color: var(--color-muted); }
 @media (max-width: 600px) { .layered-screens { min-height: 340px; } .layered-screens-plane { inset: 15% 9% 20%; } }
 @media (prefers-reduced-motion: reduce) { .layered-screens { --screen-spread: 1 !important; } }
+
+/* Both product halves carry equal typographic weight. The user requested the
+   macro/spring scene and quota rings; those explicit brand choices govern motion. */
+.hero-stage:not([data-ready]) .stage-labels,
+.hero-stage:not([data-ready]) .layer-tooltip { visibility: hidden; }
+.layer-key { margin-top: var(--space-sm); font-size: var(--text-sm); color: var(--color-muted); }
+.layer-key summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; text-decoration: underline; text-underline-offset: 4px; }
+.layer-key summary:hover { color: var(--color-ink); }
+.layer-key summary:active { color: var(--color-accent); }
+.layer-key dl { display: grid; gap: var(--space-md); margin-block: var(--space-sm); }
+.layer-key dt { color: var(--color-ink); font-weight: 600; }
+.layer-key dd { margin: var(--space-2xs) 0 0; }

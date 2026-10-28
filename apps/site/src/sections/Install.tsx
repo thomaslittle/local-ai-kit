@@ -80,8 +80,8 @@ export function Install() {
       <div className="head-split">
         <h2 id="install-title">Two tracks. One runtime.</h2>
         <p className="lead">
-          Install it for the dashboard and every app built on it just works. Add it to a project and
-          the user’s existing AI clients become your backend.
+          Use the dashboard to inspect reported access. Add the SDK to build on the AI
+          your users authorize.
         </p>
       </div>
 
@@ -113,7 +113,7 @@ export function Install() {
                   <strong>{item.title}</strong>
                 </span>
                 <span className="track-card-blurb">{item.blurb}</span>
-                <code>{key === "app" ? "curl, powershell" : "npm, pnpm, bun, yarn, cargo, pip"}</code>
+                <code>{key === "app" ? "source build" : "npm, pnpm, bun, yarn, cargo, pip"}</code>
               </button>
             );
           })}

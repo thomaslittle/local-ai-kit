@@ -4,7 +4,7 @@ const CARDS = [
   {
     icon: EyeOff,
     title: "No secrets exported",
-    body: "Provider credentials stay with the native client that already owns them. The SDK reports facts, never tokens or cookies. Browser cookies are never read.",
+    body: "Provider credentials remain with native clients or explicitly configured credential sources. Snapshots expose evidence, not credential values. Browser cookies are never read.",
   },
   {
     icon: Lock,
@@ -29,8 +29,8 @@ export function Security() {
       <div className="container">
         <h2 id="security-title">A local runtime is only useful if it stays local.</h2>
         <p className="statement">
-          OriginLM is not a relay and not a proxy. It is a boundary: one place that knows which app
-          asked for what, and one place where the user can take it back.
+          A local permission boundary records which app asked for which operation.
+          Cloud requests go to the selected provider under its terms.
         </p>
 
         <div className="guarantees">
@@ -45,8 +45,8 @@ export function Security() {
         <div className="security-foot">
           <p>
             <strong>Read the actual guarantees.</strong> The threat model names the assets, the trust
-            boundaries and the attacks that are out of scope. The privacy statement is generated from one
-            source so the install page, README and app cannot drift.
+            boundaries and the attacks that are out of scope. Provider coverage and platform verification
+            are documented separately; local does not mean every operation is offline.
           </p>
           <div className="security-links">
             <a className="btn btn-ghost" href="https://github.com/thomaslittle/local-ai-kit/blob/main/SECURITY.md">Security policy</a>
