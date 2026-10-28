@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 
 $target = switch ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
   'X64' { 'x86_64-pc-windows-msvc' }
-  'Arm64' { 'aarch64-pc-windows-msvc' }
+  'Arm64' { throw 'Windows ARM64 packages are not available in this source preview.' }
   default { throw "Unsupported architecture: $($_)" }
 }
 $archive = "local-ai-kit-$target.zip"
@@ -21,14 +21,28 @@ try {
   Write-Host "Downloading $archive"
   Invoke-WebRequest -UseBasicParsing -Uri "$ReleaseBase/$archive" -OutFile (Join-Path $temp $archive)
   Invoke-WebRequest -UseBasicParsing -Uri "$ReleaseBase/SHA256SUMS" -OutFile (Join-Path $temp 'SHA256SUMS')
-  $expected = (Get-Content (Join-Path $temp 'SHA256SUMS') | Where-Object { $_ -match [regex]::Escape($archive) } | Select-Object -First 1).Split(' ')[0]
-  $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $temp $archive)).Hash.ToLowerInvariant()
-  if (-not $expected -or $expected.ToLowerInvariant() -ne $actual) { throw 'Checksum mismatch' }
+  $checksumLines = @(Get-Content (Join-Path $temp 'SHA256SUMS') | Where-Object { $_ -match ('^[0-9a-fA-F]{64}  ' + [regex]::Escape($archive) + '$') })
+  if ($checksumLines.Count -ne 1) { throw 'Expected exactly one checksum for this archive' }
+  $expected = $checksumLines[0].Substring(0, 64)
+  $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $temp $archive)).Hash
+  if ($expected -ine $actual) { throw 'Checksum mismatch' }
 
-  Expand-Archive -Path (Join-Path $temp $archive) -DestinationPath $temp
+  # Extract only the exact helper entry. No archive path can escape the temp directory.
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
+  $zip = [System.IO.Compression.ZipFile]::OpenRead((Join-Path $temp $archive))
+  $payload = Join-Path $temp 'local-ai-kit.exe'
+  try {
+    $entries = @($zip.Entries | Where-Object { $_.FullName -ceq "helper-$target/local-ai-kit.exe" })
+    if ($entries.Count -ne 1 -or $entries[0].Length -le 0 -or $entries[0].Length -gt 40MB) { throw 'Invalid helper archive member' }
+    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entries[0], $payload, $false)
+  } finally { $zip.Dispose() }
+  # An explicitly configured certificate identity must never silently downgrade.
+  if ($env:LAI_WINDOWS_SIGNER_THUMBPRINT) {
+    $signature = Get-AuthenticodeSignature -FilePath $payload
+    if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Thumbprint -ine $env:LAI_WINDOWS_SIGNER_THUMBPRINT) { throw 'Helper signature verification failed' }
+  }
   New-Item -ItemType Directory -Force -Path $InstallDir, $StateDir | Out-Null
-  $binary = Get-ChildItem -Path $temp -Recurse -Filter 'local-ai-kit.exe' | Select-Object -First 1
-  Copy-Item $binary.FullName (Join-Path $InstallDir 'local-ai-kit.exe') -Force
+  Copy-Item $payload (Join-Path $InstallDir 'local-ai-kit.exe') -Force
 
   $token = Join-Path $StateDir 'broker-token.json'
   $socket = 'local-ai-kit-user'

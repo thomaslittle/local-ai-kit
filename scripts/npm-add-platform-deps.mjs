@@ -31,7 +31,8 @@ cpSync(sdk, out, {
   filter: (path) => !path.includes('node_modules') && !path.endsWith('package-lock.json'),
 });
 const manifest = JSON.parse(readFileSync(join(out, 'package.json'), 'utf8'));
-if (manifest.private) throw new Error('Refusing to stage a private package');
+if (manifest.private && !process.argv.includes('--preview')) throw new Error('Refusing to stage a private package without --preview');
+// Preview staging preserves private:true: npm pack is allowed, npm publish is not.
 
 const optional = {};
 for (const directory of readdirSync(packages)) {

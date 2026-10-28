@@ -1,243 +1,76 @@
-name: Release
+name: Prepare release artifacts
 
-# A tag push builds signed, checksummed artifacts; manual dispatch defaults to a
-# dry run that uploads nothing. Real publishing needs the `release` environment
-# approval configured in GitHub, and every registry token below.
+# Preparation only: no registry, GitHub release, signing or deployment authority.
+# A tag cannot publish private preview packages. See docs/release/PUBLISHING.md.
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: Build and print the manifest without publishing
-        type: boolean
-        default: true
-
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'scripts/prepare_helper_archive.py'
+      - 'scripts/npm-*.mjs'
+      - 'scripts/stage_python_package.py'
 permissions:
-  contents: write
-  id-token: write
-
+  contents: read
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
+  group: release-prepare-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  plan:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      dry_run: ${{ steps.version.outputs.dry_run }}
-    steps:
-      - uses: actions/checkout@v7
-      - id: version
-        shell: bash
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          if [ -z "$version" ] || [ "$GITHUB_REF_TYPE" != "tag" ]; then
-            version="$(node -p "require('./packages/sdk-typescript/package.json').version")"
-          fi
-          dry="false"
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" != "false" ]; then dry="true"; fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "dry_run=$dry" >> "$GITHUB_OUTPUT"
-
-  build:
-    needs: plan
+  prepare:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, nm: linux-x64, limit: 40 }
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest, nm: linux-arm64, limit: 40 }
-          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest, nm: linux-x64-musl, limit: 60 }
-          - { target: aarch64-unknown-linux-musl, os: ubuntu-latest, nm: linux-arm64-musl, limit: 60 }
-          - { target: x86_64-apple-darwin, os: macos-latest, nm: darwin-x64, limit: 40 }
-          - { target: aarch64-apple-darwin, os: macos-latest, nm: darwin-arm64, limit: 40 }
-          - { target: x86_64-pc-windows-msvc, os: windows-latest, nm: win32-x64, limit: 40 }
-          - { target: aarch64-pc-windows-msvc, os: windows-latest, nm: win32-arm64, limit: 40 }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04, plat: linux_x86_64 }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, plat: linux_aarch64 }
+          - { target: x86_64-apple-darwin, os: macos-15-intel, plat: macosx_15_0_x86_64 }
+          - { target: aarch64-apple-darwin, os: macos-15, plat: macosx_15_0_arm64 }
+          - { target: x86_64-pc-windows-msvc, os: windows-2025, plat: win_amd64 }
     runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - if: contains(matrix.target, 'linux')
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
-      - name: Build the helper (stripped)
-        shell: bash
-        run: |
-          cargo build --release --locked -p lai-cli --target "${{ matrix.target }}"
-          out="target/${{ matrix.target }}/release/local-ai-kit"
-          if [ "${{ runner.os }}" = "Linux" ]; then strip "$out" || true; fi
-          size=$(( $(wc -c < "$out") / 1048576 ))
-          echo "helper is ${size}MB (budget ${{ matrix.limit }}MB)"
-          if [ "$size" -gt "${{ matrix.limit }}" ]; then
-            echo "::error::${{ matrix.target }} exceeds its size budget"
-            exit 1
-          fi
-      - uses: actions/upload-artifact@v4
-        with:
-          name: helper-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/local-ai-kit*
-
-  sign-macos:
-    needs: [plan, build]
-    if: github.event_name == 'push'
-    runs-on: macos-latest
+    timeout-minutes: 40
     env:
-      APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
-      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-    steps:
-      - if: env.APPLE_CERTIFICATE_P12 != ''
-        uses: actions/download-artifact@v4
-        with:
-          pattern: helper-*apple-darwin
-          path: artifacts
-      - name: Sign the helper
-        if: env.APPLE_CERTIFICATE_P12 != ''
-        shell: bash
-        run: |
-          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > cert.p12
-          security create-keychain -p actions build.keychain
-          security import cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-keychain-settings -lut 21600 build.keychain
-          security unlock-keychain -p actions build.keychain
-          for binary in artifacts/helper-*/local-ai-kit; do
-            codesign --force --timestamp --options runtime --sign "Developer ID Application" "$binary"
-          done
-      - if: env.APPLE_CERTIFICATE_P12 != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: helpers-macos-signed
-          path: artifacts
-
-  npm:
-    needs: [plan, build]
-    runs-on: ubuntu-latest
+      CARGO_INCREMENTAL: '0'
+      CARGO_BUILD_JOBS: '2'
+      MACOSX_DEPLOYMENT_TARGET: '15.0'
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: helper-*
-          path: artifacts
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22.20.0'
-      - name: Stage the per-platform packages and the SDK
-        run: |
-          for dir in artifacts/helper-*; do
-            target="${dir#artifacts/helper-}"
-            node scripts/npm-platform-packages.mjs --binary "$dir/local-ai-kit" --target "$target" --out npm-out
-          done
-          node scripts/npm-add-platform-deps.mjs --packages npm-out --sdk packages/sdk-typescript --out npm-sdk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: npm-staged
-          path: |
-            npm-out
-            npm-sdk
-
-  wheels:
-    needs: [plan, build]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, plat: manylinux_2_17_x86_64 }
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest, plat: manylinux_2_17_aarch64 }
-          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest, plat: musllinux_1_2_x86_64 }
-          - { target: aarch64-unknown-linux-musl, os: ubuntu-latest, plat: musllinux_1_2_aarch64 }
-          - { target: x86_64-apple-darwin, os: macos-latest, plat: macosx_11_0_x86_64 }
-          - { target: aarch64-apple-darwin, os: macos-latest, plat: macosx_11_0_arm64 }
-          - { target: x86_64-pc-windows-msvc, os: windows-latest, plat: win_amd64 }
-          - { target: aarch64-pc-windows-msvc, os: windows-latest, plat: win_arm64 }
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v4
-        with:
-          name: helper-${{ matrix.target }}
-          path: helper
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-      - name: Stage the platform wheel
-        shell: bash
-        run: |
-          python scripts/stage_python_package.py --binary "$(find helper -name 'local-ai-kit*' -type f | head -1)" --target "${{ matrix.target }}" --plat-name "${{ matrix.plat }}" --out wheels
-          python -m pip install --quiet setuptools wheel
-          cd wheels/local-ai-kit
-          python setup.py bdist_wheel --plat-name "${{ matrix.plat }}" --dist-dir ..
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wheel-${{ matrix.target }}
-          path: wheels/*.whl
-
-  publish:
-    needs: [plan, npm, wheels, sign-macos]
-    if: needs.plan.outputs.dry_run == 'false'
-    runs-on: ubuntu-latest
-    environment: release
-    env:
-      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      TWINE_USERNAME: __token__
-      TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v4
-        with:
-          name: npm-staged
-          path: staged
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: wheel-*
-          path: wheels-out
       - uses: actions/setup-node@v7
         with:
           node-version: '22.20.0'
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Publish crates in dependency order
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.98.1 --profile minimal
+      - name: Build native helper and SDK
+        shell: bash
         run: |
-          for crate in lai-contracts lai-core lai-transports lai-kit local-ai-kit; do
-            cargo publish --locked -p "$crate"
-          done
-      - name: Publish npm packages with provenance
+          cargo build --release --locked -p lai-cli --bin local-ai-kit --target '${{ matrix.target }}'
+          npm ci --ignore-scripts
+          npm run build --workspace @local-ai-kit/sdk
+          python -m pip install -r scripts/requirements-build.txt
+      - name: Stage exact target artifacts
+        shell: bash
         run: |
-          for dir in staged/npm-out/*; do (cd "$dir" && npm publish --provenance --access public); done
-          (cd staged/npm-sdk && npm publish --provenance --access public)
-      - name: Publish wheels
-        run: |
-          python -m pip install twine
-          python -m twine upload wheels-out/*/*.whl
-
-  release:
-    needs: [plan, build, npm]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
+          binary='target/${{ matrix.target }}/release/local-ai-kit'
+          if [ "$RUNNER_OS" = Windows ]; then binary="$binary.exe"; fi
+          python scripts/prepare_helper_archive.py --binary "$binary" --target '${{ matrix.target }}' --out prepared
+          node scripts/npm-platform-packages.mjs --binary "$binary" --target '${{ matrix.target }}' --out npm-out
+          node scripts/npm-add-platform-deps.mjs --packages npm-out --sdk packages/sdk-typescript --out npm-sdk --preview
+          mkdir -p prepared/npm
+          for dir in npm-out/* npm-sdk; do npm pack "$PWD/$dir" --ignore-scripts --pack-destination "$PWD/prepared/npm"; done
+          python scripts/stage_python_package.py --binary "$binary" --target '${{ matrix.target }}' --plat-name '${{ matrix.plat }}' --out wheels
+          (cd wheels/local-ai-kit && python setup.py bdist_wheel --plat-name '${{ matrix.plat }}' --dist-dir ../../prepared)
+      - name: Preserve unsigned preview artifacts
+        uses: actions/upload-artifact@v7
         with:
-          pattern: helper-*
-          path: bundles
-      - name: Checksums
+          name: prepared-${{ matrix.target }}
+          path: prepared/
+          if-no-files-found: error
+      - name: State release boundaries
+        shell: bash
         run: |
-          cd bundles
-          for dir in helper-*; do tar -czf "${dir}.tar.gz" "$dir"; done
-          sha256sum helper-*.tar.gz > SHA256SUMS
-      - name: Upload the release
-        if: needs.plan.outputs.dry_run == 'false'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            bundles/*.tar.gz
-            bundles/SHA256SUMS
-      - name: Dry run summary
-        if: needs.plan.outputs.dry_run == 'true'
-        run: |
-          echo "Dry run for ${{ needs.plan.outputs.version }}: nothing uploaded."
-          cat bundles/SHA256SUMS
+          echo 'Unsigned preview artifacts only. No packages or releases were published.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Linux wheels use host-specific linux tags, not an unverified manylinux promise.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'See docs/release/PUBLISHING.md for signing, compatibility and publication gates.' >> "$GITHUB_STEP_SUMMARY"

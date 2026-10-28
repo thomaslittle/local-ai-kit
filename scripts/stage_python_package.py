@@ -3,7 +3,7 @@
 
     python scripts/stage_python_package.py \
       --binary dist/local-ai-kit --target x86_64-unknown-linux-gnu \
-      --plat-name manylinux_2_17_x86_64 --out wheels
+      --plat-name linux_x86_64 --out wheels
 
 The staged copy is a normal setuptools project whose wheel is forced to be
 platform-specific, because it contains a native executable. Building it needs
@@ -16,14 +16,11 @@ import shutil
 import sys
 
 PLATFORMS = {
-    'x86_64-unknown-linux-gnu': 'manylinux_2_17_x86_64',
-    'aarch64-unknown-linux-gnu': 'manylinux_2_17_aarch64',
-    'x86_64-unknown-linux-musl': 'musllinux_1_2_x86_64',
-    'aarch64-unknown-linux-musl': 'musllinux_1_2_aarch64',
-    'x86_64-apple-darwin': 'macosx_11_0_x86_64',
-    'aarch64-apple-darwin': 'macosx_11_0_arm64',
+    'x86_64-unknown-linux-gnu': 'linux_x86_64',
+    'aarch64-unknown-linux-gnu': 'linux_aarch64',
+    'x86_64-apple-darwin': 'macosx_15_0_x86_64',
+    'aarch64-apple-darwin': 'macosx_15_0_arm64',
     'x86_64-pc-windows-msvc': 'win_amd64',
-    'aarch64-pc-windows-msvc': 'win_arm64',
 }
 
 SETUP_PY = '''from setuptools import setup
@@ -35,6 +32,11 @@ class bdist_wheel(_bdist_wheel):
         super().finalize_options()
         # The wheel contains a native executable, so it is never "pure".
         self.root_is_pure = False
+
+    def get_tag(self):
+        # Python source is portable; only the bundled executable is platform-bound.
+        _, _, platform = super().get_tag()
+        return "py3", "none", platform
 
 
 setup(cmdclass={"bdist_wheel": bdist_wheel})
@@ -62,7 +64,6 @@ def main() -> int:
     manifest_path = out / 'pyproject.toml'
     manifest = manifest_path.read_text('utf-8')
     manifest = manifest.replace('name = "local-ai-kit-preview"', 'name = "local-ai-kit"')
-    manifest = manifest.replace('classifiers = ["Private :: Do Not Upload"]\n', '')
     manifest = manifest.replace('local_ai_kit = ["py.typed", "*.pyi"]', 'local_ai_kit = ["py.typed", "*.pyi", "_bin/*"]')
     manifest_path.write_text(manifest, 'utf-8')
     (out / 'setup.py').write_text(SETUP_PY, 'utf-8')
