@@ -12,7 +12,7 @@ Account/profile/route/model/billing identities remain distinct. Account failure 
 
 Native commands are structured arguments with owned-process cleanup. Wrappers need verified launch recipes; ambiguous `agent` binaries are not attributed by filename alone. API credentials are bound to explicitly configured endpoints, redirects are rejected, and response bodies/streams are bounded. Error messages are sanitized.
 
-Artifacts are bounded memory-only bytes, expire, and are private to their owner/session. Reading them never accepts a filesystem path. Browser downloads must not execute returned content. Cached Cursor metadata queries only non-secret identity/plan fields and remains explicitly unverified.
+Artifacts are bounded memory-only bytes, expire, and are private to their owner/session. Reading them never accepts a filesystem path. Browser downloads must not execute returned content. Cursor metadata comes from the installed `cursor-agent` CLI. Its dashboard allowance request is off by default; with `--allow-usage cursor` the adapter sends the session token Cursor already stored locally, keeps it in memory for that request only, and never logs, serializes, exports or writes it anywhere else. Without that grant the app shows the cached identity/plan as explicitly stale.
 
 ## Known limits
 

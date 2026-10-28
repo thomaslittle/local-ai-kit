@@ -81,7 +81,7 @@ fn run() -> Result<()> {
     let entries = registry.clone();
     let native_entries = native.clone();
     let managed_root = chatgpt.as_ref().and(state_dir.as_ref()).cloned();
-    let service = lai_kit::build_service_with_chatgpt(
+    let service = lai_kit::build_service_with_cursor_usage(
         std::sync::Arc::new(move |cancel| {
             let mut scan = base(cancel)?;
             entries.inject(&mut scan);
@@ -97,6 +97,7 @@ fn run() -> Result<()> {
         declarations,
         state_dir,
         chatgpt,
+        args.usage_providers.contains("cursor"),
     );
     let client = stable_id("extension", &[&origin]);
     service.register_client(&client, host::policy(&args))?;
