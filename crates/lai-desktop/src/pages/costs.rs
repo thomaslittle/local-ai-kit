@@ -56,7 +56,7 @@ impl Desktop {
                 Button::new(("edit-price", index)).secondary().disabled(!editable)
                     .label(format!("{} / {}   ${} input   ${} output", price.provider_id, price.native_model_id, price.input_usd_per_million.as_str(), price.output_usd_per_million.as_str()))
                     .on_click(cx.listener(move |this, _, window, cx| {
-                        this.price_edit_index = Some(index);
+                        this.price_edit_original = Some(price.clone());
                         let values = [price.provider_id.clone(), price.native_model_id.clone(), price.input_usd_per_million.as_str().into(), price.output_usd_per_million.as_str().into(), price.reviewed_at.clone(), price.source.clone()];
                         for (field, value) in this.price_fields.iter().zip(values) { field.update(cx, |field, cx| field.set_value(value, window, cx)); }
                         cx.notify();
@@ -65,9 +65,19 @@ impl Desktop {
             .children(["Provider ID", "Exact model ID", "Input USD per million", "Output USD per million", "Reviewed on (YYYY-MM-DD)", "Source or local rationale"].into_iter().enumerate().map(|(index, label)| div().v_flex().gap_1().child(div().text_size(px(12.)).child(label)).child(Input::new(&self.price_fields[index]).disabled(!editable))))
             .child(div().h_flex().gap_3()
                 .child(Button::new("new-price").secondary().disabled(!editable).label("New model price").on_click(cx.listener(|this, _, window, cx| {
-                    this.price_edit_index = None;
+                    this.price_edit_original = None;
                     for field in &this.price_fields { field.update(cx, |field, cx| field.set_value("", window, cx)); }
                     this.price_fields[4].update(cx, |field, cx| field.set_value(chrono::Utc::now().format("%Y-%m-%d").to_string(), window, cx));
+                    cx.notify();
+                })))
+                .child(Button::new("remove-price").secondary().disabled(!editable || self.price_edit_original.is_none()).label("Remove selected price").on_click(cx.listener(|this, _, _, cx| {
+                    let Some(original) = &this.price_edit_original else { return; };
+                    let Some(report) = this.bundle.as_ref().and_then(|bundle| bundle.costs.as_ref()) else { return; };
+                    let mut prices = report.prices.clone();
+                    let Some(index) = prices.iter().position(|price| price == original) else { this.toast("Price table changed; select the row again"); cx.notify(); return; };
+                    prices.remove(index);
+                    if this.broker.commands.send(Command::SetPrices(prices)).is_err() { this.toast("Runtime worker is unavailable"); }
+                    else { this.price_edit_original = None; this.toast("Removing price. Save the retained fields to restore it."); }
                     cx.notify();
                 })))
                 .child(Button::new("save-price").primary().disabled(!editable).label("Save price").on_click(cx.listener(|this, _, _, cx| {
@@ -77,7 +87,7 @@ impl Desktop {
                     if price.provider_id.is_empty() || price.native_model_id.is_empty() || price.source.is_empty() || chrono::NaiveDate::parse_from_str(&price.reviewed_at, "%Y-%m-%d").is_err() { this.toast("Enter provider, model, source and a valid review date"); cx.notify(); return; }
                     let Some(report) = this.bundle.as_ref().and_then(|bundle| bundle.costs.as_ref()) else { return; };
                     let mut prices = report.prices.clone();
-                    if let Some(index) = this.price_edit_index { if let Some(current) = prices.get_mut(index) { *current = price; } else { this.toast("Price table changed; select the row again"); return; } } else { prices.push(price); }
+                    if let Some(original) = &this.price_edit_original { if let Some(current) = prices.iter_mut().find(|current| *current == original) { *current = price; } else { this.toast("Price table changed; select the row again"); cx.notify(); return; } } else { prices.push(price); }
                     if this.broker.commands.send(Command::SetPrices(prices)).is_err() { this.toast("Runtime worker is unavailable"); } else { this.toast("Saving prices; refresh result appears here"); }
                     cx.notify();
                 }))))
