@@ -1,3 +1,4 @@
+import { brand } from "../brand.generated";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Preload } from "@react-three/drei/core/Preload.js";
@@ -21,6 +22,7 @@ type SceneProps = {
   labels: { current: (HTMLDivElement | null)[] };
   onHover: (layer: Layer | null) => void;
   onReady: () => void;
+  onFailure: () => void;
   quality: "full" | "light";
 };
 
@@ -95,8 +97,10 @@ function StudioEnvironment() {
   const { gl, scene } = useThree();
   useEffect(() => {
     const pmrem = new PMREMGenerator(gl);
-    const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = environment;
+    const room = new RoomEnvironment();
+    const environment = pmrem.fromScene(room, 0.04);
+    room.dispose();
+    scene.environment = environment.texture;
     return () => {
       scene.environment = null;
       environment.dispose();
@@ -166,7 +170,7 @@ function PacketSystem({ spreadRef }: { spreadRef: { value: number } }) {
   const mesh = useRef<InstancedMesh>(null);
   const count = 16;
   const dummy = useMemo(() => new Object3D(), []);
-  const colors = useMemo(() => [new Color("#f7bd4b"), new Color("#eba31a"), new Color("#c98a3c")], []);
+  const colors = useMemo(() => [new Color(brand.amberHover), new Color(brand.amber), new Color(brand.sceneBronze)], []);
 
   useFrame((state) => {
     if (!mesh.current) return;
@@ -203,13 +207,13 @@ function ProviderNodes({ spreadRef }: { spreadRef: { value: number } }) {
   const group = useRef<Group>(null);
   const nodes = useMemo(
     () => [
-      { x: -2.55, tone: "#eba31a" },
-      { x: -1.7, tone: "#f7bd4b" },
-      { x: -0.85, tone: "#a9b29f" },
-      { x: 0, tone: "#eba31a" },
-      { x: 0.85, tone: "#c97e5a" },
-      { x: 1.7, tone: "#a9b29f" },
-      { x: 2.55, tone: "#f7bd4b" },
+      { x: -2.55, tone: brand.amber },
+      { x: -1.7, tone: brand.amberHover },
+      { x: -0.85, tone: brand.sceneSage },
+      { x: 0, tone: brand.amber },
+      { x: 0.85, tone: brand.sceneTerracotta },
+      { x: 1.7, tone: brand.sceneSage },
+      { x: 2.55, tone: brand.amberHover },
     ],
     [],
   );
@@ -236,7 +240,7 @@ function ProviderNodes({ spreadRef }: { spreadRef: { value: number } }) {
 
 function LayerDetail({ layer, width, height, depth }: { layer: Layer; width: number; height: number; depth: number }) {
   const z = depth / 2 + 0.004;
-  const tone = layer.id === "dashboard" ? "#f7bd4b" : "#d9c9b6";
+  const tone = layer.id === "dashboard" ? brand.amberHover : brand.sceneText;
 
   if (layer.id === "providers") return null;
 
@@ -246,16 +250,16 @@ function LayerDetail({ layer, width, height, depth }: { layer: Layer; width: num
         {[0.42, 0.62, 0.34, 0.72, 0.5, 0.82].map((value, index) => (
           <mesh key={index} position={[-0.72 + index * 0.24, -0.45 + value * 0.22, 0]}>
             <planeGeometry args={[0.12, value * 0.42]} />
-            <meshBasicMaterial color={index % 2 ? "#a9b29f" : tone} transparent opacity={0.7} toneMapped={false} />
+            <meshBasicMaterial color={index % 2 ? brand.sceneSage : tone} transparent opacity={0.7} toneMapped={false} />
           </mesh>
         ))}
         <mesh position={[0.1, 0.28, 0]}>
           <planeGeometry args={[1.5, 0.035]} />
-          <meshBasicMaterial color="#faf9f5" transparent opacity={0.18} toneMapped={false} />
+          <meshBasicMaterial color={brand.paper} transparent opacity={0.18} toneMapped={false} />
         </mesh>
         <mesh position={[-0.18, 0.12, 0]}>
           <planeGeometry args={[1.0, 0.035]} />
-          <meshBasicMaterial color="#faf9f5" transparent opacity={0.12} toneMapped={false} />
+          <meshBasicMaterial color={brand.paper} transparent opacity={0.12} toneMapped={false} />
         </mesh>
       </group>
     );
@@ -268,13 +272,13 @@ function LayerDetail({ layer, width, height, depth }: { layer: Layer; width: num
         [0, 1, 2].map((dot) => (
           <mesh key={`dot-${dot}`} position={[0.12 + dot * 0.16, height / 2 - 0.22, 0]}>
             <circleGeometry args={[0.035, 12]} />
-            <meshBasicMaterial color={dot === 0 ? "#f7bd4b" : "#6f625c"} toneMapped={false} />
+            <meshBasicMaterial color={dot === 0 ? brand.amberHover : brand.sceneMuted} toneMapped={false} />
           </mesh>
         ))}
       {Array.from({ length: rows }).map((_, index) => (
         <mesh key={index} position={[0.5 + (index % 2) * 0.5, 0.12 - index * 0.22, 0]}>
           <planeGeometry args={[0.7 + (index % 3) * 0.3, 0.045]} />
-          <meshBasicMaterial color={index === 0 ? tone : "#faf9f5"} transparent opacity={index === 0 ? 0.55 : 0.14} toneMapped={false} />
+          <meshBasicMaterial color={index === 0 ? tone : brand.paper} transparent opacity={index === 0 ? 0.55 : 0.14} toneMapped={false} />
         </mesh>
       ))}
     </group>
@@ -360,7 +364,7 @@ function GlassLayer({
     >
       <RoundedPanel args={[shape.width, shape.height, shape.depth]} radius={0.11}>
         <meshPhysicalMaterial
-          color="#4a3831"
+          color={brand.sceneGlass}
           metalness={0.8}
           roughness={0.14}
           transparent
@@ -368,7 +372,7 @@ function GlassLayer({
           clearcoat={1}
           clearcoatRoughness={0.06}
           envMapIntensity={0.9}
-          emissive={isHovered ? "#eba31a" : "#1a0f05"}
+          emissive={isHovered ? brand.amber : brand.sceneEmissive}
           emissiveIntensity={isHovered ? 0.1 : 0.16}
           side={DoubleSide}
         />
@@ -381,7 +385,7 @@ function GlassLayer({
       {!isProviders && (
         <mesh position={[0, -shape.height / 2 + 0.05, 0.02]}>
           <planeGeometry args={[shape.width * 0.86, 0.012]} />
-          <meshBasicMaterial color={isDashboard ? "#f7bd4b" : "#eba31a"} transparent opacity={isDashboard ? 0.5 : 0.24} />
+          <meshBasicMaterial color={isDashboard ? brand.amberHover : brand.amber} transparent opacity={isDashboard ? 0.5 : 0.24} />
         </mesh>
       )}
 
@@ -444,7 +448,17 @@ function Rig({
   );
 }
 
-export default function HeroScene({ stageEl, labels, onHover, onReady, quality }: SceneProps) {
+function ContextLoss({ onFailure }: { onFailure: () => void }) {
+  const { gl } = useThree();
+  useEffect(() => {
+    const canvas = gl.domElement;
+    canvas.addEventListener("webglcontextlost", onFailure);
+    return () => canvas.removeEventListener("webglcontextlost", onFailure);
+  }, [gl, onFailure]);
+  return null;
+}
+
+export default function HeroScene({ stageEl, labels, onHover, onReady, onFailure, quality }: SceneProps) {
   const spreadRef = useMemo(() => ({ value: 0 }), []);
 
   return (
@@ -460,11 +474,12 @@ export default function HeroScene({ stageEl, labels, onHover, onReady, quality }
       aria-label="Exploded 3D view of the OriginLM stack: your app and the dashboard on top, then the SDK, transport, local runtime, adapters and the AI providers already installed."
       role="img"
     >
+      <ContextLoss onFailure={onFailure} />
       <ambientLight intensity={0.9} />
-      <directionalLight position={[5, 8, 8]} intensity={1.6} color="#fff2dc" />
-      <directionalLight position={[-6, 2, 4]} intensity={1.1} color="#a9b29f" />
-      <pointLight position={[0, -5, 4]} intensity={18} color="#eba31a" distance={16} />
-      <pointLight position={[5, 2, 6]} intensity={9} color="#fff2dc" distance={16} />
+      <directionalLight position={[5, 8, 8]} intensity={1.6} color={brand.sceneLight} />
+      <directionalLight position={[-6, 2, 4]} intensity={1.1} color={brand.sceneSage} />
+      <pointLight position={[0, -5, 4]} intensity={18} color={brand.amber} distance={16} />
+      <pointLight position={[5, 2, 6]} intensity={9} color={brand.sceneLight} distance={16} />
       <Rig stageEl={stageEl} labels={labels} spreadRef={spreadRef} quality={quality} onHover={onHover} />
     </Canvas>
   );

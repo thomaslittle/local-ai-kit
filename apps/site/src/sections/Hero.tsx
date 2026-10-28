@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Component, type ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
 import { ArrowRight } from "../components/Icon";
 import { LAYERS, type Layer } from "../data/layers";
 
@@ -7,10 +7,19 @@ const HeroScene = lazy(() => import("../scene/HeroScene"));
 function supportsWebGL() {
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
+    const context = canvas.getContext("webgl2");
+    context?.getExtension("WEBGL_lose_context")?.loseContext();
+    return Boolean(context);
   } catch {
     return false;
   }
+}
+
+class SceneBoundary extends Component<{ children: ReactNode; onFailure: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch() { this.props.onFailure(); }
+  render() { return this.state.failed ? null : this.props.children; }
 }
 
 export function HeroStage() {
@@ -22,13 +31,32 @@ export function HeroStage() {
   const [quality, setQuality] = useState<"full" | "light">("full");
   const [staticMode, setStaticMode] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || !supportsWebGL()) {
+    const node = stageRef.current;
+    if (!node) return;
+    let intersecting = true;
+    const update = () => setVisible(intersecting && !document.hidden);
+    const observer = new IntersectionObserver(([entry]) => {
+      intersecting = entry.isIntersecting;
+      update();
+    });
+    observer.observe(node);
+    document.addEventListener("visibilitychange", update);
+    return () => { observer.disconnect(); document.removeEventListener("visibilitychange", update); };
+  }, []);
+
+  useEffect(() => {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!supportsWebGL()) {
       setStaticMode(true);
       return;
     }
+
+    const motionChanged = () => setStaticMode(motion.matches);
+    motionChanged();
+    motion.addEventListener("change", motionChanged);
 
     setQuality(
       window.innerWidth >= 900 && (navigator.hardwareConcurrency ?? 4) >= 4 && !new URLSearchParams(window.location.search).has("light")
@@ -46,12 +74,13 @@ export function HeroStage() {
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
+      motion.removeEventListener("change", motionChanged);
     };
   }, []);
 
   return (
     <figure className="hero-figure">
-      <div className="hero-stage" ref={stageRef} data-static={staticMode || paused || undefined} data-ready={ready && !paused || undefined}>
+      <div className="hero-stage" ref={stageRef} data-static={staticMode || paused || undefined} data-ready={ready && !paused && !staticMode && visible || undefined}>
         <img
           className="stage-fallback"
           src="/hero-poster.svg"
@@ -61,7 +90,8 @@ export function HeroStage() {
           fetchPriority="high"
         />
 
-        {enabled && !staticMode && !paused && (
+        {enabled && !staticMode && !paused && visible && (
+          <SceneBoundary onFailure={() => setStaticMode(true)}>
           <Suspense fallback={null}>
             <HeroScene
               stageEl={stageRef.current}
@@ -69,8 +99,10 @@ export function HeroStage() {
               quality={quality}
               onHover={setActive}
               onReady={() => setReady(true)}
+              onFailure={() => setStaticMode(true)}
             />
           </Suspense>
+          </SceneBoundary>
         )}
 
         <div className="stage-labels" aria-hidden="true">
@@ -126,13 +158,12 @@ export function Hero() {
       <div className="container hero-grid">
         <div className="hero-copy">
           <h1>
-            <span className="line">See and use all your AI.</span>
-            <span className="line line-second">One dependency for every app.</span>
+            <span className="line">See your AI.</span>
+            <span className="line line-second">Build with it.</span>
           </h1>
 
           <p className="lead hero-sub">
-            A local control center for every AI client, model, account and subscription on your machine.
-            The same runtime is the one dependency that puts the user’s own AI in your app.
+            Your AI dashboard and developer platform, powered by one local runtime.
           </p>
 
           <div className="hero-actions">
@@ -145,7 +176,7 @@ export function Hero() {
           </div>
 
           <p className="hero-note">
-            Free and MIT-licensed for macOS, Windows and Linux. Local-first, no telemetry, no account required.
+            MIT-licensed source preview. No OriginLM account or telemetry.
           </p>
         </div>
 
