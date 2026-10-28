@@ -52,7 +52,12 @@ class HelperResolutionTests(unittest.TestCase):
         with patch.dict(os.environ, {'LAI_BROKER_ADDRESS': '/tmp/x.sock', 'LAI_BROKER_TOKEN_FILE': '/tmp/t.json'}):
             self.assertEqual(default_address(), '/tmp/x.sock')
             self.assertEqual(default_token_file(), pathlib.Path('/tmp/t.json'))
-        with patch.dict(os.environ, {}, clear=True):
+        preserved = {
+            key: value
+            for key, value in os.environ.items()
+            if key not in ('LAI_BROKER_ADDRESS', 'LAI_BROKER_TOKEN_FILE')
+        }
+        with patch.dict(os.environ, preserved, clear=True):
             self.assertTrue(default_address().endswith('user.sock') or default_address() == 'local-ai-kit-user')
             self.assertTrue(str(default_token_file()).endswith('broker-token.json'))
 
@@ -61,8 +66,13 @@ class HelperResolutionTests(unittest.TestCase):
             path = pathlib.Path(directory) / 'broker-token.json'
             path.write_text('{"address":"/tmp/x.sock","token":"' + 'a' * 64 + '"}')
             path.chmod(0o644)
-            self.assertIsNone(client_module._shared_token('/tmp/x.sock', path))
-            if os.name != 'nt':
+            if os.name == 'nt':
+                # Windows has no owner-only mode bit to inspect; the descriptor
+                # still has to match the address and carry a real token.
+                self.assertEqual(client_module._shared_token('/tmp/x.sock', path), 'a' * 64)
+                self.assertIsNone(client_module._shared_token('/tmp/other.sock', path))
+            else:
+                self.assertIsNone(client_module._shared_token('/tmp/x.sock', path))
                 path.chmod(0o600)
                 self.assertEqual(client_module._shared_token('/tmp/x.sock', path), 'a' * 64)
                 self.assertIsNone(client_module._shared_token('/tmp/other.sock', path))
