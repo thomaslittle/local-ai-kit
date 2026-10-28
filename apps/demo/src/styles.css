@@ -1,3 +1,4 @@
+@import "../../../brand/tokens.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/outfit";
@@ -11,14 +12,14 @@
   font-display: swap;
 }
 
-/* Theme: OriginLM. Graphite `#231F20` surfaces, amber `#EBA31A` accent,
-   off-white `#FAF9F5` light theme, Red Hat Display, shadcn base-mira, Phosphor
+/* Theme: OriginLM. Graphite `var(--originlm-graphite)` surfaces, amber `var(--originlm-amber)` accent,
+   off-white `var(--originlm-paper)` light theme, Red Hat Display, shadcn base-mira, Phosphor
    icons. Tokens follow shadcn's Tailwind v4 convention. `:root` is the light
    palette; `.dark` (set on <html>) is the default workspace. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Red Hat Display Variable", "Outfit Variable", -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--originlm-font);
   --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 
   --color-background: var(--background);
@@ -106,36 +107,36 @@
   --radius: 0.45rem;
   --theme-hue: 76;
   --theme-chroma: 0.15;
-  --background: #faf9f5;
-  --foreground: #231f20;
+  --background: var(--originlm-paper);
+  --foreground: var(--originlm-graphite);
   --card: #ffffff;
-  --card-foreground: #231f20;
+  --card-foreground: var(--originlm-graphite);
   --popover: #ffffff;
-  --popover-foreground: #231f20;
-  --primary: #eba31a;
-  --primary-foreground: #231f20;
+  --popover-foreground: var(--originlm-graphite);
+  --primary: var(--originlm-amber);
+  --primary-foreground: var(--originlm-graphite);
   --secondary: #f1ede4;
-  --secondary-foreground: #231f20;
+  --secondary-foreground: var(--originlm-graphite);
   --muted: #f1ede4;
-  --muted-foreground: #6b635c;
+  --muted-foreground: var(--originlm-light-muted);
   --accent: #f0e9dc;
-  --accent-foreground: #231f20;
-  --destructive: #b4544a;
-  --border: #e5dfd4;
+  --accent-foreground: var(--originlm-graphite);
+  --destructive: var(--originlm-light-danger);
+  --border: var(--originlm-light-border);
   --input: #ddd5c7;
   --ring: #c98a12;
   --chart-1: #c98a12;
-  --chart-2: #557a62;
+  --chart-2: var(--originlm-light-success);
   --chart-3: #4a6b8a;
-  --chart-4: #9a6b14;
+  --chart-4: var(--originlm-light-warning);
   --chart-5: #6e5d87;
   --sidebar: #f3f0e9;
-  --sidebar-foreground: #231f20;
+  --sidebar-foreground: var(--originlm-graphite);
   --sidebar-primary: #b47400;
   --sidebar-primary-foreground: #fff9ef;
   --sidebar-accent: #e7dfd2;
-  --sidebar-accent-foreground: #231f20;
-  --sidebar-border: #e5dfd4;
+  --sidebar-accent-foreground: var(--originlm-graphite);
+  --sidebar-border: var(--originlm-light-border);
   --sidebar-ring: #c98a12;
   --surface-subtle: rgb(35 31 32 / 4%);
   --surface: rgb(35 31 32 / 5%);
@@ -145,9 +146,9 @@
   --accent-surface: rgb(235 163 26 / 12%);
   --accent-strong: rgb(235 163 26 / 20%);
   --seam: var(--border);
-  --text-faint: #6b635c;
-  --success: #557a62;
-  --warning: #9a6b14;
+  --text-faint: var(--originlm-light-muted);
+  --success: var(--originlm-light-success);
+  --warning: var(--originlm-light-warning);
   --info: #4a6b8a;
   --brand-foreground: #9c6400;
   --glow-a: rgb(235 163 26 / 0.22);
@@ -157,36 +158,36 @@
 .dark {
   color-scheme: dark;
   /* Graphite workspace: the desktop shell's dark surfaces. */
-  --background: #1e1a1b;
-  --foreground: #faf9f5;
-  --card: #262122;
-  --card-foreground: #faf9f5;
-  --popover: #2e2829;
-  --popover-foreground: #faf9f5;
-  --primary: #eba31a;
-  --primary-foreground: #231f20;
+  --background: var(--originlm-dark-background);
+  --foreground: var(--originlm-paper);
+  --card: var(--originlm-dark-card);
+  --card-foreground: var(--originlm-paper);
+  --popover: var(--originlm-dark-raised);
+  --popover-foreground: var(--originlm-paper);
+  --primary: var(--originlm-amber);
+  --primary-foreground: var(--originlm-graphite);
   --secondary: #2a2425;
-  --secondary-foreground: #faf9f5;
-  --muted: #2e2829;
-  --muted-foreground: #b0a8a1;
+  --secondary-foreground: var(--originlm-paper);
+  --muted: var(--originlm-dark-raised);
+  --muted-foreground: var(--originlm-dark-muted);
   --accent: #3a3233;
-  --accent-foreground: #faf9f5;
-  --destructive: #e0776b;
-  --border: #3b3334;
+  --accent-foreground: var(--originlm-paper);
+  --destructive: var(--originlm-dark-danger);
+  --border: var(--originlm-dark-border);
   --input: rgb(255 255 255 / 12%);
   --ring: rgb(235 163 26 / 45%);
-  --chart-1: #eba31a;
+  --chart-1: var(--originlm-amber);
   --chart-2: #a9b29f;
   --chart-3: #c2a46b;
   --chart-4: #c97e5a;
   --chart-5: #8e7c6a;
-  --sidebar: #1e1a1b;
-  --sidebar-foreground: #faf9f5;
-  --sidebar-primary: #eba31a;
-  --sidebar-primary-foreground: #231f20;
+  --sidebar: var(--originlm-dark-background);
+  --sidebar-foreground: var(--originlm-paper);
+  --sidebar-primary: var(--originlm-amber);
+  --sidebar-primary-foreground: var(--originlm-graphite);
   --sidebar-accent: #3a3233;
-  --sidebar-accent-foreground: #faf9f5;
-  --sidebar-border: #3b3334;
+  --sidebar-accent-foreground: var(--originlm-paper);
+  --sidebar-border: var(--originlm-dark-border);
   --sidebar-ring: rgb(235 163 26 / 30%);
   --surface-subtle: rgb(250 249 245 / 3%);
   --surface: rgb(250 249 245 / 6%);
@@ -196,11 +197,11 @@
   --accent-surface: rgb(235 163 26 / 16%);
   --accent-strong: rgb(235 163 26 / 24%);
   --seam: var(--border);
-  --text-faint: #b0a8a1;
-  --success: #7cc08f;
-  --warning: #d9a441;
+  --text-faint: var(--originlm-dark-muted);
+  --success: var(--originlm-dark-success);
+  --warning: var(--originlm-dark-warning);
   --info: #a9b29f;
-  --brand-foreground: #eba31a;
+  --brand-foreground: var(--originlm-amber);
   --glow-a: rgb(235 163 26 / 0.20);
   --glow-b: rgb(169 178 159 / 0.12);
 }
