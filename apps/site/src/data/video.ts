@@ -6,5 +6,5 @@ export const PROMO = {
   poster: "/media/originlm-promo-poster.jpg",
   duration: "0:52",
   resolution: "1920×1080",
-  size: "—",
+  size: "5.9 MB",
 };

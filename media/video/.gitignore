@@ -8,3 +8,7 @@ onion.png
 *.wav
 !media/*.wav
 test_render/
+
+originlm-promo/out/
+originlm-promo/frames/
+originlm-promo/strip.png

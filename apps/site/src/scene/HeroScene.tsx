@@ -362,7 +362,7 @@ function GlassLayer({
         if (event.pointerType === "mouse") onHover(null);
       }}
     >
-      <RoundedPanel args={[shape.width, shape.height, shape.depth]} radius={0.11}>
+      <RoundedPanel args={[shape.width, shape.height, shape.depth]} radius={0.11} edgeColor={isHovered ? "#f7bd4b" : "#a8896f"} edgeOpacity={isHovered ? 0.95 : 0.5}>
         <meshPhysicalMaterial
           color={brand.sceneGlass}
           metalness={0.8}

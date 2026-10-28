@@ -4,12 +4,15 @@ import { LAYERS, type Layer } from "../data/layers";
 
 const HeroScene = lazy(() => import("../scene/HeroScene"));
 
-function supportsWebGL() {
+function supportsWebGL(allowSoftware: boolean) {
   try {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("webgl2");
-    context?.getExtension("WEBGL_lose_context")?.loseContext();
-    return Boolean(context);
+    if (!context) return false;
+    const debug = context.getExtension("WEBGL_debug_renderer_info");
+    const renderer = debug ? String(context.getParameter(debug.UNMASKED_RENDERER_WEBGL)) : "";
+    context.getExtension("WEBGL_lose_context")?.loseContext();
+    return allowSoftware || !/swiftshader|llvmpipe|software|basic render/i.test(renderer);
   } catch {
     return false;
   }
@@ -49,7 +52,8 @@ export function HeroStage() {
 
   useEffect(() => {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (!supportsWebGL()) {
+    const force3d = new URLSearchParams(window.location.search).has("3d");
+    if (!supportsWebGL(force3d)) {
       setStaticMode(true);
       return;
     }

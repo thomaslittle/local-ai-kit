@@ -18,7 +18,7 @@ const targets = [
 
 for (const [width, height, label, scale] of [[1440, 960, "desktop", 1], [390, 844, "mobile", 2]]) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale, colorScheme: "dark", isMobile: width < 600, hasTouch: width < 600 });
-  await page.goto("http://127.0.0.1:5174/", { waitUntil: "networkidle" });
+  await page.goto("http://127.0.0.1:5174/?3d", { waitUntil: "networkidle" });
   await page.waitForTimeout(2200);
   await page.evaluate(async () => {
     for (let y = 0; y < document.body.scrollHeight; y += window.innerHeight * 0.8) {

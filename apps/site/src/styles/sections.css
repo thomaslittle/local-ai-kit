@@ -1415,7 +1415,8 @@
 }
 
 .op[data-state="none"] {
-  opacity: 0.52;
+  color: #9b938c;
+  border-color: rgb(250 249 245 / 10%);
 }
 
 .provider-card details {
@@ -1885,7 +1886,7 @@
 
 .video-chapters {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: 1.25rem;
 }
@@ -2070,7 +2071,13 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1080px) {
+  .video-chapters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
   .video-chapters {
     grid-template-columns: 1fr;
   }
