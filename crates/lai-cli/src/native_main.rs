@@ -11,6 +11,8 @@ use std::{io::Read, time::Duration};
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Registration {
     allowed_origins: Vec<String>,
+    #[serde(default)]
+    allowed_extensions: Vec<String>,
     args: Vec<String>,
 }
 fn denied() -> DomainError {
@@ -22,7 +24,7 @@ fn denied() -> DomainError {
 fn run() -> Result<()> {
     let mut input = std::env::args().skip(1);
     let origin = input.next().ok_or_else(denied)?;
-    if !lai_transports::native_messaging::valid_origin(&origin)
+    if !lai_transports::native_messaging::valid_caller(&origin)
         || input.any(|v| {
             !v.strip_prefix("--parent-window=")
                 .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
@@ -42,8 +44,9 @@ fn run() -> Result<()> {
         return Err(denied());
     }
     let config: Registration = serde_json::from_slice(&bytes).map_err(|_| denied())?;
-    if !config.allowed_origins.iter().any(|o| o == &origin)
-        || config.allowed_origins.len() > 32
+    if !(config.allowed_origins.iter().any(|o| o == &origin)
+        || config.allowed_extensions.iter().any(|e| e == &origin))
+        || config.allowed_origins.len() + config.allowed_extensions.len() > 32
         || config.args.len() > 128
     {
         return Err(denied());
@@ -109,13 +112,19 @@ fn run() -> Result<()> {
         .enable_all()
         .build()
         .map_err(|_| denied())?;
+    let allowed: Vec<String> = config
+        .allowed_origins
+        .iter()
+        .chain(config.allowed_extensions.iter())
+        .cloned()
+        .collect();
     let result = runtime.block_on(lai_transports::native_messaging::serve_native(
         tokio::io::stdin(),
         tokio::io::stdout(),
         service,
         client,
         &origin,
-        &config.allowed_origins,
+        &allowed,
     ));
     runtime.shutdown_timeout(Duration::from_millis(100));
     result

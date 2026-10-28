@@ -4030,6 +4030,7 @@ dependencies = [
  "lai-adapters",
  "lai-chatgpt-auth",
  "lai-contracts",
+ "lai-control",
  "lai-core",
  "lai-discovery",
  "lai-kit",

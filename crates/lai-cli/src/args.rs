@@ -5,11 +5,13 @@ pub enum Action {
     Help,
     Version,
     Scan,
+    Status,
     Serve,
     Connect,
 }
 pub struct Args {
     pub action: Action,
+    pub json: bool,
     pub home: Option<PathBuf>,
     pub endpoints: Option<PathBuf>,
     pub native_profiles: Option<PathBuf>,
@@ -71,11 +73,13 @@ impl Args {
             Some("--help" | "-h") => Action::Help,
             Some("--version" | "-V") => Action::Version,
             Some("scan") => Action::Scan,
+            Some("status") => Action::Status,
             Some("serve") => Action::Serve,
             _ => return Err(invalid()),
         };
         let mut args = Self {
             action,
+            json: false,
             home: None,
             endpoints: None,
             native_profiles: None,
@@ -122,7 +126,7 @@ impl Args {
                 return Err(invalid());
             }
             match flag {
-                "--json" if matches!(args.action, Action::Scan) => json = true,
+                "--json" if matches!(args.action, Action::Scan | Action::Status) => json = true,
                 "--home" if matches!(args.action, Action::Scan | Action::Serve) => {
                     args.home = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
@@ -152,7 +156,7 @@ impl Args {
                 }
                 "--stdio" if matches!(args.action, Action::Serve) => stdio = true,
                 "--http" if matches!(args.action, Action::Serve) => args.http = true,
-                "--ipc" if matches!(args.action, Action::Serve) => {
+                "--ipc" if matches!(args.action, Action::Serve | Action::Status) => {
                     args.ipc = Some(
                         input
                             .next()
@@ -161,7 +165,7 @@ impl Args {
                     )
                 }
                 "--independent" if matches!(args.action, Action::Serve) => args.independent = true,
-                "--token-file" if matches!(args.action, Action::Serve) => {
+                "--token-file" if matches!(args.action, Action::Serve | Action::Status) => {
                     args.token_file = Some(absolute(input.next().ok_or_else(invalid)?)?)
                 }
                 "--admin-token-file" if matches!(args.action, Action::Serve) => {
@@ -291,6 +295,7 @@ impl Args {
         {
             return Err(invalid());
         }
+        args.json = json;
         if args.allow_codex_metadata {
             args.metadata_providers.insert("codex".into());
         }
@@ -321,6 +326,22 @@ impl Args {
             && (!args.http || !args.allow_passive || args.metadata_providers.is_empty())
         {
             return Err(invalid());
+        }
+        if matches!(args.action, Action::Status) {
+            // Status only reads an existing broker; it never configures one.
+            if stdio
+                || args.http
+                || args.independent
+                || args.allow_execution
+                || args.workspace.is_some()
+                || args.grants_file.is_some()
+                || args.admin_token_file.is_some()
+                || args.warm_metadata
+                || args.os_notifications
+            {
+                return Err(invalid());
+            }
+            return Ok(args);
         }
         if (!args.http && (args.assets.is_some() || seen.contains("--port")))
             || (native_execution
