@@ -26,7 +26,7 @@ export const LAYERS: Layer[] = [
     id: "transport",
     label: "Transport",
     title: "Local transport only",
-    detail: "stdio for native helpers, IPC for embedded hosts, Native Messaging for browser extensions.",
+    detail: "stdio for owned helpers, IPC for the shared broker, Native Messaging for registered extensions.",
     meta: "stdio, IPC, Native Messaging",
   },
   {

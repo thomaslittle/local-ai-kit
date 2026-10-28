@@ -57,43 +57,19 @@ function DiscoverVisual() {
 
 function GrantVisual() {
   return (
-    <div className="grant-card" aria-hidden="true">
-      <div className="grant-head">
-        <span className="app-icon" aria-hidden="true">E</span>
-        <div>
-          <strong>Example Studio</strong>
-          <small>Illustrative permission request</small>
-        </div>
-      </div>
-      <div className="grant-list">
-        {[
-          ["Usage and quota snapshot", false],
-          ["Model catalog", false],
-          ["Run sessions", false],
-          ["Workspace ~/Projects/example", true],
-        ].map(([label, off]) => (
-          <div className="grant-item" key={String(label)} data-off={off}>
-            <span>{label}</span>
-            <span className="toggle" />
-          </div>
-        ))}
-      </div>
-    </div>
+    <figure className="shot shot--panel" data-slot="runtime" data-kind="product">
+      <img src="/screens/control-center-diagnostics.webp" width={2880} height={2000} loading="lazy"
+        alt="OriginLM Diagnostics in example mode, showing runtime and grant evidence. This is not an approval prompt." />
+    </figure>
   );
 }
 
 function SessionVisual() {
   return (
-    <div className="session-card" aria-hidden="true">
-      <div className="session-line"><span>route</span><code>claude-code/subscription</code></div>
-      <div className="session-line"><span>model</span><code>native-id@7f2c</code></div>
-      <div className="session-line"><span>workspace</span><code>~/Projects/example</code></div>
-      <div className="session-stream">
-        <span>session ready, grant verified</span>
-        <span>turn started, owned cancellation</span>
-        <span>native approval requested once</span>
-      </div>
-    </div>
+    <figure className="shot shot--panel" data-slot="playground" data-kind="product">
+      <img src="/screens/control-center-playground.webp" width={2880} height={2000} loading="lazy"
+        alt="The real OriginLM Playground in example mode, ready for explicit route selection and a gated turn. No provider request has run." />
+    </figure>
   );
 }
 

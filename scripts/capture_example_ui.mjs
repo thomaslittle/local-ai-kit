@@ -37,6 +37,14 @@ try {
       await page.setViewportSize({ width: 1440, height: 1000 });
     }
   }
+  for (const route of ['diagnostics', 'playground']) {
+    await open(route);
+    if (route === 'diagnostics') await page.getByRole('button', { name: 'Refresh diagnostics', exact: true }).click();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const file = resolve(scratch, `${route}.png`);
+    await page.screenshot({ path: file });
+    encode(file, resolve(root, `apps/site/public/screens/control-center-${route}.webp`));
+  }
   await open('connections');
   const connections = resolve(scratch, 'connections.png');
   await page.screenshot({ path: connections }); encode(connections, resolve(root, 'apps/site/public/screens/control-center-connections.webp'));
