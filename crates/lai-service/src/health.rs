@@ -317,27 +317,30 @@ pub fn derive_issues(
                 .values()
                 .any(|issue| issue.connection_id.as_deref() == Some(&connection.id))
         {
+            // Only unknown, unavailable or unchecked auth reaches this branch;
+            // reported sign-outs are handled above. Do not claim the user has
+            // to sign in when the provider never told us either way.
             let issue = observed_issue(
                 IssueKind::AuthRequired,
-                IssueSeverity::Warning,
+                IssueSeverity::Info,
                 &connection.id,
-                "Sign-in required",
+                "Sign-in not checked",
                 format!(
-                    "{} needs an explicit sign-in before it can be used.",
+                    "{} has not reported a signed-in account yet, so OriginLM cannot confirm the session.",
                     connection.display_name
                 ),
                 Some(connection),
                 route,
                 vec![evidence_from(
                     &connection.auth,
-                    "AUTH_REQUIRED",
-                    "Connection is not authenticated",
+                    "AUTH_NOT_CHECKED",
+                    "Provider did not report an auth state",
                 )],
                 vec![remediation(
-                    RemediationKind::SignIn,
-                    "Sign in",
-                    "Sign in through the installed client.",
-                    true,
+                    RemediationKind::Refresh,
+                    "Check again",
+                    "Read the client's metadata again. Signing in is only needed if the client itself asks for it.",
+                    false,
                 )],
             );
             observed.insert(issue.id.clone(), merge(previous.get(&issue.id), issue));

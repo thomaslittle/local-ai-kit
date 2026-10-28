@@ -379,3 +379,27 @@ verifies that a reported v2 executable never starts that server. Existing
 fake gateway catalog and loopback reply tests remain green. Full OpenCode 2
 communication is a separate adapter follow-up; this guard does not claim
 that support. No upstream implementation was copied for this checkpoint.
+
+## October 27 Cursor CLI metadata and opt-in allowances
+
+Cursor moved from the cache-only reader to the installed `cursor-agent` CLI:
+`status` for the signed-in session, `about` for the subscription tier,
+`models` for the provider-native catalog, and `--version` for client evidence.
+The cache reader remains the fallback when the CLI is missing or does not
+confirm a session; it never turns into a sign-out claim.
+
+The CLI exposes no allowance percentages. `--allow-usage cursor` is a new,
+separate grant (it requires `--allow-metadata cursor`) that reads the session
+token Cursor already stores in `User/globalStorage/state.vscdb` into a zeroizing
+buffer, calls only `DashboardService/GetCurrentPeriodUsage` and `GetPlanInfo`,
+and never logs, serializes, exports or writes the token. Evidence kind is
+`community_endpoint` because the dashboard service is undocumented; values are
+Cursor-reported, not inferred. Cursor is still excluded from Playground and
+execution.
+
+Verified on this host against Cursor CLI 2026.10.22-27dcf5f and a Premium
+account: authenticated (reported), plan Premium, 270 native models, one
+"Included usage" window at 27.67% used with the reported reset. Unit tests cover
+the login/model/tier parsers and percent mapping; the cache-reader tests are
+unchanged. The dashboard request shape is fixture-shaped here, not qualified on
+other plans or regions. No inference, account change, or token export occurred.

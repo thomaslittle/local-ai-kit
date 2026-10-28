@@ -5,11 +5,11 @@ import { EmptyState } from '@/components/common/empty-state';
 import { DEFAULT_PATH, PAGES } from '@/lib/pages';
 import { SelectorsPage } from '@/pages/selectors/selectors-page';
 
-const title = (page: string) => ({ meta: [{ title: `${page} · Local AI Kit` }] });
+const title = (page: string) => ({ meta: [{ title: `${page} · OriginLM` }] });
 
 const rootRoute = createRootRoute({
   component: AppShell,
-  head: () => ({ meta: [{ title: 'Local AI Kit — Developer Showcase' }] }),
+  head: () => ({ meta: [{ title: 'OriginLM — Developer Showcase' }] }),
   notFoundComponent: () => (
     <EmptyState icon={CompassIcon} title="Page not found" description="That address is not part of the showcase. Use the sidebar to pick a page." />
   ),
