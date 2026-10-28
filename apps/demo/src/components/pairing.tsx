@@ -57,7 +57,7 @@ export function Pairing({ onPaired, onExampleData }: { onPaired: (client: LocalA
           <span className="mb-2 grid size-11 place-items-center rounded-xl bg-primary/10 text-brand-foreground ring-1 ring-primary/25">
             <KeyIcon className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-[0.65rem] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Local AI Kit</span>
+          <span className="text-[0.65rem] font-semibold tracking-[0.2em] text-muted-foreground uppercase">OriginLM</span>
           <h1 data-slot="card-title" className="text-2xl font-semibold tracking-tight">
             Connect your local runtime
           </h1>

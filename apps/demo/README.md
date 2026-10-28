@@ -1,6 +1,6 @@
-# Developer showcase
+# OriginLM · Developer showcase
 
-A React application that consumes only the public TypeScript SDK and the selector core. By default it pairs with the native helper and shows what is actually detected on your machine; clearly labeled example data is only a fallback when no runtime is paired. The app itself never reads a credential, keyring, or provider client; all of that stays in the native helper.
+The OriginLM React application that consumes only the public TypeScript SDK and the selector core. By default it pairs with the native helper and shows what is actually detected on your machine; clearly labeled example data is only a fallback when no runtime is paired. The app itself never reads a credential, keyring, or provider client; all of that stays in the native helper.
 
 ## Run it
 
@@ -16,6 +16,14 @@ It starts the **native helper**, so the demo shows what is actually detected on 
 **Real data first, labeled example data as the fallback.** With a paired runtime everything on screen is real. If no native runtime is reachable, or you choose **Explore example data** on the pairing screen, the demo shows clearly labeled synthetic data ("Synthetic showcase" banner) with a **Pair a runtime** button back to the real thing. Example data is never mixed with real results, and a failed explicit connection clears it.
 
 For tests and scripted scenarios only, `node apps/demo/server.mjs --fixture` serves the built UI with a loopback fixture service (`/#demo-fixture&staleAuth=1&...`).
+
+## Brand
+
+The shell uses the OriginLM treatment: the app icon (graphite symbol on the
+amber `#EBA31A` tile) in the sidebar header, the graphite/amber/off-white palette
+in both themes, and Red Hat Display (variable TTF, OFL 1.1) as the interface
+face. Sources and licences: `src/assets/brand/README.md` and
+`src/assets/fonts/README.md`.
 
 ## Stack
 
