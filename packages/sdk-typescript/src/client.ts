@@ -61,9 +61,11 @@ export interface CreateLocalAIOptions {
   signal?: AbortSignal;
 }
 async function autoTransport(options: CreateLocalAIOptions): Promise<Transport> {
-  if (typeof (globalThis as { process?: unknown }).process === 'undefined') throw new LocalAIError('TRANSPORT_REQUIRED');
-  // @ts-expect-error The Node entry is plain ESM with no build-time types.
-  const auto = (await import('../node/auto.mjs')) as {
+  const node = (globalThis as { process?: { versions?: { node?: string } } }).process;
+  if (!node?.versions?.node) throw new LocalAIError('TRANSPORT_REQUIRED');
+  // Resolved at runtime so a browser bundle never pulls in the Node entry.
+  const entry = new URL('../node/auto.mjs', import.meta.url).href;
+  const auto = (await import(/* @vite-ignore */ entry)) as {
     openAutoTransport: (options: AutoTransportOptions) => Promise<Transport>;
   };
   return auto.openAutoTransport(options.auto ?? {});
