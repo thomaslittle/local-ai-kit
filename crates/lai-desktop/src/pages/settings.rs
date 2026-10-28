@@ -12,7 +12,7 @@ use gpui_kit::*;
 impl Desktop {
     pub fn page_settings(&mut self, cx: &mut Context<Self>) -> AnyElement {
         let theme = cx.theme().clone();
-        let address = std::fs::read(&self.token_path)
+        let address = lai_platform::read_private_file(&self.token_path, 16 * 1024)
             .ok()
             .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
             .and_then(|value| {
@@ -85,7 +85,7 @@ impl Desktop {
                         div()
                             .text_size(px(10.))
                             .text_color(theme.muted_foreground)
-                            .child("Motion uses the component library's tokens and follows the system's reduced-motion setting."),
+                            .child("Appearance preferences apply to this app."),
                     ),
             )
             .child(

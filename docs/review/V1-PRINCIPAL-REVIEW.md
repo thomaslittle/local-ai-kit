@@ -161,7 +161,7 @@ plus one byte, and close handles on every path. Unix opens reject links and avoi
 blocking on swapped FIFOs. Windows checks regular-file identity/reparse semantics;
 ACL ownership is not claimed. Helper resolution also checks Unix execute permission
 and never ignores an invalid Rust environment override. Regression cases authored;
-Phase F execution pending.
+Native Settings now uses the same bounded descriptor reader; it no longer reads an arbitrary-size credential file during rendering. Phase F execution pending.
 
 ### V1-019 (P2): documentation and marketing drift
 
@@ -171,7 +171,7 @@ architecture, source/local-package quickstarts, user dashboard guide, troublesho
 privacy and explicit extension/pairing limits. Native Snapshot/error types are exported
 from the dependency-first facade so consumers do not need a second contract dependency.
 Python preview version aligns with alpha.20. All snippets remain pending Phase F execution;
-Tauri/Electron/GPUI integration fragments are labeled as integrations into existing apps.
+Tauri/Electron/GPUI integration fragments are labeled as integrations into existing apps. Removed unsupported competitor generalizations, universal provider coverage and an unimplemented generated-privacy claim. Grant-request examples now explicitly identify the host-approval response.
 
 ### V1-020 (P2): status conflated connection failure with denied grants
 
