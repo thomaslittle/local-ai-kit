@@ -33,15 +33,14 @@ impl Journal {
         Ok(())
     }
     pub fn read(&self, session: Option<&str>, after: Option<u64>) -> Result<Value> {
-        if let Some(after) = after {
-            if after > self.sequence
+        if let Some(after) = after
+            && (after > self.sequence
                 || self.records.front().is_some_and(|(e, _)| {
                     after.saturating_add(1) < e.sequence.parse::<u64>().unwrap_or(0)
-                })
+                }))
             {
                 return Err(err(ErrorCode::EventGap));
             }
-        }
         let mut events = Vec::new();
         let mut bytes = 0;
         let mut cursor = after.unwrap_or_else(|| {

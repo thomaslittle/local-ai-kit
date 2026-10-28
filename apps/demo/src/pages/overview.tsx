@@ -78,7 +78,7 @@ export default function OverviewPage() {
       <section aria-labelledby="allowances-title">
         <div className="mb-4 flex items-baseline justify-between gap-4">
           <h2 id="allowances-title" className="text-xl font-semibold">Usage and allowances</h2>
-          <Link to="/usage" className="text-sm underline underline-offset-4">All usage details</Link>
+          <Link to="/usage" className="text-sm underline underline-offset-4">Usage details</Link>
         </div>
         {windows.length ? (
           <ul className="grid gap-x-6 border-t sm:grid-cols-2">

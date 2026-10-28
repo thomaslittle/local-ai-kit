@@ -87,13 +87,12 @@ impl MetadataWatcher {
                                 .file_name()
                                 .and_then(|n| n.to_str())
                                 .map(str::to_ascii_lowercase);
-                            if name.as_deref().is_some_and(|n| NAMES.contains(&n)) {
-                                if let Some((_, connections)) =
+                            if name.as_deref().is_some_and(|n| NAMES.contains(&n))
+                                && let Some((_, connections)) =
                                     path.parent().and_then(|p| callback_targets.get(&key(p)))
                                 {
                                     ids.extend(connections.iter().cloned());
                                 }
-                            }
                         }
                     }
                     Err(_) => {

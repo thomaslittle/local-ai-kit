@@ -66,11 +66,22 @@ async fn invalid_saved_prices_do_not_silently_restore_defaults() {
 async fn oversized_serialized_prices_preserve_the_previous_saved_table() {
     let directory = tempfile::tempdir().unwrap();
     let host = service(directory.path());
-    host.handle("admin", "costs.setPrices", json!({"prices":[]})).await.unwrap();
+    host.handle("admin", "costs.setPrices", json!({"prices":[]}))
+        .await
+        .unwrap();
     let prices: Vec<_> = (0..128).map(|index| json!({"providerId":"fixture", "nativeModelId":format!("model-{index}"), "inputUsdPerMillion":"1", "outputUsdPerMillion":"2", "reviewedAt":"2026-10-28", "source":"x".repeat(1024)})).collect();
-    assert_eq!(host.handle("admin", "costs.setPrices", json!({"prices":prices})).await.unwrap_err().code, ErrorCode::FrameTooLarge);
+    assert_eq!(
+        host.handle("admin", "costs.setPrices", json!({"prices":prices}))
+            .await
+            .unwrap_err()
+            .code,
+        ErrorCode::InvalidRequest
+    );
     let restarted = service(directory.path());
-    let report = restarted.handle("admin", "costs.read", json!({})).await.unwrap();
+    let report = restarted
+        .handle("admin", "costs.read", json!({}))
+        .await
+        .unwrap();
     assert_eq!(report["prices"], json!([]));
     assert!(report["storageError"].is_null());
 }

@@ -115,11 +115,10 @@ fn load_grants(path: &Path) -> Result<GrantsFile> {
         if !app.token_file.is_absolute() || !token_files.insert(app.token_file.clone()) {
             return Err(invalid("Grant token files must be absolute and unique"));
         }
-        if let Some(connections) = &app.connection_ids {
-            if connections.len() > 64 || !connections.iter().all(|id| valid_scope_id(id)) {
+        if let Some(connections) = &app.connection_ids
+            && (connections.len() > 64 || !connections.iter().all(|id| valid_scope_id(id))) {
                 return Err(invalid("Grant connection ids are invalid"));
             }
-        }
         if app.probe_connection_ids.len() > 64
             || app.probe_provider_ids.len() > 64
             || !app
@@ -197,13 +196,12 @@ fn grant_paths(
     {
         return Err(invalid("Broker token files must be absolute and unique"));
     }
-    if let Some(grants_file) = grants_file {
-        if unique.contains(grants_file) {
+    if let Some(grants_file) = grants_file
+        && unique.contains(grants_file) {
             return Err(invalid(
                 "A broker token file cannot overwrite the grant file",
             ));
         }
-    }
     Ok(paths)
 }
 

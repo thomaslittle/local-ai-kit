@@ -104,8 +104,8 @@ pub fn parse_metadata(
                 ],
             );
             let mut options = vec![];
-            if entry["supportsEffort"] == true {
-                if let Some(levels) = entry["supportedEffortLevels"].as_array() {
+            if entry["supportsEffort"] == true
+                && let Some(levels) = entry["supportedEffortLevels"].as_array() {
                     if levels.len() > 64 {
                         return Err(invalid());
                     }
@@ -142,7 +142,6 @@ pub fn parse_metadata(
                         });
                     }
                 }
-            }
             report.models.push(Model {
                 id: route_model_key(route, id),
                 route_id: route.into(),

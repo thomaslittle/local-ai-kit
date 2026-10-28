@@ -74,11 +74,9 @@ impl HostTools {
                 if let Some(tool) = name
                     .strip_prefix(server.as_str())
                     .and_then(|tail| tail.strip_prefix(separator))
-                {
-                    if tools.contains(tool) {
+                    && tools.contains(tool) {
                         return Some(format!("mcp__{server}__{tool}"));
                     }
-                }
             }
         }
         let mut owners = self

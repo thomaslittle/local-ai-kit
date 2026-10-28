@@ -11,7 +11,7 @@ mod theme;
 mod ui;
 
 use app::Desktop;
-use gpui_kit::component::{TitleBar};
+use gpui_kit::component::TitleBar;
 use gpui_kit::*;
 use std::{borrow::Cow, path::PathBuf, sync::Arc};
 

@@ -197,8 +197,8 @@ impl<F: LocalFilesystem> Scanner<F> {
                 kind: "local_client".into(),
             });
             let mut roots = definition.roots(env);
-            if !definition.has_override(env) {
-                if let Some(prefix) = definition.profile_prefix {
+            if !definition.has_override(env)
+                && let Some(prefix) = definition.profile_prefix {
                     roots.extend(
                         extra
                             .iter()
@@ -209,7 +209,6 @@ impl<F: LocalFilesystem> Scanner<F> {
                             .cloned(),
                     );
                 }
-            }
             let default_root = roots.first().cloned();
             roots.sort();
             roots.dedup();

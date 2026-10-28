@@ -434,11 +434,10 @@ impl Runtime {
             Err(error) => {
                 // The provider may already have suspended before failing. Keep this
                 // session unusable; never continue an uncertain native conversation.
-                if let Ok(mut state) = cell.state.lock() {
-                    if state.view.state != SessionState::Closed {
+                if let Ok(mut state) = cell.state.lock()
+                    && state.view.state != SessionState::Closed {
                         state.view.state = SessionState::Error;
                     }
-                }
                 Err(error)
             }
         }
@@ -528,11 +527,10 @@ impl Runtime {
                     return true;
                 }
                 cell.active.store(false, Ordering::Release);
-                if let Ok(state) = cell.state.lock() {
-                    if let Some(cancel) = &state.cancel {
+                if let Ok(state) = cell.state.lock()
+                    && let Some(cancel) = &state.cancel {
                         cancel.send_replace(true);
                     }
-                }
                 let cell = cell.clone();
                 if let Ok(handle) = tokio::runtime::Handle::try_current() {
                     handle.spawn(async move {

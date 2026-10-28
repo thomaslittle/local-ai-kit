@@ -86,8 +86,8 @@ pub fn parse_metadata(
             scopes: vec![],
         });
     }
-    if kind == "chatgpt" {
-        if let Some(plan) = text(&account["planType"]).filter(|plan| *plan != "unknown") {
+    if kind == "chatgpt"
+        && let Some(plan) = text(&account["planType"]).filter(|plan| *plan != "unknown") {
             report.plan = Observation::reported(
                 Plan {
                     native_id: plan.into(),
@@ -96,7 +96,6 @@ pub fn parse_metadata(
                 source.clone(),
             );
         }
-    }
     report.models = models::parse_models(route, &identity, native_models, &source)?;
     if let Some(rates) = rate_limits {
         report.quota_pools = usage::parse_usage(

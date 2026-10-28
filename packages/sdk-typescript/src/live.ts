@@ -84,6 +84,8 @@ export function createLiveSnapshotStore(
     }
   };
 
+  // Preserve the base method before extending this same object.
+  const disposeSnapshot = store.dispose.bind(store);
   return Object.assign(store, {
     connect() {
       if (started || disposed) return () => {};
@@ -107,7 +109,7 @@ export function createLiveSnapshotStore(
       pending = undefined;
       controller?.abort();
       controller = undefined;
-      store.dispose();
+      disposeSnapshot();
     },
   });
 }

@@ -134,8 +134,8 @@ pub fn poll(
         } else {
             NotificationReason::NewIssue
         };
-        if let Some(store) = store {
-            if store
+        if let Some(store) = store
+            && store
                 .record_notification(&issue.id, &key, severity_label(issue.severity), now_ms)
                 .is_err()
             {
@@ -149,7 +149,6 @@ pub fn poll(
                 ));
                 continue;
             }
-        }
         decisions.push(decision(issue, true, reason, preferences));
     }
     decisions.truncate(64);

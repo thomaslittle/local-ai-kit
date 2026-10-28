@@ -76,8 +76,8 @@ pub(super) fn parse_usage(
         // only when Codex includes `individualLimit`. Reimplemented from T3 Code
         // `codexRateLimitsToWindows` at
         // [4c18faf62c](https://github.com/pingdotgg/t3code/commit/4c18faf62c).
-        if native_id == "codex" || fallback == "codex" {
-            if let Some(used) = individual_credit_used_percent(bucket.get("individualLimit")) {
+        if (native_id == "codex" || fallback == "codex")
+            && let Some(used) = individual_credit_used_percent(bucket.get("individualLimit")) {
                 let reading = UsageReading::try_from(UsageInput {
                     unit: "percent".into(),
                     used: DecimalString::try_from(used).map_err(|_| invalid())?,
@@ -96,7 +96,6 @@ pub(super) fn parse_usage(
                     duration_seconds: None,
                 });
             }
-        }
         // Percent windows are not token estimates. Credits and spend controls need their own units.
         pools.push(QuotaPool {
             id: pool_id,

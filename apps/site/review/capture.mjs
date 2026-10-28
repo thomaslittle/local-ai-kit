@@ -13,7 +13,7 @@ const candidates = [
 ];
 const executablePath = candidates.find((path) => existsSync(path));
 
-const base = process.env.SITE_URL ?? "http://127.0.0.1:5174/";
+const base = process.env.SITE_URL ?? "http://127.0.0.1:5177/";
 const desktopBase = base + (base.includes("?") ? "&" : "?") + "3d";
 
 const browser = await chromium.launch({

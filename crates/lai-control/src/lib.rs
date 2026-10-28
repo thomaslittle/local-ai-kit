@@ -28,7 +28,11 @@ impl BrokerClient {
             .map_err(|_| "Runtime unavailable".to_owned())?;
         let stream = runtime
             .block_on(async {
-                tokio::time::timeout(Duration::from_secs(2), lai_transports::local_ipc::connect(address)).await
+                tokio::time::timeout(
+                    Duration::from_secs(2),
+                    lai_transports::local_ipc::connect(address),
+                )
+                .await
             })
             .map_err(|_| "Broker connection timed out".to_owned())?
             .map_err(|error| error.to_string())?;
@@ -53,8 +57,9 @@ impl BrokerClient {
         path: &Path,
         expected_address: Option<&str>,
     ) -> std::result::Result<Self, String> {
-        let bytes = lai_platform::read_private_file(path, 16 * 1024)
-            .map_err(|_| "Token file must be a readable, bounded owner-only regular file".to_owned())?;
+        let bytes = lai_platform::read_private_file(path, 16 * 1024).map_err(|_| {
+            "Token file must be a readable, bounded owner-only regular file".to_owned()
+        })?;
         let descriptor: Value =
             serde_json::from_slice(&bytes).map_err(|_| "Token file is malformed".to_owned())?;
         let address = descriptor["address"]
@@ -72,7 +77,13 @@ impl BrokerClient {
     pub fn call(&mut self, method: &str, params: Value) -> std::result::Result<Value, String> {
         self.call_typed(method, params).map_err(|error| {
             let code = serde_json::to_value(&error.code).ok();
-            format!("{}: {}", code.as_ref().and_then(Value::as_str).unwrap_or("PROVIDER_UNAVAILABLE"), error.message)
+            format!(
+                "{}: {}",
+                code.as_ref()
+                    .and_then(Value::as_str)
+                    .unwrap_or("PROVIDER_UNAVAILABLE"),
+                error.message
+            )
         })
     }
 
@@ -81,10 +92,9 @@ impl BrokerClient {
         self.sequence = self.sequence.saturating_add(1);
         let id = self.sequence;
         let frame = json!({"jsonrpc":"2.0","id":id,"method":method,"params":params});
-        let stream = self
-            .stream
-            .as_mut()
-            .ok_or_else(|| DomainError::new(ErrorCode::ProviderUnavailable, "Control center is closed"))?;
+        let stream = self.stream.as_mut().ok_or_else(|| {
+            DomainError::new(ErrorCode::ProviderUnavailable, "Control center is closed")
+        })?;
         let mut complete_reply = false;
         let result = self.runtime.block_on(async {
             tokio::time::timeout(Duration::from_secs(30), async {

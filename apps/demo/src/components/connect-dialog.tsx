@@ -30,7 +30,7 @@ export default function ConnectDialog() {
               Connect local runtime
             </DialogTitle>
             <DialogDescription>
-              Connect only to a runtime you started and explicitly authorized. Use an app-session token—not an AI provider key.
+              Connect only to a runtime you started and explicitly authorized. Use an app-session token, never an AI provider key.
             </DialogDescription>
           </DialogHeader>
           <FieldGroup>

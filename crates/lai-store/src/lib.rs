@@ -591,8 +591,8 @@ impl StateStore {
                     .optional()
                     .map_err(classify)?
                     .and_then(|payload| serde_json::from_str::<Issue>(&payload).ok());
-                if let Some(issue) = issue.as_mut() {
-                    if issue.state != IssueState::Resolved {
+                if let Some(issue) = issue.as_mut()
+                    && issue.state != IssueState::Resolved {
                         issue.state = IssueState::Resolved;
                         issue.resolved_at = Some(Timestamp::now());
                         if let Ok(payload) = serde_json::to_string(issue) {
@@ -602,7 +602,6 @@ impl StateStore {
                             );
                         }
                     }
-                }
             }
         }
         transaction.commit().map_err(classify)?;

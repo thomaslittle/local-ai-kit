@@ -47,7 +47,13 @@ fn zero_price_is_explicit_and_oversized_results_are_unknown() {
 
 #[test]
 fn provider_cost_numbers_normalize_small_values_without_unbounded_expansion() {
-    for (json, expected) in [("1e-7", Some("0.0000001")), ("0", Some("0")), ("-0.1", None), ("1e-200", None), ("1e200", None)] {
+    for (json, expected) in [
+        ("1e-7", Some("0.0000001")),
+        ("0", Some("0")),
+        ("-0.1", None),
+        ("1e-200", None),
+        ("1e200", None),
+    ] {
         let number: serde_json::Number = serde_json::from_str(json).unwrap();
         let actual = lai_contracts::DecimalString::from_json_number(&number);
         assert_eq!(actual.as_ref().map(|value| value.as_str()), expected);

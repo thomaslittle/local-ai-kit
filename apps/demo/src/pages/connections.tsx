@@ -159,7 +159,7 @@ function ProfileMetadata() {
         <div role="status" aria-live="polite" className="mb-4 grid gap-2">
           <p className="text-sm">{`${batch.completed} of ${batch.total} profiles checked`}</p>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${(batch.completed / batch.total) * 100}%` }} />
+            <div className="h-full rounded-full bg-primary transition-none duration-500" style={{ width: `${(batch.completed / batch.total) * 100}%` }} />
           </div>
         </div>
       ) : null}

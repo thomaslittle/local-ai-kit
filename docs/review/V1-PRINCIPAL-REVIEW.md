@@ -274,8 +274,9 @@ are no longer repeatedly renamed. Focused builds pass; fixture execution is pend
 
 The fresh reviewer identified that Python auto startup applied caller env/cwd only
 to its bridge, not the private broker that performs discovery. It also found that
-valid price rows could serialize past the reader's 128 KiB limit, producing an
-unreadable table after restart. Implemented one validated process environment
+a possible writer/reader size mismatch. The final test established that the existing
+64 KiB request limit already rejects such a table before saving; the additional
+128 KiB serialized-write guard preserves the reader boundary if request limits evolve. Implemented one validated process environment
 for both Python children, and serialization-size validation before changing prices.
 Regressions authored; final execution pending.
 
@@ -295,3 +296,24 @@ Activation now reads persisted versions under its lock, records the highest veri
 version durably before replacement, and refuses malformed state. Explicit rollback
 retains the floor. ADR-008 describes the conservative crash behavior. Signed
 sequential-activation and corrupt-state regressions authored; execution pending.
+
+### V1-033 (P1): live-store disposal recursively called its own override
+
+The final lifecycle regressions exposed that `Object.assign(store, …)` replaced
+`store.dispose`, and the extension then called itself. Capture the base disposer
+before extending the object. Both lifecycle regressions now pass.
+
+### V1-034 (P2): obsolete site CSS and inherited primitive motion defaults
+
+The first design sweep found an unimported legacy stylesheet, broad transitions
+and animated layout dimensions inherited from UI primitives, plus duplicate dark
+palette literals. Removed the unused file, narrowed motion to named properties,
+and reused brand tokens. Rendered sweep and accessibility qualification in progress.
+
+### V1-035 (P1): long Unix temporary paths broke dependency-first startup
+
+The fresh packed Node consumer failed to start its real helper under a 117-byte
+socket path. Unix `sun_path` limits are smaller than normal filesystem paths.
+Node, Python and Rust now use a short `/tmp` endpoint when their normal temporary
+path exceeds 100 bytes; owner-only socket permissions and per-connection auth remain.
+The same long-home artifact consumers are the regression evidence. No inference.

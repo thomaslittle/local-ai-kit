@@ -3,6 +3,8 @@
  * axes: dark/grotesk-sans/warm · posture: restrained · job: try and sign up, the action in the nav, the hero, the install band and the footer · imagery: screenshots 2 (capture.mjs, example data) · sweep: pending v1 integration verification; earlier branch results do not qualify this revision · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V3 · weakest: V, the page keeps its eleven-part argument in order; varied the compositions instead (split, table, pinned steps, band, vertical tabs, index table, statement, film with chapters) */
 /* Hallmark · waive 39b · app UI at 36px with a ::after hit target expanding it to 44px · the copy control lives in each code block header beside the code it copies, where a 48px marketing pill would crowd the sample */
+/* Hallmark · waive 44c · the render heuristic selects .hero-copy as the hero; the actual header fills the 900px fold and includes the 700px stack plus its caption and layer key. The reviewed full-fold capture confirms the composition. */
+/* Hallmark · waive 79 · the same .hero-copy heuristic excludes the adjacent stack and caption from its content bounds; the full 1440x900 capture has that real visual through the fold. */
 /* Hallmark · dismissed 28a · the first lazy image is the usage screenshot in the second section, below the fold; the LCP is the hero stage poster, which carries fetchpriority high */
 /* Hallmark · answered F7 · the pills are the nav links, icon buttons, filter and install tabs, all controls; boxes take the 12px card radius */
 /* Hallmark · answered F15 · 64px between a split's text and its visual, 32px between grid columns, 40px inside the integrations panel: three roles, not drift */
@@ -334,8 +336,8 @@ p { color: var(--color-muted); }
 .surface dd { margin: var(--space-2xs) 0 0; color: var(--color-muted); font-size: var(--text-sm); }
 
 .mini-view-figure { margin: 0; }
-.mini-view-figure img { display: block; width: 100%; height: auto; border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-card); }
-.mini-view-figure figcaption { margin-top: var(--space-sm); font-size: var(--text-sm); color: var(--color-muted); }
+.mini-view-figure img { position: static; display: block; width: 100%; height: auto; border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-card); }
+.mini-view-figure[data-slot] > figcaption { display: block !important; margin-top: var(--space-sm); font-size: var(--text-sm); color: var(--color-muted); }
 
 /* ---------- Integrations: vertical tabs ---------- */
 
@@ -497,7 +499,7 @@ p { color: var(--color-muted); }
 /* Real UI on three planes; the static composition also works without scripting. */
 .layered-screens { --screen-spread: 1; position: relative; margin: 0; min-height: 460px; perspective: 1800px; overflow: hidden; }
 .layered-screens-plane { position: absolute; inset: 12% 8% 15%; transform-style: preserve-3d; transform: rotateX(50deg) rotateZ(-35deg); }
-.layered-screens-plane img { position: absolute; inset: 0; width: 100%; height: auto; border: var(--rule-hair) solid var(--color-rule-2); border-radius: var(--radius-inner); box-shadow: var(--shadow-card); background: var(--color-paper); }
+.layered-screens-plane img { position: absolute; inset: 0; width: 100%; height: auto; border: var(--rule-hair) solid var(--color-rule-2); border-radius: var(--radius-inner); background: var(--color-paper); }
 .layered-screens-plane img:nth-child(1) { transform: translateZ(calc(-70px * var(--screen-spread))); }
 .layered-screens-plane img:nth-child(2) { transform: translateZ(0); }
 .layered-screens-plane img:nth-child(3) { transform: translateZ(calc(70px * var(--screen-spread))); }

@@ -16,22 +16,20 @@ fn home() -> Option<PathBuf> {
 }
 
 fn default_address() -> String {
-    if let Some(value) = std::env::var_os("LAI_BROKER_ADDRESS") {
-        if let Some(value) = value.to_str().filter(|value| !value.is_empty()) {
+    if let Some(value) = std::env::var_os("LAI_BROKER_ADDRESS")
+        && let Some(value) = value.to_str().filter(|value| !value.is_empty()) {
             return value.to_string();
         }
-    }
     if cfg!(windows) {
         return "local-ai-kit-user".into();
     }
-    if let Some(runtime) = std::env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from) {
-        if runtime.is_absolute() {
+    if let Some(runtime) = std::env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from)
+        && runtime.is_absolute() {
             return runtime
                 .join("local-ai-kit/user.sock")
                 .to_string_lossy()
                 .into();
         }
-    }
     home()
         .map(|home| home.join(".local-ai-kit/user.sock"))
         .unwrap_or_else(|| PathBuf::from("/tmp/local-ai-kit-user.sock"))
@@ -104,16 +102,26 @@ pub fn run(
     let mut client = match BrokerClient::from_token_file(&token_file, Some(&address)) {
         Ok(client) => client,
         Err(error) => {
-            let denied = error.starts_with("LOCAL_ACCESS_DENIED:") || error.starts_with("PERMISSION_DENIED:");
-            let reason = if denied { "LOCAL_ACCESS_DENIED" }
-                else if error.starts_with("PROTOCOL_INCOMPATIBLE:") { "PROTOCOL_INCOMPATIBLE" }
-                else { "CONNECTION_FAILED" };
+            let denied = error.starts_with("LOCAL_ACCESS_DENIED:")
+                || error.starts_with("PERMISSION_DENIED:");
+            let reason = if denied {
+                "LOCAL_ACCESS_DENIED"
+            } else if error.starts_with("PROTOCOL_INCOMPATIBLE:") {
+                "PROTOCOL_INCOMPATIBLE"
+            } else {
+                "CONNECTION_FAILED"
+            };
             if json {
-                println!("{}", json!({"running": true, "authorized": if denied { Some(false) } else { None }, "reason": reason, "address": address}));
+                println!(
+                    "{}",
+                    json!({"running": true, "authorized": if denied { Some(false) } else { None }, "reason": reason, "address": address})
+                );
             } else if denied {
                 eprintln!("OriginLM helper: running, but this credential was rejected");
             } else {
-                eprintln!("OriginLM helper: reachable, but the authenticated protocol connection failed ({reason}). Check the descriptor and runtime version.");
+                eprintln!(
+                    "OriginLM helper: reachable, but the authenticated protocol connection failed ({reason}). Check the descriptor and runtime version."
+                );
             }
             return Ok(if denied { 4 } else { 1 });
         }

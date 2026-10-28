@@ -20,7 +20,7 @@ export function UsageRing({ reading }: { reading: Reading }) {
       </ChartContainer>
       <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
         <span className="text-3xl font-semibold tracking-tight tabular-nums">{percent(fraction)}</span>
-        <span className="text-[0.65rem] tracking-wide text-muted-foreground uppercase">used</span>
+        <span className="text-[0.65rem] text-muted-foreground">used</span>
       </div>
     </div>
   );

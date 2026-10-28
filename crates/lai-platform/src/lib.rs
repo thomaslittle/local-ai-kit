@@ -2,9 +2,9 @@
 mod native;
 mod paths;
 mod private_file;
-pub use private_file::read_private_file;
 use lai_contracts::Result;
 pub use paths::{child_path, default_state_dir};
+pub use private_file::read_private_file;
 use std::path::{Path, PathBuf};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EntryKind {

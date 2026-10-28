@@ -44,14 +44,21 @@ pub fn spawn(token_file: PathBuf, refresh: Duration, example: bool) -> BrokerHan
         .name("lai-broker".into())
         .spawn(move || {
             if example {
-                let mut fixture: Value = serde_json::from_str(include_str!("../assets/example-snapshot.json"))
-                    .expect("bundled synthetic snapshot");
-                let anchor = chrono::DateTime::parse_from_rfc3339(fixture["observedAt"].as_str().expect("fixture timestamp"))
-                    .expect("valid fixture timestamp");
+                let mut fixture: Value =
+                    serde_json::from_str(include_str!("../assets/example-snapshot.json"))
+                        .expect("bundled synthetic snapshot");
+                let anchor = chrono::DateTime::parse_from_rfc3339(
+                    fixture["observedAt"].as_str().expect("fixture timestamp"),
+                )
+                .expect("valid fixture timestamp");
                 // Shift the labeled example once at launch, preserving all relative
                 // ages/reset intervals. Real provider evidence is never rebased.
-                rebase_example_times(&mut fixture, chrono::Utc::now().signed_duration_since(anchor));
-                let snapshot: Snapshot = serde_json::from_value(fixture).expect("rebased example snapshot");
+                rebase_example_times(
+                    &mut fixture,
+                    chrono::Utc::now().signed_duration_since(anchor),
+                );
+                let snapshot: Snapshot =
+                    serde_json::from_value(fixture).expect("rebased example snapshot");
                 let mut costs: CostReport =
                     serde_json::from_str(include_str!("../assets/example-costs.json"))
                         .expect("bundled example costs");
@@ -121,7 +128,10 @@ fn rebase_example_times(value: &mut Value, offset: chrono::Duration) {
         Value::Object(fields) => {
             for (key, value) in fields {
                 if matches!(key.as_str(), "observedAt" | "resetsAt") {
-                    if let Some(timestamp) = value.as_str().and_then(|text| chrono::DateTime::parse_from_rfc3339(text).ok()) {
+                    if let Some(timestamp) = value
+                        .as_str()
+                        .and_then(|text| chrono::DateTime::parse_from_rfc3339(text).ok())
+                    {
                         *value = Value::String((timestamp + offset).to_rfc3339());
                     }
                 } else {
@@ -129,7 +139,9 @@ fn rebase_example_times(value: &mut Value, offset: chrono::Duration) {
                 }
             }
         }
-        Value::Array(items) => items.iter_mut().for_each(|item| rebase_example_times(item, offset)),
+        Value::Array(items) => items
+            .iter_mut()
+            .for_each(|item| rebase_example_times(item, offset)),
         _ => {}
     }
 }

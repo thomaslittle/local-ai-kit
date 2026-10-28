@@ -24,8 +24,8 @@
 //!     Ok(())
 //! }
 //! ```
-pub use lai_contracts::{DomainError, ErrorCode, Snapshot};
 use lai_contracts::Result;
+pub use lai_contracts::{DomainError, ErrorCode, Snapshot};
 use lai_control::BrokerClient;
 use lai_kit::{ClientPolicy, EmbeddedClient, Kit};
 use serde::Deserialize;
@@ -149,22 +149,20 @@ fn home_dir() -> Option<PathBuf> {
 
 /// The well-known address of a per-user shared broker.
 pub fn default_address() -> String {
-    if let Some(value) = env::var_os("LAI_BROKER_ADDRESS") {
-        if let Some(value) = value.to_str().filter(|value| valid_address(value)) {
+    if let Some(value) = env::var_os("LAI_BROKER_ADDRESS")
+        && let Some(value) = value.to_str().filter(|value| valid_address(value)) {
             return value.to_string();
         }
-    }
     if cfg!(windows) {
         return "local-ai-kit-user".into();
     }
-    if let Some(runtime) = env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from) {
-        if runtime.is_absolute() {
+    if let Some(runtime) = env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from)
+        && runtime.is_absolute() {
             return runtime
                 .join("local-ai-kit/user.sock")
                 .to_string_lossy()
                 .into();
         }
-    }
     home_dir()
         .map(|home| home.join(".local-ai-kit/user.sock"))
         .unwrap_or_else(|| PathBuf::from("/tmp/local-ai-kit-user.sock"))
@@ -236,10 +234,15 @@ pub fn usable_helper(path: &Path) -> bool {
         return false;
     }
     path.metadata().is_ok_and(|meta| {
-        if !meta.is_file() { return false; }
-        #[cfg(unix)] {
+        if !meta.is_file() {
+            return false;
+        }
+        #[cfg(unix)]
+        {
             use std::os::unix::fs::PermissionsExt;
-            if meta.permissions().mode() & 0o111 == 0 { return false; }
+            if meta.permissions().mode() & 0o111 == 0 {
+                return false;
+            }
         }
         true
     })
@@ -262,14 +265,13 @@ pub fn resolve_helper(explicit: Option<PathBuf>) -> Option<PathBuf> {
         let path = PathBuf::from(value);
         return usable_helper(&path).then_some(path);
     }
-    if let Ok(current) = env::current_exe() {
-        if let Some(directory) = current.parent() {
+    if let Ok(current) = env::current_exe()
+        && let Some(directory) = current.parent() {
             let adjacent = directory.join(executable_name());
             if usable_helper(&adjacent) {
                 return Some(adjacent);
             }
         }
-    }
     path_helper()
 }
 
@@ -322,13 +324,16 @@ fn unique_address() -> String {
     if cfg!(windows) {
         format!("local-ai-kit-private-{}-{nanos}", std::process::id())
     } else {
-        // The broker binds a filesystem socket and restricts it to the owner.
-        // Keeping it in the OS temporary directory needs no state-directory
-        // setup, and the pid+timestamp name makes pre-creation impractical.
-        env::temp_dir()
-            .join(format!("local-ai-kit-{}-{nanos}.sock", std::process::id()))
-            .to_string_lossy()
-            .into()
+        let name = format!("local-ai-kit-{}-{nanos}.sock", std::process::id());
+        let candidate = env::temp_dir().join(&name);
+        // Unix sockets have a much smaller limit than filesystem paths. Keep
+        // the authenticated owner-only endpoint usable with a long TMPDIR.
+        let path = if candidate.as_os_str().len() <= 100 {
+            candidate
+        } else {
+            PathBuf::from("/tmp").join(name)
+        };
+        path.to_string_lossy().into()
     }
 }
 
@@ -449,9 +454,9 @@ impl LocalAi {
         let mut fallback_reason = None;
         let address = options.address.clone().unwrap_or_else(default_address);
         let token_file = options.token_file.clone().or_else(default_token_file);
-        if let Some(path) = token_file.as_deref() {
-            if let Some(token) = shared_token(path, &address) {
-                if address_listening(&address, &token) {
+        if let Some(path) = token_file.as_deref()
+            && let Some(token) = shared_token(path, &address)
+                && address_listening(&address, &token) {
                     match BrokerClient::connect(&address, &token) {
                         Ok(client) => {
                             return Ok(Self {
@@ -470,8 +475,6 @@ impl LocalAi {
                         }
                     }
                 }
-            }
-        }
         if let Some(helper) = resolve_helper(options.helper.clone()) {
             let (child, descriptor) = spawn_private_helper(&helper, &options.policy)?;
             let client = BrokerClient::connect(&descriptor.address, &descriptor.token)
@@ -513,7 +516,9 @@ impl LocalAi {
     }
 
     /// Why a shared protocol selected a private/embedded fallback, when applicable.
-    pub fn fallback_reason(&self) -> Option<&'static str> { self.fallback_reason }
+    pub fn fallback_reason(&self) -> Option<&'static str> {
+        self.fallback_reason
+    }
 
     /// Which resolution step succeeded.
     pub fn mode(&self) -> Mode {
@@ -572,8 +577,12 @@ impl LocalAi {
 }
 
 fn typed_snapshot(client: &mut BrokerClient) -> Result<Snapshot> {
-    serde_json::from_value(client.call_typed("snapshot.get", json!({}))?)
-        .map_err(|_| DomainError::new(ErrorCode::ProtocolIncompatible, "The broker returned an incompatible snapshot"))
+    serde_json::from_value(client.call_typed("snapshot.get", json!({}))?).map_err(|_| {
+        DomainError::new(
+            ErrorCode::ProtocolIncompatible,
+            "The broker returned an incompatible snapshot",
+        )
+    })
 }
 
 #[cfg(test)]
@@ -601,7 +610,8 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let file = directory.path().join("helper");
         std::fs::write(&file, b"#!/bin/sh\n").unwrap();
-        #[cfg(unix)] {
+        #[cfg(unix)]
+        {
             use std::os::unix::fs::PermissionsExt;
             assert!(!usable_helper(&file));
             std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o755)).unwrap();

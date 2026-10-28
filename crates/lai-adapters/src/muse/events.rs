@@ -300,11 +300,10 @@ impl TurnState {
             return out;
         };
         let params = &frame["params"];
-        if let Some(session) = params["sessionId"].as_str() {
-            if session != self.session {
+        if let Some(session) = params["sessionId"].as_str()
+            && session != self.session {
                 return out;
             }
-        }
         match method {
             "turn/started" => {
                 let Some(turn) = params["turnId"].as_str() else {
@@ -337,8 +336,8 @@ impl TurnState {
                 }
             }
             "userInput/request" | "userInput/requested" => {
-                if let Some(id) = params["userInputId"].as_str() {
-                    if self.decided.insert((format!("question:{id}"), 0)) {
+                if let Some(id) = params["userInputId"].as_str()
+                    && self.decided.insert((format!("question:{id}"), 0)) {
                         out.push(Action::DeclineQuestion {
                             user_input_id: id.to_owned(),
                         });
@@ -347,7 +346,6 @@ impl TurnState {
                             message: "Muse asked a structured question; this integration cannot answer it, so Muse continues without an answer".into(),
                         }));
                     }
-                }
             }
             "session/tokenUsage" => {
                 if params["turnId"]
@@ -519,14 +517,12 @@ impl TurnState {
         let terminal = status != "inProgress";
         match kind {
             "agentMessage" => {
-                if terminal {
-                    if let Some(text) = item["text"].as_str() {
-                        if tracked.emitted < text.len() && text.is_char_boundary(tracked.emitted) {
+                if terminal
+                    && let Some(text) = item["text"].as_str()
+                        && tracked.emitted < text.len() && text.is_char_boundary(tracked.emitted) {
                             emit_text(out, &text[tracked.emitted..]);
                             tracked.emitted = text.len();
                         }
-                    }
-                }
             }
             "reasoning" => {
                 if terminal && !tracked.streamed_summary {
@@ -563,14 +559,13 @@ impl TurnState {
                         name: tool.clone(),
                         status: status_word(&status).into(),
                     }));
-                    if matches!(tool.as_str(), "web_search" | "web_fetch") {
-                        if let Some(data) = web_extension(&tool, item, &status) {
+                    if matches!(tool.as_str(), "web_search" | "web_fetch")
+                        && let Some(data) = web_extension(&tool, item, &status) {
                             out.push(Action::Emit(EventPayload::Extension {
                                 namespace: "muse.web_search".into(),
                                 data,
                             }));
                         }
-                    }
                 }
             }
             "webSearch" => {
@@ -814,11 +809,10 @@ fn web_extension(tool: &str, item: &Value, status: &str) -> Option<Value> {
         }
     }
     data.insert("results".into(), Value::Array(hits));
-    if status != "completed" {
-        if let Some(reason) = clean(&item["failureReason"], 500) {
+    if status != "completed"
+        && let Some(reason) = clean(&item["failureReason"], 500) {
             data.insert("failure".into(), json!(redact_diagnostic_detail(&reason)));
         }
-    }
     Some(Value::Object(data))
 }
 

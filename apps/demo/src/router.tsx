@@ -23,7 +23,7 @@ const indexRoute = createRoute({
   },
 });
 
-// Selector lab is the landing page, so it ships in the entry chunk. Every other page is a lazy route chunk.
+// Keep the selector lab in the entry chunk for host integrations. Other pages load lazily.
 const routeTree = rootRoute.addChildren([
   indexRoute,
   createRoute({ getParentRoute: () => rootRoute, path: '/overview', component: lazyRouteComponent(() => import('@/pages/overview')), head: () => title('Overview') }),

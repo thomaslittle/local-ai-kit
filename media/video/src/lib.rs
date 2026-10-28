@@ -119,7 +119,7 @@ impl Scene for Shot {
             4 => {
                 let (first, second, third) = (spring(t), spring(t - 0.14), spring(t - 0.28));
                 fframes::svgr!(<g>
-                    <text x={150. + (1. - first) * 80.} y="430" fill={AMBER} font-family={FONT} font-size="40" opacity={first.clamp(0.,1.)}>"npm install ./local-ai-kit-sdk-0.1.0-alpha.20.tgz"</text>
+                    <text x={150. + (1. - first) * 80.} y="430" fill={AMBER} font-family={FONT} font-size="40" opacity={first.clamp(0.,1.)}>"npm install ./local-ai-kit-*.tgz"</text>
                     <path d="M150 485H1770" stroke={AMBER} stroke-width="2"/>
                     <text x={150. + (1. - second) * 80.} y="590" fill={FG} font-family={FONT} font-size="40" opacity={second.clamp(0.,1.)}>"import { createLocalAI } from '@local-ai-kit/sdk';"</text>
                     <text x={150. + (1. - third) * 80.} y="700" fill={FG} font-family={FONT} font-size="46" opacity={third.clamp(0.,1.)}>"const ai = await createLocalAI();"</text>

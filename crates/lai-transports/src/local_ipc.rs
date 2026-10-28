@@ -341,11 +341,10 @@ impl ActiveConnection {
 }
 impl Drop for ActiveConnection {
     fn drop(&mut self) {
-        if self.shared.active.fetch_sub(1, Ordering::SeqCst) == 1 {
-            if let Ok(mut idle) = self.shared.idle_since.lock() {
+        if self.shared.active.fetch_sub(1, Ordering::SeqCst) == 1
+            && let Ok(mut idle) = self.shared.idle_since.lock() {
                 *idle = Some(Instant::now());
             }
-        }
     }
 }
 async fn serve_connection(stream: Stream, state: Arc<Shared>) -> Result<()> {

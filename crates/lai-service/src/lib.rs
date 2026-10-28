@@ -384,11 +384,10 @@ impl NativeService {
                 | "discovery.refresh"
                 | "turns.start"
                 | "sessions.create"
-        ) {
-            if let Ok(mut interest) = self.client_interest.lock() {
+        )
+            && let Ok(mut interest) = self.client_interest.lock() {
                 interest.insert(client.to_owned(), tokio::time::Instant::now());
             }
-        }
         // Staged images and turn text have separate bounds and closed typed params.
         if method == "inputs.put" {
             params.as_object().ok_or_else(params::invalid)?;
@@ -446,11 +445,10 @@ impl NativeService {
                     close_result?;
                     // Remote revocation can fail after local sign-out. Never
                     // restore secrets or report the local disconnect as failed.
-                    if let Err(error) = disconnect {
-                        if error.code != "REVOCATION_UNCONFIRMED" {
+                    if let Err(error) = disconnect
+                        && error.code != "REVOCATION_UNCONFIRMED" {
                             return Err(map_auth(error));
                         }
-                    }
                     Ok(serde_json::json!({}))
                 }
                 _ => return Err(unsupported()),

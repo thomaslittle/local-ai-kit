@@ -100,7 +100,10 @@ def _unique_address() -> str:
     suffix = f'{os.getpid()}-{int(time.time() * 1000)}-{os.urandom(3).hex()}'
     if sys.platform == 'win32':
         return f'local-ai-kit-private-{suffix}'
-    return str(pathlib.Path(tempfile.gettempdir()) / f'local-ai-kit-{suffix}.sock')
+    name = f'local-ai-kit-{suffix}.sock'
+    candidate = str(pathlib.Path(tempfile.gettempdir()) / name)
+    # Stay below the smallest supported Unix sun_path bound, including UTF-8.
+    return candidate if len(os.fsencode(candidate)) <= 100 else str(pathlib.Path('/tmp') / name)
 
 
 async def _open_private(executable: str, options: dict) -> AsyncStdioTransport:

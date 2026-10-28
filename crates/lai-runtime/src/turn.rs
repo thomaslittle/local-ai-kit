@@ -140,11 +140,10 @@ impl TurnContext {
             .lock()
             .map_err(|_| err(ErrorCode::ProviderUnavailable))?
             .remove(&approval);
-        if let Ok(mut state) = self.cell.state.lock() {
-            if state.view.state == SessionState::AwaitingApproval {
+        if let Ok(mut state) = self.cell.state.lock()
+            && state.view.state == SessionState::AwaitingApproval {
                 state.view.state = SessionState::Running;
             }
-        }
         let allowed = allowed && !self.is_cancelled() && (self.cell.guard)().is_ok();
         self.cell.emit(
             Some(self.turn.clone()),

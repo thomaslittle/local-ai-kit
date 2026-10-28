@@ -1333,7 +1333,9 @@ impl Desktop {
                                 .text_color(theme.muted_foreground)
                                 .child(if self.example {
                                     "No runtime connected"
-                                } else if self.bundle.as_ref().is_some_and(|bundle| bundle.error.is_none() && bundle.apps_error.is_none()) {
+                                } else if self.bundle.as_ref().is_some_and(|bundle| {
+                                    bundle.error.is_none() && bundle.apps_error.is_none()
+                                }) {
                                     "Administrator access confirmed"
                                 } else {
                                     "Scoped credential"

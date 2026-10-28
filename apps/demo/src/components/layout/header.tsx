@@ -15,8 +15,8 @@ export function Header() {
   const hasClient = useDemo((state) => state.hasClient);
   const openPalette = () => actions.patch({ paletteOpen: true });
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/70 px-3 backdrop-blur-xl md:px-5">
-      <SidebarTrigger className="-ml-1" />
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3 md:px-5">
+      <SidebarTrigger className="-ml-1 size-11" />
       <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-4" />
       <Breadcrumb className="hidden sm:block">
         <BreadcrumbList>

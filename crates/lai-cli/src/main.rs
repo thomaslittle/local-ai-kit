@@ -174,13 +174,11 @@ async fn execute(args: Args) -> Result<()> {
     }
     service.enable_autonomous_refresh(args.metadata_providers.clone());
     service.enable_inventory_refresh(args.allow_passive);
-    if matches!(args.action, Action::Serve) && !args.no_metadata_cache {
-        if let Some(directory) = host::default_state_dir(args.home.as_deref()) {
-            if let Err(error) = service.enable_state_store(directory.join("state.db")) {
+    if matches!(args.action, Action::Serve) && !args.no_metadata_cache
+        && let Some(directory) = host::default_state_dir(args.home.as_deref())
+            && let Err(error) = service.enable_state_store(directory.join("state.db")) {
                 eprintln!("storage: {error}");
             }
-        }
-    }
     if matches!(args.action, Action::Serve) {
         service.start_background_tasks();
     }

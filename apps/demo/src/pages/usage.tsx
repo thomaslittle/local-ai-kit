@@ -18,7 +18,7 @@ function CountBadge({ reading }: { reading: Reading }) {
   return (
     <div className="relative mx-auto grid size-40 shrink-0 place-content-center rounded-full border-2 border-dashed text-center">
       <span className="text-3xl font-semibold tracking-tight tabular-nums">{reading.used}</span>
-      <span className="text-[0.65rem] tracking-wide text-muted-foreground uppercase">{reading.unit}</span>
+      <span className="text-[0.65rem] text-muted-foreground">{reading.unit}</span>
     </div>
   );
 }
@@ -103,7 +103,7 @@ export default function UsagePage() {
   const verified = pools.filter((pool) => pool.sharing === 'verified').length;
 
   return (
-    <div className="grid gap-5">
+    <div className="grid min-w-0 grid-cols-1 gap-5">
       <p className="max-w-3xl text-sm text-muted-foreground">Windows belong to quota pools, not model rows. Shared pools appear once; unknown totals stay unknown.</p>
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Stat label="Quota pools" value={String(pools.length)} note={`${windows} usage window${windows === 1 ? '' : 's'}`} />

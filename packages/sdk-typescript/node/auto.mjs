@@ -86,9 +86,12 @@ export function defaultTokenFile() {
 function uniqueAddress() {
   const suffix = `${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   if (process.platform === 'win32') return `local-ai-kit-private-${suffix}`;
-  // The broker binds and owner-restricts a filesystem socket; the temp
-  // directory always exists and the name is unique per process.
-  return join(tmpdir(), `local-ai-kit-${suffix}.sock`);
+  // macOS/Linux sun_path limits are smaller than a normal filesystem path.
+  // A long TMPDIR must not prevent dependency-first startup. The broker still
+  // owner-restricts the socket and authenticates every connection.
+  const name = `local-ai-kit-${suffix}.sock`;
+  const candidate = join(tmpdir(), name);
+  return Buffer.byteLength(candidate) <= 100 ? candidate : join('/tmp', name);
 }
 
 function probeArgs(options) {

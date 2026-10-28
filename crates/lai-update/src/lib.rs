@@ -67,7 +67,12 @@ fn sha256_file(path: &Path) -> Result<String, DomainError> {
             break;
         }
         total += count as u64;
-        if total > MAX_ARCHIVE_BYTES { return Err(fail(ErrorCode::FrameTooLarge, "Update payload exceeds the bound")); }
+        if total > MAX_ARCHIVE_BYTES {
+            return Err(fail(
+                ErrorCode::FrameTooLarge,
+                "Update payload exceeds the bound",
+            ));
+        }
         digest.update(&block[..count]);
     }
     Ok(format!("{:x}", digest.finalize()))
@@ -102,7 +107,9 @@ pub fn platform_id() -> String {
 }
 
 fn parse_version(value: &str) -> Option<semver::Version> {
-    if value.len() > 128 { return None; }
+    if value.len() > 128 {
+        return None;
+    }
     semver::Version::parse(value).ok()
 }
 
@@ -164,7 +171,9 @@ pub fn verify_update(
     let alpha = next.pre.as_str().strip_prefix("alpha.");
     if (next.major, next.minor, next.patch) != (0, 1, 0)
         || !next.build.is_empty()
-        || !alpha.is_some_and(|value| !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit()))
+        || !alpha.is_some_and(|value| {
+            !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit())
+        })
     {
         return Err(fail(
             ErrorCode::ProtocolIncompatible,
@@ -206,28 +215,51 @@ pub fn verify_update(
     Ok(())
 }
 
-fn copy_verified_payload(manifest: &UpdateManifest, source_path: &Path, target_path: &Path) -> Result<(), DomainError> {
+fn copy_verified_payload(
+    manifest: &UpdateManifest,
+    source_path: &Path,
+    target_path: &Path,
+) -> Result<(), DomainError> {
     let mut created = false;
     let copy = (|| -> Result<(), DomainError> {
         let mut source = File::open(source_path)
-            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Staged executable is unreadable"))?
+            .map_err(|_| {
+                fail(
+                    ErrorCode::StorageUnavailable,
+                    "Staged executable is unreadable",
+                )
+            })?
             .take(manifest.archive_bytes + 1);
         let mut options = OpenOptions::new();
         options.write(true).create_new(true);
-        #[cfg(unix)] {
+        #[cfg(unix)]
+        {
             use std::os::unix::fs::OpenOptionsExt;
             options.mode(0o755);
         }
-        let mut output = options.open(target_path)
-            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Replacement could not be created"))?;
+        let mut output = options.open(target_path).map_err(|_| {
+            fail(
+                ErrorCode::StorageUnavailable,
+                "Replacement could not be created",
+            )
+        })?;
         created = true;
         let bytes = std::io::copy(&mut source, &mut output)
             .map_err(|_| fail(ErrorCode::StorageUnavailable, "Replacement copy failed"))?;
-        output.sync_all()
-            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Replacement could not be flushed"))?;
+        output.sync_all().map_err(|_| {
+            fail(
+                ErrorCode::StorageUnavailable,
+                "Replacement could not be flushed",
+            )
+        })?;
         drop(output);
-        if bytes != manifest.archive_bytes || sha256_file(target_path)? != manifest.archive_sha256.to_ascii_lowercase() {
-            return Err(fail(ErrorCode::LocalAccessDenied, "Replacement does not match the signed executable"));
+        if bytes != manifest.archive_bytes
+            || sha256_file(target_path)? != manifest.archive_sha256.to_ascii_lowercase()
+        {
+            return Err(fail(
+                ErrorCode::LocalAccessDenied,
+                "Replacement does not match the signed executable",
+            ));
         }
         Ok(())
     })();
@@ -265,28 +297,57 @@ pub fn stage_update(
         protocol_version,
         false,
     )?;
-    let name = Path::new(&manifest.archive).file_name()
+    let name = Path::new(&manifest.archive)
+        .file_name()
         .filter(|name| *name != "manifest.json" && *name != "READY")
         .ok_or_else(|| fail(ErrorCode::InvalidRequest, "Update payload name is invalid"))?;
-    std::fs::create_dir_all(staging_root)
-        .map_err(|_| fail(ErrorCode::StorageUnavailable, "Update staging is unavailable"))?;
+    std::fs::create_dir_all(staging_root).map_err(|_| {
+        fail(
+            ErrorCode::StorageUnavailable,
+            "Update staging is unavailable",
+        )
+    })?;
     let directory = staging_root.join(&manifest.version);
-    std::fs::create_dir(&directory).map_err(|error| fail(
-        if error.kind() == std::io::ErrorKind::AlreadyExists { ErrorCode::Conflict } else { ErrorCode::StorageUnavailable },
-        "Update staging directory could not be created",
-    ))?;
+    std::fs::create_dir(&directory).map_err(|error| {
+        fail(
+            if error.kind() == std::io::ErrorKind::AlreadyExists {
+                ErrorCode::Conflict
+            } else {
+                ErrorCode::StorageUnavailable
+            },
+            "Update staging directory could not be created",
+        )
+    })?;
     let result = (|| {
         let staged_archive = directory.join(name);
         copy_verified_payload(manifest, archive, &staged_archive)?;
         let manifest_path = directory.join("manifest.json");
-        std::fs::write(&manifest_path, serde_json::to_vec_pretty(manifest)
-            .map_err(|_| fail(ErrorCode::InvalidRequest, "Update manifest is invalid"))?)
-            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Update manifest could not be staged"))?;
-        std::fs::write(directory.join("READY"), b"verified\n")
-            .map_err(|_| fail(ErrorCode::StorageUnavailable, "Update staging is unavailable"))?;
-        Ok(StagedUpdate { directory: directory.clone(), archive: staged_archive, manifest: manifest_path })
+        std::fs::write(
+            &manifest_path,
+            serde_json::to_vec_pretty(manifest)
+                .map_err(|_| fail(ErrorCode::InvalidRequest, "Update manifest is invalid"))?,
+        )
+        .map_err(|_| {
+            fail(
+                ErrorCode::StorageUnavailable,
+                "Update manifest could not be staged",
+            )
+        })?;
+        std::fs::write(directory.join("READY"), b"verified\n").map_err(|_| {
+            fail(
+                ErrorCode::StorageUnavailable,
+                "Update staging is unavailable",
+            )
+        })?;
+        Ok(StagedUpdate {
+            directory: directory.clone(),
+            archive: staged_archive,
+            manifest: manifest_path,
+        })
     })();
-    if result.is_err() { let _ = std::fs::remove_dir_all(&directory); }
+    if result.is_err() {
+        let _ = std::fs::remove_dir_all(&directory);
+    }
     result
 }
 
@@ -370,28 +431,51 @@ fn session_markers(root: &Path) -> Vec<PathBuf> {
 // Held under activation.lock. The separate floor survives a process crash
 // between executable replacement and the informational state.json write.
 fn activation_floor(root: &Path) -> Result<String, DomainError> {
-    let invalid = || fail(ErrorCode::StorageUnavailable, "Update version state is invalid; restore it before activating");
+    let invalid = || {
+        fail(
+            ErrorCode::StorageUnavailable,
+            "Update version state is invalid; restore it before activating",
+        )
+    };
     let mut highest = parse_version(env!("CARGO_PKG_VERSION")).ok_or_else(invalid)?;
-    for (name, field) in [("state.json", "installedVersion"), ("version-floor.json", "highestVerifiedVersion")] {
+    for (name, field) in [
+        ("state.json", "installedVersion"),
+        ("version-floor.json", "highestVerifiedVersion"),
+    ] {
         let bytes = match read_bounded_file(&root.join(name), MAX_MANIFEST_BYTES) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
             Err(_) => return Err(invalid()),
         };
         let value: Value = serde_json::from_slice(&bytes).map_err(|_| invalid())?;
-        let version = value[field].as_str().and_then(parse_version).ok_or_else(invalid)?;
-        if version.cmp_precedence(&highest).is_gt() { highest = version; }
+        let version = value[field]
+            .as_str()
+            .and_then(parse_version)
+            .ok_or_else(invalid)?;
+        if version.cmp_precedence(&highest).is_gt() {
+            highest = version;
+        }
     }
     Ok(highest.to_string())
 }
 
 fn persist_version_floor(root: &Path, version: &str) -> Result<(), DomainError> {
-    let temporary = root.join(format!("version-floor-{}-{}.tmp", std::process::id(), unix_ms()));
+    let temporary = root.join(format!(
+        "version-floor-{}-{}.tmp",
+        std::process::id(),
+        unix_ms()
+    ));
     let mut created = false;
     let result = (|| -> std::io::Result<()> {
-        let mut file = OpenOptions::new().write(true).create_new(true).open(&temporary)?;
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)?;
         created = true;
-        serde_json::to_writer(&mut file, &serde_json::json!({"highestVerifiedVersion": version}))?;
+        serde_json::to_writer(
+            &mut file,
+            &serde_json::json!({"highestVerifiedVersion": version}),
+        )?;
         file.sync_all()?;
         drop(file);
         std::fs::rename(&temporary, root.join("version-floor.json"))?;
@@ -399,8 +483,15 @@ fn persist_version_floor(root: &Path, version: &str) -> Result<(), DomainError> 
         File::open(root)?.sync_all()?;
         Ok(())
     })();
-    if result.is_err() && created { let _ = std::fs::remove_file(&temporary); }
-    result.map_err(|_| fail(ErrorCode::StorageUnavailable, "Update version floor could not be saved; executable was not replaced"))
+    if result.is_err() && created {
+        let _ = std::fs::remove_file(&temporary);
+    }
+    result.map_err(|_| {
+        fail(
+            ErrorCode::StorageUnavailable,
+            "Update version floor could not be saved; executable was not replaced",
+        )
+    })
 }
 
 pub struct Activation {
@@ -453,14 +544,7 @@ pub fn activate(
         ));
     }
     let floor = activation_floor(state_root)?;
-    verify_update(
-        manifest,
-        &staged.archive,
-        public_key,
-        &floor,
-        "1.0",
-        false,
-    )?;
+    verify_update(manifest, &staged.archive, public_key, &floor, "1.0", false)?;
     let backup_dir = state_root.join("backups");
     std::fs::create_dir_all(&backup_dir).map_err(|_| {
         fail(
@@ -529,12 +613,18 @@ pub fn rollback(target: &Path, backup: &Path) -> Result<(), DomainError> {
 fn read_bounded_file(path: &Path, max: u64) -> std::io::Result<Vec<u8>> {
     let metadata = path.symlink_metadata()?;
     if !metadata.is_file() || metadata.len() > max {
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Expected a bounded regular file"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "Expected a bounded regular file",
+        ));
     }
     let mut bytes = Vec::new();
     File::open(path)?.take(max + 1).read_to_end(&mut bytes)?;
     if bytes.len() as u64 > max {
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "File exceeds the bound"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "File exceeds the bound",
+        ));
     }
     Ok(bytes)
 }
@@ -665,14 +755,49 @@ mod tests {
         let target = root.path().join("current");
         std::fs::write(&target, b"old").unwrap();
         let next = signed("0.1.0-alpha.22");
-        let staged = stage_update(&next.manifest, &next.archive, &root.path().join("staging"), &next.public_key, "0.1.0-alpha.20", "1.0").unwrap();
-        let activation = activate(root.path(), &staged, &next.manifest, &target, &next.public_key).unwrap();
+        let staged = stage_update(
+            &next.manifest,
+            &next.archive,
+            &root.path().join("staging"),
+            &next.public_key,
+            "0.1.0-alpha.20",
+            "1.0",
+        )
+        .unwrap();
+        let activation = activate(
+            root.path(),
+            &staged,
+            &next.manifest,
+            &target,
+            &next.public_key,
+        )
+        .unwrap();
         rollback(&target, &activation.backup).unwrap();
         // Model the crash window before informational metadata was written.
         std::fs::remove_file(root.path().join("state.json")).unwrap();
         let older = signed("0.1.0-alpha.21");
-        let staged = stage_update(&older.manifest, &older.archive, &root.path().join("staging"), &older.public_key, "0.1.0-alpha.20", "1.0").unwrap();
-        assert_eq!(activate(root.path(), &staged, &older.manifest, &target, &older.public_key).err().unwrap().code, ErrorCode::Conflict);
+        let staged = stage_update(
+            &older.manifest,
+            &older.archive,
+            &root.path().join("staging"),
+            &older.public_key,
+            "0.1.0-alpha.20",
+            "1.0",
+        )
+        .unwrap();
+        assert_eq!(
+            activate(
+                root.path(),
+                &staged,
+                &older.manifest,
+                &target,
+                &older.public_key
+            )
+            .err()
+            .unwrap()
+            .code,
+            ErrorCode::Conflict
+        );
         assert_eq!(std::fs::read(&target).unwrap(), b"old");
     }
 
@@ -680,18 +805,56 @@ mod tests {
     fn corrupt_version_state_fails_closed() {
         let root = tempfile::tempdir().unwrap();
         std::fs::write(root.path().join("version-floor.json"), b"{}").unwrap();
-        assert_eq!(activation_floor(root.path()).unwrap_err().code, ErrorCode::StorageUnavailable);
+        assert_eq!(
+            activation_floor(root.path()).unwrap_err().code,
+            ErrorCode::StorageUnavailable
+        );
     }
 
     #[test]
     fn prerelease_numbers_and_staging_names_follow_semver() {
         let update = signed("0.1.0-alpha.20");
-        verify_update(&update.manifest, &update.archive, &update.public_key, "0.1.0-alpha.9", "1.0", false).unwrap();
+        verify_update(
+            &update.manifest,
+            &update.archive,
+            &update.public_key,
+            "0.1.0-alpha.9",
+            "1.0",
+            false,
+        )
+        .unwrap();
         let older = signed("0.1.0-alpha.9");
-        assert_eq!(verify_update(&older.manifest, &older.archive, &older.public_key, "0.1.0-alpha.20", "1.0", false).unwrap_err().code, ErrorCode::Conflict);
-        for version in ["0.1.0-alpha/../../escape", "0.1.0-alphabet", "0.1.0-alpha.020", "0.1.0-alpha.20+metadata"] {
+        assert_eq!(
+            verify_update(
+                &older.manifest,
+                &older.archive,
+                &older.public_key,
+                "0.1.0-alpha.20",
+                "1.0",
+                false
+            )
+            .unwrap_err()
+            .code,
+            ErrorCode::Conflict
+        );
+        for version in [
+            "0.1.0-alpha/../../escape",
+            "0.1.0-alphabet",
+            "0.1.0-alpha.020",
+            "0.1.0-alpha.20+metadata",
+        ] {
             let update = signed(version);
-            assert!(verify_update(&update.manifest, &update.archive, &update.public_key, "0.1.0-alpha.1", "1.0", false).is_err());
+            assert!(
+                verify_update(
+                    &update.manifest,
+                    &update.archive,
+                    &update.public_key,
+                    "0.1.0-alpha.1",
+                    "1.0",
+                    false
+                )
+                .is_err()
+            );
         }
     }
 

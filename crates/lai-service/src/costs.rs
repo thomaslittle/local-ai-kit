@@ -88,7 +88,10 @@ impl NativeService {
         validate(&prices)?;
         let serialized = serde_json::to_vec_pretty(&prices).map_err(|_| params::invalid())?;
         if serialized.len() > MAX_PRICE_BYTES {
-            return Err(DomainError::new(ErrorCode::FrameTooLarge, "Price table exceeds 128 KiB; shorten sources or remove rows"));
+            return Err(DomainError::new(
+                ErrorCode::FrameTooLarge,
+                "Price table exceeds 128 KiB; shorten sources or remove rows",
+            ));
         }
         let mut current = self.cost_prices.write().map_err(|_| denied())?;
         if let Some(path) = &current.path {
