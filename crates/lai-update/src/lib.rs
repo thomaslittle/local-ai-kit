@@ -98,16 +98,9 @@ pub fn platform_id() -> String {
     format!("{os}-{arch}")
 }
 
-fn parse_version(value: &str) -> Option<(u64, u64, u64, String)> {
-    let (core, suffix) = value.split_once('-').unwrap_or((value, ""));
-    let mut parts = core.split('.');
-    let major = parts.next()?.parse().ok()?;
-    let minor = parts.next()?.parse().ok()?;
-    let patch = parts.next()?.parse().ok()?;
-    if parts.next().is_some() {
-        return None;
-    }
-    Some((major, minor, patch, suffix.into()))
+fn parse_version(value: &str) -> Option<semver::Version> {
+    if value.len() > 128 { return None; }
+    semver::Version::parse(value).ok()
 }
 
 pub fn verify_manifest_signature(
@@ -163,19 +156,21 @@ pub fn verify_update(
             "Update protocol is incompatible with this runtime",
         ));
     }
-    if !manifest.version.starts_with("0.1.0-alpha") {
-        // This release family is deliberately constrained; widening it needs a
-        // reviewed compatibility decision, not a silent acceptance.
+    let next = parse_version(&manifest.version)
+        .ok_or_else(|| fail(ErrorCode::InvalidRequest, "Update version is invalid"))?;
+    let alpha = next.pre.as_str().strip_prefix("alpha.");
+    if (next.major, next.minor, next.patch) != (0, 1, 0)
+        || !next.build.is_empty()
+        || !alpha.is_some_and(|value| !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit()))
+    {
         return Err(fail(
             ErrorCode::ProtocolIncompatible,
             "Update version is outside the supported release family",
         ));
     }
-    let next = parse_version(&manifest.version)
-        .ok_or_else(|| fail(ErrorCode::InvalidRequest, "Update version is invalid"))?;
     let current = parse_version(current_version)
         .ok_or_else(|| fail(ErrorCode::InvalidRequest, "Current version is invalid"))?;
-    if !allow_downgrade && next < current {
+    if !allow_downgrade && next.cmp_precedence(&current).is_lt() {
         return Err(fail(
             ErrorCode::Conflict,
             "Update would downgrade the shared runtime",
@@ -613,6 +608,18 @@ mod tests {
             public_key: pair.public_key().as_ref().to_vec(),
             archive,
             _temp: temp,
+        }
+    }
+
+    #[test]
+    fn prerelease_numbers_and_staging_names_follow_semver() {
+        let update = signed("0.1.0-alpha.20");
+        verify_update(&update.manifest, &update.archive, &update.public_key, "0.1.0-alpha.9", "1.0", false).unwrap();
+        let older = signed("0.1.0-alpha.9");
+        assert_eq!(verify_update(&older.manifest, &older.archive, &older.public_key, "0.1.0-alpha.20", "1.0", false).unwrap_err().code, ErrorCode::Conflict);
+        for version in ["0.1.0-alpha/../../escape", "0.1.0-alphabet", "0.1.0-alpha.020", "0.1.0-alpha.20+metadata"] {
+            let update = signed(version);
+            assert!(verify_update(&update.manifest, &update.archive, &update.public_key, "0.1.0-alpha.1", "1.0", false).is_err());
         }
     }
 

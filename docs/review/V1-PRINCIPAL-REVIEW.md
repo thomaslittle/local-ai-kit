@@ -207,7 +207,10 @@ segments, rejecting advertised `auth.chatgpt.*` RPCs. HTTP also omitted the inve
 scope on the client and rejected it on the server, so inventory subscriptions could
 read the wrong event stream. Implemented: shared TS method validation permits
 bounded dotted identifiers; Python matches it; HTTP validates and forwards the
-inventory scope and rejects mixed inventory/session queries. Pairing-code requests now
+inventory scope and rejects mixed inventory/session queries. Inventory replay cursors
+retain their opaque epoch/sequence form; session cursors remain bounded integers.
+An initial HTTP 409 replay gap is translated to `EVENT_GAP` so the live store can
+resynchronize rather than repeatedly retrying the expired cursor. Pairing-code requests now
 honor cancellation and a bounded deadline as RPCs already did. Regression fixtures
 are authored; SDK/transport builds passed before the final pairing deadline change.
 The full verification pass remains pending.
@@ -227,3 +230,30 @@ The React option editor asked the host before setting a billing/permission-sensi
 value but skipped approval when removing the override. Provider defaults can change
 billing or permission too. Apply the same host approval to reset-to-default; preserve
 late-response selection checks. Regression fixture authored; execution pending.
+
+### V1-026 (P2): control-center decoration and touch copy controls
+
+Removed moving background glows, nested outer section cards, unused Outfit loading
+and unused decorative CSS. Sections now use semantic headings and rules; copy
+buttons remain visible with 44px targets and report clipboard failure. Tiny USD
+amounts use scientific notation instead of rounding a nonzero cost to zero. Demo
+build passed before the last copy/formatting refinement; visual qualification is
+pending. Screens and film captures will be refreshed from the finished example UI.
+
+### V1-027 (P2): native price editing used a stale row index
+
+The native editor could overwrite a different row after a price-table refresh.
+It now retains the original record and rejects editing/removal if that record
+changed. Added removal with the fields retained for restoration through Save.
+This prevents stale-row edits locally; simultaneous administrative replacements
+remain last-write-wins at the protocol level and are not claimed transactional.
+Native build passed; fixture verification pending.
+
+### V1-028 (P1): updater compared prerelease versions lexicographically
+
+The updater treated `alpha.9` as newer than `alpha.20`, reversing valid upgrade and
+downgrade decisions. Its permissive suffix parser also accepted path characters
+in the version used for staging directories. Replace it with the already-locked
+semver parser/precedence comparator, and require the supported numeric alpha family.
+Signed synthetic update regressions cover digit boundaries and invalid suffixes.
+Implemented; focused build passed. Signed fixture execution remains pending.

@@ -18,3 +18,13 @@ lockfile/manifest updates**, not yet fixture-tested or platform-qualified.
 The final verification pass must exercise the terminal UI, native transport/TLS
 fixtures, JS tooling and clean Python packaging. No live provider operations
 are needed. Windows and macOS results require their actual CI executions.
+
+## Updater SemVer reuse
+
+2026-10-28: adopted the existing lockfile's semver 1.0.28 as an exact direct
+dependency of lai-update; no new version or fork patch. Official
+[crate release](https://docs.rs/crate/semver/1.0.28) and
+[Version precedence API](https://docs.rs/semver/1.0.28/semver/struct.Version.html#method.cmp_precedence)
+support numeric prerelease ordering and build-metadata-independent precedence.
+This removes the updater's incorrect string comparison and rejects invalid staging
+version syntax. Focused build and signed fixture tests are pending final verification.
