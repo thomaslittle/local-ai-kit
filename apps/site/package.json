@@ -5,9 +5,9 @@
   "type": "module",
   "description": "OriginLM landing page: one local runtime for AI usage and for apps built on the user's own AI.",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5174 --strictPort",
+    "dev": "vite --host 127.0.0.1 --port 5177 --strictPort",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 5174 --strictPort",
+    "preview": "vite preview --host 127.0.0.1 --port 5177 --strictPort",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "review": "node review/capture.mjs"
   },

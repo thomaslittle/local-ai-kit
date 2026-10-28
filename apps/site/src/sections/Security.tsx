@@ -19,7 +19,7 @@ const CARDS = [
   {
     icon: Shield,
     title: "No telemetry, no relay",
-    body: "Nothing leaves the machine. Usage history and grants live in a local state database. There is no account to create and no analytics endpoint to call.",
+    body: "History and grants stay on your machine. No telemetry or hosted relay. Authorized requests go to your selected provider; local model routes can stay local.",
   },
 ];
 

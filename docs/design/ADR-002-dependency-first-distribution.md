@@ -242,8 +242,9 @@ admin rights, and never touches another user's files.
 ### D14. Privacy statement
 
 The install page and the README carry the same statement as SECURITY.md: no
-telemetry, no remote relay, nothing leaves the machine; provider credentials are
-read only by the native client that already owns them and are never exported;
+telemetry or hosted relay; history and grants stay local, while explicitly
+authorized operations may contact the selected provider. Provider credentials
+are never returned to consuming apps;
 grants are per app and revocable; the SDK reports the same facts in-app. The
 statement is generated from one source so they cannot drift.
 
