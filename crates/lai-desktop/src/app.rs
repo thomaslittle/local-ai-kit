@@ -190,6 +190,7 @@ pub struct Desktop {
     pub refresh_seconds: u64,
     pub error: Option<String>,
     pub connected: bool,
+    pub example: bool,
     pub last_event: Instant,
     pub palette_open: bool,
     pub palette_input: Entity<InputState>,
@@ -308,6 +309,7 @@ impl Desktop {
         }));
 
         let mut this = Self {
+            example,
             page: std::env::var("LAI_DESKTOP_PAGE")
                 .ok()
                 .and_then(|name| {
@@ -877,6 +879,7 @@ impl AuthExt for lai_contracts::Observation<lai_contracts::AuthState> {
             self,
             lai_contracts::Observation::Known {
                 value: lai_contracts::AuthState::Authenticated,
+                freshness: lai_contracts::Freshness::Fresh,
                 ..
             }
         )
@@ -1235,12 +1238,16 @@ impl Desktop {
                 }))
         };
 
-        let status_tone = if self.connected {
+        let status_tone = if self.example {
+            Tone::Amber
+        } else if self.connected {
             Tone::Green
         } else {
             Tone::Red
         };
-        let status_text = if self.connected {
+        let status_text = if self.example {
+            "Example data"
+        } else if self.connected {
             "Broker connected"
         } else {
             "Reconnecting"
@@ -1302,7 +1309,9 @@ impl Desktop {
                             div()
                                 .text_size(px(10.))
                                 .text_color(theme.muted_foreground)
-                                .child(if self.credential_kind.contains("admin") {
+                                .child(if self.example {
+                                    "No runtime connected"
+                                } else if self.credential_kind.contains("admin") {
                                     "Admin credential"
                                 } else {
                                     "Application credential"

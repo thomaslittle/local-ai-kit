@@ -72,3 +72,18 @@ reviewing each crate, package, workflow and product surface.
 Final checks are deferred until the implementation pass, per the review brief.
 Record exact commands, source SHA, platform, failures and limitations here.
 Do not inherit test claims from a different commit or call unexecuted OSes green.
+
+## Continued review findings
+
+| ID | Priority | Finding | Fix / evidence |
+|---|---|---|---|
+| V1-010 | P1 | Control/desktop Rust IPC client ignored authentication and handshake results, allocated unbounded response lines, and renewed its timeout for every unrelated notification. | Implemented explicit authentication/version checks, 1 MiB response bound and one deadline across request write/read. Failed streams are discarded. Malicious fixture regressions added; execution pending. |
+| V1-011 | P2 | Desktop counted stale authentication as current; web reported zero open issues without issue evidence. | Implemented fresh-only authentication count, cached stale label, unknown issue count and explicit disconnected example-mode footer. Visual recheck pending. |
+
+Implementation updates: V1-003 has bounded patched dependencies recorded in
+`docs/dependency-audit-2026-10-28.md`; final qualification remains pending.
+V1-006 has a shared core color/font source in `brand/tokens.json` with generated
+CSS and GPUI outputs; remaining surface-specific tokens are still under review.
+Linux native and web/site production builds have run successfully before the
+latest changes. Headless synthetic screenshots exist; they do not qualify live
+accounts, other operating systems, or all product flows.

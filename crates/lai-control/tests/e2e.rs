@@ -85,3 +85,55 @@ async fn the_control_center_uses_only_the_public_authenticated_api() {
     assert_eq!(broker.active_connections(), 0);
     broker.close().await;
 }
+
+#[cfg(unix)]
+fn fake_broker(replies: Vec<String>) -> (String, std::thread::JoinHandle<()>, tempfile::TempDir) {
+    use std::io::{BufRead, BufReader, Write};
+    let directory = tempfile::tempdir().unwrap();
+    let address = directory.path().join("broker.sock");
+    let listener = std::os::unix::net::UnixListener::bind(&address).unwrap();
+    let task = std::thread::spawn(move || {
+        let (stream, _) = listener.accept().unwrap();
+        stream
+            .set_read_timeout(Some(Duration::from_secs(3)))
+            .unwrap();
+        let mut reader = BufReader::new(stream);
+        for reply in replies {
+            let mut request = String::new();
+            if reader.read_line(&mut request).unwrap_or(0) == 0 {
+                break;
+            }
+            if reader.get_mut().write_all(reply.as_bytes()).is_err() {
+                break;
+            }
+        }
+    });
+    (address.to_string_lossy().into_owned(), task, directory)
+}
+
+#[test]
+#[cfg(unix)]
+fn rejects_unauthenticated_or_incompatible_brokers() {
+    for replies in [
+        vec!["{\"id\":1,\"result\":{\"authenticated\":false}}\n".into()],
+        vec![
+            "{\"id\":1,\"result\":{\"authenticated\":true}}\n".into(),
+            "{\"id\":2,\"result\":{\"protocolVersion\":\"2.0\",\"methods\":[]}}\n".into(),
+        ],
+    ] {
+        let (address, task, _directory) = fake_broker(replies);
+        assert!(lai_control::BrokerClient::connect(&address, &"a".repeat(64)).is_err());
+        task.join().unwrap();
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn rejects_oversized_response_without_waiting_for_newline() {
+    let (address, task, _directory) = fake_broker(vec!["x".repeat(1024 * 1024 + 1)]);
+    let error = lai_control::BrokerClient::connect(&address, &"a".repeat(64))
+        .err()
+        .unwrap();
+    assert!(error.contains("frame bound"), "{error}");
+    task.join().unwrap();
+}

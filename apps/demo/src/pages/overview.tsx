@@ -58,7 +58,7 @@ export default function OverviewPage() {
       <dl className="grid grid-cols-2 gap-6 md:grid-cols-4">
         {[
           ['Profiles', connections.length], ['Authenticated now', verified.length],
-          ['Route-scoped models', modelCount], ['Open issues', issues.length],
+          ['Route-scoped models', modelCount], ['Open issues', snapshot?.issues ? issues.length : 'Unknown'],
         ].map(([label, value]) => (
           <div key={label} className="border-l pl-4">
             <dt className="text-sm text-muted-foreground">{label}</dt>
@@ -96,7 +96,7 @@ export default function OverviewPage() {
                         : 'Usage not reported'}
                     </p>
                     {reading?.fraction != null ? (
-                      <meter className="mt-2 h-3 w-full" min={0} max={1} value={reading.fraction}
+                      <meter className="usage-meter mt-2 h-3 w-full" min={0} max={1} value={reading.fraction}
                         aria-label={`${provider} ${window.label} used share`} />
                     ) : null}
                     <p className="mt-1 text-xs text-muted-foreground">{reading?.freshness ?? 'Unknown evidence'}</p>

@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
 };
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 
 pub const MAX_PAGE_LINES: usize = 500;
 
@@ -34,11 +34,15 @@ impl BrokerClient {
             stream: Some(BufReader::new(stream)),
             sequence: 0,
         };
-        client.call("broker.authenticate", json!({"token": token}))?;
-        client.call(
+        let authentication = client.call("broker.authenticate", json!({"token": token}))?;
+        if authentication["authenticated"] != true {
+            return Err("PERMISSION_DENIED: Broker did not authenticate this client".into());
+        }
+        let handshake = client.call(
             "runtime.handshake",
             json!({"protocolVersion":"1.0","clientName":"local-ai-kit-control"}),
         )?;
+        validate_handshake(&handshake)?;
         Ok(client)
     }
 
@@ -47,7 +51,7 @@ impl BrokerClient {
         expected_address: Option<&str>,
     ) -> std::result::Result<Self, String> {
         let metadata =
-            std::fs::metadata(path).map_err(|_| "Token file is unavailable".to_owned())?;
+            std::fs::symlink_metadata(path).map_err(|_| "Token file is unavailable".to_owned())?;
         if !metadata.is_file() || metadata.len() > 16 * 1024 {
             return Err("Token file is invalid".into());
         }
@@ -81,53 +85,67 @@ impl BrokerClient {
             .stream
             .as_mut()
             .ok_or_else(|| "Control center is closed".to_owned())?;
-        self.runtime.block_on(async {
-            let bytes = serde_json::to_vec(&frame).map_err(|_| "Request is invalid".to_owned())?;
-            if bytes.len() > 1024 * 1024 {
-                return Err("Request exceeds the frame bound".to_owned());
-            }
-            stream
-                .get_mut()
-                .write_all(&bytes)
-                .await
-                .map_err(|_| "Broker connection is closed".to_owned())?;
-            stream
-                .get_mut()
-                .write_all(b"\n")
-                .await
-                .map_err(|_| "Broker connection is closed".to_owned())?;
-            stream
-                .get_mut()
-                .flush()
-                .await
-                .map_err(|_| "Broker connection is closed".to_owned())?;
-            loop {
-                let mut line = String::new();
-                let read =
-                    tokio::time::timeout(Duration::from_secs(30), stream.read_line(&mut line))
+        let result = self.runtime.block_on(async {
+            tokio::time::timeout(Duration::from_secs(30), async {
+                let bytes =
+                    serde_json::to_vec(&frame).map_err(|_| "Request is invalid".to_owned())?;
+                if bytes.len() > 1024 * 1024 {
+                    return Err("Request exceeds the frame bound".to_owned());
+                }
+                stream
+                    .get_mut()
+                    .write_all(&bytes)
+                    .await
+                    .map_err(|_| "Broker connection is closed".to_owned())?;
+                stream
+                    .get_mut()
+                    .write_all(b"\n")
+                    .await
+                    .map_err(|_| "Broker connection is closed".to_owned())?;
+                stream
+                    .get_mut()
+                    .flush()
+                    .await
+                    .map_err(|_| "Broker connection is closed".to_owned())?;
+                loop {
+                    let mut line = Vec::new();
+                    // Bound allocation before parsing, including a peer that never sends a newline.
+                    let read = (&mut *stream)
+                        .take(1024 * 1024 + 1)
+                        .read_until(b'\n', &mut line)
                         .await
-                        .map_err(|_| "Broker request timed out".to_owned())?
                         .map_err(|_| "Broker connection is closed".to_owned())?;
-                if read == 0 {
-                    return Err("Broker connection is closed".to_owned());
+                    if line.len() > 1024 * 1024 {
+                        return Err("Broker response exceeds the frame bound".to_owned());
+                    }
+                    if read == 0 {
+                        return Err("Broker connection is closed".to_owned());
+                    }
+                    let value: Value = serde_json::from_slice(&line)
+                        .map_err(|_| "Broker returned invalid JSON".to_owned())?;
+                    if value.get("id").and_then(Value::as_i64) != Some(id as i64) {
+                        continue;
+                    }
+                    if let Some(error) = value.get("error") {
+                        let code = error["data"]["code"]
+                            .as_str()
+                            .unwrap_or("PROVIDER_UNAVAILABLE");
+                        let message = error["data"]["message"]
+                            .as_str()
+                            .unwrap_or("Broker request failed");
+                        return Err(format!("{code}: {message}"));
+                    }
+                    return Ok(value.get("result").cloned().unwrap_or(Value::Null));
                 }
-                let value: Value = serde_json::from_str(&line)
-                    .map_err(|_| "Broker returned invalid JSON".to_owned())?;
-                if value.get("id").and_then(Value::as_i64) != Some(id as i64) {
-                    continue;
-                }
-                if let Some(error) = value.get("error") {
-                    let code = error["data"]["code"]
-                        .as_str()
-                        .unwrap_or("PROVIDER_UNAVAILABLE");
-                    let message = error["data"]["message"]
-                        .as_str()
-                        .unwrap_or("Broker request failed");
-                    return Err(format!("{code}: {message}"));
-                }
-                return Ok(value.get("result").cloned().unwrap_or(Value::Null));
-            }
-        })
+            })
+            .await
+            .map_err(|_| "Broker request timed out".to_owned())?
+        });
+        // A partial write/read or late reply cannot be reused as a new request's stream.
+        if result.is_err() {
+            self.stream = None;
+        }
+        result
     }
 
     pub fn snapshot(&mut self) -> std::result::Result<Snapshot, String> {
@@ -146,6 +164,21 @@ impl BrokerClient {
     pub fn close(mut self) {
         let _ = self.call("runtime.closeClient", json!({}));
         self.stream = None;
+    }
+}
+
+fn validate_handshake(value: &Value) -> std::result::Result<(), String> {
+    let compatible = value["protocolVersion"].as_str().is_some_and(|version| {
+        version
+            .strip_prefix("1.")
+            .is_some_and(|minor| !minor.is_empty() && minor.bytes().all(|b| b.is_ascii_digit()))
+    }) && value["methods"]
+        .as_array()
+        .is_some_and(|methods| methods.iter().all(Value::is_string));
+    if compatible {
+        Ok(())
+    } else {
+        Err("PROTOCOL_INCOMPATIBLE: Update the runtime or use a compatible private helper".into())
     }
 }
 
