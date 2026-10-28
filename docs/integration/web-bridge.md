@@ -27,8 +27,8 @@ python scripts/native_host.py --binary target/release/local-ai-kit-native-host \
 - Chrome/Chromium/Edge write `allowed_origins`; Firefox writes
   `allowed_extensions`. The Rust host accepts either shape and checks the caller
   against the exact entry (`valid_caller`), never a prefix.
-- Each website origin the extension talks to is approved once by the user in the
-  extension UI and stored as a revocable grant. A page cannot grant itself.
+- Website-origin grants are required for the planned content bridge. The current
+  extension does not expose the host to arbitrary website pages.
 - Pages never receive credentials; they receive results.
 - The host registration is per user and reversible with `--unregister`.
 
@@ -44,12 +44,12 @@ The helper can serve loopback HTTP with a one-time pairing code:
 local-ai-kit serve --http --port 47821 --allow-passive-discovery
 ```
 
-- Strict origin allowlist; the pairing code is single-use and short lived.
+- Same-origin host boundary; the pairing code is single-use and short lived.
 - The page exchanges the code for a short-lived, scoped token.
-- Chrome's Private Network Access preflights are answered explicitly; a request
-  without the right headers is rejected rather than silently retried.
+- Cross-origin website requests and Private Network Access preflights are not
+  enabled. Open the dashboard served by the helper to pair today.
 - `DEFAULT_PAIRING_ORIGIN` in `@local-ai-kit/web` is `http://127.0.0.1:47821`;
-  the service install can bind it when the user wants web access.
+  the service installer enables IPC only; start the explicit HTTP command above.
 
 ## Detection
 
@@ -59,7 +59,7 @@ const bridge = await detect(); // 'extension' | 'pairing' | 'none'
 ```
 
 - `extension`: the content bridge answered a postMessage ping.
-- `pairing`: a loopback `/runtime/info` probe answered; the page still needs the
+- `pairing`: a readable, validated loopback `/runtime/info` response was received; the page still needs the
   explicit code exchange.
 - `none`: show "Connect your local AI" with the install page.
 
@@ -69,7 +69,7 @@ Detection never starts a scan, never grants access and never reads a credential.
 
 | State | Copy |
 | --- | --- |
-| extension or pairing with providers | `Local AI connected · Claude, Ollama` (max three, then `+N`) |
-| reachable but no providers yet | `Local AI connected` |
+| authenticated client with providers | `Local AI connected · Claude, Ollama` (max three, then `+N`) |
+| reachable, not authenticated | `Runtime available; pairing required` |
 | nothing available | `Not detected` + install link |
-| sandboxed page (Flatpak/Snap/App Store) | `Sandboxed` with a one-line explanation |
+| unavailable or browser-blocked | `Not detected`; detection cannot establish a sandbox cause |

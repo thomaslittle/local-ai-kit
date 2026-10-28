@@ -26,7 +26,9 @@ def main():
     if a.profile=='core' or full:run(['cargo','test','--workspace','--all-targets','--locked','--no-fail-fast'],'Cargo.toml')
     if a.profile=='adapters':run([sys.executable,'scripts/adapter_conformance.py',*(['--adapter',a.adapter] if a.adapter else ['--all'])])
     if a.profile in ('selectors','javascript') or full:js_package('selector-core')
-    if a.profile in ('sdk-typescript','sdk','javascript') or full:js_package('sdk-typescript')
+    if a.profile in ('sdk-typescript','sdk','javascript') or full:
+        js_package('sdk-typescript')
+        js_package('sdk-web')
     if a.profile in ('sdk',) or full:run([sys.executable,'-m','unittest','discover','-s','packages/sdk-python/tests','-v'])
     if a.profile in ('generation',) or full:
         run([sys.executable,'-m','unittest','discover','-s','tests/generation','-v'])

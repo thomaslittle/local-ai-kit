@@ -9,11 +9,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 fn home() -> Option<PathBuf> {
-    let key = if cfg!(windows) {
-        "USERPROFILE"
-    } else {
-        "HOME"
-    };
+    let key = if cfg!(windows) { "USERPROFILE" } else { "HOME" };
     std::env::var_os(key)
         .map(PathBuf::from)
         .filter(|path| path.is_absolute())
@@ -50,24 +46,6 @@ fn default_token_file() -> Option<PathBuf> {
     home().map(|home| home.join(".local-ai-kit/broker-token.json"))
 }
 
-fn token_from_file(path: &std::path::Path) -> Option<String> {
-    let info = path.symlink_metadata().ok()?;
-    if !info.is_file() || info.file_type().is_symlink() || info.len() > 16 * 1024 {
-        return None;
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if info.permissions().mode() & 0o077 != 0 {
-            return None;
-        }
-    }
-    let value: Value = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
-    let token = value.get("token")?.as_str()?;
-    (token.len() == 64 && token.bytes().all(|byte| byte.is_ascii_hexdigit()))
-        .then(|| token.to_string())
-}
-
 fn listening(address: &str) -> bool {
     if !cfg!(windows)
         && std::path::Path::new(address).is_absolute()
@@ -98,11 +76,8 @@ pub fn run(
     json: bool,
 ) -> lai_contracts::Result<u8> {
     let address = address.unwrap_or_else(default_address);
-    let token = token_file
-        .or_else(default_token_file)
-        .as_deref()
-        .and_then(token_from_file);
-    let Some(token) = token else {
+    let token_file = token_file.or_else(default_token_file);
+    let Some(token_file) = token_file.filter(|path| path.is_file()) else {
         if json {
             println!(
                 "{}",
@@ -126,7 +101,7 @@ pub fn run(
         }
         return Ok(3);
     }
-    let client = BrokerClient::connect(&address, &token).ok();
+    let client = BrokerClient::from_token_file(&token_file, Some(&address)).ok();
     let Some(mut client) = client else {
         if json {
             println!(
@@ -141,7 +116,9 @@ pub fn run(
     let snapshot = client
         .snapshot()
         .map_err(|_| lai_contracts::DomainError::new(ErrorCode::ProviderUnavailable, "snapshot"))?;
-    let health = client.call("runtime.health", json!({})).unwrap_or(Value::Null);
+    let health = client
+        .call("runtime.health", json!({}))
+        .unwrap_or(Value::Null);
     let apps = client.apps().ok();
     let providers: Vec<String> = snapshot
         .providers
@@ -156,7 +133,7 @@ pub fn run(
                 "authorized": true,
                 "mode": "shared",
                 "address": address,
-                "version": env!("CARGO_PKG_VERSION"),
+                "clientVersion": env!("CARGO_PKG_VERSION"),
                 "protocolVersion": snapshot.protocol_version,
                 "revision": snapshot.revision,
                 "observedAt": snapshot.observed_at,
@@ -171,7 +148,7 @@ pub fn run(
             "OriginLM helper: running (protocol {}, revision {})",
             snapshot.protocol_version, snapshot.revision
         );
-        println!("  version: {}", env!("CARGO_PKG_VERSION"));
+        println!("  status client version: {}", env!("CARGO_PKG_VERSION"));
         println!(
             "  providers: {}",
             if providers.is_empty() {

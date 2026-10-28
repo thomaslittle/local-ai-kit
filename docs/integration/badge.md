@@ -1,7 +1,7 @@
 # Status badge
 
 The same facts power the dashboard, `local-ai-kit status` and a small badge on a
-website. Nothing in the badge reads a credential; it shows what a granted client
+website. The browser badge reads no credential; the CLI reads its configured grant descriptor. It shows what a granted client
 is allowed to see.
 
 ## The data
@@ -34,9 +34,9 @@ is allowed to see.
 const status = await detect(); // 'extension' | 'pairing' | 'none'
 
 const badge =
-  status === 'none'
-    ? {label: 'Not detected', action: 'Install OriginLM'}
-    : {label: `Local AI connected · ${providers.join(', ')}`, action: null};
+  {label: badgeLabel(status, [], false), action: status === 'none' ? 'Install OriginLM' : 'Connect'};
+// Pass authenticated=true only after a successful SDK handshake, with provider
+// names from that granted client's snapshot.
 ```
 
 Rules:
@@ -44,8 +44,8 @@ Rules:
 - Render at most three provider names, then "+N".
 - "Not detected" always offers the install page; it never says "no providers
   found", because that would hide a sandbox or a missing helper.
-- Sandboxed pages (Flatpak/Snap/App Store, or a browser without the extension)
-  show "Sandboxed" with a short explanation, not an error.
+- Detection alone cannot identify a sandbox. Show a sandbox explanation only
+  when the host supplies that evidence.
 - The badge is read-only: it cannot start a scan, grant access or run a turn.
   Those still require an explicit call and the normal grant.
 

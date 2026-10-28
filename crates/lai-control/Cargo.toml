@@ -6,9 +6,14 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 
+[features]
+default = ["tui"]
+tui = ["dep:ratatui", "dep:crossterm"]
+
 [[bin]]
 name = "local-ai-kit-control"
 path = "src/main.rs"
+required-features = ["tui"]
 
 [dependencies]
 lai-contracts = { path = "../lai-contracts" }
@@ -17,8 +22,8 @@ serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "io-util"] }
-ratatui = { version = "0.30.2", default-features = false, features = ["crossterm"] }
-crossterm = "0.29"
+ratatui = { version = "0.30.2", optional = true, default-features = false, features = ["crossterm"] }
+crossterm = { version = "0.29", optional = true }
 
 [dev-dependencies]
 lai-core = { path = "../lai-core" }

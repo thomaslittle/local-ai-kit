@@ -98,3 +98,18 @@ connection arguments. Structured mismatch status reporting remains pending.
 V1-012 (P1): the Rust embedded fallback started Tokio background tasks before
 constructing/entering its runtime. Runtime construction and entry now precede
 kit initialization and background-task startup. Final fixture execution pending.
+
+V1-013 (P1): incoming web detection accepted any opaque HTTP response and called
+availability “connected”. Implemented same-window/origin message filtering,
+loopback-only requests, no credentials/redirects, bounded runtime-info validation
+and separate authorized badge state. Added security fixtures and included the
+new package in workspace build/verification. Corrected unimplemented website
+pairing/PNA/content-script claims rather than weakening the host's origin boundary.
+
+V1-014 (P2): helper/facade/GPUI pulled terminal dependencies through shared control
+code. Made terminal dependencies optional and disabled them for nonterminal
+consumers (ADR-004). Isolated artifact size comparison pending.
+
+Integration update: merged `feat/web-bridge` (including status/mini-view) and
+`feat/landing-site` through `dbcbb1c`. Incoming video source/render claims are
+under review; they are not yet adopted as v1-qualified outputs.
