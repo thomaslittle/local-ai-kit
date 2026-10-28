@@ -1,3 +1,4 @@
+import { ResetCountdown } from '@/components/common/reset-countdown';
 import { CostTrend } from '@/components/common/cost-trend';
 import { lazy, Suspense } from 'react';
 import { ClockIcon, GaugeIcon, LinkIcon, StackIcon } from '@phosphor-icons/react';
@@ -47,7 +48,7 @@ function WindowReading({ window }: { window: UsageWindow }) {
           <Badge variant={reading.freshness === 'stale' ? 'warning' : 'outline'}>{reading.freshness}</Badge>
           <span className="inline-flex items-center gap-1.5">
             <ClockIcon className="size-3.5" aria-hidden="true" />
-            {window.resetsAt ? `Resets ${new Date(window.resetsAt).toLocaleTimeString()}` : 'Reset not reported'}
+            <ResetCountdown at={window.resetsAt} />
           </span>
         </div>
       </div>

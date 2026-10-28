@@ -1,3 +1,4 @@
+import { ResetCountdown } from '@/components/common/reset-countdown';
 import { CostTrend } from '@/components/common/cost-trend';
 import { ShieldCheckIcon, GaugeIcon } from '@phosphor-icons/react';
 import { Link } from '@tanstack/react-router';
@@ -56,6 +57,11 @@ export default function OverviewPage() {
         </div>
       </div>
 
+      <div data-capture="providers" className="flex flex-wrap gap-4 border-y py-4">
+        {snapshot?.providers.map((provider) => <div key={provider.id} className="flex items-center gap-2">
+          <ProviderGlyph id={provider.id} name={provider.name} /><span className="text-sm font-medium">{provider.name}</span>
+        </div>)}
+      </div>
       <dl className="grid grid-cols-2 gap-6 md:grid-cols-4">
         {[
           ['Profiles', connections.length], ['Authenticated now', verified.length],
@@ -68,47 +74,37 @@ export default function OverviewPage() {
         ))}
       </dl>
 
-      <CostTrend />
-
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
       <section aria-labelledby="allowances-title">
         <div className="mb-4 flex items-baseline justify-between gap-4">
           <h2 id="allowances-title" className="text-xl font-semibold">Usage and allowances</h2>
           <Link to="/usage" className="text-sm underline underline-offset-4">All usage details</Link>
         </div>
         {windows.length ? (
-          <ul className="divide-y border-y">
+          <ul className="grid gap-x-6 border-t sm:grid-cols-2">
             {windows.map(({ pool, window }) => {
               const reading = readingOf(window);
               const owners = connections.filter((connection) => pool.connectionIds.includes(connection.id));
               const provider = [...new Set(owners.map((connection) =>
                 snapshot?.providers.find((item) => item.id === connection.providerId)?.name ?? connection.providerId
               ))].join(', ') || 'Provider not reported';
-              const reset = window.resetsAt ? new Date(window.resetsAt) : null;
               return (
-                <li key={`${pool.id}:${window.id}`} className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                <li key={`${pool.id}:${window.id}`} className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-3 border-b py-5">
+                  <div className="relative flex size-18 items-center justify-center text-primary">
+                    <svg viewBox="0 0 80 80" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
+                      <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border)" strokeWidth="5" />
+                      {reading?.fraction != null ? <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" strokeWidth="5" pathLength="100" strokeDasharray={`${reading.fraction * 100} 100`} strokeLinecap="round" /> : null}
+                    </svg>
+                    <span className="text-sm font-semibold tabular-nums">{reading?.fraction != null ? percent(reading.fraction) : '—'}</span>
+                  </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold">{provider}</h3>
                     <p className="text-sm text-muted-foreground">{window.label}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{owners.map((owner) => owner.displayName).join(', ') || 'Connection not reported'}</p>
                   </div>
-                  <div>
-                    <p className="font-medium tabular-nums">
-                      {reading ? reading.fraction === null
-                        ? `${reading.used} ${reading.unit}, total unknown`
-                        : `${percent(reading.fraction)} used`
-                        : 'Usage not reported'}
-                    </p>
-                    {reading?.fraction != null ? (
-                      <meter className="usage-meter mt-2 h-3 w-full" min={0} max={1} value={reading.fraction}
-                        aria-label={`${provider} ${window.label} used share`} />
-                    ) : null}
-                    <p className="mt-1 text-xs text-muted-foreground">{reading?.freshness ?? 'Unknown evidence'}</p>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {reset && Number.isFinite(reset.getTime()) ? (
-                      <p>Resets <time dateTime={window.resetsAt ?? undefined}>{reset.toLocaleString()}</time></p>
-                    ) : <p>Reset not reported</p>}
-                    <p className="mt-1">{pool.routeIds.length} linked routes; {pool.sharing === 'verified' ? 'shared pool' : 'sharing unknown'}</p>
+                  <div className="col-span-2 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                    <span>{reading ? reading.fraction === null ? `${reading.used} ${reading.unit}; total unknown` : `${percent(reading.fraction)} used; ${reading.freshness}` : 'Usage not reported'}</span>
+                    <ResetCountdown at={window.resetsAt} />
                   </div>
                 </li>
               );
@@ -120,6 +116,8 @@ export default function OverviewPage() {
         )}
         <p className="mt-3 text-xs text-muted-foreground">Shared pools appear once. Allowances from different providers are never added together.</p>
       </section>
+      <CostTrend />
+      </div>
 
       {issues.length ? (
         <section aria-labelledby="issues-title">
