@@ -6,6 +6,7 @@ param(
   [switch]$Purge
 )
 $ErrorActionPreference = 'Stop'
+Stop-ScheduledTask -TaskName 'OriginLM Helper' -ErrorAction SilentlyContinue
 Unregister-ScheduledTask -TaskName 'OriginLM Helper' -Confirm:$false -ErrorAction SilentlyContinue
 Remove-Item -Force (Join-Path ([Environment]::GetFolderPath('Startup')) 'OriginLM Tray.lnk') -ErrorAction SilentlyContinue
 

@@ -10,7 +10,12 @@ set -eu
 BASE="${LAI_RELEASE_BASE:-https://<site>/releases/latest/download}"
 BIN_DIR="${LAI_BIN_DIR:-$HOME/.local/bin}"
 STATE_DIR="${LAI_STATE_DIR:-$HOME/.local-ai-kit}"
-SOCKET="${LAI_BROKER_SOCKET:-${XDG_RUNTIME_DIR:-$STATE_DIR}/local-ai-kit/user.sock}"
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  default_socket="$XDG_RUNTIME_DIR/local-ai-kit/user.sock"
+else
+  default_socket="$STATE_DIR/user.sock"
+fi
+SOCKET="${LAI_BROKER_SOCKET:-$default_socket}"
 
 say() { printf '%s\n' "$*"; }
 fail() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -59,14 +64,31 @@ mkdir -p "$BIN_DIR" "$STATE_DIR" "$(dirname "$SOCKET")"
 install -m 0755 "$tmp/helper-$target/local-ai-kit" "$BIN_DIR/local-ai-kit"
 
 token="$STATE_DIR/broker-token.json"
-args="serve --ipc $SOCKET --independent --token-file $token --allow-passive-discovery"
+# Service files have their own escaping rules; shell word splitting is not one.
+xml_escape() { printf '%s' "$1" | sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g;'; }
+unit_quote() {
+  printf '"'
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g; s/%/%%/g; s/\$/$$/g'
+  printf '"'
+}
+# Newlines cannot be represented safely by these service-file templates.
+for path in "$BIN_DIR" "$STATE_DIR" "$SOCKET"; do
+  case "$path" in
+    /*) ;;
+    *) fail "service paths must be absolute" ;;
+  esac
+  case "$path" in
+    *'
+'*) fail "service paths must not contain newlines" ;;
+  esac
+done
 
 if [ "$(uname -s)" = Darwin ]; then
   plist="$HOME/Library/LaunchAgents/dev.originlm.helper.plist"
   mkdir -p "$(dirname "$plist")"
   plist_args=""
-  for word in $args; do
-    plist_args="$plist_args    <string>$word</string>
+  for word in "$BIN_DIR/local-ai-kit" serve --ipc "$SOCKET" --independent --token-file "$token" --allow-passive-discovery; do
+    plist_args="$plist_args    <string>$(xml_escape "$word")</string>
 "
   done
   cat > "$plist" <<PLIST
@@ -75,7 +97,6 @@ if [ "$(uname -s)" = Darwin ]; then
 <plist version="1.0"><dict>
   <key>Label</key><string>dev.originlm.helper</string>
   <key>ProgramArguments</key><array>
-    <string>$BIN_DIR/local-ai-kit</string>
 $plist_args  </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
@@ -95,7 +116,7 @@ Description=OriginLM local AI helper
 After=default.target
 
 [Service]
-ExecStart=$BIN_DIR/local-ai-kit $args
+ExecStart=$(unit_quote "$BIN_DIR/local-ai-kit") serve --ipc $(unit_quote "$SOCKET") --independent --token-file $(unit_quote "$token") --allow-passive-discovery
 Restart=on-failure
 RestartSec=2
 Nice=5

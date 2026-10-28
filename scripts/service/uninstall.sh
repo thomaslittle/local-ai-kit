@@ -47,7 +47,6 @@ for path in \
 done
 
 rm -f "$BIN_DIR/local-ai-kit"
-rm -rf "$STATE_DIR/workspaces"
 if [ "$PURGE" -eq 1 ]; then
   rm -rf "$STATE_DIR" "$DATA_DIR"
   say "Removed the binary, service and user data"
