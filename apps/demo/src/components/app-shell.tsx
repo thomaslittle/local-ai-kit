@@ -115,7 +115,7 @@ export function AppShell() {
         <SidebarInset className="min-w-0 bg-transparent">
           <Header />
           <ModeBanner />
-          <main className="mx-auto w-full max-w-[96rem] flex-1 px-4 py-8 md:px-8">
+          <div className="mx-auto w-full max-w-[96rem] flex-1 px-4 py-8 md:px-8">
             <PageHeading />
             <Notices />
             <PageOutlet />
@@ -123,7 +123,7 @@ export function AppShell() {
               <span>Local-first by design. Honest about what is known.</span>
               <span>v0.1 · work in progress</span>
             </footer>
-          </main>
+          </div>
         </SidebarInset>
       </SidebarProvider>
       <GlobalShortcuts />

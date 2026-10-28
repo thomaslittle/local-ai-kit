@@ -46,6 +46,7 @@ for(const section of ['Overview','Connections','Models','Usage','Playground','Di
   try{
    await mountFixture(page);
    await nav(page,section);
+   assert.equal(await page.locator('main main').count(),0,'Each page has one main landmark');
    assert.deepEqual(details(await new AxeBuilder({page}).withTags(tags).analyze()),[]);
   }finally{await context.close();}
  });
