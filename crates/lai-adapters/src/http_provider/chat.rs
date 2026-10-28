@@ -218,8 +218,8 @@ impl Chat {
             // OpenRouter reports the charge in USD credits in the final SSE usage frame.
             // Generic compatible endpoints may use a different currency or meaning.
             if self.kind == HttpKind::Compatible && self.endpoint.reports_usd_cost() {
-                if let Some(cost) = value.pointer("/usage/cost").filter(|cost| cost.is_number()) {
-                    if let Ok(amount) = DecimalString::try_from(cost.to_string()) {
+                if let Some(cost) = value.pointer("/usage/cost").and_then(serde_json::Value::as_number) {
+                    if let Some(amount) = DecimalString::from_json_number(cost) {
                         cx.emit(EventPayload::Usage {
                             unit: "cost_usd".into(),
                             used: amount.into(),

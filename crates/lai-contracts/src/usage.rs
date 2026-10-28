@@ -33,6 +33,17 @@ impl From<DecimalString> for String {
     }
 }
 impl DecimalString {
+    /// Normalize a provider JSON number, including scientific notation, without
+    /// allocating an unbounded decimal expansion. Protocol values remain plain strings.
+    pub fn from_json_number(value: &serde_json::Number) -> Option<Self> {
+        let encoded = value.to_string();
+        if encoded.len() > 128 { return None; }
+        let decimal = BigDecimal::from_str(&encoded).ok()?;
+        let (_, scale) = decimal.as_bigint_and_exponent();
+        if !(-128..=128).contains(&scale) { return None; }
+        Self::try_from(decimal.normalized().to_plain_string()).ok()
+    }
+
     pub fn as_str(&self) -> &str {
         &self.0
     }
