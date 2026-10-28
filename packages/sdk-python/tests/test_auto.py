@@ -98,12 +98,14 @@ class PrivateLifecycleTests(unittest.IsolatedAsyncioTestCase):
         broker.stdout.readline = AsyncMock(return_value=b'invalid descriptor')
         broker.wait = AsyncMock(return_value=0)
         with tempfile.TemporaryDirectory() as directory:
-            with (patch.dict(os.environ, {'NODE_OPTIONS': '--injected', 'UNRELATED_SECRET': 'synthetic'}),
+            with (patch.dict(os.environ, {'NODE_OPTIONS': '--injected', 'UNRELATED_SECRET': 'synthetic', 'XDG_STATE_HOME': directory, 'LOCALAPPDATA': directory, 'APPDATA': directory}),
                   patch.object(asyncio, 'create_subprocess_exec', AsyncMock(return_value=broker)) as spawn):
                 with self.assertRaises(LocalAIError):
                     await client_module._open_private('/fixture/helper', {'cwd': directory, 'env': {'HOME': directory}})
                 self.assertEqual(spawn.call_args.kwargs['cwd'], directory)
                 self.assertEqual(spawn.call_args.kwargs['env']['HOME'], directory)
+                for key in ('XDG_STATE_HOME', 'LOCALAPPDATA', 'APPDATA'):
+                    self.assertEqual(spawn.call_args.kwargs['env'][key], directory)
                 self.assertNotIn('NODE_OPTIONS', spawn.call_args.kwargs['env'])
                 self.assertNotIn('UNRELATED_SECRET', spawn.call_args.kwargs['env'])
 

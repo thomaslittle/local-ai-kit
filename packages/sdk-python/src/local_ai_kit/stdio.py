@@ -15,7 +15,7 @@ def _process_options(cwd=None, env=None):
         raise LocalAIError('INVALID_WORKSPACE')
     if env is not None and not isinstance(env, dict):
         raise LocalAIError('INVALID_ENVIRONMENT')
-    allowed = ('PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS')
+    allowed = ('PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_RUNTIME_DIR','APPDATA','LOCALAPPDATA','LOCAL_AI_KIT_STATE_DIR','DBUS_SESSION_BUS_ADDRESS')
     inherited = {key: os.environ[key] for key in allowed if key in os.environ}
     for key, value in (env or {}).items():
         if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', key) or not isinstance(value, str) or '\0' in value or key.upper() in ('NODE_OPTIONS','LD_PRELOAD','DYLD_INSERT_LIBRARIES','PYTHONSTARTUP','PYTHONPATH','PYTHONHOME'):

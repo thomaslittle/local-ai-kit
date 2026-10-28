@@ -58,3 +58,12 @@ test('server event gap fails only its subscription and preserves request transpo
 test('stdio carries nested auth method identifiers without relaxing malformed names',async()=>{
  const t=await open();try{assert.deepEqual(await t.request('auth.chatgpt.status',{synthetic:true}),{synthetic:true});for(const method of ['auth..status','.auth.status','auth.status.'])await assert.rejects(t.request(method),/INVALID_METHOD/);}finally{await t.close();}
 });
+
+test('standard OS data directories survive the minimal child environment',async()=>{
+ const keys=['XDG_STATE_HOME','APPDATA','LOCALAPPDATA','LOCAL_AI_KIT_STATE_DIR'];
+ const previous=Object.fromEntries(keys.map(key=>[key,process.env[key]]));
+ const expected=Object.fromEntries(keys.map(key=>[key,'synthetic-state-directory']));
+ Object.assign(process.env,expected);let transport;
+ try{transport=await open();assert.deepEqual(await transport.request('test.directories'),expected);}
+ finally{await transport?.close();for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}}
+});

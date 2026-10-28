@@ -7,7 +7,7 @@ export function processOptions({cwd, env: overrides} = {}) {
   if (cwd !== undefined && (typeof cwd !== 'string' || !isAbsolute(cwd) || cwd.includes('\0'))) throw new LocalAIError('INVALID_WORKSPACE');
   if (overrides !== undefined && (overrides === null || typeof overrides !== 'object' || Array.isArray(overrides))) throw new LocalAIError('INVALID_ENVIRONMENT');
   const env = {};
-  for (const key of ['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS']) {
+  for (const key of ['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','HOME','USERPROFILE','TMP','TEMP','TMPDIR','LANG','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_RUNTIME_DIR','APPDATA','LOCALAPPDATA','LOCAL_AI_KIT_STATE_DIR','DBUS_SESSION_BUS_ADDRESS']) {
     if (process.env[key] !== undefined) env[key] = process.env[key];
   }
   for (const [key, value] of Object.entries(overrides ?? {})) {
