@@ -11,7 +11,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { brand } from '../brand.generated';
 import { LAYERS } from '../data/layers';
 
-export type StudioFrame = { seconds: number; spread: number; intro?: number; pointer?: [number, number]; active?: number };
+export type StudioFrame = { seconds: number; spread: number; intro?: number; pointer?: [number, number]; active?: number; framing?: 'hero' };
 export type StudioOptions = { width: number; height: number; dpr: number; light: boolean; assetBase?: string };
 const W = 6.4, H = W * 1000 / 1440, GAP = 0.92;
 const clamp = THREE.MathUtils.clamp;
@@ -105,7 +105,8 @@ export async function createStudio(canvas: HTMLCanvasElement, options: StudioOpt
       const dolly = 1 - Math.pow(1 - intro, 4);
       const [px, py] = frame.pointer ?? [0, 0];
       stack.rotation.set(-0.65 + py * 0.06, 0.12 + px * 0.06 + Math.sin(frame.seconds * 0.13) * 0.015, -0.17);
-      stack.position.set(-0.4, 0.1, 0);
+      const hero = frame.framing === 'hero';
+      stack.position.set(-0.4, hero ? THREE.MathUtils.lerp(-0.65, 0.1, frame.spread) : 0.1, 0);
       panels.forEach(({ group, edge, shadow }, index) => {
         const stagger = smooth(frame.spread * 1.24 - index * 0.06);
         group.position.z = (2 - index) * (0.09 + GAP * stagger);
@@ -121,7 +122,8 @@ export async function createStudio(canvas: HTMLCanvasElement, options: StudioOpt
       });
       spine.geometry.setFromPoints(panels.map(({ group }) => new THREE.Vector3(-W / 2 + 0.15, -H / 2 - 0.12, group.position.z)));
       spine.visible = frame.spread > 0.2;
-      const finalDistance = width < height ? 23 : 18.8;
+      const baseDistance = width < height ? 23 : 18.8;
+      const finalDistance = hero ? baseDistance * THREE.MathUtils.lerp(0.76, 1, frame.spread) : baseDistance;
       stack.updateMatrixWorld(true);
       const focus = panels[0].group.localToWorld(new THREE.Vector3((manifest.focus.u - 0.5) * W, (0.5 - manifest.focus.v) * H, 0.043));
       camera.position.set(THREE.MathUtils.lerp(focus.x, 0.4, dolly), THREE.MathUtils.lerp(focus.y, 0.3, dolly), THREE.MathUtils.lerp(focus.z + 2.07, finalDistance, dolly));

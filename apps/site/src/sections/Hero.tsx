@@ -152,6 +152,9 @@ export function HeroStage() {
           {paused ? "Play animation" : "Pause animation"}
         </button>
       )}
+      <ol className="static-layer-names" aria-label="Layers in the OriginLM stack">
+        {LAYERS.map(layer => <li key={layer.id}>{layer.label}</li>)}
+      </ol>
       <figcaption>
         {staticMode
           ? "The OriginLM stack, one runtime from the providers up to your app."

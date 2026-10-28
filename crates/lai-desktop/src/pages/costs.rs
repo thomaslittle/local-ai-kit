@@ -19,17 +19,24 @@ impl Desktop {
             .unwrap_or_default();
         let maximum = records
             .iter()
-            .filter_map(|record| record.amount_usd.as_ref()?.as_str().parse::<f32>().ok())
+            .filter_map(|record| record.amount_usd.as_ref()?.as_str().parse::<f64>().ok())
             .filter(|value| value.is_finite())
-            .fold(0.000001_f32, f32::max);
+            .fold(0.000001_f64, f64::max);
+        let maximum_label = if maximum >= 1_000_000. {
+            format!("{maximum:.2e}")
+        } else {
+            maximum.to_string()
+        };
         div().v_flex().gap_3().p_4().border_1().border_color(theme.border).rounded(px(ui::CARD_RADIUS))
             .child(ui::section_title(if self.example { "Cost trend — example data" } else { "Cost trend" }, &theme))
             .children(self.bundle.as_ref().and_then(|bundle| bundle.cost_error.clone()).map(|error| div().text_size(px(12.)).child(error)))
+            .child(div().text_size(px(12.)).text_color(theme.muted_foreground).child(format!("Scale: $0 to ${maximum_label} per turn")))
             .child(div().h_flex().items_end().gap_2().h(px(100.)).children(records.iter().map(|record| {
-                let amount = record.amount_usd.as_ref().and_then(|value| value.as_str().parse::<f32>().ok()).filter(|value| value.is_finite());
-                div().flex_1().h(px(amount.map(|value| (value / maximum * 100.).max(1.)).unwrap_or(1.)))
+                let amount = record.amount_usd.as_ref().and_then(|value| value.as_str().parse::<f64>().ok()).filter(|value| value.is_finite());
+                div().flex_1().h(px(amount.map(|value| (value / maximum * 100.).max(1.) as f32).unwrap_or(1.)))
                     .border_1().border_color(theme.primary).bg(if record.basis == "estimated" { theme.primary.opacity(0.2) } else if amount.is_some() { theme.primary } else { theme.border })
             })))
+            .child(div().text_size(px(11.)).text_color(theme.muted_foreground).child(format!("Latest {} observed turns, oldest to newest. Latest four amounts below, newest first.", records.len())))
             .children(records.iter().rev().take(4).map(|record| div().h_flex().justify_between().gap_3().text_size(px(12.))
                 .child(record.native_model_id.clone())
                 .child(match &record.amount_usd { Some(value) => format!("${} {}", value.as_str(), if record.basis == "estimated" { "estimated" } else { "provider reported" }), None => "Unknown: usage or price missing".into() })))

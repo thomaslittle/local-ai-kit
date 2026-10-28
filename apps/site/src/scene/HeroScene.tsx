@@ -64,7 +64,7 @@ export default function HeroScene({ stageEl, introPlayed, labels, onHover, onRea
         const spread = Math.max(0, Math.min(1, separation));
         const intro = introPlayed.current ? 1 : Math.min(1, seconds / 2.6);
         if (intro === 1) introPlayed.current = true;
-        placeLabels(created.render({ seconds, spread, intro, pointer, active: active < 0 ? undefined : active }));
+        placeLabels(created.render({ seconds, spread, intro, framing: 'hero', pointer, active: active < 0 ? undefined : active }));
         if (seconds < 0.1) ready();
         animation = requestAnimationFrame(frame);
       };

@@ -24,7 +24,7 @@ export function Integrations() {
     <section className="section integrations-section" id="integrations" aria-labelledby="integrations-title">
       <div className="container">
         <div className="head-split">
-          <h2 id="integrations-title">Real code for the framework you actually ship.</h2>
+          <h2 id="integrations-title">One protocol. Imports stay inert.</h2>
           <p className="lead">
             Every example talks to the same protocol. Pick your host: in-process Rust, a stdio helper,
             or the browser extension bridge. None of them read credentials on import.

@@ -1,6 +1,6 @@
 /* Hallmark · shape: Feature Stack (kept order, recomposed) · genre: atmospheric · theme: brand (OriginLM graphite and amber; material lent from Lumen, dealt 1/3) · redesign: full
  * paper: oklch(19% 0.008 0) · accent: oklch(76% 0.16 75) · display: Red Hat Display · body: Red Hat Display · hero: Stage · nav: three-part bar, four real destinations plus GitHub and the action · footer: statement, the closing action large over index columns · signature: the shared five-screen perspective stack beside the head, the runtime pulled apart layer by layer
- * axes: dark/grotesk-sans/warm · posture: restrained · job: try and sign up, the action in the nav, the hero, the install band and the footer · imagery: screenshots 2 (capture.mjs, example data) · sweep: pending v1 integration verification; earlier branch results do not qualify this revision · v2.0.0 */
+ * axes: dark/grotesk-sans/warm · posture: restrained · job: try and sign up, the action in the nav, the hero, the install band and the footer · imagery: screenshots 2 (capture.mjs, example data) · sweep: Floor 0 FAIL; one copy-control waiver; finish-review: subagent, 4 findings, 4 resolved, 0 open; hero reviewed in the finish pass · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V3 · weakest: V, the page keeps its eleven-part argument in order; varied the compositions instead (split, table, pinned steps, band, vertical tabs, index table, statement, film with chapters) */
 /* Hallmark · waive 39b · app UI at 36px with a ::after hit target expanding it to 44px · the copy control lives in each code block header beside the code it copies, where a 48px marketing pill would crowd the sample */
 /* Hallmark · dismissed 28a · the first lazy image is the usage screenshot in the second section, below the fold; the LCP is the hero stage poster, which carries fetchpriority high */
@@ -184,7 +184,7 @@ p { color: var(--color-muted); }
 
 .hero-figure { margin: 0; min-width: 0; }
 .hero-stage {
-  position: relative; height: min(660px, calc(100dvh - 272px)); min-height: 440px; border-radius: var(--radius-card);
+  position: relative; height: min(660px, calc(100dvh - 300px)); min-height: 440px; border-radius: var(--radius-card);
   background: var(--color-paper); color: var(--color-ink);
   overflow: hidden; isolation: isolate;
 }
@@ -523,3 +523,6 @@ p { color: var(--color-muted); }
   .js .hero-scroll:not(:has(.hero-stage[data-fallback])) { height: calc(200dvh - 72px); }
   .js .hero-scroll:not(:has(.hero-stage[data-fallback])) > .hero { position: sticky; top: 72px; }
 }
+
+.static-layer-names { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin: var(--space-sm) 0 0; padding: 0; list-style: none; color: var(--color-ink-2); font-size: var(--text-sm); }
+.hero-figure:has(.hero-stage[data-ready]) .static-layer-names { display: none; }
